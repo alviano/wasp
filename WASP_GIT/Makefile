@@ -5,20 +5,7 @@ CXXFLAGS=-Wall -std=c++11 $(CODE)
 LINK=$(GCC)
 LINKFLAGS=-lm
 
-SRCS = \
- Clause.cpp\
- Dimacs.cpp\
- Literal.cpp\
- NegativeLiteral.cpp\
- PositiveLiteral.cpp\
- ProgramBuilder.cpp\
- SATSolver.cpp\
- Solver.cpp\
- Variable.cpp\
- WaspFacade.cpp\
- main.cpp\
- learning/FirstUIPLearningStrategy.cpp\
- 
+SRCS = $(wildcard *.cpp) $(wildcard learning/*.cpp) $(wildcard stl/*.cpp)
 
 OBJS = $(SRCS:.cpp=.o)
 DEPS = $(SRCS:.cpp=.d)
