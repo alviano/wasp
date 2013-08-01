@@ -27,6 +27,7 @@
 #define	POSITIVELITERAL_H
 
 #include "Literal.h"
+#include "NegativeLiteral.h"
 
 /**
  * This class represents a positive literal.
@@ -35,33 +36,62 @@
 class PositiveLiteral : public Literal
 {
     public:
-        inline PositiveLiteral();        
-        inline PositiveLiteral( Variable* var );
-//        inline PositiveLiteral( const string& name );
-        
+        inline PositiveLiteral();
+        inline PositiveLiteral( const string& name );
+        inline ~PositiveLiteral();
+
         virtual bool isFalse() const;
         virtual bool isTrue() const;
+        virtual bool isUndefined() const;
 
         virtual bool setFalse();
         virtual bool setTrue();
+        inline void setUndefined();
+
+        virtual NegativeLiteral* getNegativeLiteral();
+        virtual PositiveLiteral* getPositiveLiteral();
         
+        virtual unsigned int getDecisionLevel() const;
+        virtual void setDecisionLevel( unsigned int decisionLevel );
+
     private:        
-        virtual ostream& print( ostream& out ) const;        
+        virtual ostream& print( ostream& out ) const;
+
+        unsigned int decisionLevel;
+
+        string name;
+
+        TruthValue truthValue;
 };
 
-PositiveLiteral::PositiveLiteral() : Literal()
+PositiveLiteral::PositiveLiteral() :
+    decisionLevel( 0 ),
+    name(""),
+    truthValue( UNDEFINED )
 {
 }
 
 PositiveLiteral::PositiveLiteral(
-    Variable* var ) : Literal( var )
+    const string& n ) :
+    decisionLevel( 0 ),
+    name( n ),
+    truthValue( UNDEFINED )
 {
 }
 
-//PositiveLiteral::PositiveLiteral( 
-//    const string& name ) : Literal( name )
-//{
-//}
+PositiveLiteral::~PositiveLiteral()
+{
+    if( oppositeLiteral )
+        delete oppositeLiteral;
+}
+
+void
+PositiveLiteral::setUndefined()
+{
+    assert( "This assert is not strictly necessary. By the way, this assignment is useless." && truthValue != UNDEFINED );
+    truthValue = UNDEFINED;
+}
+
 
 #endif	/* POSITIVELITERAL_H */
 

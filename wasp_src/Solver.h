@@ -37,6 +37,7 @@ using namespace std;
 #include "stl/UnorderedSet.h"
 #include "learning/LearningStrategy.h"
 #include "learning/FirstUIPLearningStrategy.h"
+#include "PositiveLiteral.h"
 
 class Variable;
 
@@ -80,34 +81,28 @@ class Solver
             assert( "The copy constructor has been disabled." && 0 );
         }
         
-        void addVariableInternal( Variable* var );
+        void addVariableInternal( PositiveLiteral* posLiteral );
         
         list< pair< Literal*, TruthValue > > literalsToPropagate;
         unsigned int currentDecisionLevel;
         
     protected:
         LearningStrategy* learningStrategy;
-        list< Variable* > assignedVariables;
-        UnorderedSet< Variable* > undefinedVariables;
-//        list< Literal* > assignedLiterals;
-//        UnorderedSet< Literal* > undefinedLiterals;
+        list< PositiveLiteral* > assignedLiterals;
+        UnorderedSet< PositiveLiteral* > undefinedLiterals;
         vector< unsigned int > unrollVector;
         bool conflict;
         
         /* Data structures */
-//        vector< Literal* > positiveLiterals;
-//        vector< Literal* > negativeLiterals;
-        vector< Variable* > variables;
+        vector< PositiveLiteral* > positiveLiterals;
         List< Clause* > clauses;
         List< Clause* > learnedClauses;
 };
 
 Solver::Solver() : currentDecisionLevel( 0 ), conflict( false )
 {
-    //Add a fake position.    
-//    negativeLiterals.push_back( NULL );
-//    positiveLiterals.push_back( NULL );
-    variables.push_back( NULL );
+    //Add a fake position.
+    positiveLiterals.push_back( NULL );
     learningStrategy = new FirstUIPLearningStrategy();    
 }
 
@@ -143,7 +138,7 @@ void
 Solver::incrementCurrentDecisionLevel()
 {
     currentDecisionLevel++;
-    unrollVector.push_back( assignedVariables.size() );
+    unrollVector.push_back( assignedLiterals.size() );
     
     assert( currentDecisionLevel == unrollVector.size() );
 }

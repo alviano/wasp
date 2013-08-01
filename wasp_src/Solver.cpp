@@ -20,27 +20,17 @@
 
 #include "PositiveLiteral.h"
 #include "NegativeLiteral.h"
-#include "Variable.h"
 #include "Solver.h"
 
 Solver::~Solver()
 {
-//    assignedLiterals.clear();
-//    undefinedLiterals.clear();
-    assignedVariables.clear();
-    undefinedVariables.clear();
+    assignedLiterals.clear();
+    undefinedLiterals.clear();
     literalsToPropagate.clear();
     
-//    assert( positiveLiterals.size() == negativeLiterals.size() );
-//    for( unsigned int i = 1; i < positiveLiterals.size(); i++ )
-//    {
-//        delete negativeLiterals[ i ];
-//        delete positiveLiterals[ i ];
-//    }
-    
-    for( unsigned int i = 1; i < variables.size(); i++ )
+    for( unsigned int i = 1; i < positiveLiterals.size(); i++ )
     {
-        delete variables[ i ];
+        delete positiveLiterals[ i ];
     }
     
     while( !clauses.empty() )
@@ -62,30 +52,29 @@ Solver::~Solver()
 void
 Solver::addVariable( 
     const string& name )
-{
-    Variable* var = new Variable( name );
-    addVariableInternal( var );    
+{    
+    PositiveLiteral* positiveLiteral = new PositiveLiteral( name );
+    addVariableInternal( positiveLiteral );
 }
 
 void
 Solver::addVariable()
 {
-    Variable* var = new Variable();
-    addVariableInternal( var );
+    PositiveLiteral* positiveLiteral = new PositiveLiteral();
+    addVariableInternal( positiveLiteral );
 }
 
 void
 Solver::addVariableInternal(
-    Variable* var )
+    PositiveLiteral* positiveLiteral )
 {
-    NegativeLiteral* negativeLiteral = new NegativeLiteral( var );
-    PositiveLiteral* positiveLiteral = new PositiveLiteral( var );
+    NegativeLiteral* negativeLiteral = new NegativeLiteral();
     
-    var->setNegativeLiteral( negativeLiteral );
-    var->setPositiveLiteral( positiveLiteral );
+    negativeLiteral->setOppositeLiteral( positiveLiteral );
+    positiveLiteral->setOppositeLiteral( negativeLiteral );
     
-    variables.push_back( var );
-    undefinedVariables.insert( var );
+    positiveLiterals.push_back( positiveLiteral );
+    undefinedLiterals.insert( positiveLiteral );
     
 //    assert( positiveLiterals.size() == negativeLiterals.size() );
 //    PositiveLiteral* positiveLiteral = new PositiveLiteral();
@@ -108,12 +97,8 @@ Solver::onLiteralAssigned(
     assert( "TruthValue has an invalid value." && ( truthValue == TRUE || truthValue == FALSE ) );
     
     literalsToPropagate.push_back( pair< Literal*, TruthValue >( literal, truthValue ) );
-    Variable* var = literal->getVariable();
-    assert( var != NULL );
-    var->setDecisionLevel( currentDecisionLevel );
+    literal->setDecisionLevel( currentDecisionLevel );
     literal->setImplicant( implicant );
-//    literal->setImplicant( implicant );
-//    literal->setDecisionLevel( currentDecisionLevel );    
 }
 
 void
@@ -121,17 +106,18 @@ Solver::unroll(
     unsigned int level )
 {
     assert( "Level is not valid." && level < unrollVector.size() && currentDecisionLevel >= level );
-    assert( "Vector for unroll is inconsistent" && assignedVariables.size() >= unrollVector[ level ] );    
-    unsigned int toUnroll = assignedVariables.size() - unrollVector[ level ];
+    assert( "Vector for unroll is inconsistent" && assignedLiterals.size() >= unrollVector[ level ] );    
+    unsigned int toUnroll = assignedLiterals.size() - unrollVector[ level ];
     unsigned int toPop = currentDecisionLevel - level;
     
     currentDecisionLevel = level;
     
     while( toUnroll > 0 )
     {
-        Variable* variable = assignedVariables.back();
-        assignedVariables.pop_back();
-        variable->setUndefined();
+        PositiveLiteral* tmp = assignedLiterals.back();
+        assignedLiterals.pop_back();
+        tmp->setUndefined();        
+        this->undefinedLiterals.insert( tmp );
         toUnroll--;
     }
     
@@ -149,6 +135,13 @@ Solver::getLiteral(
 {
 //    assert( "Checking if lit is in the range." && lit < 0 || lit < positiveLiterals.size() );
 //    assert( "Checking if lit is in the range." && lit > 0 || -lit < negativeLiterals.size() );
-    assert( "Lit is out of range." && abs( lit ) < variables.size() );
-    return lit > 0 ? variables[ lit ]->getPositiveLiteral() : variables[ -lit ]->getNegativeLiteral();//positiveLiterals[ lit ] : negativeLiterals[ -lit ];
+    assert( "Lit is out of range." && abs( lit ) < positiveLiterals.size() );
+    Literal* literal;
+    if( lit > 0 )
+        literal = positiveLiterals[ lit ];
+    else
+        literal = positiveLiterals[ -lit ]->getNegativeLiteral();
+    
+    assert( literal != NULL );
+    return literal;
 }

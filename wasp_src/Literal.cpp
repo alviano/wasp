@@ -18,7 +18,6 @@
 
 #include "Literal.h"
 #include "Clause.h"
-#include "Variable.h"
 
 ostream&
 operator<<( 
@@ -32,9 +31,9 @@ void
 Literal::unitPropagation(
     Solver& solver )
 {
-//    assert( !this->isUndefined() );
-//    if( this->isFalse() )
-//    {
+    assert( !this->isUndefined() );
+    if( this->isFalse() )
+    {
     assert( this->isFalse() );
         watchedClauses.startIteration();
         while( watchedClauses.hasNext() )
@@ -42,21 +41,9 @@ Literal::unitPropagation(
             Clause* clause = watchedClauses.next();
             clause->onLiteralFalse( this, solver );            
         }        
-//    }
-//    else
-//    {
-//        oppositeLiteral->unitPropagation( solver );
-//    }
-}
-
-bool
-Literal::isUndefined() const
-{
-    return variable->isUndefined();
-}
-
-void
-Literal::setUndefined()
-{
-    variable->setUndefined();
+    }
+    else
+    {
+        oppositeLiteral->unitPropagation( solver );
+    }
 }

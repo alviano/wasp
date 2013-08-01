@@ -20,7 +20,6 @@
 
 #include "SATSolver.h"
 #include "AbstractBuilder.h"
-#include "Variable.h"
 #include "stl/UnorderedSet.h"
 
 void 
@@ -34,21 +33,21 @@ SATSolver::solve()
 {
     printProgram();
     
-    Variable* choice;
-    while( !undefinedVariables.empty() )
+    Literal* choice;
+    while( !undefinedLiterals.empty() )
     {
         if( !conflict )
         {
-            choice = undefinedVariables.at( 0 );
+            choice = undefinedLiterals.at( 0 );
             assert( choice != NULL );
             incrementCurrentDecisionLevel();
-            onLiteralAssigned( choice->getPositiveLiteral(), FALSE, NULL );
+            onLiteralAssigned( choice, FALSE, NULL );
             cout << "Choice " << *choice << endl;
         }
         else
         {
             conflict = false;
-            onLiteralAssigned( choice->getPositiveLiteral(), TRUE, NULL );            
+            onLiteralAssigned( choice, TRUE, NULL );            
             cout << "Flipping " << *choice << endl;
         }
         
@@ -58,13 +57,13 @@ SATSolver::solve()
             pair< Literal*, TruthValue >& next = getNextLiteralToPropagate();
 
             Literal* literalToPropagate = next.first;
-            Variable* var = literalToPropagate->getVariable();
-            assert( var != NULL );
             cout << "Propagating " << *literalToPropagate << " " << ( next.second == TRUE ? "TRUE" : "FALSE" ) << endl;
             
-            if( undefinedVariables.erase( var ) )
+            PositiveLiteral* posLiteral = literalToPropagate->getPositiveLiteral();
+            assert( posLiteral != NULL );
+            if( undefinedLiterals.erase( posLiteral ) )
             {
-                assignedVariables.push_back( var );
+                assignedLiterals.push_back( posLiteral );
             }
             
             conflict = next.second == TRUE ? !literalToPropagate->setTrue() : !literalToPropagate->setFalse();
@@ -79,14 +78,14 @@ SATSolver::solve()
                 
                 break;
             }
-            literalToPropagate->getVariable()->unitPropagation( *this );            
+            literalToPropagate->unitPropagation( *this );            
         }
     }
     
     cout << "Model:";
-    for( list< Variable* >::iterator it = assignedVariables.begin(); it != assignedVariables.end(); ++it )
+    for( list< PositiveLiteral* >::iterator it = assignedLiterals.begin(); it != assignedLiterals.end(); ++it )
     {
-        Variable* tmp = *it;
+        PositiveLiteral* tmp = *it;
         if( tmp->isTrue() )
         {
             cout << " " << *tmp;

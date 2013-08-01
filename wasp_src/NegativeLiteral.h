@@ -28,6 +28,8 @@
 
 #include "Literal.h"
 
+class PositiveLiteral;
+
 /**
  * This class represents a negative literal.
  *  
@@ -36,14 +38,19 @@ class NegativeLiteral : public Literal
 {
     public:        
         inline NegativeLiteral();
-        inline NegativeLiteral( Variable* var );
-//        inline NegativeLiteral( const string& name );
         
         virtual bool isFalse() const;
         virtual bool isTrue() const;
+        virtual bool isUndefined() const;
 
         virtual bool setFalse();
         virtual bool setTrue();
+        
+        virtual NegativeLiteral* getNegativeLiteral();
+        virtual PositiveLiteral* getPositiveLiteral();
+        
+        unsigned int getDecisionLevel() const;
+        void setDecisionLevel( unsigned int dl );
         
     private:
         
@@ -53,16 +60,6 @@ class NegativeLiteral : public Literal
 NegativeLiteral::NegativeLiteral() : Literal()
 {
 }
-
-NegativeLiteral::NegativeLiteral(
-    Variable* var ) : Literal( var )
-{
-}
-
-//NegativeLiteral::NegativeLiteral( 
-//    const string& name ) : Literal( name )
-//{
-//}
 
 #endif	/* NEGATIVELITERAL_H */
 

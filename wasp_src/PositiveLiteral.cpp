@@ -17,41 +17,73 @@
  */
 
 #include "PositiveLiteral.h"
-#include "Variable.h"
 
 ostream&
 PositiveLiteral::print( 
     ostream& out ) const
 {
-    assert( variable != NULL );
-    out << *variable;
+    out << name;
     return out;
 }
 
 bool
 PositiveLiteral::isFalse() const
 {
-    assert( variable != NULL );
-    return variable->isFalse();
+    return truthValue == FALSE;
 }
 
 bool
 PositiveLiteral::isTrue() const
 {
-    assert( variable != NULL );
-    return variable->isTrue();
+    return truthValue == TRUE;
+}
+
+bool
+PositiveLiteral::isUndefined() const
+{
+    return truthValue == UNDEFINED;
 }
 
 bool
 PositiveLiteral::setFalse()
 {
-    assert( variable != NULL );
-    return variable->setFalse();
+    if( truthValue == TRUE )
+        return false;
+    truthValue = FALSE;
+    return true;
 }
 
 bool
 PositiveLiteral::setTrue()
 {
-    assert( variable != NULL );
-    return variable->setTrue();
+    if( truthValue == FALSE )
+        return false;
+    truthValue = TRUE;
+    return true;
+}
+
+unsigned int
+PositiveLiteral::getDecisionLevel() const
+{
+    assert( "Undefined variables have no decision level." && !isUndefined() );
+    return decisionLevel;
+}
+
+void
+PositiveLiteral::setDecisionLevel(
+    unsigned int dl )
+{
+    decisionLevel = dl;
+}
+
+PositiveLiteral*
+PositiveLiteral::getPositiveLiteral()
+{
+    return this;
+}
+
+NegativeLiteral*
+PositiveLiteral::getNegativeLiteral()
+{
+    return static_cast< NegativeLiteral* >( oppositeLiteral );
 }

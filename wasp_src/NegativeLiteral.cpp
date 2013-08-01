@@ -17,41 +17,74 @@
  */
 
 #include "NegativeLiteral.h"
-#include "Variable.h"
+#include "PositiveLiteral.h"
 
 ostream&
 NegativeLiteral::print( 
     ostream& out ) const
 {
-    assert( variable != NULL );
-    out << "not " << *variable;
+    assert( oppositeLiteral != NULL );
+    out << "not " << *oppositeLiteral;
     return out;
 }
 
 bool
 NegativeLiteral::isFalse() const
 {
-    assert( variable != NULL );
-    return variable->isTrue();
+    assert( oppositeLiteral != NULL );
+    return oppositeLiteral->isTrue();
 }
 
 bool
 NegativeLiteral::isTrue() const
 {
-    assert( variable != NULL );
-    return variable->isFalse();
+    assert( oppositeLiteral != NULL );
+    return oppositeLiteral->isFalse();
+}
+
+bool
+NegativeLiteral::isUndefined() const
+{
+    assert( oppositeLiteral != NULL );
+    return oppositeLiteral->isUndefined();
 }
 
 bool
 NegativeLiteral::setFalse()
 {
-    assert( variable != NULL );
-    return variable->setTrue();
+    assert( oppositeLiteral != NULL );
+    return oppositeLiteral->setTrue();
 }
 
 bool
 NegativeLiteral::setTrue()
 {
-    assert( variable != NULL );
-    return variable->setFalse();
+    assert( oppositeLiteral != NULL );
+    return oppositeLiteral->setFalse();
+}
+
+unsigned int
+NegativeLiteral::getDecisionLevel() const
+{
+    assert( "Undefined variables have no decision level." && !isUndefined() );
+    return oppositeLiteral->getDecisionLevel();
+}
+
+void
+NegativeLiteral::setDecisionLevel(
+    unsigned int dl )
+{
+    oppositeLiteral->setDecisionLevel( dl );
+}
+
+PositiveLiteral*
+NegativeLiteral::getPositiveLiteral()
+{
+    return static_cast< PositiveLiteral* >( oppositeLiteral );
+}
+
+NegativeLiteral*
+NegativeLiteral::getNegativeLiteral()
+{
+    return this;
 }

@@ -35,7 +35,8 @@ using namespace std;
 #include "WatchedList.h"
 
 class Clause;
-class Variable;
+class NegativeLiteral;
+class PositiveLiteral;
 class Solver;
 
 /**
@@ -48,61 +49,41 @@ class Literal
     
     public:
         inline Literal();
-        inline Literal( Variable* var );
-//        inline Literal( const string& name );
 
         inline WatchedList< Clause* >::iterator addWatchedClause( Clause* clause );
         inline void eraseWatchedClause( WatchedList< Clause* >::iterator it );
 
         virtual bool isTrue() const = 0;
         virtual bool isFalse() const = 0;
-        bool isUndefined() const;
+        virtual bool isUndefined() const = 0;
 
         virtual bool setFalse() = 0;
         virtual bool setTrue() = 0;
-        void setUndefined();
         
-//        inline unsigned int getDecisionLevel() const;
-//        inline void setDecisionLevel( unsigned int );
+        virtual unsigned int getDecisionLevel() const = 0;
+        virtual void setDecisionLevel( unsigned int ) = 0;
         
-        inline Variable* getVariable();
-        inline void setVariable( Variable* );
+        virtual NegativeLiteral* getNegativeLiteral() = 0;
+        virtual PositiveLiteral* getPositiveLiteral() = 0;
         
         inline const Clause* getImplicant() const;
         inline void setImplicant( Clause* clause );
         
-//        inline void setOppositeLiteral( Literal* oppositeLiteral );        
+        inline void setOppositeLiteral( Literal* lit );
         
         void unitPropagation( Solver& solver );
         
     protected:
         
         /**
-         * The decision level of the literal.
-         */
-//        unsigned int decisionLevel;
-        
-        /**
          * This variable stores the clause which derived the literal.
          */
-        Clause* implicant;
-        
-        Variable* variable;
-        
+        Clause* implicant;        
+                
         /**
-         * The name of the literal.
+         * The literal with the opposite polarity.
          */
-//        string name;
-        
-//        /**
-//         * The literal with the opposite polarity.
-//         */
-//        Literal* oppositeLiteral;        
-//        
-//        /**
-//         * A truth value assigned to the literal.
-//         */
-//        TruthValue truthValue;
+        Literal* oppositeLiteral;
 
         /**
          * List of all clauses in which the literal is watched.
@@ -111,25 +92,11 @@ class Literal
         
         virtual ostream& print( ostream& out ) const = 0;
         
-//        inline bool setFalseInternal();
-//        inline bool setTrueInternal();
-//        inline void setUndefinedInternal();
-//        inline void setDecisionLevelInternal( unsigned int dl );
 };
 
-Literal::Literal() : implicant( NULL )/*, name( "" ), decisionLevel( 0 ), oppositeLiteral( NULL ), truthValue( UNDEFINED )*/
+Literal::Literal() : implicant( NULL )
 {
 }
-
-Literal::Literal(
-    Variable* var ) : implicant( NULL ), variable( var )/*, name( "" ), decisionLevel( 0 ), oppositeLiteral( NULL ), truthValue( UNDEFINED )*/
-{
-}
-
-//Literal::Literal( 
-//    const string& n ) : decisionLevel( 0 ), implicant( NULL ), name( n )/*, oppositeLiteral( NULL ), truthValue( UNDEFINED )*/
-//{
-//}
 
 WatchedList< Clause* >::iterator
 Literal::addWatchedClause(
@@ -145,104 +112,6 @@ Literal::eraseWatchedClause(
     watchedClauses.erase( it );
 }
 
-//bool
-//Literal::isTrue() const
-//{
-//    return truthValue == TRUE;
-//}
-//
-//bool
-//Literal::isFalse() const
-//{
-//    return truthValue == FALSE;
-//}
-//
-//bool
-//Literal::isUndefined() const
-//{
-//    return truthValue == UNDEFINED;
-//}
-
-//bool
-//Literal::setFalse()
-//{
-//    if( !setFalseInternal() )
-//        return false;
-//    assert( "Opposite literal is NULL." && oppositeLiteral != NULL );
-//    bool result = oppositeLiteral->setTrueInternal();
-//    assert( "Opposite literal can be conflictual iff current literal is also conflictual." && result );
-//    return true;
-//}
-//
-//bool
-//Literal::setTrue()
-//{
-//    if( !setTrueInternal() )
-//        return false;
-//    
-//    assert( "Opposite literal is NULL." && oppositeLiteral != NULL );
-//    bool result = oppositeLiteral->setFalseInternal();
-//    assert( "Opposite literal can be conflictual iff current literal is also conflictual." && result );
-//    return true;
-//}
-//
-//void
-//Literal::setUndefined()
-//{
-//    setUndefinedInternal();
-//    assert( "Opposite literal is NULL." && oppositeLiteral != NULL );
-//    oppositeLiteral->setUndefinedInternal();
-//}
-//
-//bool
-//Literal::setFalseInternal()
-//{
-//    bool result = true;
-//    if( truthValue == TRUE )
-//        result = false;
-//    truthValue = FALSE;
-//    return result;
-//}
-//
-//bool
-//Literal::setTrueInternal()
-//{
-//    bool result = true;
-//    if( truthValue == FALSE )
-//        result = false;
-//    
-//    truthValue = TRUE;    
-//    return result;
-//}
-//
-//void
-//Literal::setUndefinedInternal()
-//{
-//    truthValue = UNDEFINED;    
-//}
-//
-//unsigned int
-//Literal::getDecisionLevel() const
-//{
-//    assert( "Undefined literals have no decision level." && !isUndefined() );
-//    return decisionLevel;
-//}
-//
-//void
-//Literal::setDecisionLevel(
-//    unsigned int dl )
-//{    
-//    setDecisionLevelInternal( dl );
-//    oppositeLiteral->setDecisionLevelInternal( dl );
-//}
-//
-//void
-//Literal::setDecisionLevelInternal(
-//    unsigned int dl )
-//{
-//    decisionLevel = dl;
-//}
-
 const Clause*
 Literal::getImplicant() const
 {
@@ -257,26 +126,12 @@ Literal::setImplicant(
     implicant = clause;
 }
 
-Variable*
-Literal::getVariable()
-{
-    return variable;
-}
-
 void
-Literal::setVariable(
-    Variable* var )
+Literal::setOppositeLiteral(
+    Literal* lit )
 {
-    variable = var;
+    oppositeLiteral = lit;
 }
-
-//void
-//Literal::setOppositeLiteral(
-//    Literal* opp )
-//{
-//    assert( "Opposite literal has been set." && oppositeLiteral == NULL );
-//    oppositeLiteral = opp;
-//}
 
 #endif	/* LITERAL_H */
 
