@@ -56,7 +56,7 @@ class Solver
         inline void addClause( Clause* clause );
         Literal* getLiteral( int lit );
         
-        inline pair< Literal*, TruthValue >& getNextLiteralToPropagate();
+        inline Literal* getNextLiteralToPropagate();
         inline bool hasNextLiteralToPropagate() const;        
         
         inline unsigned int getCurrentDecisionLevel();
@@ -83,7 +83,7 @@ class Solver
         
         void addVariableInternal( PositiveLiteral* posLiteral );
         
-        list< pair< Literal*, TruthValue > > literalsToPropagate;
+        list< Literal* > literalsToPropagate;
         unsigned int currentDecisionLevel;
         
     protected:
@@ -92,6 +92,7 @@ class Solver
         UnorderedSet< PositiveLiteral* > undefinedLiterals;
         vector< unsigned int > unrollVector;
         bool conflict;
+        Literal* conflictLiteral;
         
         /* Data structures */
         vector< PositiveLiteral* > positiveLiterals;
@@ -99,7 +100,7 @@ class Solver
         List< Clause* > learnedClauses;
 };
 
-Solver::Solver() : currentDecisionLevel( 0 ), conflict( false )
+Solver::Solver() : currentDecisionLevel( 0 ), conflict( false ), conflictLiteral( NULL )
 {
     //Add a fake position.
     positiveLiterals.push_back( NULL );
@@ -113,11 +114,11 @@ Solver::addClause(
     clauses.push_back( clause );
 }
 
-pair< Literal*, TruthValue >&
+Literal*
 Solver::getNextLiteralToPropagate()
 {
     assert( !literalsToPropagate.empty() );
-    pair< Literal*, TruthValue >& tmp = literalsToPropagate.back();
+    Literal* tmp = literalsToPropagate.back();
     literalsToPropagate.pop_back();
     return tmp;
 }

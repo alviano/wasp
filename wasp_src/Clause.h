@@ -31,9 +31,9 @@
 #include <vector>
 
 #include "Literal.h"
+#include "learning/LearningStrategy.h"
 using namespace std;
 
-class Literal;
 class Solver;
 
 /**
@@ -59,10 +59,15 @@ class Clause
         inline Clause( unsigned int size, unsigned int firstWatch, unsigned int secondWatch );
 
         inline void addLiteral( Literal* literal );
+        inline const Literal* getLiteral( unsigned int pos ) const;
+        inline unsigned int size() const;
+        
         inline void attachClause();
         inline void detachClause();
 
         void onLiteralFalse( Literal* literal, Solver& solver );
+        
+        inline void onLearning( LearningStrategy* strategy );
 
         inline void setFirstWatch( unsigned int firstWatch );
         inline void setSecondWatch( unsigned int secondWatch );
@@ -190,6 +195,32 @@ Clause::setWatchesInRandomPositions()
 
     assert( "First watch is not in range." && firstWatch < literals.size() );
     assert( "Second watch is not in range." && secondWatch < literals.size() );
+}
+
+const Literal*
+Clause::getLiteral(
+    unsigned int pos ) const
+{
+    assert( "Position is not valid." && pos < size() );
+    return literals[ pos ];
+}
+
+unsigned int
+Clause::size() const
+{
+    return literals.size();
+}
+
+void
+Clause::onLearning(
+    LearningStrategy* strategy )
+{
+    assert( "LearningStrategy is not initialized." && strategy != NULL );
+    for( unsigned int i = 0; i < literals.size(); i++ )
+    {
+        Literal* literal = literals[ i ];        
+        strategy->onNavigatingLiteral( literal );
+    }
 }
 
 #endif	/* CLAUSE_H */

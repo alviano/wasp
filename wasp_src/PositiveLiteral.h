@@ -53,15 +53,32 @@ class PositiveLiteral : public Literal
         
         virtual unsigned int getDecisionLevel() const;
         virtual void setDecisionLevel( unsigned int decisionLevel );
+        
+        virtual unsigned int getOrderInThePropagation() const;
+        virtual void setOrderInThePropagation( unsigned int order );
 
     private:        
-        virtual ostream& print( ostream& out ) const;
-
+        /**
+         * The level in the backtracking tree in which this literal has been derived.  
+         */        
         unsigned int decisionLevel;
 
+        /**
+         * The name associated to the literal.
+         */
         string name;
 
+        /**
+         * This variable represents the order in which the literal has been propagated.
+         */
+        unsigned int orderInThePropagation;
+        
+        /**
+         * The truth value of the literal. It can assume three values: UNDEFINED, TRUE or FALSE.
+         */
         TruthValue truthValue;
+        
+        virtual ostream& print( ostream& out ) const;
 };
 
 PositiveLiteral::PositiveLiteral() :
@@ -91,7 +108,6 @@ PositiveLiteral::setUndefined()
     assert( "This assert is not strictly necessary. By the way, this assignment is useless." && truthValue != UNDEFINED );
     truthValue = UNDEFINED;
 }
-
 
 #endif	/* POSITIVELITERAL_H */
 

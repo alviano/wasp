@@ -66,7 +66,7 @@ NegativeLiteral::setTrue()
 unsigned int
 NegativeLiteral::getDecisionLevel() const
 {
-    assert( "Undefined variables have no decision level." && !isUndefined() );
+    assert( "Undefined literals have no decision level." && !isUndefined() );
     return oppositeLiteral->getDecisionLevel();
 }
 
@@ -75,6 +75,20 @@ NegativeLiteral::setDecisionLevel(
     unsigned int dl )
 {
     oppositeLiteral->setDecisionLevel( dl );
+}
+
+unsigned int
+NegativeLiteral::getOrderInThePropagation() const
+{
+    assert( "Undefined literals have not been propagated." && !isUndefined() );
+    return oppositeLiteral->getOrderInThePropagation();
+}
+
+void
+NegativeLiteral::setOrderInThePropagation(
+    unsigned int order )
+{
+    oppositeLiteral->setOrderInThePropagation( order );
 }
 
 PositiveLiteral*

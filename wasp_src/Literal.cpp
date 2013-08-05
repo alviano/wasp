@@ -31,10 +31,9 @@ void
 Literal::unitPropagation(
     Solver& solver )
 {
-    assert( !this->isUndefined() );
+    assert( "Literal to propagate is Undefined." && !this->isUndefined() );
     if( this->isFalse() )
     {
-    assert( this->isFalse() );
         watchedClauses.startIteration();
         while( watchedClauses.hasNext() )
         {
@@ -46,4 +45,12 @@ Literal::unitPropagation(
     {
         oppositeLiteral->unitPropagation( solver );
     }
+}
+
+void
+Literal::onLearning( 
+    LearningStrategy* strategy )
+{
+    if( implicant != NULL )
+        implicant->onLearning( strategy );
 }

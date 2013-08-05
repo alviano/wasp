@@ -28,12 +28,15 @@
 
 class Clause;
 class Literal;
+class Solver;
 
 class LearningStrategy
 {
     public:
         LearningStrategy(){}
-        virtual Clause* learnClause( Literal* conflictLiteral ) = 0;
+        
+        virtual void onNavigatingLiteral( Literal* ) = 0;
+        virtual Clause* learnClause( Literal* conflictLiteral, Solver& solver ) = 0;
 };
 
 #endif	/* LEARNINGSTRATEGY_H */

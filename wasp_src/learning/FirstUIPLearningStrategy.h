@@ -27,16 +27,51 @@
 #define	FIRSTUIPLEARNINGSTRATEGY_H
 
 #include "LearningStrategy.h"
+#include <cassert>
+#include <unordered_set>
+#include <list>
+using namespace std;
 
 class FirstUIPLearningStrategy : public LearningStrategy
 {
     public:
         inline FirstUIPLearningStrategy();
-        virtual Clause* learnClause( Literal* conflictLiteral );
+        
+        virtual void onNavigatingLiteral( Literal* );
+        virtual Clause* learnClause( Literal* conflictLiteral, Solver& solver );                
+        
+    private:
+        Literal* getNextToConsider();
+        inline void clearDataStructures();
+        void addLiteralInLearnedClause( Literal* literal );
+        inline void addLiteralToNavigate( Literal* literal );                
+        
+        unordered_set< Literal* > addedLiterals;
+        unsigned int decisionLevel;
+        Clause* learnedClause;
+        list< Literal* > literalsOfTheSameLevel;        
 };
 
 FirstUIPLearningStrategy::FirstUIPLearningStrategy() : LearningStrategy()
 {
+    learnedClause = NULL;
+    decisionLevel = 0;
+}
+        
+void
+FirstUIPLearningStrategy::addLiteralToNavigate( 
+    Literal* literal )
+{
+    if( addedLiterals.insert( literal ).second )
+        literalsOfTheSameLevel.push_back( literal );
+}
+
+void
+FirstUIPLearningStrategy::clearDataStructures()
+{
+    learnedClause = NULL;
+    literalsOfTheSameLevel.clear();
+    addedLiterals.clear();
 }
 
 #endif	/* FIRSTUIPLEARNINGSTRATEGY_H */

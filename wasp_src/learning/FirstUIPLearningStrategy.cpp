@@ -18,6 +18,8 @@
 
 #include "FirstUIPLearningStrategy.h"
 #include "../Clause.h"
+#include "../Literal.h"
+#include "../Solver.h"
 
 #include <cassert>
 #include <iostream>
@@ -26,34 +28,79 @@ using namespace std;
 
 Clause*
 FirstUIPLearningStrategy::learnClause(
-    Literal* conflictLiteral )
+    Literal* conflictLiteral,
+    Solver& solver )
 {
     assert( "Conflict literal is NULL." && conflictLiteral != NULL );
+    assert( "Learned clause has to be NULL in the beginning." && learnedClause == NULL );
+    
     cout << "CONFLICT LITERAL " << *conflictLiteral << endl;
     
-    assert( "Implement Me!!!" && 0 );
-    /*
-    Clause* clause = new Clause();
-
-	list< Literal* > literalsOfSameLevel;    
-
-    const Clause* implicant = conflictLiteral->getImplicant();
+    learnedClause = new Clause();
+    decisionLevel = solver.getCurrentDecisionLevel();
+	
+    conflictLiteral->onConflict( this );
     
-    computeNeighbours( conflictLiteral, literalsOfSameLevel, literalsOfPreviousLevel );
-
-	//Se c'è un solo letterale dello stesso livello, questo deve essere il primo uip. Penso che valga solo se si fa una visita in ampiezza.
-	while( literalsOfSameLevel.size() > 1 )
+	//If there is only one element, this element is the first UIP.
+	while( literalsOfTheSameLevel.size() > 1 )
 	{
-		Literal lit = literalsOfSameLevel.pop_front(); //Visita del grafo in ampiezza
-		computeNeighbours( lit, literalsOfSameLevel, literalsOfPreviousLevel );
+		Literal* currentLiteral = getNextToConsider();
+        currentLiteral->onLearning( this );        
 	}
 
-	assert( literalsOfSameLevel.size() == 1 );
+	assert( literalsOfTheSameLevel.size() == 1 );
 
-	Literal uip = literalsOfSameLevel.pop();
-	literalsOfPreviousLevel.push( uip );
+	Literal* uip = literalsOfTheSameLevel.back();
+    literalsOfTheSameLevel.pop_back();    
+	learnedClause->addLiteral( uip );
 
-	insertConstraint( literalsOfPreviousLevel );
-    ***/
-    return NULL;
+    return learnedClause;
+}
+
+Literal*
+FirstUIPLearningStrategy::getNextToConsider()
+{
+    assert( "There is no next literal: list is empty." && !literalsOfTheSameLevel.empty() );
+    
+    list< Literal* >::iterator it = literalsOfTheSameLevel.begin();
+    list< Literal* >::iterator maxLiteralIterator = it;
+    unsigned int max = ( *maxLiteralIterator )->getOrderInThePropagation();
+    ++it;
+    
+    for( ; it != literalsOfTheSameLevel.end(); ++it )
+    {
+        Literal* current = *it;
+        if( max < current->getOrderInThePropagation() )
+        {
+            max = current->getOrderInThePropagation();
+            maxLiteralIterator = it;
+        }
+    }
+    
+    Literal* maxLiteral = *maxLiteralIterator;
+    literalsOfTheSameLevel.erase( maxLiteralIterator );    
+    return maxLiteral;
+}
+
+void
+FirstUIPLearningStrategy::onNavigatingLiteral( 
+    Literal* literal )
+{
+    if( literal->getDecisionLevel() == decisionLevel )
+    {
+        addLiteralToNavigate( literal );
+    }
+    else
+    {
+        addLiteralInLearnedClause( literal );
+    }
+}
+
+void
+FirstUIPLearningStrategy::addLiteralInLearnedClause( 
+    Literal* literal )
+{
+    assert( "Learned clause is not initialized." && learnedClause != NULL );
+    if( addedLiterals.insert( literal ).second )
+        learnedClause->addLiteral( literal );
 }

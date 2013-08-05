@@ -16,8 +16,6 @@
  *
  */
 
-#include <queue>
-
 #include "SATSolver.h"
 #include "AbstractBuilder.h"
 #include "stl/UnorderedSet.h"
@@ -41,44 +39,41 @@ SATSolver::solve()
             choice = undefinedLiterals.at( 0 );
             assert( choice != NULL );
             incrementCurrentDecisionLevel();
+            assert( choice->isUndefined() );        
             onLiteralAssigned( choice, FALSE, NULL );
             cout << "Choice " << *choice << endl;
         }
         else
         {
             conflict = false;
-            onLiteralAssigned( choice, TRUE, NULL );            
+            assert( choice->isUndefined() );        
+            onLiteralAssigned( choice, TRUE, NULL );
             cout << "Flipping " << *choice << endl;
         }
         
-        assert( choice->isUndefined() );
+        unsigned int countOfPropagatingLiterals = 0;
         while( hasNextLiteralToPropagate() )
         {
-            pair< Literal*, TruthValue >& next = getNextLiteralToPropagate();
-
-            Literal* literalToPropagate = next.first;
-            cout << "Propagating " << *literalToPropagate << " " << ( next.second == TRUE ? "TRUE" : "FALSE" ) << endl;
+            Literal* literalToPropagate = getNextLiteralToPropagate();
             
-            PositiveLiteral* posLiteral = literalToPropagate->getPositiveLiteral();
-            assert( posLiteral != NULL );
-            if( undefinedLiterals.erase( posLiteral ) )
-            {
-                assignedLiterals.push_back( posLiteral );
-            }
-            
-            conflict = next.second == TRUE ? !literalToPropagate->setTrue() : !literalToPropagate->setFalse();
+            literalToPropagate->setOrderInThePropagation( countOfPropagatingLiterals++ );
+            literalToPropagate->unitPropagation( *this );
             if( conflict )
             {
                 if( getCurrentDecisionLevel() == 0 )
                 {
                     cout << "INCO" << endl;
                     return;
-                }                
+                }
+                conflictLiteral->setOrderInThePropagation( countOfPropagatingLiterals++ );
+                Clause* clause = learningStrategy->learnClause( conflictLiteral, *this );
+                assert( clause != NULL );
+                conflictLiteral = NULL;
+                cout << "Learned: " << *clause << endl;
                 unrollOne();
-                
+//                exit( 0 );
                 break;
             }
-            literalToPropagate->unitPropagation( *this );            
         }
     }
     

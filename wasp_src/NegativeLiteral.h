@@ -49,8 +49,11 @@ class NegativeLiteral : public Literal
         virtual NegativeLiteral* getNegativeLiteral();
         virtual PositiveLiteral* getPositiveLiteral();
         
-        unsigned int getDecisionLevel() const;
-        void setDecisionLevel( unsigned int dl );
+        virtual unsigned int getDecisionLevel() const;
+        virtual void setDecisionLevel( unsigned int dl );
+        
+        virtual unsigned int getOrderInThePropagation() const;
+        virtual void setOrderInThePropagation( unsigned int order );
         
     private:
         

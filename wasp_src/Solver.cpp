@@ -74,17 +74,7 @@ Solver::addVariableInternal(
     positiveLiteral->setOppositeLiteral( negativeLiteral );
     
     positiveLiterals.push_back( positiveLiteral );
-    undefinedLiterals.insert( positiveLiteral );
-    
-//    assert( positiveLiterals.size() == negativeLiterals.size() );
-//    PositiveLiteral* positiveLiteral = new PositiveLiteral();
-//    positiveLiterals.push_back( positiveLiteral );
-//    NegativeLiteral* negativeLiteral = new NegativeLiteral();
-//    negativeLiterals.push_back( negativeLiteral );
-//    
-//    positiveLiteral->setOppositeLiteral( negativeLiteral );
-//    negativeLiteral->setOppositeLiteral( positiveLiteral );
-//    this->undefinedLiterals.insert( positiveLiteral );
+    undefinedLiterals.insert( positiveLiteral );    
 }
 
 void 
@@ -96,9 +86,29 @@ Solver::onLiteralAssigned(
     assert( "Assigned literal is NULL." && literal != NULL );
     assert( "TruthValue has an invalid value." && ( truthValue == TRUE || truthValue == FALSE ) );
     
-    literalsToPropagate.push_back( pair< Literal*, TruthValue >( literal, truthValue ) );
-    literal->setDecisionLevel( currentDecisionLevel );
-    literal->setImplicant( implicant );
+    if( !conflict )
+    {
+        PositiveLiteral* positiveLiteral = literal->getPositiveLiteral();
+        
+        assert( positiveLiteral != NULL );
+        if( undefinedLiterals.erase( positiveLiteral ) )
+        {
+            assignedLiterals.push_back( positiveLiteral );
+            literalsToPropagate.push_back( literal );            
+            literal->setDecisionLevel( currentDecisionLevel );
+            literal->setImplicant( implicant );
+            truthValue == TRUE ? !literal->setTrue() : !literal->setFalse();
+        }
+        else
+        {
+            conflict = truthValue == TRUE ? !literal->setTrue() : !literal->setFalse();
+            if( conflict )
+            {
+                literal->setImplicant( implicant ); 
+                conflictLiteral = literal;
+            }
+        }
+    }
 }
 
 void
@@ -133,8 +143,6 @@ Literal*
 Solver::getLiteral(
     int lit )
 {
-//    assert( "Checking if lit is in the range." && lit < 0 || lit < positiveLiterals.size() );
-//    assert( "Checking if lit is in the range." && lit > 0 || -lit < negativeLiterals.size() );
     assert( "Lit is out of range." && abs( lit ) < positiveLiterals.size() );
     Literal* literal;
     if( lit > 0 )

@@ -35,6 +35,7 @@ using namespace std;
 #include "WatchedList.h"
 
 class Clause;
+class LearningStrategy;
 class NegativeLiteral;
 class PositiveLiteral;
 class Solver;
@@ -63,14 +64,17 @@ class Literal
         virtual unsigned int getDecisionLevel() const = 0;
         virtual void setDecisionLevel( unsigned int ) = 0;
         
+        virtual unsigned int getOrderInThePropagation() const = 0;
+        virtual void setOrderInThePropagation( unsigned int order ) = 0;
+        
         virtual NegativeLiteral* getNegativeLiteral() = 0;
         virtual PositiveLiteral* getPositiveLiteral() = 0;
         
-        inline const Clause* getImplicant() const;
-        inline void setImplicant( Clause* clause );
-        
+        inline void setImplicant( Clause* clause );        
         inline void setOppositeLiteral( Literal* lit );
         
+        inline void onConflict( LearningStrategy* strategy );        
+        void onLearning( LearningStrategy* strategy );        
         void unitPropagation( Solver& solver );
         
     protected:
@@ -88,7 +92,7 @@ class Literal
         /**
          * List of all clauses in which the literal is watched.
          */
-        WatchedList< Clause* > watchedClauses;
+        WatchedList< Clause* > watchedClauses;       
         
         virtual ostream& print( ostream& out ) const = 0;
         
@@ -112,13 +116,6 @@ Literal::eraseWatchedClause(
     watchedClauses.erase( it );
 }
 
-const Clause*
-Literal::getImplicant() const
-{
-    assert( "Undefined literals have no implicant." && !isUndefined() );
-    return implicant;
-}
-
 void
 Literal::setImplicant(
     Clause* clause )
@@ -131,6 +128,15 @@ Literal::setOppositeLiteral(
     Literal* lit )
 {
     oppositeLiteral = lit;
+}
+
+void
+Literal::onConflict( 
+    LearningStrategy* strategy )
+{
+    assert( "OppositeLiteral is not set properly." && oppositeLiteral != NULL );    
+    onLearning( strategy );
+    oppositeLiteral->onLearning( strategy );
 }
 
 #endif	/* LITERAL_H */
