@@ -59,19 +59,19 @@ class Clause
         inline Clause( unsigned int size, unsigned int firstWatch, unsigned int secondWatch );
 
         inline void addLiteral( Literal* literal );
-        inline const Literal* getLiteral( unsigned int pos ) const;
-        inline unsigned int size() const;
-        
+
         inline void attachClause();
+        inline void attachClause( unsigned int firstWatch, unsigned int secondWatch );
         inline void detachClause();
 
-        void onLiteralFalse( Literal* literal, Solver& solver );
-        
         inline void onLearning( LearningStrategy* strategy );
+        void onLiteralFalse( Literal* literal, Solver& solver );
 
         inline void setFirstWatch( unsigned int firstWatch );
         inline void setSecondWatch( unsigned int secondWatch );
-        inline void setWatchesInRandomPositions();        
+        inline void setWatchesInRandomPositions();
+        
+        inline unsigned int size() const;        
 
     private:
         Clause( const Clause& orig );
@@ -100,7 +100,7 @@ class Clause
         void updateWatch( unsigned int& watchToUpdate, const unsigned int& otherWatch, WatchedList< Clause* >::iterator iteratorWatchToUpdate, Solver& solver );
 };
 
-Clause::Clause()
+Clause::Clause() : firstWatch( 0 ), secondWatch( 0 )
 {
 }
 
@@ -147,7 +147,19 @@ Clause::attachClause()
         setWatchesInRandomPositions();
     assert( "First watch and second watch point to the same literal." && firstWatch != secondWatch );
     attachWatch( firstWatch, iterator_firstWatch );
-    attachWatch( secondWatch, iterator_secondWatch );    
+    attachWatch( secondWatch, iterator_secondWatch );
+}
+
+void
+Clause::attachClause( 
+    unsigned int first,
+    unsigned int second )
+{
+    setFirstWatch( first );
+    setSecondWatch( second );
+    assert( "First watch and second watch point to the same literal." && firstWatch != secondWatch );
+    attachWatch( firstWatch, iterator_firstWatch );
+    attachWatch( secondWatch, iterator_secondWatch );
 }
 
 void
@@ -187,6 +199,7 @@ Clause::setSecondWatch(
 void
 Clause::setWatchesInRandomPositions()
 {
+    assert( literals.size() > 1 );
     firstWatch = rand() % literals.size();
     secondWatch = rand() % ( literals.size() - 1 );
 
@@ -195,14 +208,6 @@ Clause::setWatchesInRandomPositions()
 
     assert( "First watch is not in range." && firstWatch < literals.size() );
     assert( "Second watch is not in range." && secondWatch < literals.size() );
-}
-
-const Literal*
-Clause::getLiteral(
-    unsigned int pos ) const
-{
-    assert( "Position is not valid." && pos < size() );
-    return literals[ pos ];
 }
 
 unsigned int

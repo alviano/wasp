@@ -38,6 +38,7 @@ using namespace std;
 #include "learning/LearningStrategy.h"
 #include "learning/FirstUIPLearningStrategy.h"
 #include "PositiveLiteral.h"
+#include "learning/SequenceBasedRestartsStrategy.h"
 
 class Variable;
 
@@ -54,6 +55,8 @@ class Solver
         void addVariable();
         
         inline void addClause( Clause* clause );
+        inline void addLearnedClause( Clause* learnedClause );        
+        
         Literal* getLiteral( int lit );
         
         inline Literal* getNextLiteralToPropagate();
@@ -63,6 +66,10 @@ class Solver
         inline void incrementCurrentDecisionLevel();
         
         void onLiteralAssigned( Literal* literal, TruthValue truthValue, Clause* implicant );
+        
+        inline void onLearningClause( Literal* literalToPropagate, Clause* learnedClause, unsigned int backjumpingLevel );
+        inline void onLearningUnaryClause( Literal* literalToPropagate, Clause* learnedClause );        
+        inline void onRestarting();        
         
         void unroll( unsigned int level );
         inline void unrollOne();
@@ -104,7 +111,7 @@ Solver::Solver() : currentDecisionLevel( 0 ), conflict( false ), conflictLiteral
 {
     //Add a fake position.
     positiveLiterals.push_back( NULL );
-    learningStrategy = new FirstUIPLearningStrategy();    
+    learningStrategy = new FirstUIPLearningStrategy( new SequenceBasedRestartsStrategy( 32 ) );    
 }
 
 void
@@ -112,6 +119,13 @@ Solver::addClause(
     Clause* clause )
 {
     clauses.push_back( clause );
+}
+
+void
+Solver::addLearnedClause( 
+    Clause* learnedClause )
+{
+    learnedClauses.push_back( learnedClause );
 }
 
 Literal*
@@ -148,6 +162,39 @@ void
 Solver::unrollOne()
 {
     unroll( currentDecisionLevel - 1 );
+}
+
+void
+Solver::onLearningClause( 
+    Literal* literalToPropagate, 
+    Clause* learnedClause, 
+    unsigned int backjumpingLevel )
+{
+    assert( "Backjumping level is not valid." && backjumpingLevel < currentDecisionLevel );
+    unroll( backjumpingLevel );
+    
+    assert( "Each learned clause has to be an asserting clause." && literalToPropagate != NULL );
+    assert( "Learned clause has not been calculated." && learnedClause != NULL );
+    
+    onLiteralAssigned( literalToPropagate, TRUE, learnedClause );
+}
+
+void
+Solver::onLearningUnaryClause(
+    Literal* literalToPropagate,
+    Clause* learnedClause )
+{
+    unroll( 0 );    
+    onLiteralAssigned( literalToPropagate, TRUE, NULL );
+    
+    assert( "Learned clause has not been calculated." && learnedClause != NULL );
+    delete learnedClause;
+}
+
+void
+Solver::onRestarting()
+{
+    unroll( 0 );
 }
 
 #endif	/* SOLVER_H */

@@ -26,6 +26,10 @@
 #ifndef LEARNINGSTRATEGY_H
 #define	LEARNINGSTRATEGY_H
 
+#include "RestartsStrategy.h"
+
+#include <cassert>
+
 class Clause;
 class Literal;
 class Solver;
@@ -33,11 +37,40 @@ class Solver;
 class LearningStrategy
 {
     public:
-        LearningStrategy(){}
+        inline LearningStrategy( RestartsStrategy* restartsStrategy );
+        virtual ~LearningStrategy()
+        {
+            if( restartsStrategy )
+                delete restartsStrategy;
+        }
         
         virtual void onNavigatingLiteral( Literal* ) = 0;
-        virtual Clause* learnClause( Literal* conflictLiteral, Solver& solver ) = 0;
+        virtual void onConflict( Literal* conflictLiteral, Solver& solver ) = 0;        
+        
+    protected:
+        
+        /**
+         * The decision level of the conflict.
+         */
+        unsigned int decisionLevel;
+        
+        /**
+         * The new learned clause.
+         */
+        Clause* learnedClause;
+        
+        /**
+         * The strategy used for restarts.
+         */
+        RestartsStrategy* restartsStrategy;             
 };
+
+LearningStrategy::LearningStrategy(
+    RestartsStrategy* strategy ): decisionLevel( 0 ), learnedClause( NULL )
+{
+    assert( "The strategy for restarts must be initialized." && strategy != NULL );
+    restartsStrategy = strategy;
+}
 
 #endif	/* LEARNINGSTRATEGY_H */
 

@@ -94,7 +94,7 @@ Solver::onLiteralAssigned(
         if( undefinedLiterals.erase( positiveLiteral ) )
         {
             assignedLiterals.push_back( positiveLiteral );
-            literalsToPropagate.push_back( literal );            
+            literalsToPropagate.push_back( literal );
             literal->setDecisionLevel( currentDecisionLevel );
             literal->setImplicant( implicant );
             truthValue == TRUE ? !literal->setTrue() : !literal->setFalse();
@@ -104,7 +104,7 @@ Solver::onLiteralAssigned(
             conflict = truthValue == TRUE ? !literal->setTrue() : !literal->setFalse();
             if( conflict )
             {
-                literal->setImplicant( implicant ); 
+                literal->setImplicant( implicant );
                 conflictLiteral = literal;
             }
         }

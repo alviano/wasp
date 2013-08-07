@@ -23,7 +23,6 @@
 void 
 SATSolver::init()
 {
-    
 }
 
 void 
@@ -32,6 +31,7 @@ SATSolver::solve()
     printProgram();
     
     Literal* choice;
+    unsigned int count = 0;
     while( !undefinedLiterals.empty() )
     {
         if( !conflict )
@@ -43,36 +43,27 @@ SATSolver::solve()
             onLiteralAssigned( choice, FALSE, NULL );
             cout << "Choice " << *choice << endl;
         }
-        else
-        {
-            conflict = false;
-            assert( choice->isUndefined() );        
-            onLiteralAssigned( choice, TRUE, NULL );
-            cout << "Flipping " << *choice << endl;
-        }
         
         unsigned int countOfPropagatingLiterals = 0;
         while( hasNextLiteralToPropagate() )
         {
             Literal* literalToPropagate = getNextLiteralToPropagate();
-            
+
             literalToPropagate->setOrderInThePropagation( countOfPropagatingLiterals++ );
             literalToPropagate->unitPropagation( *this );
             if( conflict )
             {
                 if( getCurrentDecisionLevel() == 0 )
                 {
-                    cout << "INCO" << endl;
+                    cout << "UNSAT" << endl;
                     return;
                 }
+
+                conflict = false;
                 conflictLiteral->setOrderInThePropagation( countOfPropagatingLiterals++ );
-                Clause* clause = learningStrategy->learnClause( conflictLiteral, *this );
-                assert( clause != NULL );
-                conflictLiteral = NULL;
-                cout << "Learned: " << *clause << endl;
-                unrollOne();
-//                exit( 0 );
-                break;
+                learningStrategy->onConflict( conflictLiteral, *this );
+                conflictLiteral = NULL;                
+                assert( hasNextLiteralToPropagate() );
             }
         }
     }

@@ -27,7 +27,6 @@
 #define	FIRSTUIPLEARNINGSTRATEGY_H
 
 #include "LearningStrategy.h"
-#include <cassert>
 #include <unordered_set>
 #include <list>
 using namespace std;
@@ -35,27 +34,57 @@ using namespace std;
 class FirstUIPLearningStrategy : public LearningStrategy
 {
     public:
-        inline FirstUIPLearningStrategy();
+        inline FirstUIPLearningStrategy( RestartsStrategy* restartsStrategy );
         
         virtual void onNavigatingLiteral( Literal* );
-        virtual Clause* learnClause( Literal* conflictLiteral, Solver& solver );                
+        virtual void onConflict( Literal* conflictLiteral, Solver& solver );        
         
     private:
-        Literal* getNextToConsider();
-        inline void clearDataStructures();
+        
+        /**
+         * This method computes the next literal to navigate in the implication graph.
+         * The most recent (in the order of derivation) literal should be processed before.          
+         * 
+         * @return the next literal to consider.
+         */
+        Literal* getNextLiteralToNavigate();
+        
+        /**
+         * This method cleans data structures.
+         * It should be called in the end of each iteration.
+         */
+        inline void clearDataStructures();           
+        
+        /**
+         * Add a literal in the new learned clause.
+         * @param literal the literal to add.
+         */
         void addLiteralInLearnedClause( Literal* literal );
+        
+        /**
+         * The literal added by this method is a literal which should be navigated.
+         * @param literal the literal to navigate.
+         */
         inline void addLiteralToNavigate( Literal* literal );                
         
+        /**
+         * The literals already added.
+         */
         unordered_set< Literal* > addedLiterals;
-        unsigned int decisionLevel;
-        Clause* learnedClause;
-        list< Literal* > literalsOfTheSameLevel;        
+        
+        /**
+         * Literals to explore in the implication graph.
+         */
+        list< Literal* > literalsToNavigate;
+        
+        unsigned int maxDecisionLevel;
+        
+        unsigned int maxPosition;       
 };
 
-FirstUIPLearningStrategy::FirstUIPLearningStrategy() : LearningStrategy()
+FirstUIPLearningStrategy::FirstUIPLearningStrategy(
+    RestartsStrategy* restartsStrategy ) : LearningStrategy( restartsStrategy ), maxDecisionLevel( 0 )
 {
-    learnedClause = NULL;
-    decisionLevel = 0;
 }
         
 void
@@ -63,14 +92,15 @@ FirstUIPLearningStrategy::addLiteralToNavigate(
     Literal* literal )
 {
     if( addedLiterals.insert( literal ).second )
-        literalsOfTheSameLevel.push_back( literal );
+        literalsToNavigate.push_back( literal );
 }
 
 void
 FirstUIPLearningStrategy::clearDataStructures()
 {
     learnedClause = NULL;
-    literalsOfTheSameLevel.clear();
+    maxDecisionLevel = 0;
+    literalsToNavigate.clear();
     addedLiterals.clear();
 }
 
