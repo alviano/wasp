@@ -33,7 +33,7 @@ FirstUIPLearningStrategy::onConflict(
     assert( "Learned clause has to be NULL in the beginning." && learnedClause == NULL );   
     assert( "The literalsToNavigate structure must to be empty in the beginning." && literalsToNavigate.empty() );
     
-    learnedClause = new Clause();
+    learnedClause = new LearnedClause();
     decisionLevel = solver.getCurrentDecisionLevel();
 	
     //Compute implicants of the conflictual literal.

@@ -30,7 +30,7 @@
 
 #include <cassert>
 
-class Clause;
+class LearnedClause;
 class Literal;
 class Solver;
 
@@ -57,7 +57,7 @@ class LearningStrategy
         /**
          * The new learned clause.
          */
-        Clause* learnedClause;
+        LearnedClause* learnedClause;
         
         /**
          * The strategy used for restarts.

@@ -71,10 +71,16 @@ class Clause
         inline void setSecondWatch( unsigned int secondWatch );
         inline void setWatchesInRandomPositions();
         
-        inline unsigned int size() const;        
+        inline unsigned int size() const;
+        
+    protected:
+        inline bool isImplicantOfALiteral() const;
 
     private:
-        Clause( const Clause& orig );
+        Clause( const Clause& )
+        {
+            assert( "The copy constructor has been disabled." && 0 );
+        }
 
         vector< Literal* > literals;
 
@@ -178,6 +184,14 @@ Clause::detachClause()
     assert( "First watch and second watch point to the same literal." && firstWatch != secondWatch );
     detachWatch( firstWatch, iterator_firstWatch );
     detachWatch( secondWatch, iterator_secondWatch );    
+}
+
+bool
+Clause::isImplicantOfALiteral() const
+{    
+    assert( "First watch is out of range." && firstWatch < size() );
+    assert( "Second watch is out of range." && secondWatch < size() );
+    return ( literals[ firstWatch ]->isImplicant( this ) || literals[ secondWatch ]->isImplicant( this ) );
 }
 
 void

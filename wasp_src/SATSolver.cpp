@@ -23,13 +23,12 @@
 void 
 SATSolver::init()
 {
+    printProgram();    
 }
 
 void 
 SATSolver::solve()
 {
-    printProgram();
-    
     Literal* choice;
     unsigned int count = 0;
     while( !undefinedLiterals.empty() )

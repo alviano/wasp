@@ -70,14 +70,15 @@ class Literal
         virtual NegativeLiteral* getNegativeLiteral() = 0;
         virtual PositiveLiteral* getPositiveLiteral() = 0;
         
+        inline bool isImplicant( const Clause* clause ) const;
         inline void setImplicant( Clause* clause );        
         inline void setOppositeLiteral( Literal* lit );
         
         inline void onConflict( LearningStrategy* strategy );        
         void onLearning( LearningStrategy* strategy );        
-        void unitPropagation( Solver& solver );
+        void unitPropagation( Solver& solver );        
         
-    protected:
+    protected:                
         
         /**
          * This variable stores the clause which derived the literal.
@@ -95,6 +96,13 @@ class Literal
         WatchedList< Clause* > watchedClauses;       
         
         virtual ostream& print( ostream& out ) const = 0;
+        
+    private:
+        
+        Literal( const Literal& )
+        {
+            assert( "The copy constructor has been disabled." && 0 );
+        }
         
 };
 
@@ -137,6 +145,13 @@ Literal::onConflict(
     assert( "OppositeLiteral is not set properly." && oppositeLiteral != NULL );    
     onLearning( strategy );
     oppositeLiteral->onLearning( strategy );
+}
+
+bool
+Literal::isImplicant( 
+    const Clause* clause ) const
+{
+    return !this->isUndefined() && implicant == clause;
 }
 
 #endif	/* LITERAL_H */

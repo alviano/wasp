@@ -17,51 +17,29 @@
  */
 
 /* 
- * File:   Constants.h
+ * File:   AggressiveDeletionStrategy.h
  * Author: Carmine Dodaro
  *
- * Created on 21 July 2013, 17.29
+ * Created on 8 August 2013, 15.27
  */
 
-#ifndef CONSTANTS_H
-#define	CONSTANTS_H
+#ifndef AGGRESSIVEDELETIONSTRATEGY_H
+#define	AGGRESSIVEDELETIONSTRATEGY_H
 
-//#define UNDEFINED 1
-//#define TRUE 2
-//#define FALSE 4
-//#define TRUE_UNDEFINED 3
-//#define FALSE_UNDEFINED 5
-//#define INTERPRETATION_MASK 7
+#include "DeletionStrategy.h"
 
-enum TruthValue { UNDEFINED = 1, TRUE = 2, FALSE = 4 };
+class AggressiveDeletionStrategy : public DeletionStrategy
+{
+    public:
+        inline AggressiveDeletionStrategy();
+        
+    protected:
+        virtual bool onLearningProtected( Solver& solver );
+};
 
-/*
- * Wasp constants
- */
-#define WASP_STRING "WASP 2.0\n"
+AggressiveDeletionStrategy::AggressiveDeletionStrategy() : DeletionStrategy()
+{
+}
 
-/* 
- * Error messages
- */
-#define ERRORPARSING WASP_STRING "\nError during parsing."
-#define ERRORPARSINGCODE 100
-
-/*
- * DIMACS Format
- */
-#define COMMENT_DIMACS 'c'
-#define FORMULA_INFO_DIMACS 'p'
-#define SOLUTION_DIMACS 's'
-#define VALUE_DIMACS 'v'
-#define UNSAT "UNSATISFIABLE"
-#define SAT "SATISFIABLE"
-
-
-/*
- * New types
- */
-typedef double Activity;
-
-
-#endif	/* CONSTANTS_H */
+#endif	/* AGGRESSIVEDELETIONSTRATEGY_H */
 
