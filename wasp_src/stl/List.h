@@ -91,7 +91,7 @@ List< T >::erase(
     typename List< T >::iterator it )
 {
     --listSize;
-    list< T >::erase( it );
+    return list< T >::erase( it );
 }
 
 template< class T >

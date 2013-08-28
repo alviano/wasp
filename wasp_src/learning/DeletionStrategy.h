@@ -35,6 +35,7 @@ class DeletionStrategy
 {
     public:
         inline DeletionStrategy();
+        inline virtual ~DeletionStrategy() {}
         inline bool continueIterationAvg();        
         bool hasToDeleteClauseThreshold( LearnedClause* clause );
         bool hasToDeleteClauseAvg( LearnedClause* clause );

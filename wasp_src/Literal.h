@@ -50,6 +50,7 @@ class Literal
     
     public:
         inline Literal();
+        inline virtual ~Literal() {}
 
         inline WatchedList< Clause* >::iterator addWatchedClause( Clause* clause );
         inline void eraseWatchedClause( WatchedList< Clause* >::iterator it );
@@ -114,7 +115,7 @@ WatchedList< Clause* >::iterator
 Literal::addWatchedClause(
     Clause* clause )
 {
-    watchedClauses.add( clause );
+    return watchedClauses.add( clause );
 }
 
 void

@@ -33,6 +33,7 @@ class ProgramBuilder : public AbstractBuilder
 {
     public:        
         ProgramBuilder( Solver* s );
+        inline virtual ~ProgramBuilder() {}
         virtual void newVar();
         virtual void newVar( const string& name );
         

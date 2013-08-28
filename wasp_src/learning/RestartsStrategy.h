@@ -31,6 +31,7 @@ class RestartsStrategy
 {
     public:
         inline RestartsStrategy();
+        inline virtual ~RestartsStrategy() {};
         inline RestartsStrategy( unsigned int threshold );
         virtual bool onLearningClause() = 0;
         virtual void onLearningUnaryClause() = 0;

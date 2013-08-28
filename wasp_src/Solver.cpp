@@ -146,7 +146,7 @@ Literal*
 Solver::getLiteral(
     int lit )
 {
-    assert( "Lit is out of range." && abs( lit ) < positiveLiterals.size() );
+    assert( "Lit is out of range." && static_cast< unsigned >( abs( lit ) ) < positiveLiterals.size() );
     Literal* literal;
     if( lit > 0 )
         literal = positiveLiterals[ lit ];

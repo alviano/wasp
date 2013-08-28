@@ -29,6 +29,7 @@
 #include "RestartsStrategy.h"
 
 #include <cassert>
+#include <iostream>
 
 class LearnedClause;
 class Literal;

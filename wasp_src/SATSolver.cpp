@@ -30,7 +30,6 @@ void
 SATSolver::solve()
 {
     Literal* choice;
-    unsigned int count = 0;
     while( !undefinedLiterals.empty() )
     {
         if( !conflict )
