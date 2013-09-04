@@ -17,39 +17,32 @@
  */
 
 /* 
- * File:   RestartsStrategy.h
+ * File:   MostOccurrencesVisitor.h
  * Author: Carmine Dodaro
  *
- * Created on 6 August 2013, 21.10
+ * Created on 04 September 2013, 10.18
  */
 
-#ifndef RESTARTSSTRATEGY_H
-#define	RESTARTSSTRATEGY_H
+#ifndef MOSTOCCURRENCESVISITOR_H
+#define	MOSTOCCURRENCESVISITOR_H
 
-class RestartsStrategy
+#include "HeuristicVisitor.h"
+
+class Literal;
+
+class MostOccurrencesVisitor : public HeuristicVisitor
 {
     public:
-        inline RestartsStrategy();
-        inline virtual ~RestartsStrategy() {};
-        inline RestartsStrategy( unsigned int threshold );
-        virtual bool onLearningClause() = 0;
-        virtual void onLearningUnaryClause() = 0;
+        inline MostOccurrencesVisitor();
+        virtual void onNavigatingLiteral( Literal* literal );
         
-    protected:
-        virtual void computeNextRestartValue() = 0;
-        unsigned int nextRestartValue;
-        unsigned int conflictsCount;        
-        unsigned int threshold;
+    private:
+        unsigned int maxOccurrences;
 };
 
-RestartsStrategy::RestartsStrategy(
-    unsigned int t ) : conflictsCount( 0 ), threshold( t )
+MostOccurrencesVisitor::MostOccurrencesVisitor() : HeuristicVisitor(), maxOccurrences( 0 )
 {
 }
 
-RestartsStrategy::RestartsStrategy() : conflictsCount( 0 ), threshold( 0 )
-{
-}
-
-#endif	/* RESTARTSSTRATEGY_H */
+#endif	/* MOSTOCCURRENCESVISITOR_H */
 

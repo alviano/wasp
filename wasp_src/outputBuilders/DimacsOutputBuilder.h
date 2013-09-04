@@ -17,33 +17,32 @@
  */
 
 /* 
- * File:   SATSolver.h
+ * File:   DimacsOutputBuilder.h
  * Author: Carmine Dodaro
  *
- * Created on 21 July 2013, 16.58
+ * Created on 04 September 2013, 13.00
  */
 
-#ifndef SATSOLVER_H
-#define	SATSOLVER_H
+#ifndef DIMACSOUTPUTBUILDER_H
+#define DIMACSOUTPUTBUILDER_H
 
-#include "Solver.h"
+#include "OutputBuilder.h"
 
-class SATSolver : public Solver
+class DimacsOutputBuilder : public OutputBuilder
 {
-    public:
-        SATSolver() : Solver()
-        {        
-        }
-        
-        ~SATSolver()
-        {
-        }        
-        
-        virtual void init();
-        virtual void propagate( Literal* literalToPropagate );
-
-//        virtual bool solve();
+	public:
+        inline DimacsOutputBuilder();
+        virtual void startModel();
+        virtual void printLiteral( PositiveLiteral* );
+        virtual void endModel();
+        virtual void onProgramIncoherent();
+    
+    private:
+        unsigned int numberOfModels;
 };
 
-#endif	/* SATSOLVER_H */
+DimacsOutputBuilder::DimacsOutputBuilder() : numberOfModels( 0 )
+{
+}
 
+#endif /* DIMACSOUTPUTBUILDER_H */

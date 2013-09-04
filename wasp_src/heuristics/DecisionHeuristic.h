@@ -17,33 +17,23 @@
  */
 
 /* 
- * File:   SATSolver.h
+ * File:   DecisionHeuristic.h
  * Author: Carmine Dodaro
  *
- * Created on 21 July 2013, 16.58
+ * Created on 02 September 2013, 12.42
  */
 
-#ifndef SATSOLVER_H
-#define	SATSOLVER_H
+#ifndef DECISIONHEURISTIC_H
+#define	DECISIONHEURISTIC_H
 
-#include "Solver.h"
+class Literal;
+class Solver;
 
-class SATSolver : public Solver
+class DecisionHeuristic
 {
     public:
-        SATSolver() : Solver()
-        {        
-        }
-        
-        ~SATSolver()
-        {
-        }        
-        
-        virtual void init();
-        virtual void propagate( Literal* literalToPropagate );
-
-//        virtual bool solve();
+        virtual Literal* makeAChoice( Solver& solver ) = 0;
 };
 
-#endif	/* SATSOLVER_H */
+#endif	/* DECISIONHEURISTIC_H */
 

@@ -17,39 +17,39 @@
  */
 
 /* 
- * File:   RestartsStrategy.h
+ * File:   HeuristicVisitor.h
  * Author: Carmine Dodaro
  *
- * Created on 6 August 2013, 21.10
+ * Created on 03 September 2013, 16.50
  */
 
-#ifndef RESTARTSSTRATEGY_H
-#define	RESTARTSSTRATEGY_H
+#ifndef HEURISTICVISITOR_H
+#define	HEURISTICVISITOR_H
 
-class RestartsStrategy
+class Literal;
+
+#include "../../Constants.h"
+
+class HeuristicVisitor
 {
     public:
-        inline RestartsStrategy();
-        inline virtual ~RestartsStrategy() {};
-        inline RestartsStrategy( unsigned int threshold );
-        virtual bool onLearningClause() = 0;
-        virtual void onLearningUnaryClause() = 0;
+        inline HeuristicVisitor();
+        virtual void onNavigatingLiteral( Literal* ) = 0;
+        inline Literal* getChosenLiteral();
         
     protected:
-        virtual void computeNextRestartValue() = 0;
-        unsigned int nextRestartValue;
-        unsigned int conflictsCount;        
-        unsigned int threshold;
+        Literal* chosenLiteral;
 };
 
-RestartsStrategy::RestartsStrategy(
-    unsigned int t ) : conflictsCount( 0 ), threshold( t )
+HeuristicVisitor::HeuristicVisitor() : chosenLiteral( 0 )
 {
 }
 
-RestartsStrategy::RestartsStrategy() : conflictsCount( 0 ), threshold( 0 )
+Literal*
+HeuristicVisitor::getChosenLiteral()
 {
+    return chosenLiteral;
 }
 
-#endif	/* RESTARTSSTRATEGY_H */
+#endif	/* HEURISTICVISITOR_H */
 

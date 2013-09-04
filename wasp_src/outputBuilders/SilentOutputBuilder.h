@@ -17,33 +17,26 @@
  */
 
 /* 
- * File:   SATSolver.h
+ * File:   SilentOutputBuilder.h
  * Author: Carmine Dodaro
  *
- * Created on 21 July 2013, 16.58
+ * Created on 04 September 2013, 12.52
  */
 
-#ifndef SATSOLVER_H
-#define	SATSOLVER_H
+#ifndef SILENTOUTPUTBUILDER_H
+#define SILENTOUTPUTBUILDER_H
 
-#include "Solver.h"
+#include "WaspOutputBuilder.h"
 
-class SATSolver : public Solver
+class SilentOutputBuilder : public WaspOutputBuilder
 {
-    public:
-        SATSolver() : Solver()
-        {        
-        }
-        
-        ~SATSolver()
-        {
-        }        
-        
-        virtual void init();
-        virtual void propagate( Literal* literalToPropagate );
-
-//        virtual bool solve();
+	public:
+        inline SilentOutputBuilder();
+        virtual void onProgramIncoherent();
 };
 
-#endif	/* SATSOLVER_H */
+SilentOutputBuilder::SilentOutputBuilder()
+{
+}
 
+#endif /* SILENTOUTPUTBUILDER_H */

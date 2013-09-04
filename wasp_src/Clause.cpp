@@ -46,7 +46,7 @@ Clause::onLiteralFalse(
     Literal* literal,
     Solver& solver )
 {
-    assert( literal->isFalse() );
+    assert( "The literal must be false." && literal->isFalse() );
     
     assert( "First watch is not in range." && firstWatch < literals.size() );
     assert( "First watch points to a NULL literal." && literals[ firstWatch ] != NULL );
@@ -64,7 +64,7 @@ Clause::onLiteralFalse(
     }
     else
     {
-        assert( literal == literals[ secondWatch ] );
+        assert( "Literal is not watched." && literal == literals[ secondWatch ] );
         //if the clause is already satisfied do nothing.
         if( !literals[ firstWatch ]->isTrue() )
         {
@@ -77,7 +77,7 @@ Clause::onLiteralFalse(
 void
 Clause::updateWatch(
     unsigned int& watchToUpdate,
-    const unsigned int& otherWatch,
+    unsigned int& otherWatch,
     WatchedList< Clause* >::iterator iteratorWatchToUpdate,
     Solver& solver )
 {    
@@ -100,21 +100,51 @@ Clause::updateWatch(
         if( watchToUpdate == otherWatch )
             watchToUpdate = ( watchToUpdate + 1 ) % literals.size();
     } while( watchToUpdate != oldPosition && literals[ watchToUpdate ]->isFalse() );
-    assert( watchToUpdate < literals.size() );
+    assert( "The watchToUpdate is in a incosistent position." && watchToUpdate < literals.size() );
     
-    //If the watchToUpdate has reached its previous position the only undefined 
+    //If the watchToUpdate has reached its previous position the only undefined
     //literal in the clause is pointed by the otherWatch. Thus, unit propagation!
     if( watchToUpdate == oldPosition )
     {
-        assert( !literals[ otherWatch ]->isTrue() );
+        assert( "The other literal cannot be true." && !literals[ otherWatch ]->isTrue() );
         //Propagate literals[ otherWatch ];
         solver.onLiteralAssigned( literals[ otherWatch ], TRUE, this );
+        
+        //Literals inferred by this clause are inserting in the position 0 by default.
+        moveWatchToFirstPosition( watchToUpdate, otherWatch );        
     }
     else
     {
         //Detach the old watch
         detachWatch( oldPosition, iteratorWatchToUpdate );
         //Attach the watch in the new position
-        attachWatch( watchToUpdate, iteratorWatchToUpdate );
+        attachWatch( watchToUpdate, iteratorWatchToUpdate );                
     }
+}
+
+void
+Clause::moveWatchToFirstPosition(
+    unsigned int& watchToUpdate,
+    unsigned int& otherWatch )
+{
+    assert( "The watchToUpdate is not in range." && watchToUpdate < literals.size() );
+    assert( "The otherWatch is not in range." && otherWatch < literals.size() );
+    
+    //If the watch to update is equal to 0 than no operation needed.
+    if( watchToUpdate == 0 )
+        return;
+    
+    //Swap the literal pointed by the watchToUpdate with the one in the first position.
+    Literal* tmp = literals[ 0 ];
+    literals[ 0 ] = literals[ watchToUpdate ];
+    literals[ watchToUpdate ] = tmp;
+    
+    //If the other watch is equal to 0, we need to change the position of the watches.
+    if( otherWatch == 0 )
+    {
+        otherWatch = watchToUpdate;
+    }
+    
+    //In the end, the watchToUpdate is moved to the first position.
+    watchToUpdate = 0;
 }

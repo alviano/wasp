@@ -31,7 +31,7 @@
 class SequenceBasedRestartsStrategy : public RestartsStrategy
 {
     public:
-        inline SequenceBasedRestartsStrategy( unsigned int threshold );
+        inline SequenceBasedRestartsStrategy( unsigned int threshold = 32 );
         virtual bool onLearningClause();
         virtual void onLearningUnaryClause();
         

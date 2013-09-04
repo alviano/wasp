@@ -73,6 +73,8 @@ class Clause
         
         inline unsigned int size() const;
         
+        inline void visitForHeuristic( HeuristicVisitor* );
+        
     protected:
         inline bool isImplicantOfALiteral() const;
 
@@ -93,6 +95,8 @@ class Clause
         inline void attachWatch( const unsigned int& watchToAttach, WatchedList< Clause* >::iterator& iterator );
         inline void detachWatch( const unsigned int& watchToDetach, WatchedList< Clause* >::iterator& iterator );
         
+        void moveWatchToFirstPosition( unsigned int& watch, unsigned int& otherWatch );
+        
         /**
          * 
          * This function updates the position of one watch.
@@ -103,7 +107,7 @@ class Clause
          * @param solver The current solver
          * @return true if the watch has been moved, false otherwise
          */        
-        void updateWatch( unsigned int& watchToUpdate, const unsigned int& otherWatch, WatchedList< Clause* >::iterator iteratorWatchToUpdate, Solver& solver );
+        void updateWatch( unsigned int& watchToUpdate, unsigned int& otherWatch, WatchedList< Clause* >::iterator iteratorWatchToUpdate, Solver& solver );
 };
 
 Clause::Clause() : firstWatch( 0 ), secondWatch( 0 )
@@ -191,7 +195,16 @@ Clause::isImplicantOfALiteral() const
 {    
     assert( "First watch is out of range." && firstWatch < size() );
     assert( "Second watch is out of range." && secondWatch < size() );
-    return ( literals[ firstWatch ]->isImplicant( this ) || literals[ secondWatch ]->isImplicant( this ) );
+    
+//    return ( literals[ firstWatch ]->isImplicant( this ) || literals[ secondWatch ]->isImplicant( this ) );
+    
+    assert( "This clause is the implicant of a literal which is not in the first position." 
+         && ( !literals[ 0 ]->isImplicant( this ) || 
+          ( !literals[ firstWatch ]->isImplicant( this ) 
+         && !literals[ secondWatch ]->isImplicant( this ) ) ) );
+    
+    //We assume that the literal inferred is always in the first position.
+    return ( literals[ 0 ]->isImplicant( this ) );
 }
 
 void
@@ -239,6 +252,19 @@ Clause::onLearning(
     {
         Literal* literal = literals[ i ];        
         strategy->onNavigatingLiteral( literal );
+    }
+}
+
+void
+Clause::visitForHeuristic( 
+    HeuristicVisitor* heuristicVisitor )
+{
+    if( literals.size() == 1 || literals[ firstWatch ]->isTrue() || literals[ secondWatch ]->isTrue() )
+        return;
+    
+    for( unsigned int i = 0; i < literals.size(); i++ )
+    {
+        literals[ i ]->visitForHeuristic( heuristicVisitor );
     }
 }
 

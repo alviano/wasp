@@ -16,34 +16,36 @@
  *
  */
 
-/* 
- * File:   SATSolver.h
- * Author: Carmine Dodaro
- *
- * Created on 21 July 2013, 16.58
- */
+#include "WaspOutputBuilder.h"
 
-#ifndef SATSOLVER_H
-#define	SATSOLVER_H
+#include "../PositiveLiteral.h"
+#include <iostream>
+using namespace std;
 
-#include "Solver.h"
-
-class SATSolver : public Solver
+void
+WaspOutputBuilder::startModel()
 {
-    public:
-        SATSolver() : Solver()
-        {        
-        }
-        
-        ~SATSolver()
-        {
-        }        
-        
-        virtual void init();
-        virtual void propagate( Literal* literalToPropagate );
+    cout << "{";
+}
 
-//        virtual bool solve();
-};
+void
+WaspOutputBuilder::printLiteral( 
+    PositiveLiteral* positiveLiteral )
+{
+    if( positiveLiteral->isTrue() )
+    {
+        cout << ", " << *positiveLiteral;
+    }    
+}
 
-#endif	/* SATSOLVER_H */
+void
+WaspOutputBuilder::endModel()
+{
+    cout << "}" << endl;
+}
 
+void
+WaspOutputBuilder::onProgramIncoherent()
+{
+     cout << NOMODEL << endl;
+}

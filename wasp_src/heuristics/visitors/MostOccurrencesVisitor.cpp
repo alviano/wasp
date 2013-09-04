@@ -16,34 +16,20 @@
  *
  */
 
-/* 
- * File:   SATSolver.h
- * Author: Carmine Dodaro
- *
- * Created on 21 July 2013, 16.58
- */
+#include "MostOccurrencesVisitor.h"
+#include <cassert>
 
-#ifndef SATSOLVER_H
-#define	SATSOLVER_H
+#include "../../Literal.h"
 
-#include "Solver.h"
-
-class SATSolver : public Solver
+void
+MostOccurrencesVisitor::onNavigatingLiteral(    
+    Literal* literal )
 {
-    public:
-        SATSolver() : Solver()
-        {        
-        }
-        
-        ~SATSolver()
-        {
-        }        
-        
-        virtual void init();
-        virtual void propagate( Literal* literalToPropagate );
-
-//        virtual bool solve();
-};
-
-#endif	/* SATSOLVER_H */
-
+    Literal* oppositeLiteral = literal->getOppositeLiteral();
+    unsigned int numberOfOccurrences = literal->numberOfWatchedClauses() + oppositeLiteral->numberOfWatchedClauses();;
+    if( numberOfOccurrences > maxOccurrences )
+    {
+        maxOccurrences = numberOfOccurrences;        
+        ( literal->numberOfWatchedClauses() > oppositeLiteral->numberOfWatchedClauses() ) ? chosenLiteral = literal : chosenLiteral = oppositeLiteral;
+    }
+}

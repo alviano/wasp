@@ -16,34 +16,37 @@
  *
  */
 
-/* 
- * File:   SATSolver.h
- * Author: Carmine Dodaro
- *
- * Created on 21 July 2013, 16.58
- */
+#include "CompetitionOutputBuilder.h"
+#include "../PositiveLiteral.h"
 
-#ifndef SATSOLVER_H
-#define	SATSOLVER_H
+extern int EXIT_CODE;
 
-#include "Solver.h"
-
-class SATSolver : public Solver
+void
+CompetitionOutputBuilder::startModel()
 {
-    public:
-        SATSolver() : Solver()
-        {        
-        }
-        
-        ~SATSolver()
-        {
-        }        
-        
-        virtual void init();
-        virtual void propagate( Literal* literalToPropagate );
+    EXIT_CODE = 10;
+    cout << ANSWER << endl;
+}
 
-//        virtual bool solve();
-};
+void
+CompetitionOutputBuilder::printLiteral(
+    PositiveLiteral* positiveLiteral )
+{
+    if( positiveLiteral->isTrue() )
+    {
+        cout << *positiveLiteral << ". ";
+    }    
+}
 
-#endif	/* SATSOLVER_H */
+void
+CompetitionOutputBuilder::endModel()
+{
+    cout << endl;
+}
 
+void
+CompetitionOutputBuilder::onProgramIncoherent()
+{
+    EXIT_CODE = 20;
+    cout << NOMODEL_COMPETITION_OUTPUT << endl;
+}

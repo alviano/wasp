@@ -39,6 +39,15 @@ enum TruthValue { UNDEFINED = 1, TRUE = 2, FALSE = 4 };
  * Wasp constants
  */
 #define WASP_STRING "WASP 2.0\n"
+#define NOMODEL "INCOHERENT"
+#define NOMODEL_COMPETITION_OUTPUT "INCONSISTENT"
+#define ANSWER "ANSWER"
+#define ANSWER_THIRD_COMPETITION "ANSWER SET FOUND"
+#define WEIGHT_LEVEL_WEAKCONSTRAINT_SEPARATOR "@"
+#define COST "COST"
+#define OPTIMUM "OPTIMUM"
+#define QUERY_FALSE_OUTPUT "no."
+#define QUERY_TRUE_OUTPUT "yes."
 
 /* 
  * Error messages
@@ -61,6 +70,7 @@ enum TruthValue { UNDEFINED = 1, TRUE = 2, FALSE = 4 };
  * New types
  */
 typedef double Activity;
+typedef unsigned int BERKMIN_HEURISTIC_COUNTER;
 
 
 #endif	/* CONSTANTS_H */

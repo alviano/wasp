@@ -17,33 +17,27 @@
  */
 
 /* 
- * File:   SATSolver.h
+ * File:   TopMostUndefinedClauseVisitor.h
  * Author: Carmine Dodaro
  *
- * Created on 21 July 2013, 16.58
+ * Created on 03 September 2013, 17.08
  */
 
-#ifndef SATSOLVER_H
-#define	SATSOLVER_H
+#ifndef TOPMOSTUNDEFINEDCLAUSEVISITOR_H
+#define	TOPMOSTUNDEFINEDCLAUSEVISITOR_H
 
-#include "Solver.h"
+#include "BerkminTotalCounterVisitor.h"
 
-class SATSolver : public Solver
+class TopMostUndefinedClauseVisitor : public BerkminTotalCounterVisitor
 {
     public:
-        SATSolver() : Solver()
-        {        
-        }
-        
-        ~SATSolver()
-        {
-        }        
-        
-        virtual void init();
-        virtual void propagate( Literal* literalToPropagate );
-
-//        virtual bool solve();
+        inline TopMostUndefinedClauseVisitor();
+        void choosePolarity( Literal* literal, Literal* oppositeLiteral );
 };
 
-#endif	/* SATSOLVER_H */
+TopMostUndefinedClauseVisitor::TopMostUndefinedClauseVisitor() : BerkminTotalCounterVisitor()
+{
+}
+
+#endif	/* TOPMOSTUNDEFINEDCLAUSEVISITOR_H */
 

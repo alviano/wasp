@@ -50,6 +50,12 @@ Solver::~Solver()
     
     if( deletionStrategy )
         delete deletionStrategy;
+    
+    if( heuristicCounterFactoryForLiteral )
+        delete heuristicCounterFactoryForLiteral;
+    
+    if( outputBuilder )
+        delete outputBuilder;
 }
 
 void
@@ -77,7 +83,10 @@ Solver::addVariableInternal(
     positiveLiteral->setOppositeLiteral( negativeLiteral );
     
     positiveLiterals.push_back( positiveLiteral );
-    undefinedLiterals.insert( positiveLiteral );    
+    undefinedLiterals.insert( positiveLiteral );
+    
+    positiveLiteral->setHeuristicCounter( heuristicCounterFactoryForLiteral );
+    negativeLiteral->setHeuristicCounter( heuristicCounterFactoryForLiteral );
 }
 
 void 
@@ -193,4 +202,37 @@ Solver::decreaseLearnedClausesActivity()
         LearnedClause* currentClause = *it;
         currentClause->decreaseActivity();
     }
+}
+
+
+bool 
+Solver::solve()
+{
+    while( hasUndefinedLiterals() )
+    {
+        assert( !conflictDetected() );
+        chooseLiteral();        
+
+        while( hasNextLiteralToPropagate() )
+        {
+            Literal* literalToPropagate = getNextLiteralToPropagate();
+            literalToPropagate->setOrderInThePropagation( numberOfAssignedLiterals() );           
+            propagate( literalToPropagate );
+            
+            if( conflictDetected() )
+            {
+                if( getCurrentDecisionLevel() == 0 )
+                {
+                    foundIncoherence();
+                    return false;
+                }
+
+                analyzeConflict();
+                assert( hasNextLiteralToPropagate() );
+            }
+        }
+    }
+    
+    printAnswerSet();    
+    return true;
 }

@@ -23,57 +23,47 @@
 void 
 SATSolver::init()
 {
-    printProgram();    
+    cout << COMMENT_DIMACS << " " << WASP_STRING << endl;
+    printProgram();
 }
 
-void 
-SATSolver::solve()
+void
+SATSolver::propagate(
+    Literal* literalToPropagate )
 {
-    Literal* choice;
-    while( !undefinedLiterals.empty() )
-    {
-        if( !conflict )
-        {
-            choice = undefinedLiterals.at( 0 );
-            assert( choice != NULL );
-            incrementCurrentDecisionLevel();
-            assert( choice->isUndefined() );        
-            onLiteralAssigned( choice, FALSE, NULL );
-            cout << "Choice " << *choice << endl;
-        }
-        
-        unsigned int countOfPropagatingLiterals = 0;
-        while( hasNextLiteralToPropagate() )
-        {
-            Literal* literalToPropagate = getNextLiteralToPropagate();
-
-            literalToPropagate->setOrderInThePropagation( countOfPropagatingLiterals++ );
-            literalToPropagate->unitPropagation( *this );
-            if( conflict )
-            {
-                if( getCurrentDecisionLevel() == 0 )
-                {
-                    cout << "UNSAT" << endl;
-                    return;
-                }
-
-                conflict = false;
-                conflictLiteral->setOrderInThePropagation( countOfPropagatingLiterals++ );
-                learningStrategy->onConflict( conflictLiteral, *this );
-                conflictLiteral = NULL;                
-                assert( hasNextLiteralToPropagate() );
-            }
-        }
-    }
-    
-    cout << "Model:";
-    for( list< PositiveLiteral* >::iterator it = assignedLiterals.begin(); it != assignedLiterals.end(); ++it )
-    {
-        PositiveLiteral* tmp = *it;
-        if( tmp->isTrue() )
-        {
-            cout << " " << *tmp;
-        }
-    }
-    cout << endl;
+    literalToPropagate->unitPropagation( *this );
 }
+
+//bool 
+//SATSolver::solve()
+//{
+//    while( hasUndefinedLiterals() )
+//    {
+//        if( !conflictDetected() )
+//        {
+//            chooseLiteral();
+//        }
+//
+//        while( hasNextLiteralToPropagate() )
+//        {
+//            Literal* literalToPropagate = getNextLiteralToPropagate();
+//
+//            literalToPropagate->setOrderInThePropagation( numberOfAssignedLiterals() );
+//            literalToPropagate->unitPropagation( *this );
+//            if( conflictDetected() )
+//            {
+//                if( getCurrentDecisionLevel() == 0 )
+//                {
+//                    foundIncoherence();
+//                    return false;
+//                }
+//
+//                analyzeConflict();
+//                assert( hasNextLiteralToPropagate() );
+//            }
+//        }
+//    }
+//    
+//    printAnswerSet();    
+//    return true;
+//}

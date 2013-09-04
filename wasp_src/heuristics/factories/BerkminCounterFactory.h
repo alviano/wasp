@@ -17,33 +17,26 @@
  */
 
 /* 
- * File:   SATSolver.h
+ * File:   BerkminCounterFactory.h
  * Author: Carmine Dodaro
  *
- * Created on 21 July 2013, 16.58
+ * Created on 02 September 2013, 17.16
  */
 
-#ifndef SATSOLVER_H
-#define	SATSOLVER_H
+#ifndef BERKMINCOUNTERFACTORY_H
+#define	BERKMINCOUNTERFACTORY_H
 
-#include "Solver.h"
+#include "HeuristicCounterFactoryForLiteral.h"
+#include "../counters/BerkminCounters.h"
 
-class SATSolver : public Solver
+class BerkminCounterFactory : public HeuristicCounterFactoryForLiteral
 {
-    public:
-        SATSolver() : Solver()
-        {        
-        }
-        
-        ~SATSolver()
+    public:        
+        virtual HeuristicCounterForLiteral* createHeuristicCounter()
         {
-        }        
-        
-        virtual void init();
-        virtual void propagate( Literal* literalToPropagate );
-
-//        virtual bool solve();
+            return new BerkminCounters();
+        }
 };
 
-#endif	/* SATSOLVER_H */
+#endif	/* BERKMINCOUNTERFACTORY_H */
 

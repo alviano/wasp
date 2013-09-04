@@ -15,35 +15,34 @@
  *  limitations under the License.
  *
  */
+#include "ThirdCompetitionOutputBuilder.h"
 
-/* 
- * File:   SATSolver.h
- * Author: Carmine Dodaro
- *
- * Created on 21 July 2013, 16.58
- */
+#include "../PositiveLiteral.h"
 
-#ifndef SATSOLVER_H
-#define	SATSOLVER_H
-
-#include "Solver.h"
-
-class SATSolver : public Solver
+void
+ThirdCompetitionOutputBuilder::startModel()
 {
-    public:
-        SATSolver() : Solver()
-        {        
-        }
-        
-        ~SATSolver()
-        {
-        }        
-        
-        virtual void init();
-        virtual void propagate( Literal* literalToPropagate );
+    cout << ANSWER_THIRD_COMPETITION << endl;
+}
 
-//        virtual bool solve();
-};
+void
+ThirdCompetitionOutputBuilder::printLiteral(
+    PositiveLiteral* positiveLiteral )
+{
+    if( positiveLiteral->isTrue() )
+    {
+        cout << *positiveLiteral << ". ";
+    }
+}
 
-#endif	/* SATSOLVER_H */
+void
+ThirdCompetitionOutputBuilder::endModel()
+{
+    cout << endl;
+}
 
+void
+ThirdCompetitionOutputBuilder::onProgramIncoherent()
+{
+    cout << NOMODEL_COMPETITION_OUTPUT << endl;
+}

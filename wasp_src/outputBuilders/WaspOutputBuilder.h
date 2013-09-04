@@ -17,33 +17,29 @@
  */
 
 /* 
- * File:   SATSolver.h
+ * File:   WaspOutputBuilder.h
  * Author: Carmine Dodaro
  *
- * Created on 21 July 2013, 16.58
+ * Created on 04 September 2013, 12.44
  */
 
-#ifndef SATSOLVER_H
-#define	SATSOLVER_H
+#ifndef WASPOUTPUTBUILDER_H
+#define WASPOUTPUTBUILDER_H
 
-#include "Solver.h"
+#include "OutputBuilder.h"
 
-class SATSolver : public Solver
+class WaspOutputBuilder : public OutputBuilder
 {
-    public:
-        SATSolver() : Solver()
-        {        
-        }
-        
-        ~SATSolver()
-        {
-        }        
-        
-        virtual void init();
-        virtual void propagate( Literal* literalToPropagate );
-
-//        virtual bool solve();
+	public:
+        inline WaspOutputBuilder();
+        virtual void startModel();
+        virtual void printLiteral( PositiveLiteral* );
+        virtual void endModel();
+        virtual void onProgramIncoherent();
 };
 
-#endif	/* SATSOLVER_H */
+WaspOutputBuilder::WaspOutputBuilder()
+{
+}
 
+#endif /* WASPOUTPUTBUILDER_H */

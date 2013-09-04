@@ -16,34 +16,28 @@
  *
  */
 
-/* 
- * File:   SATSolver.h
- * Author: Carmine Dodaro
- *
- * Created on 21 July 2013, 16.58
- */
+#include "BerkminCounters.h"
 
-#ifndef SATSOLVER_H
-#define	SATSOLVER_H
-
-#include "Solver.h"
-
-class SATSolver : public Solver
+void
+BerkminCounters::onLearning()
 {
-    public:
-        SATSolver() : Solver()
-        {        
-        }
-        
-        ~SATSolver()
-        {
-        }        
-        
-        virtual void init();
-        virtual void propagate( Literal* literalToPropagate );
+    globalCounter++;
+    counter++;
+}
 
-//        virtual bool solve();
-};
+void
+BerkminCounters::onNavigatingImplicationGraph()
+{
+    globalCounter++;
+    counter++;
+}
 
-#endif	/* SATSOLVER_H */
-
+void
+BerkminCounters::onAging(
+    unsigned int value )
+{
+    if( value == 0 )
+        return;
+    
+    counter = counter / value;
+}

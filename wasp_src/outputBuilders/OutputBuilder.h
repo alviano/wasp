@@ -17,33 +17,31 @@
  */
 
 /* 
- * File:   SATSolver.h
+ * File:   OutputBuilder.h
  * Author: Carmine Dodaro
  *
- * Created on 21 July 2013, 16.58
+ * Created on 04 September 2013, 12.00
  */
 
-#ifndef SATSOLVER_H
-#define	SATSOLVER_H
+#ifndef OUTPUTBUILDER_H
+#define OUTPUTBUILDER_H
 
-#include "Solver.h"
+#include "../Constants.h"
 
-class SATSolver : public Solver
+#include <iostream>
+#include <list>
+using namespace std;
+
+class PositiveLiteral;
+
+class OutputBuilder
 {
-    public:
-        SATSolver() : Solver()
-        {        
-        }
-        
-        ~SATSolver()
-        {
-        }        
-        
-        virtual void init();
-        virtual void propagate( Literal* literalToPropagate );
-
-//        virtual bool solve();
+	public:
+        virtual void startModel() = 0;
+        virtual void printLiteral( PositiveLiteral* ) = 0;
+        virtual void endModel() = 0;
+        virtual void onProgramIncoherent() = 0;
+//        virtual void onAnswerSetFoundWithWeakConstraint( Interpretation&, Program& );
 };
 
-#endif	/* SATSOLVER_H */
-
+#endif /* OUTPUTBUILDER_H */

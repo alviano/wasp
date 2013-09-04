@@ -33,12 +33,16 @@ using namespace std;
 
 #include "Constants.h"
 #include "WatchedList.h"
+#include "heuristics/counters/HeuristicCounterForLiteral.h"
+#include "heuristics/DecisionHeuristic.h"
+#include "heuristics/factories/HeuristicCounterFactoryForLiteral.h"
 
 class Clause;
 class LearningStrategy;
 class NegativeLiteral;
 class PositiveLiteral;
 class Solver;
+class HeuristicVisitor;
 
 /**
  * This class represents a Literal.
@@ -50,7 +54,11 @@ class Literal
     
     public:
         inline Literal();
-        inline virtual ~Literal() {}
+        inline virtual ~Literal()
+        {
+            if( heuristicCounter )
+                delete heuristicCounter;
+        }
 
         inline WatchedList< Clause* >::iterator addWatchedClause( Clause* clause );
         inline void eraseWatchedClause( WatchedList< Clause* >::iterator it );
@@ -75,17 +83,35 @@ class Literal
         inline void setImplicant( Clause* clause );        
         inline void setOppositeLiteral( Literal* lit );
         
-        inline void onConflict( LearningStrategy* strategy );        
+        inline void setHeuristicCounter( HeuristicCounterFactoryForLiteral* );
+        
+        inline void onConflict( LearningStrategy* strategy );
         void onLearning( LearningStrategy* strategy );        
-        void unitPropagation( Solver& solver );        
+        inline void onNavigatingImplicationGraph();
+        inline void onAging( unsigned int );
+        
+        void visitForHeuristic( HeuristicVisitor* );
+        
+        void unitPropagation( Solver& solver );
+        
+        inline Literal* getOppositeLiteral();
+        
+        inline const HeuristicCounterForLiteral* getHeuristicCounter() const;
+        
+        inline unsigned int numberOfWatchedClauses() const;
         
     protected:                
         
         /**
          * This variable stores the clause which derived the literal.
          */
-        Clause* implicant;        
-                
+        Clause* implicant;
+        
+        /**
+         * This variables stores the heuristic value for this literal.
+         */
+        HeuristicCounterForLiteral* heuristicCounter;
+
         /**
          * The literal with the opposite polarity.
          */
@@ -94,8 +120,8 @@ class Literal
         /**
          * List of all clauses in which the literal is watched.
          */
-        WatchedList< Clause* > watchedClauses;       
-        
+        WatchedList< Clause* > watchedClauses;
+
         virtual ostream& print( ostream& out ) const = 0;
         
     private:
@@ -107,7 +133,7 @@ class Literal
         
 };
 
-Literal::Literal() : implicant( NULL )
+Literal::Literal() : implicant( NULL ), heuristicCounter( NULL )
 {
 }
 
@@ -153,6 +179,46 @@ Literal::isImplicant(
     const Clause* clause ) const
 {
     return !this->isUndefined() && implicant == clause;
+}
+
+void
+Literal::onNavigatingImplicationGraph()
+{
+    assert( "Heuristic has not been set." && heuristicCounter != NULL );
+    heuristicCounter->onNavigatingImplicationGraph();
+}
+
+void
+Literal::onAging(
+    unsigned int value )
+{
+    assert( "Heuristic has not been set." && heuristicCounter != NULL );
+    heuristicCounter->onAging( value );
+}
+
+void
+Literal::setHeuristicCounter( 
+    HeuristicCounterFactoryForLiteral* heuristicCounterFactoryForLiteral )
+{
+    heuristicCounter = heuristicCounterFactoryForLiteral->createHeuristicCounter();
+}
+
+const HeuristicCounterForLiteral*
+Literal::getHeuristicCounter() const
+{
+    return heuristicCounter;
+}
+
+Literal*
+Literal::getOppositeLiteral()
+{
+    return oppositeLiteral;
+}
+
+unsigned int
+Literal::numberOfWatchedClauses() const
+{
+    return watchedClauses.size();
 }
 
 #endif	/* LITERAL_H */

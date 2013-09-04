@@ -16,34 +16,9 @@
  *
  */
 
-/* 
- * File:   SATSolver.h
- * Author: Carmine Dodaro
- *
- * Created on 21 July 2013, 16.58
- */
+#include "SilentOutputBuilder.h"
 
-#ifndef SATSOLVER_H
-#define	SATSOLVER_H
-
-#include "Solver.h"
-
-class SATSolver : public Solver
+void
+SilentOutputBuilder::onProgramIncoherent()
 {
-    public:
-        SATSolver() : Solver()
-        {        
-        }
-        
-        ~SATSolver()
-        {
-        }        
-        
-        virtual void init();
-        virtual void propagate( Literal* literalToPropagate );
-
-//        virtual bool solve();
-};
-
-#endif	/* SATSOLVER_H */
-
+}

@@ -88,7 +88,7 @@ Dimacs::readComment(
     char buf[ 10240 ];
 
     input.getline( buf, 10240 );
-    assert( "Comment too long " && input.gcount() < 10239 );    
+    assert( "Comment too long." && input.gcount() < 10239 );    
 }
 
 void
@@ -344,7 +344,7 @@ Dimacs::readClause(
 void
 Dimacs::insertVariables(
     unsigned int numberOfVariables )
-{    
+{
     for( unsigned int i = 1; i <= numberOfVariables; i++ )
     {
         stringstream ss;

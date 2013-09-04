@@ -16,34 +16,16 @@
  *
  */
 
-/* 
- * File:   SATSolver.h
- * Author: Carmine Dodaro
- *
- * Created on 21 July 2013, 16.58
- */
+#include "TopMostUndefinedClauseVisitor.h"
 
-#ifndef SATSOLVER_H
-#define	SATSOLVER_H
+#include "../counters/BerkminCounters.h"
+#include "../../Literal.h"
+#include <cassert>
 
-#include "Solver.h"
-
-class SATSolver : public Solver
+void
+TopMostUndefinedClauseVisitor::choosePolarity(
+    Literal* literal,
+    Literal* oppositeLiteral )
 {
-    public:
-        SATSolver() : Solver()
-        {        
-        }
-        
-        ~SATSolver()
-        {
-        }        
-        
-        virtual void init();
-        virtual void propagate( Literal* literalToPropagate );
-
-//        virtual bool solve();
-};
-
-#endif	/* SATSOLVER_H */
-
+    ( getLiteralCounter( literal ) > getLiteralCounter( oppositeLiteral ) ) ? chosenLiteral = literal : chosenLiteral = oppositeLiteral;
+}

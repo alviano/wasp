@@ -17,33 +17,22 @@
  */
 
 /* 
- * File:   SATSolver.h
+ * File:   HeuristicCounterForLiteral.h
  * Author: Carmine Dodaro
  *
- * Created on 21 July 2013, 16.58
+ * Created on 02 September 2013, 12.01
  */
 
-#ifndef SATSOLVER_H
-#define	SATSOLVER_H
+#ifndef HEURISTICCOUNTERFORLITERAL_H
+#define	HEURISTICCOUNTERFORLITERAL_H
 
-#include "Solver.h"
-
-class SATSolver : public Solver
+class HeuristicCounterForLiteral
 {
     public:
-        SATSolver() : Solver()
-        {        
-        }
-        
-        ~SATSolver()
-        {
-        }        
-        
-        virtual void init();
-        virtual void propagate( Literal* literalToPropagate );
-
-//        virtual bool solve();
+        virtual void onLearning() = 0;
+        virtual void onNavigatingImplicationGraph() = 0;
+        virtual void onAging( unsigned int value ) = 0;        
 };
 
-#endif	/* SATSOLVER_H */
+#endif	/* HEURISTICCOUNTERFORLITERAL_H */
 

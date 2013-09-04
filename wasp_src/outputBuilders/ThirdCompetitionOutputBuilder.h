@@ -17,33 +17,29 @@
  */
 
 /* 
- * File:   SATSolver.h
+ * File:   ThirdCompetitionOutputBuilder.h
  * Author: Carmine Dodaro
  *
- * Created on 21 July 2013, 16.58
+ * Created on 04 September 2013, 12.47
  */
 
-#ifndef SATSOLVER_H
-#define	SATSOLVER_H
+#ifndef THIRDCOMPETITIONOUTPUTBUILDER_H
+#define THIRDCOMPETITIONOUTPUTBUILDER_H
 
-#include "Solver.h"
+#include "OutputBuilder.h"
 
-class SATSolver : public Solver
+class ThirdCompetitionOutputBuilder : public OutputBuilder
 {
-    public:
-        SATSolver() : Solver()
-        {        
-        }
-        
-        ~SATSolver()
-        {
-        }        
-        
-        virtual void init();
-        virtual void propagate( Literal* literalToPropagate );
-
-//        virtual bool solve();
+	public:
+        inline ThirdCompetitionOutputBuilder();
+        virtual void startModel();
+        virtual void printLiteral( PositiveLiteral* );
+        virtual void endModel();
+        virtual void onProgramIncoherent();
 };
 
-#endif	/* SATSOLVER_H */
+ThirdCompetitionOutputBuilder::ThirdCompetitionOutputBuilder()
+{
+}
 
+#endif /* THIRDCOMPETITIONOUTPUTBUILDER_H */

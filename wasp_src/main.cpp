@@ -31,6 +31,7 @@
 #include "SATSolver.h"
 using namespace std;
 
+int EXIT_CODE = 0;
 /*
  * 
  */
@@ -47,6 +48,6 @@ int main(int argc, char** argv) {
     
     delete programBuilder;
     
-    return 0;
+    return EXIT_CODE;
 }
 

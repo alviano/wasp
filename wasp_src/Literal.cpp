@@ -18,6 +18,7 @@
 
 #include "Literal.h"
 #include "Clause.h"
+#include "heuristics/visitors/HeuristicVisitor.h"
 
 ostream&
 operator<<( 
@@ -51,6 +52,19 @@ void
 Literal::onLearning( 
     LearningStrategy* strategy )
 {
+    //The implicant can be NULL if the literal is a choice.
     if( implicant != NULL )
         implicant->onLearning( strategy );
+    
+    assert( "Heuristic has not been set." && heuristicCounter != NULL );
+    heuristicCounter->onLearning();
+}
+
+void
+Literal::visitForHeuristic(
+    HeuristicVisitor* heuristicVisitor )
+{    
+    assert( "Heuristic visitor has not been set." && heuristicVisitor != NULL );
+    if( isUndefined() )
+        heuristicVisitor->onNavigatingLiteral( this );
 }
