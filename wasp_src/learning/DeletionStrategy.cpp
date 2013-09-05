@@ -64,7 +64,7 @@ void
 DeletionStrategy::onLearning( 
     Solver& solver,
     LearnedClause* learnedClause )
-{    
+{
     learnedClause->incrementActivity( increment );
     decrementActivity();
     if( learnedClause->getActivity() > 1e20 )

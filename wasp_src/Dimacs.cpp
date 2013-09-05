@@ -21,6 +21,7 @@
 #include "AbstractBuilder.h"
 #include "Clause.h"
 #include "Constants.h"
+#include "ErrorMessage.h"
 
 #include <cassert>
 #include <sstream>
@@ -69,14 +70,12 @@ Dimacs::parse(
             break;
             
         default:
-            cerr << ERRORPARSING << endl;
-            break;
+            ErrorMessage::errorDuringParsing( "Unexpected symbol.");
         }
     }
     if( !input.good() && !input.eof() )
     {
-        cerr << ERRORPARSING << endl;
-        exit( ERRORPARSINGCODE );
+        ErrorMessage::errorDuringParsing( "Unexpected symbol.");
     }
     builder->endBuilding();
 }
@@ -88,7 +87,8 @@ Dimacs::readComment(
     char buf[ 10240 ];
 
     input.getline( buf, 10240 );
-    assert( "Comment too long." && input.gcount() < 10239 );    
+    if( input.gcount() > 10239 )
+        ErrorMessage::errorDuringParsing( "Comment too long.");
 }
 
 void
@@ -111,25 +111,19 @@ Dimacs::readFormulaInfo(
     /*else*/ 
     if( type != 'c' )
     {
-        cerr << ERRORPARSING << endl;
-        cerr << "Expected a 'c'." << endl;
-        exit( ERRORPARSINGCODE );
+        ErrorMessage::errorDuringParsing( "Expected a 'c'.");
     }
         
     input >> type;
     if( type != 'n' )
     {
-        cerr << ERRORPARSING << endl;
-        cerr << "Expected a 'n'." << endl;
-        exit( ERRORPARSINGCODE );
+        ErrorMessage::errorDuringParsing( "Expected a 'n'.");        
     }
     
     input >> type;
     if( type != 'f' )
     {
-        cerr << ERRORPARSING << endl;
-        cerr << "Expected a 'f'." << endl;
-        exit( ERRORPARSINGCODE );
+        ErrorMessage::errorDuringParsing( "Expected a 'f'.");
     }
     
     input >> numberOfVariables;    
@@ -202,9 +196,15 @@ Dimacs::readClause(
     
     //read the next literal
     input >> next;
+    
+    //storing the first literal in case the clause is unary.
+    int firstLiteral = next;    
     do
     {
-        assert( next != 0 );
+        if( next == 0 )
+        {
+            ErrorMessage::errorDuringParsing( "Empty clause are not allowed.");
+        }            
         
         //insert the current literal in the set
         tempSet.insert( next );
@@ -220,7 +220,14 @@ Dimacs::readClause(
         input >> next;
         
       //do while next is not 0
-    } while( next != 0 );
+    } while( next != 0 );          
+    
+    if( clause->size() == 1 )
+    {
+        assert( firstLiteral != 0 );
+        trivial = true;
+        builder->addTrueLiteral( firstLiteral );
+    }
     
     //if the clause is not trivial add it in the formula
     if( !trivial )

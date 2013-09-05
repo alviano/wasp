@@ -42,12 +42,15 @@ class NegativeLiteral : public Literal
         virtual bool isFalse() const;
         virtual bool isTrue() const;
         virtual bool isUndefined() const;
-
+        
+        virtual void setImplicant( Clause* clause );
+        virtual bool isImplicant( const Clause* clause ) const;
+        
         virtual bool setFalse();
         virtual bool setTrue();
         
         virtual NegativeLiteral* getNegativeLiteral();
-        virtual PositiveLiteral* getPositiveLiteral();
+        virtual PositiveLiteral* getPositiveLiteral();        
         
         virtual unsigned int getDecisionLevel() const;
         virtual void setDecisionLevel( unsigned int dl );
@@ -55,8 +58,9 @@ class NegativeLiteral : public Literal
         virtual unsigned int getOrderInThePropagation() const;
         virtual void setOrderInThePropagation( unsigned int order );
         
-    private:
+        virtual void onLearning( LearningStrategy* strategy );
         
+    private:        
         virtual ostream& print( ostream& out ) const;
 };
 

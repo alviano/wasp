@@ -25,12 +25,29 @@ void
 HigherGlobalCounterVisitor::choosePolarity(
     Literal* literal,
     Literal* oppositeLiteral )
-{
-//    assert( "IMPLEMENT LOOKAHEAD" && 0 );
-    ( getLiteralCounter( literal ) > getLiteralCounter( oppositeLiteral ) ) ? chosenLiteral = literal : chosenLiteral = oppositeLiteral;
-    
+{    
     assert( "Solver has not been set." && solver != NULL );
     
+    unsigned int value1 = estimatePropagation( literal );
+    if( value1 == UINT_MAX )
+    {
+        chosenLiteral = literal;
+        return;
+    }
+
+    unsigned int value2 = estimatePropagation( oppositeLiteral );
+
+    if( value1 > value2 )
+        chosenLiteral = literal;
+    else
+        chosenLiteral = oppositeLiteral;
+}
+
+unsigned int
+HigherGlobalCounterVisitor::estimatePropagation(
+    Literal* literal )
+{
+    assert( literal->isUndefined() );
     solver->incrementCurrentDecisionLevel();
     solver->setAChoice( literal );
     
@@ -38,76 +55,18 @@ HigherGlobalCounterVisitor::choosePolarity(
     {
         Literal* literalToPropagate = solver->getNextLiteralToPropagate();
         literalToPropagate->setOrderInThePropagation( solver->numberOfAssignedLiterals() );
-        solver->propagate( literalToPropagate );        
+        solver->propagate( literalToPropagate );
+        
+        if( solver->conflictDetected() )
+        {
+            solver->unrollOne();
+            solver->clearConflictStatus();
+            return UINT_MAX;
+        }
     }
     
-    //void
-//BerkminHeuristic::choosePolarity(
-//    Atom& a )
-//{
-//    startTimer( lookahead );
-//    statistics( incrementChoosePolarityInvocationsNumber() );
-//    AtomId atomId = a.getId();
-//    
-//    TruthValue atomTruthValue;
-//    TruthValue otherAtomTruthValue;
-//    
-//    if( isMoreNegativeOccurrences( atomId ) )
-//    {
-//        atomTruthValue = TRUE;
-//        otherAtomTruthValue = FALSE;
-//    }
-//    else
-//    {
-//        atomTruthValue = FALSE;
-//        otherAtomTruthValue = TRUE;
-//    }
-//
-//    AtomTruthValue literal;
-//    literal.first = atomId;    
-//    literal.second = atomTruthValue;
-//
-//    nextLevel();
-//
-//    Stack< unsigned int >& backtrackingStack = getBacktrackingStack();
-//    stack< AtomTruthValue >& propagationStack = getPropagationStack();
-//    backtrackingStack.push( &( a.getChoiceAddress() ) );
-//    a.setChoice();
-//    propagationStack.push( literal );
-//    if( !propagate() )
-//    {
-//        unrollOne();
-////        currentChoice.second = otherAtomTruthValue;
-//        chosenPolarity = atomTruthValue;
-//    }
-//    else
-//    {
-//        unsigned int diff = backtrackingStack.size();
-//        unrollOne();
-//        nextLevel();
-//
-//        backtrackingStack.push( &( a.getChoiceAddress() ) );
-//        a.setChoice();
-//        
-//        literal.second = otherAtomTruthValue;
-//        propagationStack.push( literal );
-//        if( !propagate() )
-//        {
-//            unrollOne();            
-////            currentChoice.second = atomTruthValue;
-//            chosenPolarity = otherAtomTruthValue;
-//        }
-//        else
-//        {
-//            unrollOne();
-//            if( diff <= backtrackingStack.size() )
-//                chosenPolarity = otherAtomTruthValue;
-//            else
-//                chosenPolarity = atomTruthValue;
-//        }
-//    }
-//    
-//    stopTimer( lookahead );
-//}
-
+    unsigned int lookaheadValue = literal->numberOfWatchedClauses() + solver->numberOfAssignedLiterals();
+    
+    solver->unrollOne();    
+    return lookaheadValue;
 }

@@ -27,5 +27,5 @@ TopMostUndefinedClauseVisitor::choosePolarity(
     Literal* literal,
     Literal* oppositeLiteral )
 {
-    ( getLiteralCounter( literal ) > getLiteralCounter( oppositeLiteral ) ) ? chosenLiteral = literal : chosenLiteral = oppositeLiteral;
+    chosenLiteral = ( getLiteralCounter( literal ) > getLiteralCounter( oppositeLiteral ) ) ? literal : oppositeLiteral;
 }

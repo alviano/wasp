@@ -26,6 +26,7 @@
 #ifndef CONSTANTS_H
 #define	CONSTANTS_H
 
+#include <climits>
 //#define UNDEFINED 1
 //#define TRUE 2
 //#define FALSE 4
@@ -48,11 +49,12 @@ enum TruthValue { UNDEFINED = 1, TRUE = 2, FALSE = 4 };
 #define OPTIMUM "OPTIMUM"
 #define QUERY_FALSE_OUTPUT "no."
 #define QUERY_TRUE_OUTPUT "yes."
+#define MAXUNSIGNEDINT UINT_MAX
 
 /* 
  * Error messages
  */
-#define ERRORPARSING WASP_STRING "\nError during parsing."
+#define ERRORPARSING WASP_STRING "\nError during parsing"
 #define ERRORPARSINGCODE 100
 
 /*

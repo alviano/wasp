@@ -40,6 +40,7 @@ class ProgramBuilder : public AbstractBuilder
         virtual Clause* startClause();
         virtual Clause* startClause( unsigned int size );
         virtual void addLiteralInClause( int lit, Clause* clause );
+        virtual void addTrueLiteral( int lit );
         virtual void endClause( Clause* clause );
         
         virtual void startBuilding();

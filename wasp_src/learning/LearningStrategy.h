@@ -31,6 +31,7 @@
 #include <cassert>
 #include <iostream>
 
+class Clause;
 class LearnedClause;
 class Literal;
 class Solver;
@@ -46,7 +47,7 @@ class LearningStrategy
         }
         
         virtual void onNavigatingLiteral( Literal* ) = 0;
-        virtual void onConflict( Literal* conflictLiteral, Solver& solver ) = 0;        
+        virtual void onConflict( Literal* conflictLiteral, Clause* conflictClause, Solver& solver ) = 0;        
         
     protected:
         

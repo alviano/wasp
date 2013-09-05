@@ -111,7 +111,13 @@ Clause::updateWatch(
         solver.onLiteralAssigned( literals[ otherWatch ], TRUE, this );
         
         //Literals inferred by this clause are inserting in the position 0 by default.
-        moveWatchToFirstPosition( watchToUpdate, otherWatch );        
+//        moveWatchToFirstPosition( watchToUpdate, otherWatch );
+        
+//        cout << *this << endl;
+//        cout << "watch: " << firstWatch << " " << secondWatch << endl;
+//        moveWatchToFirstPosition( otherWatch, watchToUpdate );
+//        cout << *this << endl;
+//        cout << "watch: " << firstWatch << " " << secondWatch << endl;
     }
     else
     {
@@ -122,29 +128,29 @@ Clause::updateWatch(
     }
 }
 
-void
-Clause::moveWatchToFirstPosition(
-    unsigned int& watchToUpdate,
-    unsigned int& otherWatch )
-{
-    assert( "The watchToUpdate is not in range." && watchToUpdate < literals.size() );
-    assert( "The otherWatch is not in range." && otherWatch < literals.size() );
-    
-    //If the watch to update is equal to 0 than no operation needed.
-    if( watchToUpdate == 0 )
-        return;
-    
-    //Swap the literal pointed by the watchToUpdate with the one in the first position.
-    Literal* tmp = literals[ 0 ];
-    literals[ 0 ] = literals[ watchToUpdate ];
-    literals[ watchToUpdate ] = tmp;
-    
-    //If the other watch is equal to 0, we need to change the position of the watches.
-    if( otherWatch == 0 )
-    {
-        otherWatch = watchToUpdate;
-    }
-    
-    //In the end, the watchToUpdate is moved to the first position.
-    watchToUpdate = 0;
-}
+//void
+//Clause::moveWatchToFirstPosition(
+//    unsigned int& watchToUpdate,
+//    unsigned int& otherWatch )
+//{
+//    assert( "The watchToUpdate is not in range." && watchToUpdate < literals.size() );
+//    assert( "The otherWatch is not in range." && otherWatch < literals.size() );
+//    
+//    //If the watch to update is equal to 0 than no operation needed.
+//    if( watchToUpdate == 0 )
+//        return;
+//    
+//    //Swap the literal pointed by the watchToUpdate with the one in the first position.
+//    Literal* tmp = literals[ 0 ];
+//    literals[ 0 ] = literals[ watchToUpdate ];
+//    literals[ watchToUpdate ] = tmp;
+//    
+//    //If the other watch is equal to 0, we need to change the position of the watches.
+//    if( otherWatch == 0 )
+//    {
+//        otherWatch = watchToUpdate;
+//    }
+//    
+//    //In the end, the watchToUpdate is moved to the first position.
+//    watchToUpdate = 0;
+//}

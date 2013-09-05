@@ -66,7 +66,7 @@ class Literal
         virtual bool isTrue() const = 0;
         virtual bool isFalse() const = 0;
         virtual bool isUndefined() const = 0;
-
+        
         virtual bool setFalse() = 0;
         virtual bool setTrue() = 0;
         
@@ -79,14 +79,16 @@ class Literal
         virtual NegativeLiteral* getNegativeLiteral() = 0;
         virtual PositiveLiteral* getPositiveLiteral() = 0;
         
-        inline bool isImplicant( const Clause* clause ) const;
-        inline void setImplicant( Clause* clause );        
+        virtual bool isImplicant( const Clause* clause ) const = 0;
+        
+        virtual void setImplicant( Clause* clause ) = 0;
         inline void setOppositeLiteral( Literal* lit );
         
         inline void setHeuristicCounter( HeuristicCounterFactoryForLiteral* );
         
-        inline void onConflict( LearningStrategy* strategy );
-        void onLearning( LearningStrategy* strategy );        
+        virtual void onLearning( LearningStrategy* strategy ) = 0;
+        
+        inline void onNavigatingLearnedClause();
         inline void onNavigatingImplicationGraph();
         inline void onAging( unsigned int );
         
@@ -100,12 +102,7 @@ class Literal
         
         inline unsigned int numberOfWatchedClauses() const;
         
-    protected:                
-        
-        /**
-         * This variable stores the clause which derived the literal.
-         */
-        Clause* implicant;
+    protected:        
         
         /**
          * This variables stores the heuristic value for this literal.
@@ -133,7 +130,7 @@ class Literal
         
 };
 
-Literal::Literal() : implicant( NULL ), heuristicCounter( NULL )
+Literal::Literal() : heuristicCounter( NULL )
 {
 }
 
@@ -152,13 +149,6 @@ Literal::eraseWatchedClause(
 }
 
 void
-Literal::setImplicant(
-    Clause* clause )
-{
-    implicant = clause;
-}
-
-void
 Literal::setOppositeLiteral(
     Literal* lit )
 {
@@ -166,19 +156,10 @@ Literal::setOppositeLiteral(
 }
 
 void
-Literal::onConflict( 
-    LearningStrategy* strategy )
+Literal::onNavigatingLearnedClause()
 {
-    assert( "OppositeLiteral is not set properly." && oppositeLiteral != NULL );    
-    onLearning( strategy );
-    oppositeLiteral->onLearning( strategy );
-}
-
-bool
-Literal::isImplicant( 
-    const Clause* clause ) const
-{
-    return !this->isUndefined() && implicant == clause;
+    assert( "Heuristic has not been set." && heuristicCounter != NULL );
+    heuristicCounter->onNavigatingLearnedClause();
 }
 
 void

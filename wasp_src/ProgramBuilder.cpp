@@ -65,9 +65,17 @@ ProgramBuilder::addLiteralInClause(
 }
 
 void 
+ProgramBuilder::addTrueLiteral( 
+    int lit )
+{
+    solver->addTrueLiteral( lit );
+}
+
+void 
 ProgramBuilder::endClause(
     Clause* clause )
 {
+    assert( "Clauses must contain at least two literals." && clause->size() > 1 );
     solver->addClause( clause );
     clause->attachClause();    
 }

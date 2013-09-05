@@ -33,7 +33,7 @@ class BerkminCounters : public HeuristicCounterForLiteral
 {
     public:
         inline BerkminCounters();
-        virtual void onLearning();
+        virtual void onNavigatingLearnedClause();
         virtual void onNavigatingImplicationGraph();
         virtual void onAging( unsigned int value );
         

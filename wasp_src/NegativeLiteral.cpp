@@ -63,6 +63,29 @@ NegativeLiteral::setTrue()
     return oppositeLiteral->setFalse();
 }
 
+void
+NegativeLiteral::setImplicant(
+    Clause* clause )
+{
+    assert( oppositeLiteral != NULL );
+    oppositeLiteral->setImplicant( clause );
+}
+
+void
+NegativeLiteral::onLearning( 
+    LearningStrategy* strategy )
+{
+    assert( oppositeLiteral != NULL );
+    oppositeLiteral->onLearning( strategy );
+}
+
+bool
+NegativeLiteral::isImplicant( 
+    const Clause* clause ) const
+{
+    return oppositeLiteral->isImplicant( clause );
+}
+
 unsigned int
 NegativeLiteral::getDecisionLevel() const
 {

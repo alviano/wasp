@@ -48,6 +48,9 @@ using namespace std;
 #include "heuristics/factories/BerkminCounterFactory.h"
 #include "outputBuilders/OutputBuilder.h"
 #include "outputBuilders/DimacsOutputBuilder.h"
+#include "heuristics/FirstUndefinedHeuristic.h"
+#include "learning/RestartsBasedDeletionStrategy.h"
+#include "learning/GeometricRestartsStrategy.h"
 
 class Variable;
 
@@ -58,6 +61,7 @@ class Solver
         ~Solver();
         
         virtual void init() = 0;
+        virtual bool preprocessing();
         virtual bool solve();
         virtual void propagate( Literal* literalToPropagate ) = 0;
         
@@ -68,6 +72,7 @@ class Solver
         inline void addLearnedClause( LearnedClause* learnedClause );        
         
         Literal* getLiteral( int lit );
+        inline void addTrueLiteral( int lit );
         
         inline Literal* getNextLiteralToPropagate();
         inline bool hasNextLiteralToPropagate() const;        
@@ -93,6 +98,14 @@ class Solver
         
         inline void setAChoice( Literal* choice );
         
+        inline void analyzeConflict();
+        inline void clearConflictStatus();
+        inline void chooseLiteral();
+        inline bool conflictDetected();
+        inline void foundIncoherence();
+        inline bool hasUndefinedLiterals();
+        inline void printAnswerSet();
+        
         void unroll( unsigned int level );
         inline void unrollOne();
         
@@ -102,7 +115,7 @@ class Solver
             {
                 cout << *( *it ) << endl;
             }
-        }        
+        }
         
     private:
         Solver( const Solver& )
@@ -112,6 +125,8 @@ class Solver
                 
         void addVariableInternal( PositiveLiteral* posLiteral );
         inline void deleteLearnedClause( LearnedClause* learnedClause, List< LearnedClause* >::iterator iterator );
+        
+        list< Literal* > trueLiterals;
         
         list< Literal* > literalsToPropagate;
         unsigned int currentDecisionLevel;
@@ -127,6 +142,7 @@ class Solver
         vector< unsigned int > unrollVector;
         
         Literal* conflictLiteral;
+        Clause* conflictClause;
         
         DecisionHeuristic* decisionHeuristic;
         HeuristicCounterFactoryForLiteral* heuristicCounterFactoryForLiteral;
@@ -136,23 +152,17 @@ class Solver
         
         OutputBuilder* outputBuilder;
         
-        UnorderedSet< PositiveLiteral* > undefinedLiterals;
-        
-    protected:
-        inline void analyzeConflict();
-        inline void chooseLiteral();
-        inline bool conflictDetected();
-        inline void foundIncoherence();
-        inline bool hasUndefinedLiterals();
-        inline void printAnswerSet();
+        UnorderedSet< PositiveLiteral* > undefinedLiterals;        
 };
 
-Solver::Solver() : currentDecisionLevel( 0 ), conflict( false ), conflictLiteral( NULL )
+Solver::Solver() : currentDecisionLevel( 0 ), conflict( false ), conflictLiteral( NULL ), conflictClause( NULL )
 {
     //Add a fake position.
     positiveLiterals.push_back( NULL );
-    learningStrategy = new FirstUIPLearningStrategy( new SequenceBasedRestartsStrategy() );
-    deletionStrategy = new AggressiveDeletionStrategy();
+//    learningStrategy = new FirstUIPLearningStrategy( new SequenceBasedRestartsStrategy() );
+    learningStrategy = new FirstUIPLearningStrategy( new GeometricRestartsStrategy( 100 ) );
+//    deletionStrategy = new AggressiveDeletionStrategy();
+    deletionStrategy = new RestartsBasedDeletionStrategy();
     
     heuristicCounterFactoryForLiteral = new BerkminCounterFactory();
     decisionHeuristic = new BerkminHeuristic();
@@ -172,6 +182,14 @@ Solver::addLearnedClause(
     LearnedClause* learnedClause )
 {    
     learnedClauses.push_back( learnedClause );
+}
+
+void
+Solver::addTrueLiteral(
+    int lit )
+{
+    Literal* literal = getLiteral( lit );
+    trueLiterals.push_back( literal );
 }
 
 Literal*
@@ -222,7 +240,7 @@ Solver::onLearningClause(
     assert( "Each learned clause has to be an asserting clause." && literalToPropagate != NULL );
     assert( "Learned clause has not been calculated." && learnedClause != NULL );
     
-    Clause* clause = static_cast< Clause* >( learnedClause );
+    Clause* clause = static_cast< Clause* >( learnedClause );    
     onLiteralAssigned( literalToPropagate, TRUE, clause );
     
     deletionStrategy->onLearning( *this, learnedClause );
@@ -313,17 +331,24 @@ Solver::foundIncoherence()
 void
 Solver::chooseLiteral()
 {
-    Literal* choice = decisionHeuristic->makeAChoice( *this );
+    Literal* choice = decisionHeuristic->makeAChoice( *this );    
     setAChoice( choice );
 }
 
 void
 Solver::analyzeConflict()
+{    
+    conflictLiteral->setOrderInThePropagation( numberOfAssignedLiterals() + 1 );
+    learningStrategy->onConflict( conflictLiteral, conflictClause, *this );
+    clearConflictStatus();
+}
+
+void
+Solver::clearConflictStatus()
 {
     conflict = false;
-    conflictLiteral->setOrderInThePropagation( numberOfAssignedLiterals() + 1 );
-    learningStrategy->onConflict( conflictLiteral, *this );
     conflictLiteral = NULL;
+    conflictClause = NULL;
 }
 
 unsigned int
@@ -340,7 +365,6 @@ Solver::setAChoice(
     incrementCurrentDecisionLevel();
     assert( choice->isUndefined() );
     onLiteralAssigned( choice, TRUE, NULL );
-    cout << "Choice " << *choice << endl;
 }
 
 #endif	/* SOLVER_H */

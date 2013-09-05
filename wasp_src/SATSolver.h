@@ -41,8 +41,6 @@ class SATSolver : public Solver
         
         virtual void init();
         virtual void propagate( Literal* literalToPropagate );
-
-//        virtual bool solve();
 };
 
 #endif	/* SATSOLVER_H */

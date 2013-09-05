@@ -43,6 +43,8 @@ class PositiveLiteral : public Literal
         virtual bool isFalse() const;
         virtual bool isTrue() const;
         virtual bool isUndefined() const;
+        
+        virtual void setImplicant( Clause* clause );
 
         virtual bool setFalse();
         virtual bool setTrue();
@@ -56,8 +58,13 @@ class PositiveLiteral : public Literal
         
         virtual unsigned int getOrderInThePropagation() const;
         virtual void setOrderInThePropagation( unsigned int order );
-
-    private:        
+        
+        virtual bool isImplicant( const Clause* clause ) const;
+        
+        virtual void onLearning( LearningStrategy* strategy );
+        
+    private:
+        
         /**
          * The level in the backtracking tree in which this literal has been derived.  
          */        
@@ -78,13 +85,19 @@ class PositiveLiteral : public Literal
          */
         TruthValue truthValue;
         
+        /**
+         * This variable stores the clause which derived the literal.
+         */
+        Clause* implicant;
+        
         virtual ostream& print( ostream& out ) const;
 };
 
 PositiveLiteral::PositiveLiteral() :
     decisionLevel( 0 ),
     name(""),
-    truthValue( UNDEFINED )
+    truthValue( UNDEFINED ),
+    implicant( NULL )
 {
 }
 
@@ -92,7 +105,8 @@ PositiveLiteral::PositiveLiteral(
     const string& n ) :
     decisionLevel( 0 ),
     name( n ),
-    truthValue( UNDEFINED )
+    truthValue( UNDEFINED ),
+    implicant( NULL )
 {
 }
 

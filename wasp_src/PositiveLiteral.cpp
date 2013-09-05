@@ -17,6 +17,8 @@
  */
 
 #include "PositiveLiteral.h"
+#include "heuristics/BerkminHeuristic.h"
+#include "Clause.h"
 
 ostream&
 PositiveLiteral::print( 
@@ -100,4 +102,29 @@ NegativeLiteral*
 PositiveLiteral::getNegativeLiteral()
 {
     return static_cast< NegativeLiteral* >( oppositeLiteral );
+}
+
+void
+PositiveLiteral::setImplicant(
+    Clause* clause )
+{
+    implicant = clause;
+}
+
+bool
+PositiveLiteral::isImplicant( 
+    const Clause* clause ) const
+{
+    return !this->isUndefined() && implicant == clause;
+}
+
+void
+PositiveLiteral::onLearning( 
+    LearningStrategy* strategy )
+{    
+    //The implicant can be NULL if the literal is a choice.
+    if( implicant != NULL )
+    {
+        implicant->onLearning( strategy );
+    }    
 }

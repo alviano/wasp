@@ -29,7 +29,7 @@
 class HeuristicCounterForLiteral
 {
     public:
-        virtual void onLearning() = 0;
+        virtual void onNavigatingLearnedClause() = 0;
         virtual void onNavigatingImplicationGraph() = 0;
         virtual void onAging( unsigned int value ) = 0;        
 };

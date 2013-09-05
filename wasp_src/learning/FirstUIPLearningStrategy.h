@@ -37,7 +37,7 @@ class FirstUIPLearningStrategy : public LearningStrategy
         inline FirstUIPLearningStrategy( RestartsStrategy* restartsStrategy );
         
         virtual void onNavigatingLiteral( Literal* );
-        virtual void onConflict( Literal* conflictLiteral, Solver& solver );        
+        virtual void onConflict( Literal* conflictLiteral, Clause* conflictClause, Solver& solver );        
         
     private:
         
@@ -98,7 +98,7 @@ FirstUIPLearningStrategy::addLiteralToNavigate(
 void
 FirstUIPLearningStrategy::clearDataStructures()
 {
-    learnedClause = NULL;
+    learnedClause = NULL;    
     maxDecisionLevel = 0;
     literalsToNavigate.clear();
     addedLiterals.clear();

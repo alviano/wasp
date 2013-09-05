@@ -25,6 +25,8 @@ void
 MostOccurrencesVisitor::onNavigatingLiteral(    
     Literal* literal )
 {
+    assert( "Literal has not been set." && literal != NULL );
+    assert( "Literal must be undefined." && literal->isUndefined() );
     Literal* oppositeLiteral = literal->getOppositeLiteral();
     unsigned int numberOfOccurrences = literal->numberOfWatchedClauses() + oppositeLiteral->numberOfWatchedClauses();;
     if( numberOfOccurrences > maxOccurrences )

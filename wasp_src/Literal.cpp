@@ -19,6 +19,7 @@
 #include "Literal.h"
 #include "Clause.h"
 #include "heuristics/visitors/HeuristicVisitor.h"
+#include "Solver.h"
 
 ostream&
 operator<<( 
@@ -36,28 +37,16 @@ Literal::unitPropagation(
     if( this->isFalse() )
     {
         watchedClauses.startIteration();
-        while( watchedClauses.hasNext() )
+        while( watchedClauses.hasNext() && !solver.conflictDetected() )
         {
             Clause* clause = watchedClauses.next();
             clause->onLiteralFalse( this, solver );            
-        }        
+        }
     }
     else
     {
         oppositeLiteral->unitPropagation( solver );
     }
-}
-
-void
-Literal::onLearning( 
-    LearningStrategy* strategy )
-{
-    //The implicant can be NULL if the literal is a choice.
-    if( implicant != NULL )
-        implicant->onLearning( strategy );
-    
-    assert( "Heuristic has not been set." && heuristicCounter != NULL );
-    heuristicCounter->onLearning();
 }
 
 void

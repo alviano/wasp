@@ -95,7 +95,7 @@ class Clause
         inline void attachWatch( const unsigned int& watchToAttach, WatchedList< Clause* >::iterator& iterator );
         inline void detachWatch( const unsigned int& watchToDetach, WatchedList< Clause* >::iterator& iterator );
         
-        void moveWatchToFirstPosition( unsigned int& watch, unsigned int& otherWatch );
+//        void moveWatchToFirstPosition( unsigned int& watch, unsigned int& otherWatch );
         
         /**
          * 
@@ -198,13 +198,13 @@ Clause::isImplicantOfALiteral() const
     
 //    return ( literals[ firstWatch ]->isImplicant( this ) || literals[ secondWatch ]->isImplicant( this ) );
     
-    assert( "This clause is the implicant of a literal which is not in the first position." 
-         && ( !literals[ 0 ]->isImplicant( this ) || 
-          ( !literals[ firstWatch ]->isImplicant( this ) 
-         && !literals[ secondWatch ]->isImplicant( this ) ) ) );
+//    assert( "This clause is the implicant of a literal which is not in the first position." 
+//         && ( !literals[ 0 ]->isImplicant( this ) || 
+//          ( !literals[ firstWatch ]->isImplicant( this ) 
+//         && !literals[ secondWatch ]->isImplicant( this ) ) ) );
     
     //We assume that the literal inferred is always in the first position.
-    return ( literals[ 0 ]->isImplicant( this ) );
+    return ( literals[ firstWatch ]->isImplicant( this ) || literals[ secondWatch ]->isImplicant( this ) );
 }
 
 void
@@ -226,7 +226,7 @@ Clause::setSecondWatch(
 void
 Clause::setWatchesInRandomPositions()
 {
-    assert( literals.size() > 1 );
+    assert( "Unary clause must be removed." && literals.size() > 1 );
     firstWatch = rand() % literals.size();
     secondWatch = rand() % ( literals.size() - 1 );
 
@@ -248,9 +248,10 @@ Clause::onLearning(
     LearningStrategy* strategy )
 {
     assert( "LearningStrategy is not initialized." && strategy != NULL );
+    
     for( unsigned int i = 0; i < literals.size(); i++ )
     {
-        Literal* literal = literals[ i ];        
+        Literal* literal = literals[ i ];
         strategy->onNavigatingLiteral( literal );
     }
 }

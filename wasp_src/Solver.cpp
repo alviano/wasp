@@ -98,27 +98,24 @@ Solver::onLiteralAssigned(
     assert( "Assigned literal is NULL." && literal != NULL );
     assert( "TruthValue has an invalid value." && ( truthValue == TRUE || truthValue == FALSE ) );
     
-    if( !conflict )
+    PositiveLiteral* positiveLiteral = literal->getPositiveLiteral();
+
+    assert( positiveLiteral != NULL );
+    if( undefinedLiterals.erase( positiveLiteral ) )
     {
-        PositiveLiteral* positiveLiteral = literal->getPositiveLiteral();
-        
-        assert( positiveLiteral != NULL );
-        if( undefinedLiterals.erase( positiveLiteral ) )
+        assignedLiterals.push_back( positiveLiteral );
+        literalsToPropagate.push_back( literal );
+        literal->setDecisionLevel( currentDecisionLevel );
+        literal->setImplicant( implicant );
+        truthValue == TRUE ? !literal->setTrue() : !literal->setFalse();
+    }
+    else
+    {
+        conflict = truthValue == TRUE ? !literal->setTrue() : !literal->setFalse();
+        if( conflict )
         {
-            assignedLiterals.push_back( positiveLiteral );
-            literalsToPropagate.push_back( literal );
-            literal->setDecisionLevel( currentDecisionLevel );
-            literal->setImplicant( implicant );
-            truthValue == TRUE ? !literal->setTrue() : !literal->setFalse();
-        }
-        else
-        {
-            conflict = truthValue == TRUE ? !literal->setTrue() : !literal->setFalse();
-            if( conflict )
-            {
-                literal->setImplicant( implicant );
-                conflictLiteral = literal;
-            }
+            conflictLiteral = literal;
+            conflictClause = implicant;
         }
     }
 }
@@ -204,18 +201,49 @@ Solver::decreaseLearnedClausesActivity()
     }
 }
 
+bool
+Solver::preprocessing()
+{
+    for( list< Literal* >::iterator it = trueLiterals.begin(); it != trueLiterals.end(); ++it )
+    {
+        Literal* literal = *it;
+        onLiteralAssigned( literal, TRUE, NULL );
+        
+        while( hasNextLiteralToPropagate() )
+        {
+            Literal* literalToPropagate = getNextLiteralToPropagate();
+            literalToPropagate->setOrderInThePropagation( numberOfAssignedLiterals() );           
+            propagate( literalToPropagate );
+            
+            if( conflictDetected() )
+            {
+                return false;
+            }
+        }
+    }
+    
+    return true;
+}
 
 bool 
 Solver::solve()
 {
+    init();
+    if( !preprocessing() )
+    {
+        foundIncoherence();
+        return false;
+    }
+    
     while( hasUndefinedLiterals() )
     {
         assert( !conflictDetected() );
-        chooseLiteral();        
+        chooseLiteral();
 
         while( hasNextLiteralToPropagate() )
         {
             Literal* literalToPropagate = getNextLiteralToPropagate();
+            
             literalToPropagate->setOrderInThePropagation( numberOfAssignedLiterals() );           
             propagate( literalToPropagate );
             
@@ -228,9 +256,9 @@ Solver::solve()
                 }
 
                 analyzeConflict();
-                assert( hasNextLiteralToPropagate() );
+                assert( hasNextLiteralToPropagate() || getCurrentDecisionLevel() == 0 );
             }
-        }
+        }        
     }
     
     printAnswerSet();    

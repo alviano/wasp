@@ -26,6 +26,7 @@
 void
 FirstUIPLearningStrategy::onConflict(
     Literal* conflictLiteral,
+    Clause* conflictClause,
     Solver& solver )
 {
     clearDataStructures();
@@ -36,14 +37,17 @@ FirstUIPLearningStrategy::onConflict(
     learnedClause = new LearnedClause();
     decisionLevel = solver.getCurrentDecisionLevel();
 	
-    //Compute implicants of the conflictual literal.
-    conflictLiteral->onConflict( this );
+    //Compute implicants of the conflicting literal.
+    conflictClause->onLearning( this );
+    conflictLiteral->onLearning( this );
+    
     
 	//If there is only one element, this element is the first UIP.
 	while( literalsToNavigate.size() > 1 )
 	{
         //Get next literal.
 		Literal* currentLiteral = getNextLiteralToNavigate();
+        
         //Compute implicants of the literal.
         currentLiteral->onLearning( this );        
 	}
@@ -52,7 +56,7 @@ FirstUIPLearningStrategy::onConflict(
 
 	Literal* firstUIP = literalsToNavigate.back();
     literalsToNavigate.pop_back();
-	learnedClause->addLiteral( firstUIP );
+	learnedClause->addLiteral( firstUIP );   
     
     assert( learnedClause->size() > 0 );
     if( learnedClause->size() == 1 )
@@ -77,7 +81,7 @@ FirstUIPLearningStrategy::onConflict(
             assert( maxDecisionLevel != 0 );
             solver.onLearningClause( firstUIP, learnedClause, maxDecisionLevel );
         }
-    }    
+    }
 }
 
 Literal*
@@ -110,13 +114,17 @@ void
 FirstUIPLearningStrategy::onNavigatingLiteral( 
     Literal* literal )
 {
+    assert( literal != NULL );
     unsigned int literalDecisionLevel = literal->getDecisionLevel();
+    
     if( literalDecisionLevel == decisionLevel )
     {
+        literal->onNavigatingImplicationGraph();
         addLiteralToNavigate( literal );
     }
     else if( literalDecisionLevel > 0 )
     {
+        literal->onNavigatingLearnedClause();
         addLiteralInLearnedClause( literal );
     }
 }
@@ -126,6 +134,7 @@ FirstUIPLearningStrategy::addLiteralInLearnedClause(
     Literal* literal )
 {
     assert( "Learned clause is not initialized." && learnedClause != NULL );
+    
     if( addedLiterals.insert( literal ).second )
     {
         if( literal->getDecisionLevel() > maxDecisionLevel )

@@ -40,6 +40,7 @@ class AbstractBuilder
         virtual Clause* startClause() = 0;
         virtual Clause* startClause( unsigned int size ) = 0;
         virtual void addLiteralInClause( int lit, Clause* clause ) = 0;
+        virtual void addTrueLiteral( int lit ) = 0;
         virtual void endClause( Clause* clause ) = 0;
         
         virtual void startBuilding() = 0;

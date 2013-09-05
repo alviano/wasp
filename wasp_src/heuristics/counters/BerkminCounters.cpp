@@ -19,7 +19,7 @@
 #include "BerkminCounters.h"
 
 void
-BerkminCounters::onLearning()
+BerkminCounters::onNavigatingLearnedClause()
 {
     globalCounter++;
     counter++;

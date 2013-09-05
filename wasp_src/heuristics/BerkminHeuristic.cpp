@@ -41,6 +41,7 @@ BerkminHeuristic::makeAChoice(
         chosenLiteral = pickLiteralUsingActivity( solver );
     
     assert( chosenLiteral != NULL );    
+    assert( chosenLiteral->isUndefined() );
     return chosenLiteral;
 }
 
@@ -70,7 +71,10 @@ BerkminHeuristic::topMostUndefinedLearnedClause(
         
         Literal* chosenLiteral = visitor.getChosenLiteral();
         if( chosenLiteral != NULL )
+        {
+            assert( chosenLiteral->isUndefined() );
             return chosenLiteral;
+        }
     }
     
     return NULL;
@@ -86,17 +90,26 @@ BerkminHeuristic::pickLiteralUsingActivity(
     for( unsigned int i = 0; i < undefinedLiterals.size(); ++i )
     {
         PositiveLiteral* positiveLiteral = undefinedLiterals.at( i );
+        
+        assert( "The literal must be undefined." && positiveLiteral->isUndefined() );
         positiveLiteral->visitForHeuristic( &higherGlobalCounterVisitor );
         positiveLiteral->visitForHeuristic( &mostOccurrencesVisitor );
     }
     
     Literal* chosenLiteral = higherGlobalCounterVisitor.getChosenLiteral();
     if( chosenLiteral != NULL )
+    {
+        assert( chosenLiteral->isUndefined() );
         return chosenLiteral;
+    }
     
     chosenLiteral = mostOccurrencesVisitor.getChosenLiteral();
     if( chosenLiteral != NULL )
+    {
+        assert( chosenLiteral->isUndefined() );
         return chosenLiteral;
+    }
     
+    assert( "The literal must be undefined." && undefinedLiterals.at( 0 )->isUndefined() );
     return undefinedLiterals.at( 0 );
 }

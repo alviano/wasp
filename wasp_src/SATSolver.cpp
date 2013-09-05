@@ -24,7 +24,6 @@ void
 SATSolver::init()
 {
     cout << COMMENT_DIMACS << " " << WASP_STRING << endl;
-    printProgram();
 }
 
 void
@@ -33,37 +32,3 @@ SATSolver::propagate(
 {
     literalToPropagate->unitPropagation( *this );
 }
-
-//bool 
-//SATSolver::solve()
-//{
-//    while( hasUndefinedLiterals() )
-//    {
-//        if( !conflictDetected() )
-//        {
-//            chooseLiteral();
-//        }
-//
-//        while( hasNextLiteralToPropagate() )
-//        {
-//            Literal* literalToPropagate = getNextLiteralToPropagate();
-//
-//            literalToPropagate->setOrderInThePropagation( numberOfAssignedLiterals() );
-//            literalToPropagate->unitPropagation( *this );
-//            if( conflictDetected() )
-//            {
-//                if( getCurrentDecisionLevel() == 0 )
-//                {
-//                    foundIncoherence();
-//                    return false;
-//                }
-//
-//                analyzeConflict();
-//                assert( hasNextLiteralToPropagate() );
-//            }
-//        }
-//    }
-//    
-//    printAnswerSet();    
-//    return true;
-//}
