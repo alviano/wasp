@@ -5,7 +5,11 @@ SOURCE_DIR := wasp_src
 # to compile different binaries
 BUILD := debug
 cxxflags.debug := -Wall -std=c++11 $(CODE)
-cxxflags.benchmarks := -Wall -std=c++11 $(CODE) -O3
+cxxflags.benchmarks := -Wall -std=c++11 $(CODE) -DNDEBUG -O3
+
+# for g++ <= 4.6
+cxxflags.debug0x := -Wall -std=c++0x $(CODE)
+cxxflags.benchmarks0x := -Wall -std=c++0x $(CODE) -DNDEBUG -O3
 
 BUILD_DIR = build/$(BUILD)
 
