@@ -1,31 +1,37 @@
-SOURCE_DIR := wasp_src
-
+#### BUILD modalities
 # use 
-#   $ make BUILD=benchmarks 
+#   $ make BUILD=release 
 # to compile different binaries
-BUILD := debug
-cxxflags.debug := -Wall -std=c++11 $(CODE)
-cxxflags.benchmarks := -Wall -std=c++11 $(CODE) -DNDEBUG -O3
+BUILD = debug
+cxxflags.debug = \
+ -Wall -std=c++11
+cxxflags.release = \
+ -Wall -std=c++11 -DNDEBUG -O3
 
 # for g++ <= 4.6
-cxxflags.debug0x := -Wall -std=c++0x $(CODE)
-cxxflags.benchmarks0x := -Wall -std=c++0x $(CODE) -DNDEBUG -O3
+cxxflags.debug0x = \
+ -Wall -std=c++0x
+cxxflags.release0x = \
+ -Wall -std=c++0x -DNDEBUG -O3
 
+####
+
+SOURCE_DIR = wasp_src
 BUILD_DIR = build/$(BUILD)
 
-BINARY=$(BUILD_DIR)/wasp
-GCC=g++
-CXX=$(GCC)
-CXXFLAGS := ${cxxflags.${BUILD}}
-LINK=$(GCC)
-LINKFLAGS=-lm
+BINARY = $(BUILD_DIR)/wasp
+GCC = g++
+CXX = $(GCC)
+CXXFLAGS = $(cxxflags.$(BUILD))
+LINK = $(GCC)
+LINKFLAGS = -lm
 
 SRCS = $(shell find $(SOURCE_DIR) -name '*.cpp')
 
 OBJS = $(patsubst $(SOURCE_DIR)%.cpp,$(BUILD_DIR)%.o, $(SRCS))
 DEPS = $(patsubst $(SOURCE_DIR)%.cpp,$(BUILD_DIR)%.d, $(SRCS))
 
-all: $(BINARY) 
+all: $(BINARY)
 
 $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
