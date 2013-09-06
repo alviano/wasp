@@ -67,10 +67,6 @@ class Clause
         inline void onLearning( LearningStrategy* strategy );
         void onLiteralFalse( Literal* literal, Solver& solver );
 
-        inline void setFirstWatch( unsigned int firstWatch );
-        inline void setSecondWatch( unsigned int secondWatch );
-        inline void setWatchesInRandomPositions();
-        
         inline unsigned int size() const;
         
         inline void visitForHeuristic( HeuristicVisitor* );
@@ -92,10 +88,13 @@ class Clause
         WatchedList< Clause* >::iterator iterator_firstWatch;
         WatchedList< Clause* >::iterator iterator_secondWatch;
         
-        inline void attachWatch( const unsigned int& watchToAttach, WatchedList< Clause* >::iterator& iterator );
-        inline void detachWatch( const unsigned int& watchToDetach, WatchedList< Clause* >::iterator& iterator );
+        inline void setWatchesInRandomPositions();
         
-//        void moveWatchToFirstPosition( unsigned int& watch, unsigned int& otherWatch );
+        inline void setFirstWatch( unsigned int firstWatch );
+        inline void setSecondWatch( unsigned int secondWatch );
+        
+        inline void attachWatch( const unsigned int& watchToAttach, WatchedList< Clause* >::iterator& iterator );
+        inline void detachWatch( const unsigned int& watchToDetach, WatchedList< Clause* >::iterator& iterator );        
         
         /**
          * 
@@ -107,7 +106,7 @@ class Clause
          * @param solver The current solver
          * @return true if the watch has been moved, false otherwise
          */        
-        void updateWatch( unsigned int& watchToUpdate, unsigned int& otherWatch, WatchedList< Clause* >::iterator iteratorWatchToUpdate, Solver& solver );
+        void updateWatch( unsigned int& watchToUpdate, const unsigned int& otherWatch, WatchedList< Clause* >::iterator& iteratorWatchToUpdate, Solver& solver );
 };
 
 Clause::Clause() : firstWatch( 0 ), secondWatch( 0 )
@@ -148,6 +147,7 @@ Clause::attachWatch(
     assert( "The watchToAttach is not in range." && watchToAttach < literals.size() );
     assert( "The watchToAttach points to a NULL literal." && literals[ watchToAttach ] != NULL );
     iterator = literals[ watchToAttach ]->addWatchedClause( this );
+    assert( "The iterator must point to this clause." && this == *iterator );
 }
 
 void
@@ -179,7 +179,8 @@ Clause::detachWatch(
 {
     assert( "The watchToDetach is not in range." && watchToDetach < literals.size() );
     assert( "The watchToDetach points to a NULL literal." && literals[ watchToDetach ] != NULL );
-    literals[ watchToDetach ]->eraseWatchedClause( iterator );
+    assert( "The iterator must point to this clause." && this == *iterator );
+    literals[ watchToDetach ]->eraseWatchedClause( iterator );    
 }
 
 void
@@ -194,9 +195,7 @@ bool
 Clause::isImplicantOfALiteral() const
 {    
     assert( "First watch is out of range." && firstWatch < size() );
-    assert( "Second watch is out of range." && secondWatch < size() );
-    
-//    return ( literals[ firstWatch ]->isImplicant( this ) || literals[ secondWatch ]->isImplicant( this ) );
+    assert( "Second watch is out of range." && secondWatch < size() );    
     
 //    assert( "This clause is the implicant of a literal which is not in the first position." 
 //         && ( !literals[ 0 ]->isImplicant( this ) || 

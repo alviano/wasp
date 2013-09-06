@@ -7,12 +7,16 @@ cxxflags.debug = \
  -Wall -std=c++11
 cxxflags.release = \
  -Wall -std=c++11 -DNDEBUG -O3
+cxxflags.gprof = \
+ -Wall -std=c++11 -DNDEBUG -O3 -g -pg
 
 # for g++ <= 4.6
 cxxflags.debug0x = \
  -Wall -std=c++0x
 cxxflags.release0x = \
  -Wall -std=c++0x -DNDEBUG -O3
+cxxflags.gprof0x = \
+ -Wall -std=c++0x -DNDEBUG -O3 -g -pg 
 
 ####
 
@@ -24,7 +28,7 @@ GCC = g++
 CXX = $(GCC)
 CXXFLAGS = $(cxxflags.$(BUILD))
 LINK = $(GCC)
-LINKFLAGS = -lm
+LINKFLAGS = -lm -g -pg
 
 SRCS = $(shell find $(SOURCE_DIR) -name '*.cpp')
 

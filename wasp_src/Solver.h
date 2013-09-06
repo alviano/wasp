@@ -160,7 +160,7 @@ Solver::Solver() : currentDecisionLevel( 0 ), conflict( false ), conflictLiteral
     //Add a fake position.
     positiveLiterals.push_back( NULL );
 //    learningStrategy = new FirstUIPLearningStrategy( new SequenceBasedRestartsStrategy() );
-    learningStrategy = new FirstUIPLearningStrategy( new GeometricRestartsStrategy( 100 ) );
+    learningStrategy = new FirstUIPLearningStrategy( new SequenceBasedRestartsStrategy( 100000 ) );
 //    deletionStrategy = new AggressiveDeletionStrategy();
     deletionStrategy = new RestartsBasedDeletionStrategy();
     
@@ -262,6 +262,7 @@ void
 Solver::onRestarting()
 {
     deletionStrategy->onRestarting();
+    decisionHeuristic->onRestarting( *this );
     unroll( 0 );
 }
 
@@ -340,6 +341,7 @@ Solver::analyzeConflict()
 {    
     conflictLiteral->setOrderInThePropagation( numberOfAssignedLiterals() + 1 );
     learningStrategy->onConflict( conflictLiteral, conflictClause, *this );
+    decisionHeuristic->onLearning( *this );
     clearConflictStatus();
 }
 

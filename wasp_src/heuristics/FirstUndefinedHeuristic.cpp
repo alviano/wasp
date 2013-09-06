@@ -27,3 +27,14 @@ FirstUndefinedHeuristic::makeAChoice(
     return solver.getUndefinedLiterals().at( 0 );
 }
 
+void
+FirstUndefinedHeuristic::onLearning(
+    Solver& )
+{
+}
+        
+void
+FirstUndefinedHeuristic::onRestarting(
+    Solver& )
+{
+}

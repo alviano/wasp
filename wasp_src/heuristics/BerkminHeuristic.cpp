@@ -113,3 +113,16 @@ BerkminHeuristic::pickLiteralUsingActivity(
     assert( "The literal must be undefined." && undefinedLiterals.at( 0 )->isUndefined() );
     return undefinedLiterals.at( 0 );
 }
+
+void
+BerkminHeuristic::onLearning(
+    Solver& solver )
+{
+    numberOfConflicts++;    
+}
+
+void
+BerkminHeuristic::onRestarting(
+    Solver& )
+{
+}

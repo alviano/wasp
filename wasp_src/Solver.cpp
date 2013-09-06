@@ -237,6 +237,20 @@ Solver::solve()
     
     while( hasUndefinedLiterals() )
     {
+        /*
+        static unsigned int PROVA = 0;
+        static time_t PROVA_TIME = time( 0 );
+        
+        if( ++PROVA > 2000000 ) {
+            cerr << "PROVA END!" << endl;
+            return false;
+        }
+        else if( ++PROVA % 10000 == 0 )
+        {
+            cout << PROVA << " " << learnedClauses.size() <<  " " << ( time( 0 ) - PROVA_TIME ) << endl;
+        }
+        //*/
+        
         assert( !conflictDetected() );
         chooseLiteral();
 
@@ -258,7 +272,7 @@ Solver::solve()
                 analyzeConflict();
                 assert( hasNextLiteralToPropagate() || getCurrentDecisionLevel() == 0 );
             }
-        }        
+        }
     }
     
     printAnswerSet();    

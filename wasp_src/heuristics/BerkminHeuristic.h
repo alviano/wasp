@@ -43,6 +43,8 @@ class BerkminHeuristic : public DecisionHeuristic
         inline BerkminHeuristic( unsigned int maxBerkminNumber = 512 );
         virtual ~BerkminHeuristic();
         virtual Literal* makeAChoice( Solver& solver );
+        virtual void onLearning( Solver& solver );
+        virtual void onRestarting( Solver& solver );
         
     protected:
         virtual Literal* pickLiteralUsingLearnedClauses( Solver& solver );
@@ -52,10 +54,11 @@ class BerkminHeuristic : public DecisionHeuristic
     private:
         Literal* topMostUndefinedLearnedClause( Solver& solver );
         unsigned int maxBerkminNumber;
+        unsigned int numberOfConflicts;
 };
 
 BerkminHeuristic::BerkminHeuristic( 
-    unsigned int max ) : maxBerkminNumber( max )
+    unsigned int max ) : maxBerkminNumber( max ), numberOfConflicts( 0 )
 {
 }
 
