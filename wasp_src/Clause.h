@@ -82,34 +82,23 @@ class Clause
 
         vector< Literal* > literals;
 
-        unsigned int firstWatch;
-        unsigned int secondWatch;
-
         WatchedList< Clause* >::iterator iterator_firstWatch;
         WatchedList< Clause* >::iterator iterator_secondWatch;
         
         inline void setWatchesInRandomPositions();
         
-        inline void setFirstWatch( unsigned int firstWatch );
-        inline void setSecondWatch( unsigned int secondWatch );
+        inline void attachFirstWatch();
+        inline void attachSecondWatch();
+        inline void detachFirstWatch();
+        inline void detachSecondWatch();
         
-        inline void attachWatch( const unsigned int& watchToAttach, WatchedList< Clause* >::iterator& iterator );
-        inline void detachWatch( const unsigned int& watchToDetach, WatchedList< Clause* >::iterator& iterator );        
+        void updateFirstWatch( Solver& solver );
+        void updateSecondWatch( Solver& solver );
         
-        /**
-         * 
-         * This function updates the position of one watch.
-         * It is required that both watches are pointing to an undefined literal.
-         * 
-         * @param watchToUpdate The watch to update
-         * @param otherWatch The other watch
-         * @param solver The current solver
-         * @return true if the watch has been moved, false otherwise
-         */        
-        void updateWatch( unsigned int& watchToUpdate, const unsigned int& otherWatch, WatchedList< Clause* >::iterator& iteratorWatchToUpdate, Solver& solver );
+        inline void swapLiterals( unsigned int pos1, unsigned int pos2 );
 };
 
-Clause::Clause() : firstWatch( 0 ), secondWatch( 0 )
+Clause::Clause()
 {
 }
 
@@ -123,7 +112,7 @@ Clause::Clause(
 Clause::Clause(
     unsigned int size,
     unsigned int first,
-    unsigned int second ) : firstWatch( first ), secondWatch( second )
+    unsigned int second )
 {
     assert( "First watch is out of range." && first < size );
     assert( "Second watch is out of range." && second < size );
@@ -140,24 +129,43 @@ Clause::addLiteral(
 }
 
 void
-Clause::attachWatch(
-    const unsigned int& watchToAttach,
-    WatchedList< Clause* >::iterator& iterator )
+Clause::attachFirstWatch()
 {
-    assert( "The watchToAttach is not in range." && watchToAttach < literals.size() );
-    assert( "The watchToAttach points to a NULL literal." && literals[ watchToAttach ] != NULL );
-    iterator = literals[ watchToAttach ]->addWatchedClause( this );
-    assert( "The iterator must point to this clause." && this == *iterator );
+    assert( "Unary clause must be removed." && literals.size() > 1 );
+    iterator_firstWatch = literals[ 0 ]->addWatchedClause( this );
+    assert( "The iterator must point to this clause." && this == *iterator_firstWatch );
+}
+
+void
+Clause::attachSecondWatch()
+{
+    assert( "Unary clause must be removed." && literals.size() > 1 );
+    iterator_secondWatch = literals[ 1 ]->addWatchedClause( this );
+    assert( "The iterator must point to this clause." && this == *iterator_secondWatch );
+}
+        
+void
+Clause::detachFirstWatch()
+{
+    assert( "The watchToDetach points to a NULL literal." && literals[ 0 ] != NULL );
+    assert( "The iterator must point to this clause." && this == *iterator_firstWatch );
+    literals[ 0 ]->eraseWatchedClause( iterator_firstWatch );
+}
+        
+void
+Clause::detachSecondWatch()
+{
+    assert( "The watchToDetach points to a NULL literal." && literals[ 1 ] != NULL );
+    assert( "The iterator must point to this clause." && this == *iterator_secondWatch );
+    literals[ 1 ]->eraseWatchedClause( iterator_secondWatch );
 }
 
 void
 Clause::attachClause()
 {
-    if( firstWatch == secondWatch )
-        setWatchesInRandomPositions();
-    assert( "First watch and second watch point to the same literal." && firstWatch != secondWatch );
-    attachWatch( firstWatch, iterator_firstWatch );
-    attachWatch( secondWatch, iterator_secondWatch );
+    assert( "Unary clauses must be removed." && literals.size() > 1 );
+    attachFirstWatch();
+    attachSecondWatch();
 }
 
 void
@@ -165,37 +173,25 @@ Clause::attachClause(
     unsigned int first,
     unsigned int second )
 {
-    setFirstWatch( first );
-    setSecondWatch( second );
-    assert( "First watch and second watch point to the same literal." && firstWatch != secondWatch );
-    attachWatch( firstWatch, iterator_firstWatch );
-    attachWatch( secondWatch, iterator_secondWatch );
-}
-
-void
-Clause::detachWatch(
-    const unsigned int& watchToDetach,
-    WatchedList< Clause* >::iterator& iterator )
-{
-    assert( "The watchToDetach is not in range." && watchToDetach < literals.size() );
-    assert( "The watchToDetach points to a NULL literal." && literals[ watchToDetach ] != NULL );
-    assert( "The iterator must point to this clause." && this == *iterator );
-    literals[ watchToDetach ]->eraseWatchedClause( iterator );    
+    assert( "First watch and second watch point to the same literal." && first != second );
+    swapLiterals( 0, first );
+    swapLiterals( 1, second );
+    
+    attachFirstWatch();
+    attachSecondWatch();
 }
 
 void
 Clause::detachClause()
 {
-    assert( "First watch and second watch point to the same literal." && firstWatch != secondWatch );
-    detachWatch( firstWatch, iterator_firstWatch );
-    detachWatch( secondWatch, iterator_secondWatch );    
+    detachFirstWatch();
+    detachSecondWatch();
 }
 
 bool
 Clause::isImplicantOfALiteral() const
-{    
-    assert( "First watch is out of range." && firstWatch < size() );
-    assert( "Second watch is out of range." && secondWatch < size() );    
+{
+    assert( "Unary clauses must be removed." && literals.size() > 1 );
     
 //    assert( "This clause is the implicant of a literal which is not in the first position." 
 //         && ( !literals[ 0 ]->isImplicant( this ) || 
@@ -203,37 +199,23 @@ Clause::isImplicantOfALiteral() const
 //         && !literals[ secondWatch ]->isImplicant( this ) ) ) );
     
     //We assume that the literal inferred is always in the first position.
-    return ( literals[ firstWatch ]->isImplicant( this ) || literals[ secondWatch ]->isImplicant( this ) );
-}
-
-void
-Clause::setFirstWatch(
-    unsigned int first )
-{
-    assert( "Inserted value is not valid." && first < literals.size() );
-    firstWatch = first;
-}
-
-void
-Clause::setSecondWatch(
-    unsigned int second )
-{
-    assert( "Inserted value is not valid." && second < literals.size() );
-    secondWatch = second;
+    return ( literals[ 0 ]->isImplicant( this ) || literals[ 1 ]->isImplicant( this ) );
 }
 
 void
 Clause::setWatchesInRandomPositions()
 {
-    assert( "Unary clause must be removed." && literals.size() > 1 );
-    firstWatch = rand() % literals.size();
-    secondWatch = rand() % ( literals.size() - 1 );
+    assert( "Unary clauses must be removed." && literals.size() > 1 );
+    unsigned int first = rand() % literals.size();
+    unsigned int second = rand() % ( literals.size() - 1 );
 
-    if( secondWatch >= firstWatch )
-        secondWatch++;
+    if( second >= first )
+        second++;
 
-    assert( "First watch is not in range." && firstWatch < literals.size() );
-    assert( "Second watch is not in range." && secondWatch < literals.size() );
+    assert( "First watch is not in range." && first < literals.size() );
+    assert( "Second watch is not in range." && second < literals.size() );
+    swapLiterals( 0, first );
+    swapLiterals( 1, second );    
 }
 
 unsigned int
@@ -259,13 +241,24 @@ void
 Clause::visitForHeuristic( 
     HeuristicVisitor* heuristicVisitor )
 {
-    if( literals.size() == 1 || literals[ firstWatch ]->isTrue() || literals[ secondWatch ]->isTrue() )
+    assert( "Unary clauses must be removed." && literals.size() > 1 );
+    if( literals[ 0 ]->isTrue() || literals[ 1 ]->isTrue() )
         return;
     
     for( unsigned int i = 0; i < literals.size(); i++ )
     {
         literals[ i ]->visitForHeuristic( heuristicVisitor );
     }
+}
+
+void
+Clause::swapLiterals( 
+    unsigned int pos1, 
+    unsigned int pos2 )
+{
+    assert( "First position is out of range." && pos1 < literals.size() );
+    assert( "Second position is out of range." && pos2 < literals.size() ); 
+    std::swap( literals[ pos1 ], literals[ pos2 ] );
 }
 
 #endif	/* CLAUSE_H */

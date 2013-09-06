@@ -46,75 +46,78 @@ Clause::onLiteralFalse(
     Literal* literal,
     Solver& solver )
 {
-    assert( "The literal must be false." && literal->isFalse() );
+    assert( "The literal must be false." && literal->isFalse() );    
     
-    assert( "First watch is not in range." && firstWatch < literals.size() );
-    assert( "First watch points to a NULL literal." && literals[ firstWatch ] != NULL );
-    assert( "Second watch is not in range." && secondWatch < literals.size() );
-    assert( "Second watch points to a NULL literal." && literals[ secondWatch ] != NULL );
+    assert( "Unary clauses must be removed." && literals.size() > 1 );
     
-    if( literal == literals[ firstWatch ] )
+    if( literal == literals[ 0 ] )
     {
         //if the clause is already satisfied do nothing.
-        if( !literals[ secondWatch ]->isTrue() )
+        if( !literals[ 1 ]->isTrue() )
         {
             //update first watch
-            updateWatch( firstWatch, secondWatch, iterator_firstWatch, solver );            
+            updateFirstWatch( solver );          
         }
     }
     else
     {
-        assert( "Literal is not watched." && literal == literals[ secondWatch ] );
+        assert( "Literal is not watched." && literal == literals[ 1 ] );
         //if the clause is already satisfied do nothing.
-        if( !literals[ firstWatch ]->isTrue() )
+        if( !literals[ 0 ]->isTrue() )
         {
             //update second watch
-            updateWatch( secondWatch, firstWatch, iterator_secondWatch, solver );
+            updateSecondWatch( solver );
         }
     }
 }
 
 void
-Clause::updateWatch(
-    unsigned int& watchToUpdate,
-    const unsigned int& otherWatch,
-    WatchedList< Clause* >::iterator& iteratorWatchToUpdate,
+Clause::updateFirstWatch(
     Solver& solver )
-{    
-    assert( "Clause is empty or contains only one literal." && literals.size() > 1 );
+{
+    assert( "Unary clauses must be removed." && literals.size() > 1 );
     
-    assert( "The watchToUpdate is not in range." && watchToUpdate < literals.size() );
-    assert( "The otherWatch is not in range." && otherWatch < literals.size() );
+    for( unsigned int i = 2; i < literals.size(); ++i )
+    {
+        if( !literals[ i ]->isFalse() )
+        {
+            //Detach the old watch
+            detachFirstWatch();
+            //Swap the two literals
+            swapLiterals( 0, i );
+            //Attach the watch in the new position
+            attachFirstWatch();
+            
+            return;
+        }
+    }
+    
+    assert( "The other watched literal cannot be true." && !literals[ 1 ]->isTrue() );
+    //Propagate literals[ 1 ];
+    solver.onLiteralAssigned( literals[ 1 ], TRUE, this );    
+}
 
-    assert( "The watchToUpdate points to a non false literal." && literals[ watchToUpdate ]->isFalse() );
-    assert( "The otherWatch is true." && !literals[ otherWatch ]->isTrue() );    
+void
+Clause::updateSecondWatch(
+    Solver& solver )
+{
+    assert( "Unary clauses must be removed." && literals.size() > 1 );
     
-    //Save the oldPosition of the watch
-    unsigned int oldPosition = watchToUpdate;
-    
-    //Update the watchToUpdate until the old position is reached or the watchToUpdate points to a non false literal.
-    do
+    for( unsigned int i = 2; i < literals.size(); ++i )
     {
-        watchToUpdate = ( watchToUpdate + 1 ) % literals.size();
-        //Two watches cannot point to the same literal, hence the otherWatch is skipped.    
-        if( watchToUpdate == otherWatch )
-            watchToUpdate = ( watchToUpdate + 1 ) % literals.size();
-    } while( literals[ watchToUpdate ]->isFalse() && watchToUpdate != oldPosition );
-    assert( "The watchToUpdate is in a incosistent position." && watchToUpdate < literals.size() );
+        if( !literals[ i ]->isFalse() )
+        {
+            //Detach the old watch
+            detachSecondWatch();
+            //Swap the two literals
+            swapLiterals( 1, i );
+            //Attach the watch in the new position
+            attachSecondWatch();            
+            return;
+        }
+    }
     
-    //If the watchToUpdate has reached its previous position the only undefined
-    //literal in the clause is pointed by the otherWatch. Thus, unit propagation!
-    if( watchToUpdate == oldPosition )
-    {
-        assert( "The other literal cannot be true." && !literals[ otherWatch ]->isTrue() );
-        //Propagate literals[ otherWatch ];
-        solver.onLiteralAssigned( literals[ otherWatch ], TRUE, this );
-    }
-    else
-    {   
-        //Detach the old watch
-        detachWatch( oldPosition, iteratorWatchToUpdate );
-        //Attach the watch in the new position
-        attachWatch( watchToUpdate, iteratorWatchToUpdate );        
-    }
+    assert( "The other watched literal cannot be true." && !literals[ 0 ]->isTrue() );
+    //Propagate literals[ 0 ];
+    solver.onLiteralAssigned( literals[ 0 ], TRUE, this );    
 }
