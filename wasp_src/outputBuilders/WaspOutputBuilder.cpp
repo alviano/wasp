@@ -34,7 +34,12 @@ WaspOutputBuilder::printLiteral(
 {
     if( positiveLiteral->isTrue() )
     {
-        cout << ", " << *positiveLiteral;
+        if( !first )
+            cout << ", ";
+        else
+            first = false;
+            
+        cout << *positiveLiteral;        
     }    
 }
 

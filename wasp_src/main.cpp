@@ -25,28 +25,42 @@
 
 #include <cstdlib>
 
-#include "Dimacs.h"
-#include "ProgramBuilder.h"
-#include "Solver.h"
-#include "SATSolver.h"
+#include "input/Dimacs.h"
+#include "inputBuilders/SATFormulaBuilder.h"
+#include "solvers/Solver.h"
+#include "solvers/SATSolver.h"
+#include "solvers/ASPSolver.h"
+#include "inputBuilders/ASPProgramBuilder.h"
+#include "input/GringoNumericFormat.h"
 using namespace std;
 
 int EXIT_CODE = 0;
+
 /*
  * 
  */
-int main(int argc, char** argv) {
+int main( int argc, char** argv )
+{    
+//    SATSolver solver;
+//    
+//    SATFormulaBuilder* satFormulaBuilder = new SATFormulaBuilder( &solver );
+//    
+//    Dimacs dimacs( satFormulaBuilder );
+//    dimacs.parse();
+//    
+//    solver.solve();    
+//    
+//    delete satFormulaBuilder;
     
-    SATSolver solver;
+    ASPSolver solver;
+    ASPProgramBuilder* aspProgramBuilder = new ASPProgramBuilder( &solver );
     
-    ProgramBuilder* programBuilder = new ProgramBuilder( &solver );
+    GringoNumericFormat gringoNumericFormat( aspProgramBuilder );
+    gringoNumericFormat.parse();
     
-    Dimacs dimacs( programBuilder );
-    dimacs.parse();
+    solver.solve();
     
-    solver.solve();    
-    
-    delete programBuilder;
+    delete aspProgramBuilder;
     
     return EXIT_CODE;
 }

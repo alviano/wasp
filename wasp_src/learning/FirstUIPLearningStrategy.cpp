@@ -19,7 +19,7 @@
 #include "FirstUIPLearningStrategy.h"
 #include "../Clause.h"
 #include "../Literal.h"
-#include "../Solver.h"
+#include "../solvers/Solver.h"
 
 #include <cassert>
 

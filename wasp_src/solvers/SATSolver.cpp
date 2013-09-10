@@ -17,8 +17,6 @@
  */
 
 #include "SATSolver.h"
-#include "AbstractBuilder.h"
-#include "stl/UnorderedSet.h"
 
 void 
 SATSolver::init()

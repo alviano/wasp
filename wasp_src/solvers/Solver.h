@@ -31,26 +31,28 @@
 #include <list>
 using namespace std;
 
-#include "Clause.h"
-#include "LearnedClause.h"
-#include "Literal.h"
-#include "PositiveLiteral.h"
-#include "stl/List.h"
-#include "stl/UnorderedSet.h"
-#include "learning/AggressiveDeletionStrategy.h"
-#include "learning/DeletionStrategy.h"
-#include "learning/FirstUIPLearningStrategy.h"
-#include "learning/LearningStrategy.h"
-#include "learning/SequenceBasedRestartsStrategy.h"
-#include "heuristics/BerkminHeuristic.h"
-#include "heuristics/DecisionHeuristic.h"
-#include "heuristics/factories/HeuristicCounterFactoryForLiteral.h"
-#include "heuristics/factories/BerkminCounterFactory.h"
-#include "outputBuilders/OutputBuilder.h"
-#include "outputBuilders/DimacsOutputBuilder.h"
-#include "heuristics/FirstUndefinedHeuristic.h"
-#include "learning/RestartsBasedDeletionStrategy.h"
-#include "learning/GeometricRestartsStrategy.h"
+#include "../Clause.h"
+#include "../LearnedClause.h"
+#include "../Literal.h"
+#include "../PositiveLiteral.h"
+#include "../WaspRule.h"
+#include "../stl/List.h"
+#include "../stl/UnorderedSet.h"
+#include "../learning/AggressiveDeletionStrategy.h"
+#include "../learning/DeletionStrategy.h"
+#include "../learning/FirstUIPLearningStrategy.h"
+#include "../learning/LearningStrategy.h"
+#include "../learning/SequenceBasedRestartsStrategy.h"
+#include "../heuristics/BerkminHeuristic.h"
+#include "../heuristics/DecisionHeuristic.h"
+#include "../heuristics/factories/HeuristicCounterFactoryForLiteral.h"
+#include "../heuristics/factories/BerkminCounterFactory.h"
+#include "../outputBuilders/OutputBuilder.h"
+#include "../outputBuilders/DimacsOutputBuilder.h"
+#include "../outputBuilders/WaspOutputBuilder.h"
+#include "../heuristics/FirstUndefinedHeuristic.h"
+#include "../learning/RestartsBasedDeletionStrategy.h"
+#include "../learning/GeometricRestartsStrategy.h"
 
 class Variable;
 
@@ -67,6 +69,10 @@ class Solver
         
         void addVariable( const string& name );
         void addVariable();
+        
+        AuxLiteral* addAuxVariable();
+        inline bool existsAuxLiteral( unsigned int id ) const;
+        inline AuxLiteral* getAuxLiteral( unsigned int id );
         
         inline void addClause( Clause* clause );
         inline void addLearnedClause( LearnedClause* learnedClause );        
@@ -92,11 +98,13 @@ class Solver
         inline unsigned int numberOfClauses();
         inline unsigned int numberOfLearnedClauses();        
         inline unsigned int numberOfAssignedLiterals();
+        inline unsigned int numberOfVariables();
+        inline unsigned int numberOfAuxVariables();
         
         inline const UnorderedSet< PositiveLiteral* >& getUndefinedLiterals();
         inline const List< LearnedClause* >& getLearnedClauses();
         
-        inline void setAChoice( Literal* choice );
+        inline void setAChoice( Literal* choice );        
         
         inline void analyzeConflict();
         inline void clearConflictStatus();
@@ -135,6 +143,7 @@ class Solver
         
         /* Data structures */
         vector< PositiveLiteral* > positiveLiterals;
+        vector< AuxLiteral* > auxLiterals;
         List< Clause* > clauses;
         List< LearnedClause* > learnedClauses;
         
@@ -167,7 +176,8 @@ Solver::Solver() : currentDecisionLevel( 0 ), conflict( false ), conflictLiteral
     heuristicCounterFactoryForLiteral = new BerkminCounterFactory();
     decisionHeuristic = new BerkminHeuristic();
     
-    outputBuilder = new DimacsOutputBuilder();
+//    outputBuilder = new DimacsOutputBuilder();
+    outputBuilder = new WaspOutputBuilder();
 }
 
 void
@@ -318,7 +328,8 @@ Solver::printAnswerSet()
     outputBuilder->startModel();    
     for( List< PositiveLiteral* >::iterator it = assignedLiterals.begin(); it != assignedLiterals.end(); ++it )
     {
-        outputBuilder->printLiteral( *it );
+        if( !( *it )->isHidden() )
+            outputBuilder->printLiteral( *it );
     }
     outputBuilder->endModel();
 }
@@ -359,6 +370,18 @@ Solver::numberOfAssignedLiterals()
     return assignedLiterals.size();
 }
 
+unsigned int
+Solver::numberOfVariables()
+{
+    return positiveLiterals.size();
+}
+
+unsigned int
+Solver::numberOfAuxVariables()
+{
+    return auxLiterals.size();
+}
+
 void
 Solver::setAChoice( 
     Literal* choice )
@@ -367,6 +390,21 @@ Solver::setAChoice(
     incrementCurrentDecisionLevel();
     assert( choice->isUndefined() );
     onLiteralAssigned( choice, TRUE, NULL );
+}
+
+bool
+Solver::existsAuxLiteral(
+    unsigned int id ) const
+{
+    return( id < auxLiterals.size() );
+}
+
+AuxLiteral*
+Solver::getAuxLiteral(
+    unsigned int id )
+{
+    assert( existsAuxLiteral( id ) );
+    return auxLiterals[ id ];
 }
 
 #endif	/* SOLVER_H */

@@ -17,7 +17,7 @@
  */
 
 #include "AggressiveDeletionStrategy.h"
-#include "../Solver.h"
+#include "../solvers/Solver.h"
 
 bool
 AggressiveDeletionStrategy::onLearningProtected(

@@ -55,7 +55,9 @@ enum TruthValue { UNDEFINED = 1, TRUE = 2, FALSE = 4 };
  * Error messages
  */
 #define ERRORPARSING WASP_STRING "\nError during parsing"
+#define ERRORGENERIC WASP_STRING "\nGeneric error"
 #define ERRORPARSINGCODE 100
+#define ERRORGENERICCODE 110
 
 /*
  * DIMACS Format
@@ -67,6 +69,16 @@ enum TruthValue { UNDEFINED = 1, TRUE = 2, FALSE = 4 };
 #define UNSAT "UNSATISFIABLE"
 #define SAT "SATISFIABLE"
 
+/*
+ * Gringo Numeric Format
+ */
+#define GRINGO_NORMAL_RULE_ID 1
+#define GRINGO_CONSTRAINT_RULE_ID 2
+#define GRINGO_CHOICE_RULE_ID 3
+#define GRINGO_DISJUNCTIVE_RULE_ID 8
+#define GRINGO_LINE_SEPARATOR 0
+#define GRINGO_BPLUS "B+"
+#define GRINGO_BMINUS "B-"
 
 /*
  * New types

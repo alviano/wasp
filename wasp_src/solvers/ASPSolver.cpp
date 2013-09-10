@@ -16,26 +16,19 @@
  *
  */
 
-#include "RestartsBasedDeletionStrategy.h"
-#include "../solvers/Solver.h"
+#include "ASPSolver.h"
 
-#include <cmath>
-
-bool
-RestartsBasedDeletionStrategy::onLearningProtected(
-    Solver& solver )
+void 
+ASPSolver::init()
 {
-    unsigned int programSize = solver.numberOfClauses();
-    unsigned int value1 = ( programSize / 3.0 ) * pow( 1.1, countRestarts );
-    unsigned int value2 = programSize * 3;
-    
-    unsigned int min = value1 > value2 ? value1 : value2;    
-    
-    return( solver.numberOfLearnedClauses() > min );    
+    cout << WASP_STRING << endl;
+    this->printProgram();
 }
 
 void
-RestartsBasedDeletionStrategy::onRestarting()    
+ASPSolver::propagate(
+    Literal* literalToPropagate )
 {
-    countRestarts++;
+    literalToPropagate->unitPropagation( *this );
+    literalToPropagate->supportPropagation( *this );
 }

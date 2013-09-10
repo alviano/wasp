@@ -126,5 +126,5 @@ PositiveLiteral::onLearning(
     if( implicant != NULL )
     {
         implicant->onLearning( strategy );
-    }    
+    }
 }

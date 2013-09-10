@@ -16,11 +16,12 @@
  *
  */
 
-#include <vector>
-
-#include "PositiveLiteral.h"
-#include "NegativeLiteral.h"
 #include "Solver.h"
+
+#include "../inputBuilders/AbstractBuilder.h"
+#include "../AuxLiteral.h"
+#include "../NegativeLiteral.h"
+#include "../PositiveLiteral.h"
 
 Solver::~Solver()
 {
@@ -71,6 +72,24 @@ Solver::addVariable()
 {
     PositiveLiteral* positiveLiteral = new PositiveLiteral();
     addVariableInternal( positiveLiteral );
+}
+
+AuxLiteral*
+Solver::addAuxVariable()
+{
+    AuxLiteral* auxLiteral = new AuxLiteral();
+    NegativeLiteral* negativeLiteral = new NegativeLiteral();
+    
+    negativeLiteral->setOppositeLiteral( auxLiteral );
+    auxLiteral->setOppositeLiteral( negativeLiteral );
+    
+    auxLiterals.push_back( auxLiteral );
+    undefinedLiterals.insert( auxLiteral );
+    
+    auxLiteral->setHeuristicCounter( heuristicCounterFactoryForLiteral );
+    negativeLiteral->setHeuristicCounter( heuristicCounterFactoryForLiteral );
+    
+    return auxLiteral;
 }
 
 void
@@ -209,6 +228,11 @@ Solver::preprocessing()
         Literal* literal = *it;
         onLiteralAssigned( literal, TRUE, NULL );
         
+        if( conflictDetected() )
+        {
+            return false;
+        }
+        
         while( hasNextLiteralToPropagate() )
         {
             Literal* literalToPropagate = getNextLiteralToPropagate();
@@ -221,7 +245,7 @@ Solver::preprocessing()
             }
         }
     }
-    
+    assert( !conflictDetected() );
     return true;
 }
 
@@ -255,7 +279,7 @@ Solver::solve()
         chooseLiteral();
 
         while( hasNextLiteralToPropagate() )
-        {
+        {            
             Literal* literalToPropagate = getNextLiteralToPropagate();
             
             literalToPropagate->setOrderInThePropagation( numberOfAssignedLiterals() );           

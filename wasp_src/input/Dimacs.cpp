@@ -18,10 +18,10 @@
 
 #include "Dimacs.h"
 
-#include "AbstractBuilder.h"
-#include "Clause.h"
-#include "Constants.h"
-#include "ErrorMessage.h"
+#include "../inputBuilders/AbstractBuilder.h"
+#include "../Clause.h"
+#include "../Constants.h"
+#include "../ErrorMessage.h"
 
 #include <cassert>
 #include <sstream>

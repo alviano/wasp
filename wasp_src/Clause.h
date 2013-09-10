@@ -73,14 +73,15 @@ class Clause
         
     protected:
         inline bool isImplicantOfALiteral() const;
-
+        vector< Literal* > literals;
+        
+        virtual ostream& print( ostream& out ) const;
+        
     private:
         Clause( const Clause& )
         {
             assert( "The copy constructor has been disabled." && 0 );
         }
-
-        vector< Literal* > literals;
 
         WatchedList< Clause* >::iterator iterator_firstWatch;
         WatchedList< Clause* >::iterator iterator_secondWatch;
@@ -106,7 +107,6 @@ Clause::Clause(
     unsigned int size )
 {
     literals.reserve( size );
-    setWatchesInRandomPositions();
 }
 
 Clause::Clause(

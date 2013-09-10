@@ -17,35 +17,31 @@
  */
 
 /* 
- * File:   AbstractBuilder.h
+ * File:   ASPSolver.h
  * Author: Carmine Dodaro
  *
- * Created on 23 July 2013, 13.34
+ * Created on 10 September 2013, 14.22
  */
 
-#ifndef ABSTRACTBUILDER_H
-#define	ABSTRACTBUILDER_H
+#ifndef ASPSOLVER_H
+#define	ASPSOLVER_H
 
-#include <string>
-using namespace std;
+#include "Solver.h"
 
-class Literal;
-class Clause;
-
-class AbstractBuilder
+class ASPSolver : public Solver
 {
-    public:        
-        virtual void newVar() = 0;
-        virtual void newVar( const string& name ) = 0;
-        virtual Clause* startClause() = 0;
-        virtual Clause* startClause( unsigned int size ) = 0;
-        virtual void addLiteralInClause( int lit, Clause* clause ) = 0;
-        virtual void addTrueLiteral( int lit ) = 0;
-        virtual void endClause( Clause* clause ) = 0;
+    public:
+        ASPSolver() : Solver()
+        {        
+        }
         
-        virtual void startBuilding() = 0;
-        virtual void endBuilding() = 0;
+        ~ASPSolver()
+        {
+        }        
+        
+        virtual void init();
+        virtual void propagate( Literal* literalToPropagate );
 };
 
-#endif	/* ABSTRACTBUILDER_H */
+#endif	/* ASPSOLVER_H */
 

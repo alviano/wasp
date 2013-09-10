@@ -59,9 +59,16 @@ class PositiveLiteral : public Literal
         virtual unsigned int getOrderInThePropagation() const;
         virtual void setOrderInThePropagation( unsigned int order );
         
+        inline bool isHidden() const;
         virtual bool isImplicant( const Clause* clause ) const;
         
         virtual void onLearning( LearningStrategy* strategy );
+        
+        inline void setName( string& name );
+        
+    protected:
+        
+        inline const Clause* getImplicant() const;
         
     private:
         
@@ -83,14 +90,14 @@ class PositiveLiteral : public Literal
         /**
          * The truth value of the literal. It can assume three values: UNDEFINED, TRUE or FALSE.
          */
-        TruthValue truthValue;
+        TruthValue truthValue;        
         
         /**
          * This variable stores the clause which derived the literal.
          */
         Clause* implicant;
         
-        virtual ostream& print( ostream& out ) const;
+        virtual ostream& print( ostream& out ) const;        
 };
 
 PositiveLiteral::PositiveLiteral() :
@@ -121,6 +128,25 @@ PositiveLiteral::setUndefined()
 {
     assert( "This assert is not strictly necessary. By the way, this assignment is useless." && truthValue != UNDEFINED );
     truthValue = UNDEFINED;
+}
+
+const Clause*
+PositiveLiteral::getImplicant() const
+{
+    return implicant;
+}
+
+void
+PositiveLiteral::setName(
+    string& n )
+{
+    name = n;
+}
+
+bool
+PositiveLiteral::isHidden() const
+{
+    return name == "";
 }
 
 #endif	/* POSITIVELITERAL_H */

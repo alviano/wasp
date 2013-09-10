@@ -36,9 +36,12 @@ class WaspOutputBuilder : public OutputBuilder
         virtual void printLiteral( PositiveLiteral* );
         virtual void endModel();
         virtual void onProgramIncoherent();
+        
+    private:
+        bool first;
 };
 
-WaspOutputBuilder::WaspOutputBuilder()
+WaspOutputBuilder::WaspOutputBuilder() : first( true )
 {
 }
 

@@ -29,6 +29,7 @@
 #include <iostream>
 #include <list>
 #include <string>
+#include <vector>
 using namespace std;
 
 #include "Constants.h"
@@ -43,6 +44,7 @@ class NegativeLiteral;
 class PositiveLiteral;
 class Solver;
 class HeuristicVisitor;
+class WaspRule;
 
 /**
  * This class represents a Literal.
@@ -63,6 +65,8 @@ class Literal
         inline WatchedList< Clause* >::iterator addWatchedClause( Clause* clause );
         inline void eraseWatchedClause( WatchedList< Clause* >::iterator it );
 
+        inline void addWaspRule( WaspRule* waspRule );
+        
         virtual bool isTrue() const = 0;
         virtual bool isFalse() const = 0;
         virtual bool isUndefined() const = 0;
@@ -95,14 +99,15 @@ class Literal
         void visitForHeuristic( HeuristicVisitor* );
         
         void unitPropagation( Solver& solver );
+        virtual void supportPropagation( Solver& solver );
         
         inline Literal* getOppositeLiteral();
         
         inline const HeuristicCounterForLiteral* getHeuristicCounter() const;
         
-        inline unsigned int numberOfWatchedClauses() const;
+        inline unsigned int numberOfWatchedClauses() const;        
         
-    protected:        
+    protected:
         
         /**
          * This variables stores the heuristic value for this literal.
@@ -118,6 +123,8 @@ class Literal
          * List of all clauses in which the literal is watched.
          */
         WatchedList< Clause* > watchedClauses;
+        
+        vector< WaspRule* > allWaspRules;
 
         virtual ostream& print( ostream& out ) const = 0;
         
@@ -200,6 +207,13 @@ unsigned int
 Literal::numberOfWatchedClauses() const
 {
     return watchedClauses.size();
+}
+
+void
+Literal::addWaspRule( 
+    WaspRule* waspRule )
+{
+    allWaspRules.push_back( waspRule );
 }
 
 #endif	/* LITERAL_H */

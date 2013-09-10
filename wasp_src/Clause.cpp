@@ -16,25 +16,32 @@
  *
  */
 
-#include <vector>
-
-#include "Solver.h"
-
 #include "Clause.h"
 #include "Literal.h"
+#include "solvers/Solver.h"
+
+#include <vector>
+using namespace std;
 
 ostream&
 operator<<(
     ostream & out, 
     const Clause & clause )
 {
-    if( clause.literals.empty() )
+    return clause.print( out );
+}
+
+ostream&
+Clause::print(
+    ostream& out ) const
+{
+    if( literals.empty() )
         return out;
 
-    out << *( clause.literals[ 0 ] );
-    for( unsigned int i = 1; i < clause.literals.size(); i++ )
+    out << *( literals[ 0 ] );
+    for( unsigned int i = 1; i < literals.size(); i++ )
     {
-        Literal* lit = clause.literals[ i ];
+        Literal* lit = literals[ i ];
         out << " | " << *lit;
     }
 
@@ -47,7 +54,6 @@ Clause::onLiteralFalse(
     Solver& solver )
 {
     assert( "The literal must be false." && literal->isFalse() );    
-    
     assert( "Unary clauses must be removed." && literals.size() > 1 );
     
     if( literal == literals[ 0 ] )
@@ -119,5 +125,5 @@ Clause::updateSecondWatch(
     
     assert( "The other watched literal cannot be true." && !literals[ 0 ]->isTrue() );
     //Propagate literals[ 0 ];
-    solver.onLiteralAssigned( literals[ 0 ], TRUE, this );    
+    solver.onLiteralAssigned( literals[ 0 ], TRUE, this );
 }

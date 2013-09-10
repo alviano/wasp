@@ -18,8 +18,11 @@
 
 #include "Literal.h"
 #include "Clause.h"
+#include "WaspRule.h"
 #include "heuristics/visitors/HeuristicVisitor.h"
-#include "Solver.h"
+#include "solvers/Solver.h"
+
+#include <cassert>
 
 ostream&
 operator<<( 
@@ -56,4 +59,18 @@ Literal::visitForHeuristic(
     assert( "Heuristic visitor has not been set." && heuristicVisitor != NULL );
     if( isUndefined() )
         heuristicVisitor->onNavigatingLiteral( this );
+}
+
+void
+Literal::supportPropagation( 
+    Solver& solver )
+{
+    if( isTrue() )
+    {
+        for( unsigned int i = 0; i < allWaspRules.size(); i++ )
+        {
+            WaspRule* waspRule = allWaspRules[ i ];
+            waspRule->onLiteralTrue( this, solver );
+        }
+    }
 }

@@ -19,7 +19,7 @@
 #include "HigherGlobalCounterVisitor.h"
 #include <cassert>
 
-#include "../../Solver.h"
+#include "../../solvers/Solver.h"
 
 void
 HigherGlobalCounterVisitor::choosePolarity(

@@ -21,7 +21,7 @@
 #include <cassert>
 #include "../LearnedClause.h"
 #include "../Literal.h"
-#include "../Solver.h"
+#include "../solvers/Solver.h"
 #include "visitors/TopMostUndefinedClauseVisitor.h"
 #include "visitors/HigherGlobalCounterVisitor.h"
 #include "visitors/MostOccurrencesVisitor.h"
