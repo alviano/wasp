@@ -55,14 +55,14 @@ Clause::onLiteralFalse(
 {
     assert( "The literal must be false." && literal->isFalse() );    
     assert( "Unary clauses must be removed." && literals.size() > 1 );
-    
+
     if( literal == literals[ 0 ] )
     {
         //if the clause is already satisfied do nothing.
         if( !literals[ 1 ]->isTrue() )
         {
             //update first watch
-            updateFirstWatch( solver );          
+            updateFirstWatch( solver );
         }
     }
     else

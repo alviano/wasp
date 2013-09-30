@@ -23,6 +23,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <unordered_set>
 using namespace std;
 
 GringoNumericFormat::~GringoNumericFormat()
@@ -88,7 +89,8 @@ GringoNumericFormat::readNormalRule(
 
     assert( headAtom > 0 );    
 
-    addLiteral( headAtom );
+    addNewVariable( headAtom );
+    
     if( headAtom > 0 )
     {
         unsigned int bodySize;
@@ -107,11 +109,11 @@ GringoNumericFormat::readNormalRule(
                 {
                     ErrorMessage::errorDuringParsing( "Negative size must be equal or less than total size." );
                 }
-                unsigned int next;
-                input >> next;
                 
-                cout << next << endl;
-                addLiteral( next );
+                unsigned int next;
+                input >> next;                                
+                
+                addNewVariable( next );
                 
                 if( negativeSize == 1 )
                 {
@@ -139,26 +141,37 @@ GringoNumericFormat::readNormalRule(
 
                 WaspRule* waspRule = builder->startWaspRule( bodySize + 1 );
 
+                unordered_set< unsigned int > negativeLiteralsInserted;
+                unordered_set< unsigned int > positiveLiteralsInserted;    
+                
                 unsigned int next;
                 unsigned int i = 0;
-
+                
                 while( i < negativeSize )
-                {
+                {                    
                     input >> next;
-                    addLiteral( next );
                     
-                    //Switch the polarity of the literal.
-                    builder->addLiteralInWaspRule( next, waspRule );
+                    //Avoid duplicate literals.
+                    if( negativeLiteralsInserted.insert( next ).second )
+                    {
+                        addNewVariable( next );
+                        //Switch the polarity of the literal.
+                        builder->addLiteralInWaspRule( next, waspRule );
+                    }
                     i++;
                 }
 
                 while( i < bodySize )
                 {
                     input >> next;
-                    addLiteral( next );
                     
-                    //Switch the polarity of the literal.
-                    builder->addLiteralInWaspRule( -next, waspRule );
+                    //Avoid duplicate literals.
+                    if( positiveLiteralsInserted.insert( next ).second )
+                    {
+                        addNewVariable( next );
+                        //Switch the polarity of the literal.
+                        builder->addLiteralInWaspRule( -next, waspRule );
+                    }
                     i++;
                 }
 
@@ -285,6 +298,7 @@ GringoNumericFormat::readTrueAtoms(
     while( nextAtom != 0 )
     {
         assert( nextAtom > 0 );
+        builder->addSupportedVariable( nextAtom );
         builder->addTrueLiteral( nextAtom );
         
         input >> nextAtom;
@@ -306,7 +320,10 @@ GringoNumericFormat::readFalseAtoms(
     while( nextAtom != 0 )
     {        
         if( nextAtom != 0 )
+        {
+            builder->addSupportedVariable( nextAtom );
             builder->addTrueLiteral( -nextAtom );
+        }
         
         input >> nextAtom;
     }
@@ -384,10 +401,10 @@ GringoNumericFormat::readConstraintRule(
 }
 
 void
-GringoNumericFormat::addLiteral(
-    unsigned int literal )
+GringoNumericFormat::addNewVariable(
+    unsigned int variable )
 {
-    while( literal > max )
+    while( variable > max )
     {
         builder->newVar();
         max++;

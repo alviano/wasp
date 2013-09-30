@@ -36,7 +36,7 @@ WaspRule::onLiteralTrue(
 {
     assert( firstTrueLiteral != NULL );    
     assert( literal != auxLiteral );
-    if( !firstTrueLiteral->isTrue() )
+    if( literal == firstTrueLiteral || !firstTrueLiteral->isTrue() )
     {
         firstTrueLiteral = literal;
         solver.onLiteralAssigned( auxLiteral->getOppositeLiteral(), TRUE, this );
@@ -97,7 +97,7 @@ WaspRule::attachWaspRule()
         {
             literals[ i ]->addWaspRule( this );
         }
-    }
+    } 
 }
 
 void

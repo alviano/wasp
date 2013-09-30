@@ -65,7 +65,7 @@ class GringoNumericFormat
 
         void postprocessing();
 
-        void addLiteral( unsigned int literal );
+        void addNewVariable( unsigned int variable );
 
         AbstractBuilder* builder;
 

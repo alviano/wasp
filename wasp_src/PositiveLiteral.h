@@ -38,7 +38,7 @@ class PositiveLiteral : public Literal
     public:
         inline PositiveLiteral();
         inline PositiveLiteral( const string& name );
-        inline ~PositiveLiteral();
+        virtual ~PositiveLiteral();
 
         virtual bool isFalse() const;
         virtual bool isTrue() const;
@@ -115,12 +115,6 @@ PositiveLiteral::PositiveLiteral(
     truthValue( UNDEFINED ),
     implicant( NULL )
 {
-}
-
-PositiveLiteral::~PositiveLiteral()
-{
-    if( oppositeLiteral )
-        delete oppositeLiteral;
 }
 
 void

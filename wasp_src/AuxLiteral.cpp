@@ -31,24 +31,26 @@ void
 AuxLiteral::onLearning(
     LearningStrategy* strategy )
 {
+    if( getImplicant() != NULL )
+        return;
+    
     if( isTrue() )
     {
-        if( getImplicant() != NULL )
-        {
-            if( getImplicant() == waspRule )
-            {
-                assert( "WaspRule has not been set." && waspRule != NULL );
-                waspRule->onLearningForTrueAuxLiteral( strategy );
-            }
-            else
-            {
-                PositiveLiteral::onLearning( strategy );
-            }
-        }
+        assert( getImplicant() == waspRule );
+        assert( "WaspRule has not been set." && waspRule != NULL );
+        waspRule->onLearningForTrueAuxLiteral( strategy );        
     }
     else
     {
-        assert( "WaspRule has not been set." && waspRule != NULL );
-        waspRule->onLearningForFalseAuxLiteral( strategy );
+        assert( "WaspRule has not been set." && waspRule != NULL );        
+        if( getImplicant() == waspRule )
+        {
+            waspRule->onLearningForFalseAuxLiteral( strategy );
+        }
+        else
+        {
+            assert( getImplicant() != NULL );
+            PositiveLiteral::onLearning( strategy );
+        }
     }
 }

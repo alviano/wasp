@@ -210,7 +210,7 @@ Literal::numberOfWatchedClauses() const
 }
 
 void
-Literal::addWaspRule( 
+Literal::addWaspRule(
     WaspRule* waspRule )
 {
     allWaspRules.push_back( waspRule );

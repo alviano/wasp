@@ -28,6 +28,12 @@ PositiveLiteral::print(
     return out;
 }
 
+PositiveLiteral::~PositiveLiteral()
+{
+    if( oppositeLiteral )
+        delete oppositeLiteral;
+}
+
 bool
 PositiveLiteral::isFalse() const
 {

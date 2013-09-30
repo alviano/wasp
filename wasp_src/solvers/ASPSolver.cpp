@@ -21,8 +21,7 @@
 void 
 ASPSolver::init()
 {
-    cout << WASP_STRING << endl;
-    this->printProgram();
+    cout << WASP_STRING << endl;     
 }
 
 void
@@ -30,5 +29,5 @@ ASPSolver::propagate(
     Literal* literalToPropagate )
 {
     literalToPropagate->unitPropagation( *this );
-    literalToPropagate->supportPropagation( *this );
+    literalToPropagate->supportPropagation( *this );    
 }

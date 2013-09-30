@@ -39,8 +39,6 @@ class AuxLiteral;
  */
 class WaspRule : public Clause
 {
-    friend ostream &operator<<( ostream & out, const WaspRule & waspRule );
-
     public:
 
         /**

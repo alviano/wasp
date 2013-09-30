@@ -344,7 +344,7 @@ void
 Solver::chooseLiteral()
 {
     Literal* choice = decisionHeuristic->makeAChoice( *this );    
-    setAChoice( choice );
+    setAChoice( choice );    
 }
 
 void

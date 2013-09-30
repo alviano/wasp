@@ -34,6 +34,11 @@ Solver::~Solver()
         delete positiveLiterals[ i ];
     }
     
+    for( unsigned int i = 0; i < auxLiterals.size(); i++ )
+    {
+        delete auxLiterals[ i ];
+    }
+    
     while( !clauses.empty() )
     {
         delete clauses.back();
@@ -54,6 +59,9 @@ Solver::~Solver()
     
     if( heuristicCounterFactoryForLiteral )
         delete heuristicCounterFactoryForLiteral;
+    
+    if( decisionHeuristic )
+        delete decisionHeuristic;
     
     if( outputBuilder )
         delete outputBuilder;
@@ -280,8 +288,7 @@ Solver::solve()
 
         while( hasNextLiteralToPropagate() )
         {            
-            Literal* literalToPropagate = getNextLiteralToPropagate();
-            
+            Literal* literalToPropagate = getNextLiteralToPropagate();            
             literalToPropagate->setOrderInThePropagation( numberOfAssignedLiterals() );           
             propagate( literalToPropagate );
             

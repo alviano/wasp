@@ -38,7 +38,7 @@
 class AuxLiteral : public PositiveLiteral
 {
     public:
-        inline AuxLiteral();
+        inline AuxLiteral();        
         virtual void supportPropagation( Solver& solver );
         virtual void onLearning( LearningStrategy* strategy );
         inline void setWaspRule( WaspRule* waspRule );

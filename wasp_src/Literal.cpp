@@ -62,7 +62,7 @@ Literal::visitForHeuristic(
 }
 
 void
-Literal::supportPropagation( 
+Literal::supportPropagation(
     Solver& solver )
 {
     if( isTrue() )
