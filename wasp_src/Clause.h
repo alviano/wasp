@@ -227,7 +227,7 @@ Clause::onLearning(
 {
     assert( "LearningStrategy is not initialized." && strategy != NULL );
 
-    for( unsigned int i = 1; i < literals.size(); i++ )
+    for( unsigned int i = 0; i < literals.size(); i++ )
     {
         Literal* literal = literals[ i ];
         strategy->onNavigatingLiteral( literal );

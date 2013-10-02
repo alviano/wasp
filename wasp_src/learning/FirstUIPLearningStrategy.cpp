@@ -58,6 +58,8 @@ FirstUIPLearningStrategy::onConflict(
 	learnedClause->addLiteral( firstUIP );   
     
     assert( learnedClause->size() > 0 );
+    
+    cout << "Learned clause " << *learnedClause << endl;
     if( learnedClause->size() == 1 )
     {
         solver.onLearningUnaryClause( firstUIP, learnedClause );

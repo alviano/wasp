@@ -343,7 +343,8 @@ Solver::foundIncoherence()
 void
 Solver::chooseLiteral()
 {
-    Literal* choice = decisionHeuristic->makeAChoice( *this );    
+    Literal* choice = decisionHeuristic->makeAChoice( *this );
+    cout << "Choice " << *choice << endl;
     setAChoice( choice );    
 }
 
