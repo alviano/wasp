@@ -61,8 +61,8 @@ Clause::onLiteralFalse(
         //if the clause is already satisfied do nothing.
         if( !literals[ 1 ]->isTrue() )
         {
-            //update first watch
-            updateFirstWatch( solver );
+            //update watch
+            updateWatch( solver );
         }
     }
     else
@@ -71,14 +71,16 @@ Clause::onLiteralFalse(
         //if the clause is already satisfied do nothing.
         if( !literals[ 0 ]->isTrue() )
         {
-            //update second watch
-            updateSecondWatch( solver );
+            //The watch to update should be always in first position.
+            swapWatches();            
+            //update watch
+            updateWatch( solver );
         }
     }
 }
 
 void
-Clause::updateFirstWatch(
+Clause::updateWatch(
     Solver& solver )
 {
     assert( "Unary clauses must be removed." && literals.size() > 1 );
@@ -103,27 +105,27 @@ Clause::updateFirstWatch(
     solver.onLiteralAssigned( literals[ 1 ], TRUE, this );    
 }
 
-void
-Clause::updateSecondWatch(
-    Solver& solver )
-{
-    assert( "Unary clauses must be removed." && literals.size() > 1 );
-    
-    for( unsigned int i = 2; i < literals.size(); ++i )
-    {
-        if( !literals[ i ]->isFalse() )
-        {
-            //Detach the old watch
-            detachSecondWatch();
-            //Swap the two literals
-            swapLiterals( 1, i );
-            //Attach the watch in the new position
-            attachSecondWatch();            
-            return;
-        }
-    }
-    
-    assert( "The other watched literal cannot be true." && !literals[ 0 ]->isTrue() );
-    //Propagate literals[ 0 ];
-    solver.onLiteralAssigned( literals[ 0 ], TRUE, this );
-}
+//void
+//Clause::updateSecondWatch(
+//    Solver& solver )
+//{
+//    assert( "Unary clauses must be removed." && literals.size() > 1 );
+//    
+//    for( unsigned int i = 2; i < literals.size(); ++i )
+//    {
+//        if( !literals[ i ]->isFalse() )
+//        {
+//            //Detach the old watch
+//            detachSecondWatch();
+//            //Swap the two literals
+//            swapLiterals( 1, i );
+//            //Attach the watch in the new position
+//            attachSecondWatch();            
+//            return;
+//        }
+//    }
+//    
+//    assert( "The other watched literal cannot be true." && !literals[ 0 ]->isTrue() );
+//    //Propagate literals[ 0 ];
+//    solver.onLiteralAssigned( literals[ 0 ], TRUE, this );
+//}

@@ -41,26 +41,26 @@ int EXIT_CODE = 0;
  */
 int main( int argc, char** argv )
 {    
-//    SATSolver solver;
-//    
-//    SATFormulaBuilder* satFormulaBuilder = new SATFormulaBuilder( &solver );
-//    
-//    Dimacs dimacs( satFormulaBuilder );
-//    dimacs.parse();
-//    
-//    solver.solve();    
-//    
-//    delete satFormulaBuilder;
+    SATSolver solver;
     
-    ASPSolver solver;
-    ASPProgramBuilder* aspProgramBuilder = new ASPProgramBuilder( &solver );
+    SATFormulaBuilder* satFormulaBuilder = new SATFormulaBuilder( &solver );
     
-    GringoNumericFormat gringoNumericFormat( aspProgramBuilder );
-    gringoNumericFormat.parse();
+    Dimacs dimacs( satFormulaBuilder );
+    dimacs.parse();
     
-    solver.solve();
+    solver.solve();    
     
-    delete aspProgramBuilder;
+    delete satFormulaBuilder;
+    
+//    ASPSolver solver;
+//    ASPProgramBuilder* aspProgramBuilder = new ASPProgramBuilder( &solver );
+//    
+//    GringoNumericFormat gringoNumericFormat( aspProgramBuilder );
+//    gringoNumericFormat.parse();
+//    
+//    solver.solve();
+//    
+//    delete aspProgramBuilder;
     
     return EXIT_CODE;
 }
