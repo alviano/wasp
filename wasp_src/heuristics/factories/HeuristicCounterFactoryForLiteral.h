@@ -32,6 +32,7 @@ class HeuristicCounterForLiteral;
 class HeuristicCounterFactoryForLiteral
 {
     public:
+        virtual ~HeuristicCounterFactoryForLiteral() {}
         virtual HeuristicCounterForLiteral* createHeuristicCounter() = 0;        
 };
 

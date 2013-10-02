@@ -48,6 +48,7 @@ class Clause
 
     public:
         inline Clause();
+        virtual ~Clause() {}
 
         /**
          * Constructor of Clause which takes in input the number of literals in the clause.

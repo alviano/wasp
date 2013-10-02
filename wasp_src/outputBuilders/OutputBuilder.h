@@ -37,6 +37,7 @@ class PositiveLiteral;
 class OutputBuilder
 {
 	public:
+	    virtual ~OutputBuilder() {}
         virtual void startModel() = 0;
         virtual void printLiteral( PositiveLiteral* ) = 0;
         virtual void endModel() = 0;
