@@ -41,17 +41,18 @@ FirstUIPLearningStrategy::onConflict(
     conflictClause->onLearning( this );
     conflictLiteral->onLearning( this );
 
-	//If there is only one element, this element is the first UIP.
+    //If there is only one element, this element is the first UIP.
 	while( literalsToNavigate.size() > 1 )
 	{
         //Get next literal.
 		Literal* currentLiteral = getNextLiteralToNavigate();
 
+        assert( "Literal cannot be NULL." && currentLiteral != NULL );
         //Compute implicants of the literal.
         currentLiteral->onLearning( this );
 	}
 
-	assert( "At this point of the computation the first UIP is computed." && literalsToNavigate.size() == 1 );
+    assert( "At this point of the computation the first UIP is computed." && literalsToNavigate.size() == 1 );
 
 	Literal* firstUIP = literalsToNavigate.back();
     literalsToNavigate.pop_back();
@@ -59,7 +60,6 @@ FirstUIPLearningStrategy::onConflict(
     
     assert( learnedClause->size() > 0 );
     
-    cout << "Learned clause " << *learnedClause << endl;
     if( learnedClause->size() == 1 )
     {
         solver.onLearningUnaryClause( firstUIP, learnedClause );
@@ -69,7 +69,8 @@ FirstUIPLearningStrategy::onConflict(
     {
         assert( maxPosition < ( learnedClause->size() - 1 ) );
 
-        learnedClause->attachClause( maxPosition, learnedClause->size() - 1 );
+        //Be careful. UIP should be always in position 0.
+        learnedClause->attachClause( learnedClause->size() - 1, maxPosition );
         solver.addLearnedClause( learnedClause );
 
         bool restartRequired = restartsStrategy->onLearningClause();
@@ -145,4 +146,12 @@ FirstUIPLearningStrategy::addLiteralInLearnedClause(
         }
         learnedClause->addLiteral( literal );
     }
+}
+
+void
+FirstUIPLearningStrategy::addLiteralToNavigate( 
+    Literal* literal )
+{
+    if( addedLiterals.insert( literal ).second && addedLiterals.insert( literal->getOppositeLiteral() ).second )
+        literalsToNavigate.push_back( literal );
 }

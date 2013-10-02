@@ -45,7 +45,7 @@ class Solver;
 class Clause
 {
     friend ostream &operator<<( ostream & out, const Clause & clause );
-
+    
     public:
         inline Clause();
         virtual ~Clause() {}
@@ -56,8 +56,7 @@ class Clause
          * 
          * @param size the numbers of literals.
          */
-        inline Clause( unsigned int size );
-        inline Clause( unsigned int size, unsigned int firstWatch, unsigned int secondWatch );
+        inline Clause( unsigned int size );        
 
         inline void addLiteral( Literal* literal );
 
@@ -108,17 +107,6 @@ Clause::Clause()
 Clause::Clause(
     unsigned int size )
 {
-    literals.reserve( size );
-}
-
-Clause::Clause(
-    unsigned int size,
-    unsigned int first,
-    unsigned int second )
-{
-    assert( "First watch is out of range." && first < size );
-    assert( "Second watch is out of range." && second < size );
-
     literals.reserve( size );
 }
 
@@ -175,9 +163,47 @@ Clause::attachClause(
     unsigned int first,
     unsigned int second )
 {
-    assert( "First watch and second watch point to the same literal." && first != second );
-    swapLiterals( 0, first );
-    swapLiterals( 1, second );
+    assert( "First watch is out of range." && first < literals.size() );
+    assert( "Second watch is out of range." && second < literals.size() );
+    assert( "First watch and second watch point to the same literal." && first != second );   
+    
+    #ifndef NDEBUG
+    Literal* tmp1 = literals[ first ];
+    Literal* tmp2 = literals[ second ];
+    #endif
+    
+    if( first != 0 && second != 0 )
+    {
+        swapLiterals( 0, first );
+        if( second != 1 )
+            swapLiterals( 1, second );
+    }
+    else if( first != 0 && second == 0 )
+    {        
+        if( first == 1 )
+        {
+            //In this case second is equal to 0 and first is equal to 1. You need to do just one swap.
+            swapLiterals( 0, 1 );
+        }
+        else
+        {        
+            swapLiterals( 1, second );
+            swapLiterals( 0, first );   
+        }
+    }
+    else
+    {
+        assert( first == 0 );        
+        //Useless to do: swapLiterals( 0, first );
+        assert( second != 0 );
+        if( second != 1 )
+        {
+            swapLiterals( 1, second );
+        }
+    }
+
+    assert( literals[ 0 ] == tmp1 );
+    assert( literals[ 1 ] == tmp2 );
     
     attachFirstWatch();
     attachSecondWatch();
@@ -193,8 +219,8 @@ Clause::detachClause()
 bool
 Clause::isImplicantOfALiteral() const
 {
-    assert( "Unary clauses must be removed." && literals.size() > 1 );    
-    
+    assert( "Unary clauses must be removed." && literals.size() > 1 );
+
     //We assume that the literal inferred is always in the first position.
     return ( literals[ 0 ]->isImplicant( this ) );// || literals[ 1 ]->isImplicant( this ) );
 }
@@ -227,6 +253,7 @@ Clause::onLearning(
 {
     assert( "LearningStrategy is not initialized." && strategy != NULL );
 
+    //Navigating all literals in the clause.    
     for( unsigned int i = 0; i < literals.size(); i++ )
     {
         Literal* literal = literals[ i ];

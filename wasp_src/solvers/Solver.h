@@ -282,7 +282,8 @@ Solver::deleteLearnedClause(
     List< LearnedClause* >::iterator iterator )
 {
     learnedClause->detachClause();
-    delete learnedClause;
+    
+    delete learnedClause;    
     learnedClauses.erase( iterator );
 }
 
@@ -343,8 +344,7 @@ Solver::foundIncoherence()
 void
 Solver::chooseLiteral()
 {
-    Literal* choice = decisionHeuristic->makeAChoice( *this );
-    cout << "Choice " << *choice << endl;
+    Literal* choice = decisionHeuristic->makeAChoice( *this );    
     setAChoice( choice );    
 }
 

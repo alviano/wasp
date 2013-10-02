@@ -65,7 +65,7 @@ class FirstUIPLearningStrategy : public LearningStrategy
          * The literal added by this method is a literal which should be navigated.
          * @param literal the literal to navigate.
          */
-        inline void addLiteralToNavigate( Literal* literal );                
+        void addLiteralToNavigate( Literal* literal );                
         
         /**
          * The literals already added.
@@ -85,14 +85,6 @@ class FirstUIPLearningStrategy : public LearningStrategy
 FirstUIPLearningStrategy::FirstUIPLearningStrategy(
     RestartsStrategy* restartsStrategy ) : LearningStrategy( restartsStrategy ), maxDecisionLevel( 0 )
 {
-}
-        
-void
-FirstUIPLearningStrategy::addLiteralToNavigate( 
-    Literal* literal )
-{
-    if( addedLiterals.insert( literal ).second )
-        literalsToNavigate.push_back( literal );
 }
 
 void

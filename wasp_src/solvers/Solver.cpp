@@ -290,8 +290,7 @@ Solver::solve()
         {            
             Literal* literalToPropagate = getNextLiteralToPropagate();
             
-            cout << "Propagating " << *literalToPropagate << endl;
-            literalToPropagate->setOrderInThePropagation( numberOfAssignedLiterals() );           
+            literalToPropagate->setOrderInThePropagation( numberOfAssignedLiterals() );
             propagate( literalToPropagate );
             
             if( conflictDetected() )
@@ -308,6 +307,6 @@ Solver::solve()
         }
     }
     
-    printAnswerSet();    
+    printAnswerSet();
     return true;
 }

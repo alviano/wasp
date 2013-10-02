@@ -34,7 +34,6 @@ class LearnedClause : public Clause
     public:
         inline LearnedClause();
         inline LearnedClause( unsigned int size );
-        inline LearnedClause( unsigned int size, unsigned int firstWatch, unsigned int secondWatch );
         
         inline void decreaseActivity();
         inline Activity getActivity() const;
@@ -59,13 +58,6 @@ LearnedClause::LearnedClause() : Clause(), activity( 0 )
 
 LearnedClause::LearnedClause(
     unsigned int size ) : Clause( size ), activity( 0 )
-{
-}
-
-LearnedClause::LearnedClause(
-    unsigned int size,
-    unsigned int firstWatch,
-    unsigned int secondWatch ) : Clause( size, firstWatch, secondWatch ), activity( 0 )
 {
 }
 
