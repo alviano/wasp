@@ -21,7 +21,8 @@
 void 
 SATSolver::init()
 {
-    cout << COMMENT_DIMACS << " " << WASP_STRING << endl;
+    cout << COMMENT_DIMACS << " " << WASP_STRING << endl;    
+    printProgram();
 }
 
 void

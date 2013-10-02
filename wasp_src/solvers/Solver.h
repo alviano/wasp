@@ -176,8 +176,8 @@ Solver::Solver() : currentDecisionLevel( 0 ), conflict( false ), conflictLiteral
     heuristicCounterFactoryForLiteral = new BerkminCounterFactory();
     decisionHeuristic = new BerkminHeuristic();
     
-//    outputBuilder = new DimacsOutputBuilder();
-    outputBuilder = new WaspOutputBuilder();
+    outputBuilder = new DimacsOutputBuilder();
+//    outputBuilder = new WaspOutputBuilder();
 }
 
 void

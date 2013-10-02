@@ -93,10 +93,11 @@ class Clause
         inline void detachFirstWatch();
         inline void detachSecondWatch();
         
-        void updateFirstWatch( Solver& solver );
+        void updateWatch( Solver& solver );
         void updateSecondWatch( Solver& solver );
         
         inline void swapLiterals( unsigned int pos1, unsigned int pos2 );
+        inline void swapWatches();
 };
 
 Clause::Clause()
@@ -191,15 +192,10 @@ Clause::detachClause()
 bool
 Clause::isImplicantOfALiteral() const
 {
-    assert( "Unary clauses must be removed." && literals.size() > 1 );
-    
-//    assert( "This clause is the implicant of a literal which is not in the first position." 
-//         && ( !literals[ 0 ]->isImplicant( this ) || 
-//          ( !literals[ firstWatch ]->isImplicant( this ) 
-//         && !literals[ secondWatch ]->isImplicant( this ) ) ) );
+    assert( "Unary clauses must be removed." && literals.size() > 1 );    
     
     //We assume that the literal inferred is always in the first position.
-    return ( literals[ 0 ]->isImplicant( this ) || literals[ 1 ]->isImplicant( this ) );
+    return ( literals[ 0 ]->isImplicant( this ) );// || literals[ 1 ]->isImplicant( this ) );
 }
 
 void
@@ -229,8 +225,8 @@ Clause::onLearning(
     LearningStrategy* strategy )
 {
     assert( "LearningStrategy is not initialized." && strategy != NULL );
-    
-    for( unsigned int i = 0; i < literals.size(); i++ )
+
+    for( unsigned int i = 1; i < literals.size(); i++ )
     {
         Literal* literal = literals[ i ];
         strategy->onNavigatingLiteral( literal );
@@ -259,6 +255,16 @@ Clause::swapLiterals(
     assert( "First position is out of range." && pos1 < literals.size() );
     assert( "Second position is out of range." && pos2 < literals.size() ); 
     std::swap( literals[ pos1 ], literals[ pos2 ] );
+}
+
+void
+Clause::swapWatches()
+{
+    detachFirstWatch();
+    detachSecondWatch();
+    swapLiterals( 0, 1 );
+    attachFirstWatch();
+    attachSecondWatch();
 }
 
 #endif	/* CLAUSE_H */

@@ -288,7 +288,9 @@ Solver::solve()
 
         while( hasNextLiteralToPropagate() )
         {            
-            Literal* literalToPropagate = getNextLiteralToPropagate();            
+            Literal* literalToPropagate = getNextLiteralToPropagate();
+            
+            cout << "Propagating " << *literalToPropagate << endl;
             literalToPropagate->setOrderInThePropagation( numberOfAssignedLiterals() );           
             propagate( literalToPropagate );
             
