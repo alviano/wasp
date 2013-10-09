@@ -62,8 +62,10 @@ class Literal
                 delete heuristicCounter;
         }
 
-        inline WatchedList< Clause* >::iterator addWatchedClause( Clause* clause );
-        inline void eraseWatchedClause( WatchedList< Clause* >::iterator it );
+//        inline WatchedList< Clause* >::iterator addWatchedClause( Clause* clause );
+//        inline void eraseWatchedClause( WatchedList< Clause* >::iterator it );
+        inline void addWatchedClause( Clause* clause );
+        inline void eraseWatchedClause( Clause* clause );
 
         inline void addWaspRule( WaspRule* waspRule );
         
@@ -141,18 +143,32 @@ Literal::Literal() : heuristicCounter( NULL )
 {
 }
 
-WatchedList< Clause* >::iterator
+//WatchedList< Clause* >::iterator
+//Literal::addWatchedClause(
+//    Clause* clause )
+//{
+//    return watchedClauses.add( clause );
+//}
+//
+//void
+//Literal::eraseWatchedClause(
+//    WatchedList< Clause* >::iterator it )
+//{
+//    watchedClauses.erase( it );
+//}
+
+void
 Literal::addWatchedClause(
     Clause* clause )
 {
-    return watchedClauses.add( clause );
+    watchedClauses.add( clause );
 }
 
 void
 Literal::eraseWatchedClause(
-    WatchedList< Clause* >::iterator it )
+    Clause* clause )
 {
-    watchedClauses.erase( it );
+    watchedClauses.remove( clause );
 }
 
 void

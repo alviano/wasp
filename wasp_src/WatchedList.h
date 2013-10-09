@@ -28,6 +28,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <unordered_map>
 
 #include "stl/List.h"
 #include "Constants.h"
@@ -46,7 +47,8 @@ class WatchedList : private List< T >
         using List< T >::end;
         using List< T >::erase;
         
-        inline iterator add( T element );
+        inline void add( T element );
+        inline void remove( T element );
         
         inline bool hasNext();
         inline T next();
@@ -55,6 +57,7 @@ class WatchedList : private List< T >
 	private:
 	    WatchedList( const WatchedList& );
 	    WatchedList& operator=( const WatchedList& );
+        unordered_map< T, WatchedList< T >::iterator > elementsPosition;
         iterator it;
 };
 
@@ -80,12 +83,24 @@ WatchedList< T >::operator=(
 }
 
 template< class T >
-typename WatchedList< T >::iterator
+void
 WatchedList< T >::add( 
     T element )
 {
-    List< T >::push_front( element );
-    return List< T >::begin();
+    List< T >::push_front( element );    
+    assert( elementsPosition.find( element ) == elementsPosition.end() );
+    elementsPosition[ element ] = List< T >::begin();
+//    return List< T >::begin();
+}
+
+template< class T >
+void
+WatchedList< T >::remove( 
+    T element )
+{
+    assert( elementsPosition.find( element ) != elementsPosition.end() );
+    erase( elementsPosition[ element ] );
+    elementsPosition.erase( element );
 }
 
 template< class T >

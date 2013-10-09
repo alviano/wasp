@@ -83,8 +83,8 @@ class Clause
             assert( "The copy constructor has been disabled." && 0 );
         }
 
-        WatchedList< Clause* >::iterator iterator_firstWatch;
-        WatchedList< Clause* >::iterator iterator_secondWatch;
+//        WatchedList< Clause* >::iterator iterator_firstWatch;
+//        WatchedList< Clause* >::iterator iterator_secondWatch;
         
         inline void setWatchesInRandomPositions();
         
@@ -121,32 +121,32 @@ void
 Clause::attachFirstWatch()
 {
     assert( "Unary clause must be removed." && literals.size() > 1 );
-    iterator_firstWatch = literals[ 0 ]->addWatchedClause( this );
-    assert( "The iterator must point to this clause." && this == *iterator_firstWatch );
+    /*iterator_firstWatch =*/ literals[ 0 ]->addWatchedClause( this );
+//    assert( "The iterator must point to this clause." && this == *iterator_firstWatch );
 }
 
 void
 Clause::attachSecondWatch()
 {
     assert( "Unary clause must be removed." && literals.size() > 1 );
-    iterator_secondWatch = literals[ 1 ]->addWatchedClause( this );
-    assert( "The iterator must point to this clause." && this == *iterator_secondWatch );
+    /*iterator_secondWatch =*/ literals[ 1 ]->addWatchedClause( this );
+//    assert( "The iterator must point to this clause." && this == *iterator_secondWatch );
 }
         
 void
 Clause::detachFirstWatch()
 {
     assert( "The watchToDetach points to a NULL literal." && literals[ 0 ] != NULL );
-    assert( "The iterator must point to this clause." && this == *iterator_firstWatch );
-    literals[ 0 ]->eraseWatchedClause( iterator_firstWatch );
+//    assert( "The iterator must point to this clause." && this == *iterator_firstWatch );
+    literals[ 0 ]->eraseWatchedClause( this/*iterator_firstWatch*/ );
 }
         
 void
 Clause::detachSecondWatch()
 {
     assert( "The watchToDetach points to a NULL literal." && literals[ 1 ] != NULL );
-    assert( "The iterator must point to this clause." && this == *iterator_secondWatch );
-    literals[ 1 ]->eraseWatchedClause( iterator_secondWatch );
+//    assert( "The iterator must point to this clause." && this == *iterator_secondWatch );
+    literals[ 1 ]->eraseWatchedClause( this/*iterator_secondWatch*/ );
 }
 
 void

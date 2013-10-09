@@ -65,9 +65,9 @@ Clause::onLiteralFalse(
             literals[ 0 ] = literals[ 1 ];
             literals[ 1 ] = literal;
             
-            WatchedList< Clause* >::iterator tmp = iterator_firstWatch;
-            iterator_firstWatch = iterator_secondWatch;
-            iterator_secondWatch = tmp;
+//            WatchedList< Clause* >::iterator tmp = iterator_firstWatch;
+//            iterator_firstWatch = iterator_secondWatch;
+//            iterator_secondWatch = tmp;
             assert( "The false literal should be always in position 1." && literals[ 1 ] == literal );
             //update watch
             updateWatch( solver );
