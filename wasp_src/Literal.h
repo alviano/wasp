@@ -82,7 +82,7 @@ class Literal
         
         virtual NegativeLiteral* getNegativeLiteral() = 0;
         virtual PositiveLiteral* getPositiveLiteral() = 0;
-        
+
         virtual bool isImplicant( const Clause* clause ) const = 0;
         
         virtual void setImplicant( Clause* clause ) = 0;

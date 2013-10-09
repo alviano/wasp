@@ -119,11 +119,11 @@ Solver::addVariableInternal(
 void 
 Solver::onLiteralAssigned(
     Literal* literal,
-    TruthValue truthValue,
+//    TruthValue truthValue,
     Clause* implicant )
 {
     assert( "Assigned literal is NULL." && literal != NULL );
-    assert( "TruthValue has an invalid value." && ( truthValue == TRUE || truthValue == FALSE ) );
+//    assert( "TruthValue has an invalid value." && ( truthValue == TRUE || truthValue == FALSE ) );
     
     PositiveLiteral* positiveLiteral = literal->getPositiveLiteral();
 
@@ -134,11 +134,13 @@ Solver::onLiteralAssigned(
         literalsToPropagate.push_back( literal );
         literal->setDecisionLevel( currentDecisionLevel );
         literal->setImplicant( implicant );
-        truthValue == TRUE ? !literal->setTrue() : !literal->setFalse();
+//        truthValue == TRUE ? !literal->setTrue() : !literal->setFalse();
+        bool result = literal->setTrue();
+        assert( result );
     }
     else
     {
-        conflict = truthValue == TRUE ? !literal->setTrue() : !literal->setFalse();
+        conflict = !literal->setTrue();//truthValue == TRUE ? !literal->setTrue() : !literal->setFalse();
         if( conflict )
         {
             conflictLiteral = literal;
@@ -234,7 +236,7 @@ Solver::preprocessing()
     for( list< Literal* >::iterator it = trueLiterals.begin(); it != trueLiterals.end(); ++it )
     {
         Literal* literal = *it;
-        onLiteralAssigned( literal, TRUE, NULL );
+        onLiteralAssigned( literal, NULL );
         
         if( conflictDetected() )
         {
@@ -273,7 +275,7 @@ Solver::solve()
         static unsigned int PROVA = 0;
         static time_t PROVA_TIME = time( 0 );
         
-        if( ++PROVA > 2000000 ) {
+        if( ++PROVA > 4000000 ) {
             cerr << "PROVA END!" << endl;
             return false;
         }

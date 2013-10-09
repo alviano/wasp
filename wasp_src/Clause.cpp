@@ -62,10 +62,13 @@ Clause::onLiteralFalse(
         if( !literals[ 1 ]->isTrue() )
         {
             //The watch to update should be always in position 1.
-            swapWatches();
+            literals[ 0 ] = literals[ 1 ];
+            literals[ 1 ] = literal;
             
+            WatchedList< Clause* >::iterator tmp = iterator_firstWatch;
+            iterator_firstWatch = iterator_secondWatch;
+            iterator_secondWatch = tmp;
             assert( "The false literal should be always in position 1." && literals[ 1 ] == literal );
-            
             //update watch
             updateWatch( solver );
         }
@@ -75,7 +78,7 @@ Clause::onLiteralFalse(
         assert( "Literal is not watched." && literal == literals[ 1 ] );
         //if the clause is already satisfied do nothing.
         if( !literals[ 0 ]->isTrue() )
-        {            
+        {
             //update watch
             updateWatch( solver );
         }
@@ -114,7 +117,8 @@ Clause::updateWatch(
 {
     assert( "Unary clauses must be removed." && literals.size() > 1 );
     
-    for( unsigned int i = 2; i < literals.size(); ++i )
+    unsigned int size = literals.size();
+    for( unsigned int i = 2; i < size; ++i )
     {
         if( !literals[ i ]->isFalse() )
         {
@@ -130,5 +134,5 @@ Clause::updateWatch(
     
     assert( "The other watched literal cannot be true." && !literals[ 0 ]->isTrue() );
     //Propagate literals[ 0 ];
-    solver.onLiteralAssigned( literals[ 0 ], TRUE, this );
+    solver.onLiteralAssigned( literals[ 0 ], this );
 }

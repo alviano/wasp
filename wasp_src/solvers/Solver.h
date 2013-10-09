@@ -86,7 +86,7 @@ class Solver
         inline unsigned int getCurrentDecisionLevel();
         inline void incrementCurrentDecisionLevel();
         
-        void onLiteralAssigned( Literal* literal, TruthValue truthValue, Clause* implicant );        
+        void onLiteralAssigned( Literal* literal, /*TruthValue truthValue,*/ Clause* implicant );        
         
         void decreaseLearnedClausesActivity();
         void onDeletingLearnedClausesThresholdBased();
@@ -251,7 +251,7 @@ Solver::onLearningClause(
     assert( "Learned clause has not been calculated." && learnedClause != NULL );
     
     Clause* clause = static_cast< Clause* >( learnedClause );    
-    onLiteralAssigned( literalToPropagate, TRUE, clause );
+    onLiteralAssigned( literalToPropagate, clause );
     
     deletionStrategy->onLearning( *this, learnedClause );
 }
@@ -262,7 +262,7 @@ Solver::onLearningUnaryClause(
     LearnedClause* learnedClause )
 {
     onRestarting();
-    onLiteralAssigned( literalToPropagate, TRUE, NULL );
+    onLiteralAssigned( literalToPropagate, NULL );
 
     assert( "Learned clause has not been calculated." && learnedClause != NULL );    
     delete learnedClause;
@@ -390,7 +390,7 @@ Solver::setAChoice(
     assert( choice != NULL );
     incrementCurrentDecisionLevel();
     assert( choice->isUndefined() );
-    onLiteralAssigned( choice, TRUE, NULL );
+    onLiteralAssigned( choice, NULL );
 }
 
 bool

@@ -96,8 +96,7 @@ class Clause
         void updateWatch( Solver& solver );
         void updateSecondWatch( Solver& solver );
         
-        inline void swapLiterals( unsigned int pos1, unsigned int pos2 );
-        inline void swapWatches();
+        inline void swapLiterals( unsigned int pos1, unsigned int pos2 );        
 };
 
 Clause::Clause()
@@ -171,36 +170,42 @@ Clause::attachClause(
     Literal* tmp1 = literals[ first ];
     Literal* tmp2 = literals[ second ];
     #endif
-    
-    if( first != 0 && second != 0 )
-    {
-        swapLiterals( 0, first );
-        if( second != 1 )
-            swapLiterals( 1, second );
-    }
-    else if( first != 0 && second == 0 )
-    {        
-        if( first == 1 )
-        {
-            //In this case second is equal to 0 and first is equal to 1. You need to do just one swap.
-            swapLiterals( 0, 1 );
-        }
-        else
-        {        
-            swapLiterals( 1, second );
-            swapLiterals( 0, first );   
-        }
-    }
+
+    swapLiterals( 0, first );
+    if( second == 0 )
+        swapLiterals( 1, first );
     else
-    {
-        assert( first == 0 );        
-        //Useless to do: swapLiterals( 0, first );
-        assert( second != 0 );
-        if( second != 1 )
-        {
-            swapLiterals( 1, second );
-        }
-    }
+        swapLiterals( 1, second );
+    
+//    if( first != 0 && second != 0 )
+//    {
+//        swapLiterals( 0, first );
+//        if( second != 1 )
+//            swapLiterals( 1, second );
+//    }
+//    else if( first != 0 && second == 0 )
+//    {        
+//        if( first == 1 )
+//        {
+//            //In this case second is equal to 0 and first is equal to 1. You need to do just one swap.
+//            swapLiterals( 0, 1 );
+//        }
+//        else
+//        {        
+//            swapLiterals( 1, second );
+//            swapLiterals( 0, first );   
+//        }
+//    }
+//    else
+//    {
+//        assert( first == 0 );        
+//        //Useless to do: swapLiterals( 0, first );
+//        assert( second != 0 );
+//        if( second != 1 )
+//        {
+//            swapLiterals( 1, second );
+//        }
+//    }
 
     assert( literals[ 0 ] == tmp1 );
     assert( literals[ 1 ] == tmp2 );
@@ -233,7 +238,7 @@ Clause::setWatchesInRandomPositions()
     unsigned int second = rand() % ( literals.size() - 1 );
 
     if( second >= first )
-        second++;
+        second++;    
 
     assert( "First watch is not in range." && first < literals.size() );
     assert( "Second watch is not in range." && second < literals.size() );
@@ -283,16 +288,6 @@ Clause::swapLiterals(
     assert( "First position is out of range." && pos1 < literals.size() );
     assert( "Second position is out of range." && pos2 < literals.size() ); 
     std::swap( literals[ pos1 ], literals[ pos2 ] );
-}
-
-void
-Clause::swapWatches()
-{
-    detachFirstWatch();
-    detachSecondWatch();
-    swapLiterals( 0, 1 );
-    attachFirstWatch();
-    attachSecondWatch();
 }
 
 #endif	/* CLAUSE_H */

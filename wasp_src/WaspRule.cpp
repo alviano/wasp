@@ -39,7 +39,7 @@ WaspRule::onLiteralTrue(
     if( literal == firstTrueLiteral || !firstTrueLiteral->isTrue() )
     {
         firstTrueLiteral = literal;
-        solver.onLiteralAssigned( auxLiteral->getOppositeLiteral(), TRUE, this );
+        solver.onLiteralAssigned( auxLiteral->getOppositeLiteral(), this );
     }
 }
 
@@ -51,7 +51,7 @@ WaspRule::onAuxLiteralTrue(
     {
         if( !literals[ i ]->isFalse() && literals[ i ] != auxLiteral )
         {
-            solver.onLiteralAssigned( literals[ i ]->getOppositeLiteral(), TRUE, this );
+            solver.onLiteralAssigned( literals[ i ]->getOppositeLiteral(), this );
         }
     }
 }
