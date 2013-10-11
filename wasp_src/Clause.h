@@ -270,13 +270,27 @@ Clause::visitForHeuristic(
     HeuristicVisitor* heuristicVisitor )
 {
     assert( "Unary clauses must be removed." && literals.size() > 1 );
-    if( literals[ 0 ].isTrue() || literals[ 1 ].isTrue() )
-        return;
     
-    for( unsigned int i = 0; i < literals.size(); i++ )
+    unsigned int i = 0;
+    do
     {
+        if( literals[ i ].isTrue() )
+        {
+            if( i > 0 )
+            {
+                if( i == 1 )
+                    swapLiterals( 0, i );
+                else
+                {
+                    detachFirstWatch();
+                    swapLiterals( 0, i );
+                    attachFirstWatch();
+                }
+            }
+            return;
+        }
         literals[ i ].visitForHeuristic( heuristicVisitor );
-    }
+    }while( i++ < literals.size() )
 }
 
 void

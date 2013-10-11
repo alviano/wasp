@@ -150,7 +150,7 @@ unsigned int
 Literal::getOppositeSign() const
 {
     assert( "Variable has not been set." && variable != NULL );	
-    return ( ~( ( long long ) variable & 1 ) ) & 1;
+    return ( ~( ( long long ) variable ) ) & 1;
 }
 
 const Variable*
