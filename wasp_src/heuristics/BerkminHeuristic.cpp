@@ -58,7 +58,6 @@ BerkminHeuristic::topMostUndefinedLearnedClause(
    Solver& solver )
 {
     const List< LearnedClause* >& learnedClauses = solver.getLearnedClauses();
-    TopMostUndefinedClauseVisitor visitor;
     unsigned int count = 0;
     for( List< LearnedClause* >::const_reverse_iterator it = learnedClauses.rbegin(); it != learnedClauses.rend(); ++it )
     {
@@ -66,7 +65,9 @@ BerkminHeuristic::topMostUndefinedLearnedClause(
             break;
         
         assert( *it != NULL );
-        LearnedClause& learnedClause = *( *it );        
+        LearnedClause& learnedClause = *( *it );                
+        
+        TopMostUndefinedClauseVisitor visitor;
         learnedClause.visitForHeuristic( &visitor );
         
         if( visitor.hasChosenLiteral() )

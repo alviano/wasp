@@ -57,27 +57,17 @@ Clause::onLiteralFalse(
 
     if( literal == literals[ 0 ] )
     {
-        //if the clause is already satisfied do nothing.
-        if( !literals[ 1 ].isTrue() )
-        {
-            //The watch to update should be always in position 1.
-            literals[ 0 ] = literals[ 1 ];
-            literals[ 1 ] = literal;
-
-            assert( "The false literal should be always in position 1." && literals[ 1 ] == literal );
-            //update watch
-            updateWatch( solver );
-        }
+        //The watch to update should be always in position 1.
+        literals[ 0 ] = literals[ 1 ];
+        literals[ 1 ] = literal;
     }
-    else
+
+    assert( "Literal is not watched." && literal == literals[ 1 ] );
+    //if the clause is already satisfied do nothing.
+    if( !literals[ 0 ].isTrue() )
     {
-        assert( "Literal is not watched." && literal == literals[ 1 ] );
-        //if the clause is already satisfied do nothing.
-        if( !literals[ 0 ].isTrue() )
-        {
-            //update watch
-            updateWatch( solver );
-        }
+        //update watch
+        updateWatch( solver );
     }
 }
 

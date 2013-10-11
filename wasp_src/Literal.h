@@ -107,17 +107,17 @@ class Literal
         
         inline Literal getOppositeLiteral();
 
-        Variable* variable;
+        Variable* signedVariable;
 };
 
 Literal::Literal(
     const Literal& l )
 {
-    this->variable = l.variable; 
+    this->signedVariable = l.signedVariable; 
 }
 
 Literal::Literal(
-    Variable* v ) : variable( v )
+    Variable* v ) : signedVariable( v )
 {
     assert( isPositive() );
     assert( getVariable() == v );
@@ -125,7 +125,7 @@ Literal::Literal(
 
 Literal::Literal(
     Variable* v,
-    bool ) : variable( ( Variable* ) ( ( long long ) v | 1 ) )
+    bool ) : signedVariable( ( Variable* ) ( ( long long ) v | 1 ) )
 {
     assert( !isPositive() );
     assert( getVariable() == v );
@@ -133,7 +133,7 @@ Literal::Literal(
 
 Literal::Literal(
     unsigned int sign,
-    Variable* v ) : variable( ( Variable* ) ( ( long long ) v | sign ) )
+    Variable* v ) : signedVariable( ( Variable* ) ( ( long long ) v | sign ) )
 {
     assert( sign == 0 || sign == 1 );
     assert( ( sign == 0 && isPositive() ) || ( sign == 1 && !isPositive() ) );
@@ -147,33 +147,33 @@ Literal::~Literal()
 bool
 Literal::isPositive() const
 {
-    return !( ( long long ) variable & 1 );
+    return !( ( long long ) signedVariable & 1 );
 }
 
 unsigned int
 Literal::getSign() const
 {
-    assert( "Variable has not been set." && variable != NULL );
-	return ( long long ) variable & 1;
+    assert( "Variable has not been set." && signedVariable != NULL );
+	return ( long long ) signedVariable & 1;
 }
 
 unsigned int
 Literal::getOppositeSign() const
 {
-    assert( "Variable has not been set." && variable != NULL );	
-    return ( ~( ( long long ) variable & 1 ) ) & 1;
+    assert( "Variable has not been set." && signedVariable != NULL );	
+    return ( ~( ( long long ) signedVariable ) ) & 1;
 }
 
 const Variable*
 Literal::getVariable() const
 {
-    return ( Variable* ) ( ( long long ) variable & ( ~1 ) );
+    return ( Variable* ) ( ( long long ) signedVariable & ( ~1 ) );
 }
 
 Variable*
 Literal::getVariable()
 {
-    return ( Variable* ) ( ( long long ) variable & ( ~1 ) );
+    return ( Variable* ) ( ( long long ) signedVariable & ( ~1 ) );
 }
 
 bool
@@ -299,19 +299,7 @@ Literal
 Literal::getOppositeLiteral()
 {
     Literal lit( getOppositeSign(), getVariable() );
-    return lit;
-//    if( isPositive() )
-//    {
-//        //create a negative literal
-//        Literal lit( getVariable(), false );
-//        return lit;
-//    }
-//    else
-//    {
-//        //create a positive literal        
-//        Literal lit( getVariable() );
-//        return lit;
-//    }    
+    return lit;    
 }
 
 unsigned int
