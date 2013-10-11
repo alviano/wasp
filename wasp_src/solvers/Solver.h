@@ -33,8 +33,8 @@ using namespace std;
 
 #include "../Clause.h"
 #include "../LearnedClause.h"
+#include "../Variable.h"
 #include "../Literal.h"
-#include "../PositiveLiteral.h"
 #include "../WaspRule.h"
 #include "../stl/List.h"
 #include "../stl/UnorderedSet.h"
@@ -54,8 +54,6 @@ using namespace std;
 #include "../learning/RestartsBasedDeletionStrategy.h"
 #include "../learning/GeometricRestartsStrategy.h"
 
-class Variable;
-
 class Solver
 {
     public:
@@ -65,34 +63,34 @@ class Solver
         virtual void init() = 0;
         virtual bool preprocessing();
         virtual bool solve();
-        virtual void propagate( Literal* literalToPropagate ) = 0;
+        virtual void propagate( Literal literalToPropagate ) = 0;
         
         void addVariable( const string& name );
         void addVariable();
         
-        AuxLiteral* addAuxVariable();
-        inline bool existsAuxLiteral( unsigned int id ) const;
-        inline AuxLiteral* getAuxLiteral( unsigned int id );
+//        AuxLiteral* addAuxVariable();
+//        inline bool existsAuxLiteral( unsigned int id ) const;
+//        inline AuxLiteral* getAuxLiteral( unsigned int id );
         
         inline void addClause( Clause* clause );
         inline void addLearnedClause( LearnedClause* learnedClause );        
         
-        Literal* getLiteral( int lit );
+        Literal getLiteral( int lit );
         inline void addTrueLiteral( int lit );
         
-        inline Literal* getNextLiteralToPropagate();
+        inline Literal getNextLiteralToPropagate();
         inline bool hasNextLiteralToPropagate() const;        
         
         inline unsigned int getCurrentDecisionLevel();
         inline void incrementCurrentDecisionLevel();
         
-        void onLiteralAssigned( Literal* literal, /*TruthValue truthValue,*/ Clause* implicant );        
+        void onLiteralAssigned( Literal literal, Clause* implicant );        
         
         void decreaseLearnedClausesActivity();
         void onDeletingLearnedClausesThresholdBased();
         void onDeletingLearnedClausesAvgBased();
-        inline void onLearningClause( Literal* literalToPropagate, LearnedClause* learnedClause, unsigned int backjumpingLevel );
-        inline void onLearningUnaryClause( Literal* literalToPropagate, LearnedClause* learnedClause );        
+        inline void onLearningClause( Literal literalToPropagate, LearnedClause* learnedClause, unsigned int backjumpingLevel );
+        inline void onLearningUnaryClause( Literal literalToPropagate, LearnedClause* learnedClause );        
         inline void onRestarting();        
         
         inline unsigned int numberOfClauses();
@@ -101,10 +99,10 @@ class Solver
         inline unsigned int numberOfVariables();
         inline unsigned int numberOfAuxVariables();
         
-        inline const UnorderedSet< PositiveLiteral* >& getUndefinedLiterals();
+        inline const UnorderedSet< Variable* >& getUndefinedVariables();
         inline const List< LearnedClause* >& getLearnedClauses();
         
-        inline void setAChoice( Literal* choice );        
+        inline void setAChoice( Literal choice );        
         
         inline void analyzeConflict();
         inline void clearConflictStatus();
@@ -131,26 +129,26 @@ class Solver
             assert( "The copy constructor has been disabled." && 0 );
         }
                 
-        void addVariableInternal( PositiveLiteral* posLiteral );
+        void addVariableInternal( Variable* variable );
         inline void deleteLearnedClause( LearnedClause* learnedClause, List< LearnedClause* >::iterator iterator );
         
-        list< Literal* > trueLiterals;
+        list< Literal > trueLiterals;        
+        list< Literal > literalsToPropagate;
         
-        list< Literal* > literalsToPropagate;
         unsigned int currentDecisionLevel;
         
-        List< PositiveLiteral* > assignedLiterals;
+        List< Variable* > assignedVariables;
         
         /* Data structures */
-        vector< PositiveLiteral* > positiveLiterals;
-        vector< AuxLiteral* > auxLiterals;
+        vector< Variable* > variables;
+        
         List< Clause* > clauses;
         List< LearnedClause* > learnedClauses;
         
         bool conflict;
         vector< unsigned int > unrollVector;
         
-        Literal* conflictLiteral;
+        Literal conflictLiteral;
         Clause* conflictClause;
         
         DecisionHeuristic* decisionHeuristic;
@@ -161,13 +159,13 @@ class Solver
         
         OutputBuilder* outputBuilder;
         
-        UnorderedSet< PositiveLiteral* > undefinedLiterals;        
+        UnorderedSet< Variable* > undefinedVariables;        
 };
 
 Solver::Solver() : currentDecisionLevel( 0 ), conflict( false ), conflictLiteral( NULL ), conflictClause( NULL )
 {
     //Add a fake position.
-    positiveLiterals.push_back( NULL );
+    variables.push_back( NULL );
 //    learningStrategy = new FirstUIPLearningStrategy( new SequenceBasedRestartsStrategy() );
     learningStrategy = new FirstUIPLearningStrategy( new SequenceBasedRestartsStrategy( 100000 ) );
 //    deletionStrategy = new AggressiveDeletionStrategy();
@@ -176,7 +174,7 @@ Solver::Solver() : currentDecisionLevel( 0 ), conflict( false ), conflictLiteral
     heuristicCounterFactoryForLiteral = new BerkminCounterFactory();
     decisionHeuristic = new BerkminHeuristic();
     
-    outputBuilder = new DimacsOutputBuilder();
+    outputBuilder = new DimacsOutputBuilder();    
 //    outputBuilder = new WaspOutputBuilder();
 }
 
@@ -198,15 +196,15 @@ void
 Solver::addTrueLiteral(
     int lit )
 {
-    Literal* literal = getLiteral( lit );
+    Literal literal = getLiteral( lit );
     trueLiterals.push_back( literal );
 }
 
-Literal*
+Literal
 Solver::getNextLiteralToPropagate()
 {
     assert( !literalsToPropagate.empty() );
-    Literal* tmp = literalsToPropagate.back();
+    Literal tmp = literalsToPropagate.back();
     literalsToPropagate.pop_back();
     return tmp;
 }
@@ -227,7 +225,7 @@ void
 Solver::incrementCurrentDecisionLevel()
 {
     currentDecisionLevel++;
-    unrollVector.push_back( assignedLiterals.size() );
+    unrollVector.push_back( assignedVariables.size() );
     
     assert( currentDecisionLevel == unrollVector.size() );
 }
@@ -240,7 +238,7 @@ Solver::unrollOne()
 
 void
 Solver::onLearningClause( 
-    Literal* literalToPropagate, 
+    Literal literalToPropagate, 
     LearnedClause* learnedClause, 
     unsigned int backjumpingLevel )
 {
@@ -258,7 +256,7 @@ Solver::onLearningClause(
 
 void
 Solver::onLearningUnaryClause(
-    Literal* literalToPropagate,
+    Literal literalToPropagate,
     LearnedClause* learnedClause )
 {
     onRestarting();
@@ -299,10 +297,10 @@ Solver::numberOfLearnedClauses()
     return learnedClauses.size();
 }
 
-const UnorderedSet< PositiveLiteral* >&
-Solver::getUndefinedLiterals()
+const UnorderedSet< Variable* >&
+Solver::getUndefinedVariables()
 {
-    return undefinedLiterals;
+    return undefinedVariables;
 }
 
 const List< LearnedClause* >&
@@ -320,17 +318,17 @@ Solver::conflictDetected()
 bool
 Solver::hasUndefinedLiterals()
 {
-    return !undefinedLiterals.empty();
+    return !undefinedVariables.empty();
 }
 
 void
 Solver::printAnswerSet()
 {
     outputBuilder->startModel();    
-    for( List< PositiveLiteral* >::iterator it = assignedLiterals.begin(); it != assignedLiterals.end(); ++it )
+    for( List< Variable* >::iterator it = assignedVariables.begin(); it != assignedVariables.end(); ++it )
     {
         if( !( *it )->isHidden() )
-            outputBuilder->printLiteral( *it );
+            outputBuilder->printVariable( *it );
     }
     outputBuilder->endModel();
 }
@@ -344,14 +342,14 @@ Solver::foundIncoherence()
 void
 Solver::chooseLiteral()
 {
-    Literal* choice = decisionHeuristic->makeAChoice( *this );    
+    Literal choice = decisionHeuristic->makeAChoice( *this );    
     setAChoice( choice );    
 }
 
 void
 Solver::analyzeConflict()
 {    
-    conflictLiteral->setOrderInThePropagation( numberOfAssignedLiterals() + 1 );
+    conflictLiteral.setOrderInThePropagation( numberOfAssignedLiterals() + 1 );
     learningStrategy->onConflict( conflictLiteral, conflictClause, *this );
     decisionHeuristic->onLearning( *this );
     clearConflictStatus();
@@ -368,45 +366,45 @@ Solver::clearConflictStatus()
 unsigned int
 Solver::numberOfAssignedLiterals()
 {
-    return assignedLiterals.size();
+    return assignedVariables.size();
 }
 
 unsigned int
 Solver::numberOfVariables()
 {
-    return positiveLiterals.size();
-}
-
-unsigned int
-Solver::numberOfAuxVariables()
-{
-    return auxLiterals.size();
+    return variables.size();
 }
 
 void
 Solver::setAChoice( 
-    Literal* choice )
+    Literal choice )
 {
     assert( choice != NULL );
     incrementCurrentDecisionLevel();
-    assert( choice->isUndefined() );
+    assert( choice.isUndefined() );
     onLiteralAssigned( choice, NULL );
 }
 
-bool
-Solver::existsAuxLiteral(
-    unsigned int id ) const
-{
-    return( id < auxLiterals.size() );
-}
+//bool
+//Solver::existsAuxLiteral(
+//    unsigned int id ) const
+//{
+//    return( id < auxLiterals.size() );
+//}
+//
+//AuxLiteral*
+//Solver::getAuxLiteral(
+//    unsigned int id )
+//{
+//    assert( existsAuxLiteral( id ) );
+//    return auxLiterals[ id ];
+//}
 
-AuxLiteral*
-Solver::getAuxLiteral(
-    unsigned int id )
-{
-    assert( existsAuxLiteral( id ) );
-    return auxLiterals[ id ];
-}
+//unsigned int
+//Solver::numberOfAuxVariables()
+//{
+//    return auxLiterals.size();
+//}
 
 #endif	/* SOLVER_H */
 

@@ -34,7 +34,7 @@ class MostOccurrencesVisitor : public HeuristicVisitor
 {
     public:
         inline MostOccurrencesVisitor();
-        virtual void onNavigatingLiteral( Literal* literal );
+        virtual void onNavigatingVariable( Variable* variable );
         
     private:
         unsigned int maxOccurrences;

@@ -17,44 +17,55 @@
  */
 
 #include "HigherGlobalCounterVisitor.h"
-#include <cassert>
+#include "../../Literal.h"
+#include "../../Variable.h"
 
 #include "../../solvers/Solver.h"
 
+#include <cassert>
+
 void
 HigherGlobalCounterVisitor::choosePolarity(
-    Literal* literal,
-    Literal* oppositeLiteral )
+    Variable* variable )
 {    
     assert( "Solver has not been set." && solver != NULL );
     
-    unsigned int value1 = estimatePropagation( literal );
+    Literal positiveLiteral( variable );
+    unsigned int value1 = estimatePropagation( positiveLiteral );
     if( value1 == UINT_MAX )
     {
-        chosenLiteral = literal;
+        setChosenLiteral( variable, true );        
+//        chosenLiteral = positiveLiteral;
         return;
     }
-
-    unsigned int value2 = estimatePropagation( oppositeLiteral );
+    
+    Literal negativeLiteral( variable, false );
+    unsigned int value2 = estimatePropagation( negativeLiteral );
 
     if( value1 > value2 )
-        chosenLiteral = literal;
+    {
+        setChosenLiteral( variable, true );
+//        chosenLiteral = positiveLiteral;
+    }
     else
-        chosenLiteral = oppositeLiteral;
+    {
+        setChosenLiteral( variable, false );
+//        chosenLiteral = negativeLiteral;
+    }
 }
 
 unsigned int
 HigherGlobalCounterVisitor::estimatePropagation(
-    Literal* literal )
+    Literal literal )
 {
-    assert( literal->isUndefined() );
+    assert( literal.isUndefined() );
     solver->incrementCurrentDecisionLevel();
     solver->setAChoice( literal );
     
     while( solver->hasNextLiteralToPropagate() )
     {
-        Literal* literalToPropagate = solver->getNextLiteralToPropagate();
-        literalToPropagate->setOrderInThePropagation( solver->numberOfAssignedLiterals() );
+        Literal literalToPropagate = solver->getNextLiteralToPropagate();
+        literalToPropagate.setOrderInThePropagation( solver->numberOfAssignedLiterals() );
         solver->propagate( literalToPropagate );
         
         if( solver->conflictDetected() )
@@ -65,7 +76,7 @@ HigherGlobalCounterVisitor::estimatePropagation(
         }
     }
     
-    unsigned int lookaheadValue = literal->numberOfWatchedClauses() + solver->numberOfAssignedLiterals();
+    unsigned int lookaheadValue = literal.numberOfWatchedClauses() + solver->numberOfAssignedLiterals();
     
     solver->unrollOne();    
     return lookaheadValue;

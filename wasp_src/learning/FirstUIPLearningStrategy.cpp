@@ -25,7 +25,7 @@
 
 void
 FirstUIPLearningStrategy::onConflict(
-    Literal* conflictLiteral,
+    Literal conflictLiteral,
     Clause* conflictClause,
     Solver& solver )
 {
@@ -39,22 +39,22 @@ FirstUIPLearningStrategy::onConflict(
 
     //Compute implicants of the conflicting literal.
     conflictClause->onLearning( this );
-    conflictLiteral->onLearning( this );
+    conflictLiteral.onLearning( this );
 
     //If there is only one element, this element is the first UIP.
 	while( literalsToNavigate.size() > 1 )
 	{
         //Get next literal.
-		Literal* currentLiteral = getNextLiteralToNavigate();
+		Literal currentLiteral = getNextLiteralToNavigate();
 
         assert( "Literal cannot be NULL." && currentLiteral != NULL );
         //Compute implicants of the literal.
-        currentLiteral->onLearning( this );
+        currentLiteral.onLearning( this );
 	}
 
     assert( "At this point of the computation the first UIP is computed." && literalsToNavigate.size() == 1 );
 
-	Literal* firstUIP = literalsToNavigate.back();
+	Literal firstUIP = literalsToNavigate.back();
     literalsToNavigate.pop_back();
 	learnedClause->addLiteral( firstUIP );   
     
@@ -86,62 +86,63 @@ FirstUIPLearningStrategy::onConflict(
     }
 }
 
-Literal*
+Literal
 FirstUIPLearningStrategy::getNextLiteralToNavigate()
 {
     assert( "There is no next literal: list is empty." && !literalsToNavigate.empty() );
     
-    list< Literal* >::iterator it = literalsToNavigate.begin();
-    list< Literal* >::iterator maxLiteralIterator = it;
-    unsigned int max = ( *maxLiteralIterator )->getOrderInThePropagation();
+    list< Literal >::iterator it = literalsToNavigate.begin();
+    list< Literal >::iterator maxLiteralIterator = it;
+    unsigned int max = ( *maxLiteralIterator ).getOrderInThePropagation();
     ++it;
     
     for( ; it != literalsToNavigate.end(); ++it )
     {
-        Literal* current = *it;
-        if( max < current->getOrderInThePropagation() )
+        Literal current = *it;
+        if( max < current.getOrderInThePropagation() )
         {
-            max = current->getOrderInThePropagation();
+            max = current.getOrderInThePropagation();
             maxLiteralIterator = it;
         }
     }
     
     //The most recent literal.
-    Literal* maxLiteral = *maxLiteralIterator;
+    Literal maxLiteral = *maxLiteralIterator;
     literalsToNavigate.erase( maxLiteralIterator );
     return maxLiteral;
 }
 
 void
 FirstUIPLearningStrategy::onNavigatingLiteral( 
-    Literal* literal )
+    Literal literal )
 {
     assert( literal != NULL );
-    unsigned int literalDecisionLevel = literal->getDecisionLevel();
+    unsigned int literalDecisionLevel = literal.getDecisionLevel();
     
     if( literalDecisionLevel == decisionLevel )
     {
-        literal->onNavigatingImplicationGraph();
+        literal.onNavigatingImplicationGraph();
         addLiteralToNavigate( literal );
     }
     else if( literalDecisionLevel > 0 )
     {
-        literal->onNavigatingLearnedClause();
+        literal.onNavigatingLearnedClause();
         addLiteralInLearnedClause( literal );
     }
 }
 
 void
 FirstUIPLearningStrategy::addLiteralInLearnedClause( 
-    Literal* literal )
+    Literal literal )
 {
     assert( "Learned clause is not initialized." && learnedClause != NULL );
     
-    if( addedLiterals.insert( literal ).second )
+//    if( addedVariables.insert( literal ).second )
+    if( addedVariables.insert( literal.getVariable() ).second )
     {
-        if( literal->getDecisionLevel() > maxDecisionLevel )
+        if( literal.getDecisionLevel() > maxDecisionLevel )
         {
-            maxDecisionLevel = literal->getDecisionLevel();
+            maxDecisionLevel = literal.getDecisionLevel();
             maxPosition = learnedClause->size();
         }
         learnedClause->addLiteral( literal );
@@ -150,8 +151,9 @@ FirstUIPLearningStrategy::addLiteralInLearnedClause(
 
 void
 FirstUIPLearningStrategy::addLiteralToNavigate( 
-    Literal* literal )
+    Literal literal )
 {
-    if( addedLiterals.insert( literal ).second && addedLiterals.insert( literal->getOppositeLiteral() ).second )
+//    if( addedVariables.insert( literal ).second && addedVariables.insert( literal.getOppositeLiteral() ).second )
+    if( addedVariables.insert( literal.getVariable() ).second )
         literalsToNavigate.push_back( literal );
 }

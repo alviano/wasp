@@ -18,13 +18,15 @@
 
 #include "FirstUndefinedHeuristic.h"
 
+#include "../Literal.h"
 #include "../solvers/Solver.h"
 
-Literal*
+Literal
 FirstUndefinedHeuristic::makeAChoice(
     Solver& solver )
 {
-    return solver.getUndefinedLiterals().at( 0 );
+    Variable* variable = solver.getUndefinedVariables().at( 0 );
+    return Literal( variable, false );
 }
 
 void

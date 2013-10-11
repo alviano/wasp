@@ -48,14 +48,14 @@ class WaspRule : public Clause
          * @param size the numbers of literals.
          */
         inline WaspRule( unsigned int size );
-        void setAuxLiteral( AuxLiteral* auxLiteral );
+//        void setAuxLiteral( AuxLiteral* auxLiteral );
 
-        void attachWaspRule();
-        void onLiteralTrue( Literal* literal, Solver& solver );
-        void onAuxLiteralTrue( Solver& solver );
-        virtual void onLearning( LearningStrategy* );
-        void onLearningForFalseAuxLiteral( LearningStrategy* );
-        void onLearningForTrueAuxLiteral( LearningStrategy* );
+//        void attachWaspRule();
+//        void onLiteralTrue( Literal* literal, Solver& solver );
+//        void onAuxLiteralTrue( Solver& solver );
+//        virtual void onLearning( LearningStrategy* );
+//        void onLearningForFalseAuxLiteral( LearningStrategy* );
+//        void onLearningForTrueAuxLiteral( LearningStrategy* );
     
     protected:
         virtual ostream& print( ostream& out ) const;

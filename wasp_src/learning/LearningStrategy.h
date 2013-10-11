@@ -46,8 +46,8 @@ class LearningStrategy
                 delete restartsStrategy;
         }
         
-        virtual void onNavigatingLiteral( Literal* ) = 0;
-        virtual void onConflict( Literal* conflictLiteral, Clause* conflictClause, Solver& solver ) = 0;        
+        virtual void onNavigatingLiteral( Literal ) = 0;
+        virtual void onConflict( Literal conflictLiteral, Clause* conflictClause, Solver& solver ) = 0;        
         
     protected:
         

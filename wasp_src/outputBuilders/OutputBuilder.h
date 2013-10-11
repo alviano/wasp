@@ -32,14 +32,14 @@
 #include <list>
 using namespace std;
 
-class PositiveLiteral;
+class Variable;
 
 class OutputBuilder
 {
 	public:
 	    virtual ~OutputBuilder() {}
         virtual void startModel() = 0;
-        virtual void printLiteral( PositiveLiteral* ) = 0;
+        virtual void printVariable( Variable* ) = 0;
         virtual void endModel() = 0;
         virtual void onProgramIncoherent() = 0;
 //        virtual void onAnswerSetFoundWithWeakConstraint( Interpretation&, Program& );

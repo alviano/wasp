@@ -26,29 +26,47 @@
 #ifndef HEURISTICVISITOR_H
 #define	HEURISTICVISITOR_H
 
+class Variable;
 class Literal;
 
+#include <cassert>
+#include <cstdlib>
 #include "../../Constants.h"
 
 class HeuristicVisitor
 {
     public:
         inline HeuristicVisitor();
-        virtual void onNavigatingLiteral( Literal* ) = 0;
-        inline Literal* getChosenLiteral();
+        virtual void onNavigatingVariable( Variable* ) = 0;
+        inline bool hasChosenLiteral() const;
+        Literal getChosenLiteral();
         
     protected:
-        Literal* chosenLiteral;
+        inline void setChosenLiteral( Variable* variable, bool polarity );        
+        
+    private:
+        Variable* chosenVariable;
+        bool chosenPolarity;
 };
 
-HeuristicVisitor::HeuristicVisitor() : chosenLiteral( 0 )
+HeuristicVisitor::HeuristicVisitor() : chosenVariable( NULL ), chosenPolarity( false )
 {
 }
 
-Literal*
-HeuristicVisitor::getChosenLiteral()
+void
+HeuristicVisitor::setChosenLiteral(
+    Variable* variable,
+    bool polarity )
 {
-    return chosenLiteral;
+    assert( "Variable must be set." && variable != NULL );
+    chosenVariable = variable;
+    chosenPolarity = polarity;
+}
+
+bool
+HeuristicVisitor::hasChosenLiteral() const
+{
+    return chosenVariable != NULL;
 }
 
 #endif	/* HEURISTICVISITOR_H */

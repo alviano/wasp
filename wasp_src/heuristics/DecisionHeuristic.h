@@ -33,7 +33,7 @@ class DecisionHeuristic
 {
     public:
         virtual ~DecisionHeuristic() {}
-        virtual Literal* makeAChoice( Solver& solver ) = 0;
+        virtual Literal makeAChoice( Solver& solver ) = 0;
         virtual void onLearning( Solver& solver ) = 0;
         virtual void onRestarting( Solver& solver ) = 0;
 };

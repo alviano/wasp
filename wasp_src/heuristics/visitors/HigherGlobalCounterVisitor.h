@@ -41,10 +41,9 @@ class HigherGlobalCounterVisitor : public BerkminTotalCounterVisitor
          * This function performs a lookahead step in order to choose the
          * polarity of a literal.
          * 
-         * @param literal A literal L.
-         * @param oppositeLiteral A literal with the opposite polarity of L.
+         * @param variable The chosen variable.
          */
-        virtual void choosePolarity( Literal* literal, Literal* oppositeLiteral );
+        virtual void choosePolarity( Variable* variable );
         
         /**
          * An internal function which estimates the effects of propagating a
@@ -55,7 +54,7 @@ class HigherGlobalCounterVisitor : public BerkminTotalCounterVisitor
          * inferred and the number of clauses in which the literal is watched.
          * 
          */
-        virtual unsigned int estimatePropagation( Literal* literal );
+        virtual unsigned int estimatePropagation( Literal literal );
         
     private:
         Solver* solver;

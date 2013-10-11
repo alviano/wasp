@@ -40,7 +40,7 @@ class ASPSolver : public Solver
         }        
         
         virtual void init();
-        virtual void propagate( Literal* literalToPropagate );
+        virtual void propagate( Literal literalToPropagate );
 };
 
 #endif	/* ASPSOLVER_H */

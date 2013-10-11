@@ -27,32 +27,26 @@
 #define	BERKMINHEURISTIC_H
 
 #include "DecisionHeuristic.h"
-#include "../stl/List.h"
-#include "../stl/UnorderedSet.h"
 
-#include <vector>
-using namespace std;
-
-class LearnedClause;
-class PositiveLiteral;
-class HeuristicVisitor;
+//#include <vector>
+//using namespace std;
 
 class BerkminHeuristic : public DecisionHeuristic
 {
     public:
         inline BerkminHeuristic( unsigned int maxBerkminNumber = 512 );
         virtual ~BerkminHeuristic();
-        virtual Literal* makeAChoice( Solver& solver );
+        virtual Literal makeAChoice( Solver& solver );
         virtual void onLearning( Solver& solver );
         virtual void onRestarting( Solver& solver );
         
     protected:
-        virtual Literal* pickLiteralUsingLearnedClauses( Solver& solver );
-        virtual Literal* pickLiteralUsingActivity( Solver& solver );
+        virtual Literal pickLiteralUsingLearnedClauses( Solver& solver );
+        virtual Literal pickLiteralUsingActivity( Solver& solver );
 //        virtual bool tieBreak( vector< Literal* >& );
         
     private:
-        Literal* topMostUndefinedLearnedClause( Solver& solver );
+        Literal topMostUndefinedLearnedClause( Solver& solver );
         unsigned int maxBerkminNumber;
         unsigned int numberOfConflicts;
 };

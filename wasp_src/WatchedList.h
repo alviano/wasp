@@ -87,7 +87,7 @@ void
 WatchedList< T >::add( 
     T element )
 {
-    List< T >::push_front( element );    
+    List< T >::push_front( element );
     assert( elementsPosition.find( element ) == elementsPosition.end() );
     elementsPosition[ element ] = List< T >::begin();
 //    return List< T >::begin();
@@ -95,7 +95,7 @@ WatchedList< T >::add(
 
 template< class T >
 void
-WatchedList< T >::remove( 
+WatchedList< T >::remove(
     T element )
 {
     assert( elementsPosition.find( element ) != elementsPosition.end() );

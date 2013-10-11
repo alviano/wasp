@@ -32,7 +32,7 @@ class TopMostUndefinedClauseVisitor : public BerkminTotalCounterVisitor
 {
     public:
         inline TopMostUndefinedClauseVisitor();
-        void choosePolarity( Literal* literal, Literal* oppositeLiteral );
+        void choosePolarity( Variable* );
 };
 
 TopMostUndefinedClauseVisitor::TopMostUndefinedClauseVisitor() : BerkminTotalCounterVisitor()
@@ -40,4 +40,3 @@ TopMostUndefinedClauseVisitor::TopMostUndefinedClauseVisitor() : BerkminTotalCou
 }
 
 #endif	/* TOPMOSTUNDEFINEDCLAUSEVISITOR_H */
-

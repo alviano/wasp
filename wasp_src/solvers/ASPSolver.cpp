@@ -26,8 +26,8 @@ ASPSolver::init()
 
 void
 ASPSolver::propagate(
-    Literal* literalToPropagate )
+    Literal literalToPropagate )
 {
-    literalToPropagate->unitPropagation( *this );
-    literalToPropagate->supportPropagation( *this );    
+    literalToPropagate.unitPropagation( *this );
+//    literalToPropagate->supportPropagation( *this );    
 }

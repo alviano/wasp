@@ -19,25 +19,22 @@
 #include "Solver.h"
 
 #include "../inputBuilders/AbstractBuilder.h"
-#include "../AuxLiteral.h"
-#include "../NegativeLiteral.h"
-#include "../PositiveLiteral.h"
 
 Solver::~Solver()
 {
-    assignedLiterals.clear();
-    undefinedLiterals.clear();
+    assignedVariables.clear();
+    undefinedVariables.clear();
     literalsToPropagate.clear();
     
-    for( unsigned int i = 1; i < positiveLiterals.size(); i++ )
+    for( unsigned int i = 1; i < variables.size(); i++ )
     {
-        delete positiveLiterals[ i ];
+        delete variables[ i ];
     }
     
-    for( unsigned int i = 0; i < auxLiterals.size(); i++ )
-    {
-        delete auxLiterals[ i ];
-    }
+//    for( unsigned int i = 0; i < auxLiterals.size(); i++ )
+//    {
+//        delete auxLiterals[ i ];
+//    }
     
     while( !clauses.empty() )
     {
@@ -71,76 +68,65 @@ void
 Solver::addVariable( 
     const string& name )
 {    
-    PositiveLiteral* positiveLiteral = new PositiveLiteral( name );
-    addVariableInternal( positiveLiteral );
+    Variable* variable = new Variable( name );
+    addVariableInternal( variable );
 }
 
 void
 Solver::addVariable()
 {
-    PositiveLiteral* positiveLiteral = new PositiveLiteral();
-    addVariableInternal( positiveLiteral );
+    Variable* variable = new Variable();
+    addVariableInternal( variable );
 }
 
-AuxLiteral*
-Solver::addAuxVariable()
-{
-    AuxLiteral* auxLiteral = new AuxLiteral();
-    NegativeLiteral* negativeLiteral = new NegativeLiteral();
-    
-    negativeLiteral->setOppositeLiteral( auxLiteral );
-    auxLiteral->setOppositeLiteral( negativeLiteral );
-    
-    auxLiterals.push_back( auxLiteral );
-    undefinedLiterals.insert( auxLiteral );
-    
-    auxLiteral->setHeuristicCounter( heuristicCounterFactoryForLiteral );
-    negativeLiteral->setHeuristicCounter( heuristicCounterFactoryForLiteral );
-    
-    return auxLiteral;
-}
+//AuxLiteral*
+//Solver::addAuxVariable()
+//{
+//    AuxLiteral* auxLiteral = new AuxLiteral();
+//    NegativeLiteral* negativeLiteral = new NegativeLiteral();
+//    
+//    negativeLiteral->setOppositeLiteral( auxLiteral );
+//    auxLiteral->setOppositeLiteral( negativeLiteral );
+//    
+//    auxLiterals.push_back( auxLiteral );
+//    undefinedLiterals.insert( auxLiteral );
+//    
+//    auxLiteral->setHeuristicCounter( heuristicCounterFactoryForLiteral );
+//    negativeLiteral->setHeuristicCounter( heuristicCounterFactoryForLiteral );
+//    
+//    return auxLiteral;
+//}
 
 void
 Solver::addVariableInternal(
-    PositiveLiteral* positiveLiteral )
+    Variable* variable )
 {
-    NegativeLiteral* negativeLiteral = new NegativeLiteral();
+    variables.push_back( variable );
+    undefinedVariables.insert( variable );
     
-    negativeLiteral->setOppositeLiteral( positiveLiteral );
-    positiveLiteral->setOppositeLiteral( negativeLiteral );
-    
-    positiveLiterals.push_back( positiveLiteral );
-    undefinedLiterals.insert( positiveLiteral );
-    
-    positiveLiteral->setHeuristicCounter( heuristicCounterFactoryForLiteral );
-    negativeLiteral->setHeuristicCounter( heuristicCounterFactoryForLiteral );
+    variable->setHeuristicCounterForLiterals( heuristicCounterFactoryForLiteral );    
 }
 
 void 
 Solver::onLiteralAssigned(
-    Literal* literal,
-//    TruthValue truthValue,
+    Literal literal,
     Clause* implicant )
 {
-    assert( "Assigned literal is NULL." && literal != NULL );
-//    assert( "TruthValue has an invalid value." && ( truthValue == TRUE || truthValue == FALSE ) );
+    Variable* variable = literal.getVariable();
+    assert( variable != NULL );
     
-    PositiveLiteral* positiveLiteral = literal->getPositiveLiteral();
-
-    assert( positiveLiteral != NULL );
-    if( undefinedLiterals.erase( positiveLiteral ) )
+    if( undefinedVariables.erase( variable ) )
     {
-        assignedLiterals.push_back( positiveLiteral );
+        assignedVariables.push_back( variable );
         literalsToPropagate.push_back( literal );
-        literal->setDecisionLevel( currentDecisionLevel );
-        literal->setImplicant( implicant );
-//        truthValue == TRUE ? !literal->setTrue() : !literal->setFalse();
-        bool result = literal->setTrue();
+        variable->setDecisionLevel( currentDecisionLevel );
+        variable->setImplicant( implicant );
+        bool result = literal.setTrue();
         assert( result );
     }
     else
     {
-        conflict = !literal->setTrue();//truthValue == TRUE ? !literal->setTrue() : !literal->setFalse();
+        conflict = !literal.setTrue();
         if( conflict )
         {
             conflictLiteral = literal;
@@ -154,18 +140,18 @@ Solver::unroll(
     unsigned int level )
 {
     assert( "Level is not valid." && level < unrollVector.size() && currentDecisionLevel >= level );
-    assert( "Vector for unroll is inconsistent" && assignedLiterals.size() >= unrollVector[ level ] );    
-    unsigned int toUnroll = assignedLiterals.size() - unrollVector[ level ];
+    assert( "Vector for unroll is inconsistent" && assignedVariables.size() >= unrollVector[ level ] );    
+    unsigned int toUnroll = assignedVariables.size() - unrollVector[ level ];
     unsigned int toPop = currentDecisionLevel - level;
     
     currentDecisionLevel = level;
     
     while( toUnroll > 0 )
     {
-        PositiveLiteral* tmp = assignedLiterals.back();
-        assignedLiterals.pop_back();
+        Variable* tmp = assignedVariables.back();
+        assignedVariables.pop_back();
         tmp->setUndefined();        
-        this->undefinedLiterals.insert( tmp );
+        this->undefinedVariables.insert( tmp );
         toUnroll--;
     }
     
@@ -177,19 +163,21 @@ Solver::unroll(
     literalsToPropagate.clear();
 }
 
-Literal*
+Literal
 Solver::getLiteral(
     int lit )
 {
-    assert( "Lit is out of range." && static_cast< unsigned >( abs( lit ) ) < positiveLiterals.size() );
-    Literal* literal;
+    assert( "Lit is out of range." && static_cast< unsigned >( abs( lit ) ) < variables.size() );
     if( lit > 0 )
-        literal = positiveLiterals[ lit ];
+    {
+        Literal literal( variables[ lit ] );
+        return literal;
+    }
     else
-        literal = positiveLiterals[ -lit ]->getNegativeLiteral();
-    
-    assert( literal != NULL );
-    return literal;
+    {
+        Literal literal( variables[ -lit ], false );
+        return literal;
+    }    
 }
 
 void
@@ -233,9 +221,9 @@ Solver::decreaseLearnedClausesActivity()
 bool
 Solver::preprocessing()
 {
-    for( list< Literal* >::iterator it = trueLiterals.begin(); it != trueLiterals.end(); ++it )
+    for( list< Literal >::iterator it = trueLiterals.begin(); it != trueLiterals.end(); ++it )
     {
-        Literal* literal = *it;
+        Literal literal = *it;
         onLiteralAssigned( literal, NULL );
         
         if( conflictDetected() )
@@ -245,8 +233,8 @@ Solver::preprocessing()
         
         while( hasNextLiteralToPropagate() )
         {
-            Literal* literalToPropagate = getNextLiteralToPropagate();
-            literalToPropagate->setOrderInThePropagation( numberOfAssignedLiterals() );           
+            Literal literalToPropagate = getNextLiteralToPropagate();
+            literalToPropagate.setOrderInThePropagation( numberOfAssignedLiterals() );           
             propagate( literalToPropagate );
             
             if( conflictDetected() )
@@ -271,15 +259,19 @@ Solver::solve()
     
     while( hasUndefinedLiterals() )
     {
-        /*
+        
         static unsigned int PROVA = 0;
         static time_t PROVA_TIME = time( 0 );
         
-        if( ++PROVA > 4000000 ) {
+        /*
+        unsigned int end = 3000000;
+        unsigned int printValue = 10000;
+        
+        if( ++PROVA > end ) {
             cerr << "PROVA END!" << endl;
             return false;
         }
-        else if( ++PROVA % 10000 == 0 )
+        else if( ++PROVA % printValue == 0 )
         {
             cout << PROVA << " " << learnedClauses.size() <<  " " << ( time( 0 ) - PROVA_TIME ) << endl;
         }
@@ -290,9 +282,9 @@ Solver::solve()
 
         while( hasNextLiteralToPropagate() )
         {            
-            Literal* literalToPropagate = getNextLiteralToPropagate();
+            Literal literalToPropagate = getNextLiteralToPropagate();
             
-            literalToPropagate->setOrderInThePropagation( numberOfAssignedLiterals() );
+            literalToPropagate.setOrderInThePropagation( numberOfAssignedLiterals() );
             propagate( literalToPropagate );
             
             if( conflictDetected() )

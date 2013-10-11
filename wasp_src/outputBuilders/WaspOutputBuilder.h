@@ -33,7 +33,7 @@ class WaspOutputBuilder : public OutputBuilder
 	public:
         inline WaspOutputBuilder();
         virtual void startModel();
-        virtual void printLiteral( PositiveLiteral* );
+        virtual void printVariable( Variable* );
         virtual void endModel();
         virtual void onProgramIncoherent();
         

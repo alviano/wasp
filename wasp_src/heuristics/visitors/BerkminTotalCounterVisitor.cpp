@@ -17,45 +17,39 @@
  */
 
 #include "BerkminTotalCounterVisitor.h"
-#include "../../Literal.h"
+#include "../../Variable.h"
 #include "../counters/BerkminCounters.h"
 #include <cassert>
 
 void
-BerkminTotalCounterVisitor::onNavigatingLiteral(
-    Literal* literal )
+BerkminTotalCounterVisitor::onNavigatingVariable(
+    Variable* variable )
 {
-    assert( "Literal has not been set." && literal != NULL );
-    assert( "Literal must be undefined." && literal->isUndefined() );
+    assert( "Variable has not been set." && variable != NULL );
+    assert( "Variable must be undefined." && variable->isUndefined() );
     
-    Literal* oppositeLiteral = literal->getOppositeLiteral();    
-    assert( "OppositeLiteral has not been set." && oppositeLiteral != NULL );
-    
-    BERKMIN_HEURISTIC_COUNTER totalCounter = getTotalCounter( literal, oppositeLiteral );
+    BERKMIN_HEURISTIC_COUNTER totalCounter = getTotalCounter( variable );
     if( totalCounter > maxCounter )
     {
         maxCounter = totalCounter;
-        choosePolarity( literal, oppositeLiteral );
+        choosePolarity( variable );
     }
 }
 
 BERKMIN_HEURISTIC_COUNTER
 BerkminTotalCounterVisitor::getLiteralCounter( 
-    const Literal* literal ) const
+    const HeuristicCounterForLiteral* heuristicCounter ) const
 {
-    const HeuristicCounterForLiteral* heuristicCounter = literal->getHeuristicCounter();
-    
     assert( heuristicCounter != NULL );
-    const BerkminCounters* berkminCounter = static_cast< const BerkminCounters* >( heuristicCounter );
-    
+    const BerkminCounters* berkminCounter = static_cast< const BerkminCounters* >( heuristicCounter );    
     return berkminCounter->getCounter();
 }
 
 BERKMIN_HEURISTIC_COUNTER
 BerkminTotalCounterVisitor::getTotalCounter( 
-    const Literal* literal, 
-    const Literal* oppositeLiteral ) const
+    const Variable* variable ) const
 {
-    BERKMIN_HEURISTIC_COUNTER totalCounter = getLiteralCounter( literal ) + getLiteralCounter( oppositeLiteral );
+    assert( variable != NULL );
+    BERKMIN_HEURISTIC_COUNTER totalCounter = getLiteralCounter( variable->getPositiveHeuristicCounter() ) + getLiteralCounter( variable->getNegativeHeuristicCounter() );
     return totalCounter;
 }

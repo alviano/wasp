@@ -17,7 +17,7 @@
  */
 #include "ThirdCompetitionOutputBuilder.h"
 
-#include "../PositiveLiteral.h"
+#include "../Variable.h"
 
 void
 ThirdCompetitionOutputBuilder::startModel()
@@ -26,12 +26,12 @@ ThirdCompetitionOutputBuilder::startModel()
 }
 
 void
-ThirdCompetitionOutputBuilder::printLiteral(
-    PositiveLiteral* positiveLiteral )
+ThirdCompetitionOutputBuilder::printVariable(
+    Variable* variable )
 {
-    if( positiveLiteral->isTrue() )
+    if( variable->isTrue() )
     {
-        cout << *positiveLiteral << ". ";
+        cout << *variable << ". ";
     }
 }
 

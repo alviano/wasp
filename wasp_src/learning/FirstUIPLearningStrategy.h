@@ -31,13 +31,15 @@
 #include <list>
 using namespace std;
 
+class Variable;
+
 class FirstUIPLearningStrategy : public LearningStrategy
 {
     public:
         inline FirstUIPLearningStrategy( RestartsStrategy* restartsStrategy );
         
-        virtual void onNavigatingLiteral( Literal* );
-        virtual void onConflict( Literal* conflictLiteral, Clause* conflictClause, Solver& solver );        
+        virtual void onNavigatingLiteral( Literal );
+        virtual void onConflict( Literal conflictLiteral, Clause* conflictClause, Solver& solver );        
         
     private:
         
@@ -47,7 +49,7 @@ class FirstUIPLearningStrategy : public LearningStrategy
          * 
          * @return the next literal to consider.
          */
-        Literal* getNextLiteralToNavigate();
+        Literal getNextLiteralToNavigate();
         
         /**
          * This method cleans data structures.
@@ -59,23 +61,23 @@ class FirstUIPLearningStrategy : public LearningStrategy
          * Add a literal in the new learned clause.
          * @param literal the literal to add.
          */
-        void addLiteralInLearnedClause( Literal* literal );
+        void addLiteralInLearnedClause( Literal literal );
         
         /**
          * The literal added by this method is a literal which should be navigated.
          * @param literal the literal to navigate.
          */
-        void addLiteralToNavigate( Literal* literal );                
+        void addLiteralToNavigate( Literal literal );                
         
         /**
          * The literals already added.
          */
-        unordered_set< Literal* > addedLiterals;
+        unordered_set< const Variable* > addedVariables;
         
         /**
          * Literals to explore in the implication graph.
          */
-        list< Literal* > literalsToNavigate;
+        list< Literal > literalsToNavigate;
         
         unsigned int maxDecisionLevel;
         
@@ -93,7 +95,7 @@ FirstUIPLearningStrategy::clearDataStructures()
     learnedClause = NULL;    
     maxDecisionLevel = 0;
     literalsToNavigate.clear();
-    addedLiterals.clear();
+    addedVariables.clear();
 }
 
 #endif	/* FIRSTUIPLEARNINGSTRATEGY_H */

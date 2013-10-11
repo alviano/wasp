@@ -32,7 +32,7 @@ class FirstUndefinedHeuristic : public DecisionHeuristic
 {
     public:
         inline FirstUndefinedHeuristic();
-        virtual Literal* makeAChoice( Solver& solver );
+        virtual Literal makeAChoice( Solver& solver );
         virtual void onLearning( Solver& solver );
         virtual void onRestarting( Solver& solver );
 };

@@ -22,16 +22,23 @@
 #include "../../Literal.h"
 
 void
-MostOccurrencesVisitor::onNavigatingLiteral(    
-    Literal* literal )
+MostOccurrencesVisitor::onNavigatingVariable(    
+    Variable* variable )
 {
-    assert( "Literal has not been set." && literal != NULL );
-    assert( "Literal must be undefined." && literal->isUndefined() );
-    Literal* oppositeLiteral = literal->getOppositeLiteral();
-    unsigned int numberOfOccurrences = literal->numberOfWatchedClauses() + oppositeLiteral->numberOfWatchedClauses();;
+    assert( "Variable has not been set." && variable != NULL );
+    assert( "Variable must be undefined." && variable->isUndefined() );    
+    unsigned int numberOfOccurrences = variable->numberOfPositiveWatchedClauses() + variable->numberOfNegativeWatchedClauses();
     if( numberOfOccurrences > maxOccurrences )
     {
-        maxOccurrences = numberOfOccurrences;        
-        ( literal->numberOfWatchedClauses() > oppositeLiteral->numberOfWatchedClauses() ) ? chosenLiteral = literal : chosenLiteral = oppositeLiteral;
+        maxOccurrences = numberOfOccurrences;
+        if( variable->numberOfPositiveWatchedClauses() > variable->numberOfNegativeWatchedClauses() )
+        {
+            setChosenLiteral( variable, true );
+        }
+        else
+        {
+            setChosenLiteral( variable, false );
+        }
+         
     }
 }

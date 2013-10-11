@@ -17,7 +17,6 @@
  */
 
 #include "SATFormulaBuilder.h"
-#include "../AuxLiteral.h"
 #include "../Clause.h"
 #include "../Literal.h"
 #include "../solvers/Solver.h"
@@ -63,13 +62,13 @@ SATFormulaBuilder::addLiteralInClause(
     int lit, 
     Clause* clause )
 {
-    Literal* literal = solver->getLiteral( lit );
+    Literal literal = solver->getLiteral( lit );
     addLiteralInClause( literal, clause );
 }
 
 void 
 SATFormulaBuilder::addLiteralInClause( 
-    Literal* literal,
+    Literal literal,
     Clause* clause )
 {
     assert( literal != NULL );

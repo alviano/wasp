@@ -17,7 +17,7 @@
  */
 
 #include "CompetitionOutputBuilder.h"
-#include "../PositiveLiteral.h"
+#include "../Variable.h"
 
 extern int EXIT_CODE;
 
@@ -29,12 +29,12 @@ CompetitionOutputBuilder::startModel()
 }
 
 void
-CompetitionOutputBuilder::printLiteral(
-    PositiveLiteral* positiveLiteral )
+CompetitionOutputBuilder::printVariable(
+    Variable* variable )
 {
-    if( positiveLiteral->isTrue() )
+    if( variable->isTrue() )
     {
-        cout << *positiveLiteral << ". ";
+        cout << *variable << ". ";
     }    
 }
 

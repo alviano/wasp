@@ -26,7 +26,7 @@ SATSolver::init()
 
 void
 SATSolver::propagate(
-    Literal* literalToPropagate )
+    Literal literalToPropagate )
 {
-    literalToPropagate->unitPropagation( *this );
+    literalToPropagate.unitPropagation( *this );
 }

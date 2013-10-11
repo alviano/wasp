@@ -17,7 +17,6 @@
  */
 
 #include "WaspRule.h"
-#include "AuxLiteral.h"
 #include "solvers/Solver.h"
 #include "inputBuilders/AbstractBuilder.h"
 
@@ -29,87 +28,87 @@ WaspRule::print(
     return Clause::print( out );
 }
 
-void
-WaspRule::onLiteralTrue( 
-    Literal* literal,
-    Solver& solver )
-{
-    assert( firstTrueLiteral != NULL );    
-    assert( literal != auxLiteral );
-    if( literal == firstTrueLiteral || !firstTrueLiteral->isTrue() )
-    {
-        firstTrueLiteral = literal;
-        solver.onLiteralAssigned( auxLiteral->getOppositeLiteral(), this );
-    }
-}
+//void
+//WaspRule::onLiteralTrue( 
+//    Literal* literal,
+//    Solver& solver )
+//{
+//    assert( firstTrueLiteral != NULL );    
+//    assert( literal != auxLiteral );
+//    if( literal == firstTrueLiteral || !firstTrueLiteral->isTrue() )
+//    {
+//        firstTrueLiteral = literal;
+//        solver.onLiteralAssigned( auxLiteral->getOppositeLiteral(), this );
+//    }
+//}
 
-void
-WaspRule::onAuxLiteralTrue(
-    Solver& solver )
-{
-    for( unsigned int i = 0; i < literals.size(); i++ )
-    {
-        if( !literals[ i ]->isFalse() && literals[ i ] != auxLiteral )
-        {
-            solver.onLiteralAssigned( literals[ i ]->getOppositeLiteral(), this );
-        }
-    }
-}
-
-void
-WaspRule::onLearning(
-    LearningStrategy* strategy )
-{
-    assert( auxLiteral != NULL );
-    if( auxLiteral->isTrue() )
-    {
-        strategy->onNavigatingLiteral( auxLiteral );
-    }
-    else
-    {
-        Clause::onLearning( strategy );
-    }
-}
-
-void
-WaspRule::onLearningForFalseAuxLiteral(
-    LearningStrategy* strategy )
-{
-    assert( firstTrueLiteral != NULL );
-    assert( firstTrueLiteral->isTrue() );
-
-    strategy->onNavigatingLiteral( firstTrueLiteral );
-}
-
-void
-WaspRule::onLearningForTrueAuxLiteral(
-    LearningStrategy* strategy )
-{
-    Clause::onLearning( strategy );
-}
-
-void
-WaspRule::attachWaspRule()
-{
-    for( unsigned int i = 0; i < literals.size(); i++ )
-    {
-        if( literals[ i ] != auxLiteral )
-        {
-            literals[ i ]->addWaspRule( this );
-        }
-    } 
-}
-
-void
-WaspRule::setAuxLiteral(
-    AuxLiteral* auxLit )
-{
-    auxLiteral = auxLit;
-    
-    //Set the first true literal in a random position
-    unsigned int pos = rand() % size();
-    if( literals[ pos ] == auxLiteral )
-        pos = ( pos + 1 ) % size();
-    
-    firstTrueLiteral = literals[ pos ];
-}
+//void
+//WaspRule::onAuxLiteralTrue(
+//    Solver& solver )
+//{
+//    for( unsigned int i = 0; i < literals.size(); i++ )
+//    {
+//        if( !literals[ i ]->isFalse() && literals[ i ] != auxLiteral )
+//        {
+//            solver.onLiteralAssigned( literals[ i ]->getOppositeLiteral(), this );
+//        }
+//    }
+//}
+//
+//void
+//WaspRule::onLearning(
+//    LearningStrategy* strategy )
+//{
+//    assert( auxLiteral != NULL );
+//    if( auxLiteral->isTrue() )
+//    {
+//        strategy->onNavigatingLiteral( auxLiteral );
+//    }
+//    else
+//    {
+//        Clause::onLearning( strategy );
+//    }
+//}
+//
+//void
+//WaspRule::onLearningForFalseAuxLiteral(
+//    LearningStrategy* strategy )
+//{
+//    assert( firstTrueLiteral != NULL );
+//    assert( firstTrueLiteral->isTrue() );
+//
+//    strategy->onNavigatingLiteral( firstTrueLiteral );
+//}
+//
+//void
+//WaspRule::onLearningForTrueAuxLiteral(
+//    LearningStrategy* strategy )
+//{
+//    Clause::onLearning( strategy );
+//}
+//
+//void
+//WaspRule::attachWaspRule()
+//{
+//    for( unsigned int i = 0; i < literals.size(); i++ )
+//    {
+//        if( literals[ i ] != auxLiteral )
+//        {
+//            literals[ i ]->addWaspRule( this );
+//        }
+//    } 
+//}
+//
+//void
+//WaspRule::setAuxLiteral(
+//    AuxLiteral* auxLit )
+//{
+//    auxLiteral = auxLit;
+//    
+//    //Set the first true literal in a random position
+//    unsigned int pos = rand() % size();
+//    if( literals[ pos ] == auxLiteral )
+//        pos = ( pos + 1 ) % size();
+//    
+//    firstTrueLiteral = literals[ pos ];
+//}

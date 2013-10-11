@@ -16,24 +16,20 @@
  *
  */
 
-#include "TopMostUndefinedClauseVisitor.h"
-
+#include "HeuristicVisitor.h"
 #include "../../Literal.h"
-#include "../../Variable.h"
-#include "../counters/BerkminCounters.h"
-#include <cassert>
 
-void
-TopMostUndefinedClauseVisitor::choosePolarity(
-    Variable* variable )
+Literal
+HeuristicVisitor::getChosenLiteral()
 {
-    assert( "Variable has not been set." && variable != NULL );
-    if( getLiteralCounter( variable->getPositiveHeuristicCounter() ) > getLiteralCounter( variable->getNegativeHeuristicCounter() ) )
+    if( chosenPolarity )
     {
-        setChosenLiteral( variable, true );
+        Literal literal( chosenVariable );
+        return literal;
     }
     else
     {
-        setChosenLiteral( variable, false );
+        Literal literal( chosenVariable, false );
+        return literal;
     }
 }

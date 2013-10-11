@@ -231,7 +231,9 @@ Dimacs::readClause(
     
     //if the clause is not trivial add it in the formula
     if( !trivial )
-        builder->endClause( clause );
+    {
+        builder->endClause( clause );        
+    }
     else
         delete clause;
 }

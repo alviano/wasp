@@ -27,14 +27,10 @@
 #define	CONSTANTS_H
 
 #include <climits>
-//#define UNDEFINED 1
-//#define TRUE 2
-//#define FALSE 4
-//#define TRUE_UNDEFINED 3
-//#define FALSE_UNDEFINED 5
-//#define INTERPRETATION_MASK 7
-
-enum TruthValue { UNDEFINED = 1, TRUE = 2, FALSE = 4 };
+//enum TruthValue { UNDEFINED = 0, FALSE = 1, TRUE = 2 };
+#define UNDEFINED 0
+#define FALSE 1
+#define TRUE 2
 
 /*
  * Wasp constants
@@ -85,6 +81,7 @@ enum TruthValue { UNDEFINED = 1, TRUE = 2, FALSE = 4 };
  */
 typedef double Activity;
 typedef unsigned int BERKMIN_HEURISTIC_COUNTER;
+typedef unsigned int TruthValue;
 
 
 #endif	/* CONSTANTS_H */

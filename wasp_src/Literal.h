@@ -23,214 +23,323 @@
  * Created on 21 July 2013, 16.50
  */
 
+
 #ifndef LITERAL_H
 #define	LITERAL_H
 
-#include <iostream>
-#include <list>
-#include <string>
-#include <vector>
+#include <cassert>
 using namespace std;
 
 #include "Constants.h"
-#include "WatchedList.h"
-#include "heuristics/counters/HeuristicCounterForLiteral.h"
-#include "heuristics/DecisionHeuristic.h"
-#include "heuristics/factories/HeuristicCounterFactoryForLiteral.h"
+#include "Variable.h"
 
 class Clause;
-class LearningStrategy;
-class NegativeLiteral;
-class PositiveLiteral;
 class Solver;
-class HeuristicVisitor;
-class WaspRule;
 
-/**
- * This class represents a Literal.
- * 
- */
 class Literal
 {
-    friend ostream &operator<<( ostream& out, const Literal& lit );
-    
-    public:
-        inline Literal();
-        inline virtual ~Literal()
-        {
-            if( heuristicCounter )
-                delete heuristicCounter;
-        }
+    friend ostream &operator<<( ostream &, const Literal & );
 
-//        inline WatchedList< Clause* >::iterator addWatchedClause( Clause* clause );
-//        inline void eraseWatchedClause( WatchedList< Clause* >::iterator it );
-        inline void addWatchedClause( Clause* clause );
+	public:
+
+		// Instantiate a positive literal
+		inline Literal( Variable* = NULL );
+
+		// Instantiate a negative literal. The boolean value is ignored.
+		inline Literal( Variable*, bool );
+
+		inline Literal( const Literal& );
+		inline ~Literal();
+
+		inline bool isTrue() const;
+		inline bool isFalse() const;
+		inline bool isUndefined() const;
+
+        inline bool setTrue();
+
+		inline bool operator==( const Literal& ) const;
+        inline bool operator!=( const Literal& ) const;
+
+		inline void addWatchedClause( Clause* clause );
         inline void eraseWatchedClause( Clause* clause );
 
-        inline void addWaspRule( WaspRule* waspRule );
-        
-        virtual bool isTrue() const = 0;
-        virtual bool isFalse() const = 0;
-        virtual bool isUndefined() const = 0;
-        
-        virtual bool setFalse() = 0;
-        virtual bool setTrue() = 0;
-        
-        virtual unsigned int getDecisionLevel() const = 0;
-        virtual void setDecisionLevel( unsigned int ) = 0;
-        
-        virtual unsigned int getOrderInThePropagation() const = 0;
-        virtual void setOrderInThePropagation( unsigned int order ) = 0;
-        
-        virtual NegativeLiteral* getNegativeLiteral() = 0;
-        virtual PositiveLiteral* getPositiveLiteral() = 0;
+//        inline void addWaspRule( WaspRule* waspRule );
 
-        virtual bool isImplicant( const Clause* clause ) const = 0;
+        inline unsigned int getDecisionLevel() const;
+//        inline void setDecisionLevel( unsigned int );
+
+        inline unsigned int getOrderInThePropagation() const;
+        inline void setOrderInThePropagation( unsigned int order );
+
+        inline bool isImplicant( const Clause* clause ) const;
+//        inline void setImplicant( Clause* clause );
         
-        virtual void setImplicant( Clause* clause ) = 0;
-        inline void setOppositeLiteral( Literal* lit );
-        
-        inline void setHeuristicCounter( HeuristicCounterFactoryForLiteral* );
-        
-        virtual void onLearning( LearningStrategy* strategy ) = 0;
-        
+        inline void onLearning( LearningStrategy* strategy );
+
         inline void onNavigatingLearnedClause();
         inline void onNavigatingImplicationGraph();
         inline void onAging( unsigned int );
+
+        inline void visitForHeuristic( HeuristicVisitor* );
+
+        inline void unitPropagation( Solver& solver );
+//        void supportPropagation( Solver& solver );
         
-        void visitForHeuristic( HeuristicVisitor* );
+        inline unsigned int numberOfWatchedClauses() const;
+        inline Variable* getVariable();
+        inline const Variable* getVariable() const;
         
-        void unitPropagation( Solver& solver );
-        virtual void supportPropagation( Solver& solver );
-        
-        inline Literal* getOppositeLiteral();
-        
-        inline const HeuristicCounterForLiteral* getHeuristicCounter() const;
-        
-        inline unsigned int numberOfWatchedClauses() const;        
-        
-    protected:
+	private:
         
         /**
-         * This variables stores the heuristic value for this literal.
+         * This function returns 0 if the literal is positive, 1 otherwise.
          */
-        HeuristicCounterForLiteral* heuristicCounter;
-
+        inline unsigned int getSign() const;
+        
         /**
-         * The literal with the opposite polarity.
+         * This function returns 1 if the literal is positive, 0 otherwise.
          */
-        Literal* oppositeLiteral;
+        inline unsigned int getOppositeSign() const;
+        
+        inline bool isPositive() const;
+        
+        inline Literal getOppositeLiteral();
 
-        /**
-         * List of all clauses in which the literal is watched.
-         */
-        WatchedList< Clause* > watchedClauses;
-        
-        vector< WaspRule* > allWaspRules;
-
-        virtual ostream& print( ostream& out ) const = 0;
-        
-    private:
-        
-        Literal( const Literal& )
-        {
-            assert( "The copy constructor has been disabled." && 0 );
-        }
-        
+        Variable* variable;
 };
 
-Literal::Literal() : heuristicCounter( NULL )
+Literal::Literal(
+    const Literal& l )
+{
+    this->variable = l.variable; 
+}
+
+Literal::Literal(
+    Variable* v ) : variable( v )
+{
+    assert( isPositive() );
+    assert( getVariable() == v );
+}
+
+Literal::Literal(
+    Variable* v,
+    bool ) : variable( ( Variable* ) ( ( long long ) v | 1 ) )
+{
+    assert( !isPositive() );
+    assert( getVariable() == v );
+}
+
+Literal::~Literal()
 {
 }
 
-//WatchedList< Clause* >::iterator
-//Literal::addWatchedClause(
+bool
+Literal::isPositive() const
+{
+    return !( ( long long ) variable & 1 );
+}
+
+unsigned int
+Literal::getSign() const
+{
+    assert( "Variable has not been set." && variable != NULL );
+	return ( long long ) variable & 1;
+}
+
+unsigned int
+Literal::getOppositeSign() const
+{
+    assert( "Variable has not been set." && variable != NULL );	
+    return ( ~( ( long long ) variable & 1 ) ) & 1;
+}
+
+const Variable*
+Literal::getVariable() const
+{
+    return ( Variable* ) ( ( long long ) variable & ( ~1 ) );
+}
+
+Variable*
+Literal::getVariable()
+{
+    return ( Variable* ) ( ( long long ) variable & ( ~1 ) );
+}
+
+bool
+Literal::operator==(
+    const Literal& literal ) const
+{
+    return ( getVariable() == literal.getVariable() );
+}
+
+bool
+Literal::operator!=(
+    const Literal& literal ) const
+{
+    return ( getVariable() != literal.getVariable() );
+}
+
+bool
+Literal::isTrue() const
+{
+    assert( "Variable has not been set." && getVariable() != NULL );
+    return ( getVariable()->getTruthValue() << getSign() ) & 2;
+}
+
+bool
+Literal::isFalse() const
+{
+    assert( "Variable has not been set." && getVariable() != NULL );
+    return ( getVariable()->getTruthValue() >> getSign() ) & 1;
+}
+
+bool
+Literal::isUndefined() const
+{
+    assert( "Variable has not been set." && getVariable() != NULL );
+    return getVariable()->isUndefined();
+}
+
+unsigned int
+Literal::getDecisionLevel() const
+{
+    assert( "Variable has not been set." && getVariable() != NULL );
+    return getVariable()->getDecisionLevel();
+}
+
+//void
+//Literal::setDecisionLevel( 
+//    unsigned int dl )
+//{
+//    assert( "Variable has not been set." && getVariable() != NULL );
+//    getVariable()->setDecisionLevel( dl );
+//}
+
+unsigned int
+Literal::getOrderInThePropagation() const
+{
+    assert( "Variable has not been set." && getVariable() != NULL );
+    return getVariable()->getOrderInThePropagation();
+}
+
+void
+Literal::setOrderInThePropagation( 
+    unsigned int order )
+{
+    assert( "Variable has not been set." && getVariable() != NULL );
+    getVariable()->setOrderInThePropagation( order );
+}
+
+bool
+Literal::isImplicant(
+    const Clause* clause ) const
+{
+    assert( "Variable has not been set." && getVariable() != NULL );
+    return getVariable()->isImplicant( clause );
+}
+
+//void
+//Literal::setImplicant(
 //    Clause* clause )
 //{
-//    return watchedClauses.add( clause );
+//    assert( "Variable has not been set." && getVariable() != NULL );
+//    return getVariable()->setImplicant( clause );
 //}
-//
-//void
-//Literal::eraseWatchedClause(
-//    WatchedList< Clause* >::iterator it )
-//{
-//    watchedClauses.erase( it );
-//}
+
+bool
+Literal::setTrue()
+{
+    assert( "Variable has not been set." && getVariable() != NULL );
+    TruthValue truth = TRUE >> getSign();    
+    return getVariable()->setTruthValue( truth );    
+}
+
+void
+Literal::onLearning( 
+    LearningStrategy* strategy )
+{
+    assert( "Variable has not been set." && getVariable() != NULL );
+    getVariable()->onLearning( strategy );
+}
+
+void
+Literal::onNavigatingLearnedClause()
+{
+    assert( "Variable has not been set." && getVariable() != NULL );
+    getVariable()->onNavigatingLearnedClause( getSign() );
+}
+
+void
+Literal::onNavigatingImplicationGraph()
+{
+    assert( "Variable has not been set." && getVariable() != NULL );
+    getVariable()->onNavigatingImplicationGraph( getSign() );
+}
+
+void
+Literal::onAging( 
+    unsigned int value )
+{
+    assert( "Variable has not been set." && getVariable() != NULL );
+    getVariable()->onAging( value, getSign() );
+}
+
+Literal
+Literal::getOppositeLiteral()
+{
+    if( isPositive() )
+    {
+        //create a negative literal
+        Literal lit( getVariable(), false );
+        return lit;
+    }
+    else
+    {
+        //create a positive literal        
+        Literal lit( getVariable() );
+        return lit;
+    }    
+}
+
+unsigned int
+Literal::numberOfWatchedClauses() const
+{
+    assert( "Variable has not been set." && getVariable() != NULL );
+    return getVariable()->numberOfWatchedClauses( getSign() );
+}
 
 void
 Literal::addWatchedClause(
     Clause* clause )
 {
-    watchedClauses.add( clause );
+    assert( "Variable has not been set." && getVariable() != NULL );
+    getVariable()->addWatchedClause( clause, getSign() );
 }
 
 void
 Literal::eraseWatchedClause(
     Clause* clause )
 {
-    watchedClauses.remove( clause );
+    assert( "Variable has not been set." && getVariable() != NULL );
+    getVariable()->eraseWatchedClause( clause, getSign() );
 }
 
 void
-Literal::setOppositeLiteral(
-    Literal* lit )
+Literal::visitForHeuristic( 
+    HeuristicVisitor* heuristicVisitor )
 {
-    oppositeLiteral = lit;
+    assert( "Variable has not been set." && getVariable() != NULL );
+    getVariable()->visitForHeuristic( heuristicVisitor );
 }
 
 void
-Literal::onNavigatingLearnedClause()
+Literal::unitPropagation(
+    Solver& solver )
 {
-    assert( "Heuristic has not been set." && heuristicCounter != NULL );
-    heuristicCounter->onNavigatingLearnedClause();
-}
-
-void
-Literal::onNavigatingImplicationGraph()
-{
-    assert( "Heuristic has not been set." && heuristicCounter != NULL );
-    heuristicCounter->onNavigatingImplicationGraph();
-}
-
-void
-Literal::onAging(
-    unsigned int value )
-{
-    assert( "Heuristic has not been set." && heuristicCounter != NULL );
-    heuristicCounter->onAging( value );
-}
-
-void
-Literal::setHeuristicCounter( 
-    HeuristicCounterFactoryForLiteral* heuristicCounterFactoryForLiteral )
-{
-    heuristicCounter = heuristicCounterFactoryForLiteral->createHeuristicCounter();
-}
-
-const HeuristicCounterForLiteral*
-Literal::getHeuristicCounter() const
-{
-    return heuristicCounter;
-}
-
-Literal*
-Literal::getOppositeLiteral()
-{
-    return oppositeLiteral;
-}
-
-unsigned int
-Literal::numberOfWatchedClauses() const
-{
-    return watchedClauses.size();
-}
-
-void
-Literal::addWaspRule(
-    WaspRule* waspRule )
-{
-    allWaspRules.push_back( waspRule );
+    assert( "Literal to propagate is Undefined." && !this->isUndefined() );
+    assert( this->isTrue() );
+    assert( "Variable has not been set." && getVariable() != NULL );
+    getVariable()->unitPropagation( solver, getOppositeLiteral(), getOppositeSign() );
 }
 
 #endif	/* LITERAL_H */
-

@@ -58,14 +58,14 @@ class Clause
          */
         inline Clause( unsigned int size );        
 
-        inline void addLiteral( Literal* literal );
+        inline void addLiteral( Literal literal );
 
         inline void attachClause();
         inline void attachClause( unsigned int firstWatch, unsigned int secondWatch );
         inline void detachClause();
 
         inline void onLearning( LearningStrategy* strategy );
-        void onLiteralFalse( Literal* literal, Solver& solver );
+        void onLiteralFalse( Literal literal, Solver& solver );
 
         inline unsigned int size() const;
         
@@ -73,7 +73,7 @@ class Clause
         
     protected:
         inline bool isImplicantOfALiteral() const;
-        vector< Literal* > literals;
+        vector< Literal > literals;
         
         virtual ostream& print( ostream& out ) const;
         
@@ -111,17 +111,16 @@ Clause::Clause(
 
 void
 Clause::addLiteral(
-    Literal* literal )
+    Literal literal )
 {
-    assert( literal != NULL );
     literals.push_back( literal );
 }
 
 void
 Clause::attachFirstWatch()
 {
-    assert( "Unary clause must be removed." && literals.size() > 1 );
-    /*iterator_firstWatch =*/ literals[ 0 ]->addWatchedClause( this );
+    assert( "Unary clause must be removed." && literals.size() > 1 );    
+    /*iterator_firstWatch =*/ literals[ 0 ].addWatchedClause( this );
 //    assert( "The iterator must point to this clause." && this == *iterator_firstWatch );
 }
 
@@ -129,7 +128,7 @@ void
 Clause::attachSecondWatch()
 {
     assert( "Unary clause must be removed." && literals.size() > 1 );
-    /*iterator_secondWatch =*/ literals[ 1 ]->addWatchedClause( this );
+    /*iterator_secondWatch =*/ literals[ 1 ].addWatchedClause( this );
 //    assert( "The iterator must point to this clause." && this == *iterator_secondWatch );
 }
         
@@ -138,7 +137,7 @@ Clause::detachFirstWatch()
 {
     assert( "The watchToDetach points to a NULL literal." && literals[ 0 ] != NULL );
 //    assert( "The iterator must point to this clause." && this == *iterator_firstWatch );
-    literals[ 0 ]->eraseWatchedClause( this/*iterator_firstWatch*/ );
+    literals[ 0 ].eraseWatchedClause( this/*iterator_firstWatch*/ );
 }
         
 void
@@ -146,7 +145,7 @@ Clause::detachSecondWatch()
 {
     assert( "The watchToDetach points to a NULL literal." && literals[ 1 ] != NULL );
 //    assert( "The iterator must point to this clause." && this == *iterator_secondWatch );
-    literals[ 1 ]->eraseWatchedClause( this/*iterator_secondWatch*/ );
+    literals[ 1 ].eraseWatchedClause( this/*iterator_secondWatch*/ );
 }
 
 void
@@ -167,8 +166,8 @@ Clause::attachClause(
     assert( "First watch and second watch point to the same literal." && first != second );   
     
     #ifndef NDEBUG
-    Literal* tmp1 = literals[ first ];
-    Literal* tmp2 = literals[ second ];
+    Literal tmp1 = literals[ first ];
+    Literal tmp2 = literals[ second ];
     #endif
 
     swapLiterals( 0, first );
@@ -227,7 +226,7 @@ Clause::isImplicantOfALiteral() const
     assert( "Unary clauses must be removed." && literals.size() > 1 );
 
     //We assume that the literal inferred is always in the first position.
-    return ( literals[ 0 ]->isImplicant( this ) );// || literals[ 1 ]->isImplicant( this ) );
+    return ( literals[ 0 ].isImplicant( this ) );// || literals[ 1 ]->isImplicant( this ) );
 }
 
 void
@@ -261,7 +260,7 @@ Clause::onLearning(
     //Navigating all literals in the clause.    
     for( unsigned int i = 0; i < literals.size(); i++ )
     {
-        Literal* literal = literals[ i ];
+        Literal literal = literals[ i ];
         strategy->onNavigatingLiteral( literal );
     }
 }
@@ -271,12 +270,12 @@ Clause::visitForHeuristic(
     HeuristicVisitor* heuristicVisitor )
 {
     assert( "Unary clauses must be removed." && literals.size() > 1 );
-    if( literals[ 0 ]->isTrue() || literals[ 1 ]->isTrue() )
+    if( literals[ 0 ].isTrue() || literals[ 1 ].isTrue() )
         return;
     
     for( unsigned int i = 0; i < literals.size(); i++ )
     {
-        literals[ i ]->visitForHeuristic( heuristicVisitor );
+        literals[ i ].visitForHeuristic( heuristicVisitor );
     }
 }
 

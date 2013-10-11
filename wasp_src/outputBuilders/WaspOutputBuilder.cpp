@@ -18,7 +18,7 @@
 
 #include "WaspOutputBuilder.h"
 
-#include "../PositiveLiteral.h"
+#include "../Variable.h"
 #include <iostream>
 using namespace std;
 
@@ -29,17 +29,17 @@ WaspOutputBuilder::startModel()
 }
 
 void
-WaspOutputBuilder::printLiteral( 
-    PositiveLiteral* positiveLiteral )
+WaspOutputBuilder::printVariable( 
+    Variable* variable )
 {
-    if( positiveLiteral->isTrue() )
+    if( variable->isTrue() )
     {
         if( !first )
             cout << ", ";
         else
             first = false;
             
-        cout << *positiveLiteral;        
+        cout << *variable;        
     }    
 }
 

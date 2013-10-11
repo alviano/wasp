@@ -18,7 +18,7 @@
 
 #include "DimacsOutputBuilder.h"
 
-#include "../PositiveLiteral.h"
+#include "../Variable.h"
 #include <cassert>
 using namespace std;
 
@@ -36,16 +36,16 @@ DimacsOutputBuilder::startModel()
 }
 
 void 
-DimacsOutputBuilder::printLiteral(
-    PositiveLiteral* positiveLiteral )
+DimacsOutputBuilder::printVariable(
+    Variable* variable )
 {    
-    if( positiveLiteral->isTrue() )
+    if( variable->isTrue() )
     {
-        cout << " " << *positiveLiteral;
+        cout << " " << *variable;
     }
     else
     {
-        cout << " -" << *positiveLiteral;
+        cout << " -" << *variable;
     }
 }
 

@@ -27,12 +27,12 @@
 #define	SATFORMULABUILDER_H
 
 #include "AbstractBuilder.h"
-#include "../WaspRule.h"
 #include "../stl/Trie.h"
 
 class Solver;
 class Literal;
 class AuxLiteral;
+class WaspRule;
 
 class SATFormulaBuilder : public AbstractBuilder
 {
@@ -65,7 +65,7 @@ class SATFormulaBuilder : public AbstractBuilder
 
     protected:
         Solver* solver;
-        virtual void addLiteralInClause( Literal* literal, Clause* clause );        
+        virtual void addLiteralInClause( Literal literal, Clause* clause );        
 };
 
 #endif	/* SATFORMULABUILDER_H */

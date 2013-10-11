@@ -29,48 +29,24 @@ operator<<(
     ostream& out, 
     const Literal& lit )
 {
-    return lit.print( out );
+    if( !lit.isPositive() )
+        out << "not ";
+    
+    out << *( lit.getVariable() );
+    
+    return out;
 }
 
-void
-Literal::unitPropagation(
-    Solver& solver )
-{
-    assert( "Literal to propagate is Undefined." && !this->isUndefined() );
-    if( this->isFalse() )
-    {
-        watchedClauses.startIteration();
-        while( watchedClauses.hasNext() && !solver.conflictDetected() )
-        {
-            Clause* clause = watchedClauses.next();
-            clause->onLiteralFalse( this, solver );            
-        }
-    }
-    else
-    {
-        oppositeLiteral->unitPropagation( solver );
-    }
-}
-
-void
-Literal::visitForHeuristic(
-    HeuristicVisitor* heuristicVisitor )
-{    
-    assert( "Heuristic visitor has not been set." && heuristicVisitor != NULL );
-    if( isUndefined() )
-        heuristicVisitor->onNavigatingLiteral( this );
-}
-
-void
-Literal::supportPropagation(
-    Solver& solver )
-{
-    if( isTrue() )
-    {
-        for( unsigned int i = 0; i < allWaspRules.size(); i++ )
-        {
-            WaspRule* waspRule = allWaspRules[ i ];
-            waspRule->onLiteralTrue( this, solver );
-        }
-    }
-}
+//void
+//Literal::supportPropagation(
+//    Solver& solver )
+//{
+//    if( isTrue() )
+//    {
+//        for( unsigned int i = 0; i < allWaspRules.size(); i++ )
+//        {
+//            WaspRule* waspRule = allWaspRules[ i ];
+//            waspRule->onLiteralTrue( this, solver );
+//        }
+//    }
+//}

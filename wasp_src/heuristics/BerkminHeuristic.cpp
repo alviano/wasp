@@ -19,6 +19,7 @@
 #include "BerkminHeuristic.h"
 
 #include <cassert>
+#include "../Variable.h"
 #include "../LearnedClause.h"
 #include "../Literal.h"
 #include "../solvers/Solver.h"
@@ -30,29 +31,29 @@ BerkminHeuristic::~BerkminHeuristic()
 {
 }
 
-Literal*
+Literal
 BerkminHeuristic::makeAChoice(
     Solver& solver )
 {
-    Literal* chosenLiteral;
+    Literal chosenLiteral;
     chosenLiteral = pickLiteralUsingLearnedClauses( solver );
     
     if( chosenLiteral == NULL )
         chosenLiteral = pickLiteralUsingActivity( solver );
     
     assert( chosenLiteral != NULL );    
-    assert( chosenLiteral->isUndefined() );
+    assert( chosenLiteral.isUndefined() );
     return chosenLiteral;
 }
 
-Literal*
+Literal
 BerkminHeuristic::pickLiteralUsingLearnedClauses(
     Solver& solver )
 {
     return topMostUndefinedLearnedClause( solver );
 }
 
-Literal*
+Literal
 BerkminHeuristic::topMostUndefinedLearnedClause(
    Solver& solver )
 {
@@ -69,10 +70,10 @@ BerkminHeuristic::topMostUndefinedLearnedClause(
         
         learnedClause.visitForHeuristic( &visitor );
         
-        Literal* chosenLiteral = visitor.getChosenLiteral();
-        if( chosenLiteral != NULL )
+        if( visitor.hasChosenLiteral() )
         {
-            assert( chosenLiteral->isUndefined() );
+            Literal chosenLiteral = visitor.getChosenLiteral();        
+            assert( chosenLiteral.isUndefined() );
             return chosenLiteral;
         }
     }
@@ -80,43 +81,43 @@ BerkminHeuristic::topMostUndefinedLearnedClause(
     return NULL;
 }
 
-Literal*
+Literal
 BerkminHeuristic::pickLiteralUsingActivity(
     Solver& solver )
 {
-    const UnorderedSet< PositiveLiteral* >& undefinedLiterals = solver.getUndefinedLiterals();
+    const UnorderedSet< Variable* >& undefinedVariable = solver.getUndefinedVariables();
     HigherGlobalCounterVisitor higherGlobalCounterVisitor( &solver );
     MostOccurrencesVisitor mostOccurrencesVisitor;
-    for( unsigned int i = 0; i < undefinedLiterals.size(); ++i )
+    for( unsigned int i = 0; i < undefinedVariable.size(); ++i )
     {
-        PositiveLiteral* positiveLiteral = undefinedLiterals.at( i );
+        Variable* variable = undefinedVariable.at( i );
         
-        assert( "The literal must be undefined." && positiveLiteral->isUndefined() );
-        positiveLiteral->visitForHeuristic( &higherGlobalCounterVisitor );
-        positiveLiteral->visitForHeuristic( &mostOccurrencesVisitor );
+        assert( "The literal must be undefined." && variable->isUndefined() );
+        variable->visitForHeuristic( &higherGlobalCounterVisitor );
+        variable->visitForHeuristic( &mostOccurrencesVisitor );
     }
-    
-    Literal* chosenLiteral = higherGlobalCounterVisitor.getChosenLiteral();
-    if( chosenLiteral != NULL )
+        
+    if( higherGlobalCounterVisitor.hasChosenLiteral() )
     {
-        assert( chosenLiteral->isUndefined() );
+        Literal chosenLiteral = higherGlobalCounterVisitor.getChosenLiteral();
+        assert( chosenLiteral.isUndefined() );
         return chosenLiteral;
     }
     
-    chosenLiteral = mostOccurrencesVisitor.getChosenLiteral();
-    if( chosenLiteral != NULL )
+    if( mostOccurrencesVisitor.hasChosenLiteral() )
     {
-        assert( chosenLiteral->isUndefined() );
+        Literal chosenLiteral = mostOccurrencesVisitor.getChosenLiteral();
+        assert( chosenLiteral.isUndefined() );
         return chosenLiteral;
     }
     
-    assert( "The literal must be undefined." && undefinedLiterals.at( 0 )->isUndefined() );
-    return undefinedLiterals.at( 0 );
+    assert( "The literal must be undefined." && undefinedVariable.at( 0 )->isUndefined() );
+    return Literal( undefinedVariable.at( 0 ), false );
 }
 
 void
 BerkminHeuristic::onLearning(
-    Solver& solver )
+    Solver& )
 {
     numberOfConflicts++;    
 }

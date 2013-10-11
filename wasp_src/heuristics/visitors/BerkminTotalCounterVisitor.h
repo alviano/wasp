@@ -28,18 +28,18 @@
 
 #include "HeuristicVisitor.h"
 
-class Literal;
+class HeuristicCounterForLiteral;
 
 class BerkminTotalCounterVisitor : public HeuristicVisitor
 {
     public:
         inline BerkminTotalCounterVisitor();
-        void onNavigatingLiteral( Literal* );
+        void onNavigatingVariable( Variable* );
         
     protected:
-        virtual void choosePolarity( Literal* literal, Literal* oppositeLiteral ) = 0;
-        BERKMIN_HEURISTIC_COUNTER getLiteralCounter( const Literal* ) const;
-        BERKMIN_HEURISTIC_COUNTER getTotalCounter( const Literal* literal, const Literal* oppositeLiteral ) const;
+        virtual void choosePolarity( Variable* ) = 0;
+        BERKMIN_HEURISTIC_COUNTER getLiteralCounter( const HeuristicCounterForLiteral* heuristicCounter ) const;
+        BERKMIN_HEURISTIC_COUNTER getTotalCounter( const Variable* ) const;
         BERKMIN_HEURISTIC_COUNTER maxCounter;
 };
 

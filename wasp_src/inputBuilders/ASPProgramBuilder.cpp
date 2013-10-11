@@ -17,7 +17,6 @@
  */
 
 #include "ASPProgramBuilder.h"
-#include "../AuxLiteral.h"
 #include "../Clause.h"
 #include "../Literal.h"
 #include "../solvers/Solver.h"
@@ -36,15 +35,18 @@ AuxLiteral*
 ASPProgramBuilder::newAuxVar()
 {
     #ifdef NDEBUG    
-        return solver->addAuxVariable();
+//        return solver->addAuxVariable();
     #else
-        AuxLiteral* tmp = solver->addAuxVariable();
-        stringstream s;
-        s << "#aux" << solver->numberOfAuxVariables();
-        string n = s.str();
-        tmp->setName( n );
-        return tmp;
+//        AuxLiteral* tmp = solver->addAuxVariable();
+//        stringstream s;
+//        s << "#aux" << solver->numberOfAuxVariables();
+//        string n = s.str();
+//        tmp->setName( n );
+//        return tmp;
     #endif
+
+    assert( 0 );
+    return NULL;
 }
 
 WaspRule*
@@ -61,8 +63,8 @@ ASPProgramBuilder::addLiteralInWaspRule(
     WaspRule* waspRule )
 {
     trie.addElement( -lit );
-    Literal* literal = solver->getLiteral( lit );
-    waspRule->addLiteral( literal );
+//    Literal* literal = solver->getLiteral( lit );
+//    waspRule->addLiteral( literal );
 }
 
 void
@@ -70,32 +72,34 @@ ASPProgramBuilder::setAuxLiteralInWaspRule(
     AuxLiteral* auxLiteral,
     WaspRule* waspRule )
 {    
-    waspRule->addLiteral( auxLiteral );
-    waspRule->setAuxLiteral( auxLiteral );
-    auxLiteral->setWaspRule( waspRule );
+//    waspRule->addLiteral( auxLiteral );
+//    waspRule->setAuxLiteral( auxLiteral );
+//    auxLiteral->setWaspRule( waspRule );
 }
 
 AuxLiteral*
 ASPProgramBuilder::endWaspRule(
     WaspRule* waspRule )
 {
-    unsigned int id = trie.endInsertion();
-    if( solver->existsAuxLiteral( id ) )
-    {
-        delete waspRule;
-        return solver->getAuxLiteral( id );
-    }
-    else
-    {
-        AuxLiteral* auxLiteral = this->newAuxVar();
-        this->setAuxLiteralInWaspRule( auxLiteral, waspRule );
-
-        solver->addClause( waspRule );
-        waspRule->attachClause();
-        waspRule->attachWaspRule();
-
-        return auxLiteral;
-    }
+//    unsigned int id = trie.endInsertion();
+//    if( solver->existsAuxLiteral( id ) )
+//    {
+//        delete waspRule;
+//        return solver->getAuxLiteral( id );
+//    }
+//    else
+//    {
+//        AuxLiteral* auxLiteral = this->newAuxVar();
+//        this->setAuxLiteralInWaspRule( auxLiteral, waspRule );
+//
+//        solver->addClause( waspRule );
+//        waspRule->attachClause();
+//        waspRule->attachWaspRule();
+//
+//        return auxLiteral;
+//    }
+    assert( 0 );
+    return NULL;
 }
 
 void
@@ -128,7 +132,7 @@ ASPProgramBuilder::endBuilding()
 
             for( unsigned int j = 0; j < size; j++ )
             {
-                clause->addLiteral( literalsToAdd[ j ] );
+//                clause->addLiteral( literalsToAdd[ j ] );
             }
 
             this->endClause( clause );
@@ -145,8 +149,8 @@ ASPProgramBuilder::addSupportingLiteralForHeadAtom(
     unsigned int variable,
     int lit )
 {
-    Literal* literal = solver->getLiteral( lit );
-    mapForSupport[ variable ].push_back( literal );
+//    Literal* literal = solver->getLiteral( lit );
+//    mapForSupport[ variable ].push_back( literal );
 }
         
 void
@@ -154,7 +158,7 @@ ASPProgramBuilder::addSupportingAuxLiteralForHeadAtom(
     unsigned int variable,
     AuxLiteral* auxLiteral )
 {
-    mapForSupport[ variable ].push_back( auxLiteral );
+//    mapForSupport[ variable ].push_back( auxLiteral );
 }
 
 void
@@ -162,8 +166,8 @@ ASPProgramBuilder::setAtomName(
     unsigned int variable,
     string& name )
 {
-    PositiveLiteral* literal = static_cast< PositiveLiteral* >( solver->getLiteral( variable ) );
-    literal->setName( name );
+//    Variable* literal = static_cast< Variable* >( solver->getVariable( variable ) );
+//    literal->setName( name );
 }
 
 void
@@ -171,7 +175,7 @@ ASPProgramBuilder::addAuxLiteralInClause(
     AuxLiteral* auxLiteral,
     Clause* clause )
 {
-    clause->addLiteral( auxLiteral->getOppositeLiteral() );
+//    clause->addLiteral( auxLiteral->getOppositeLiteral() );
 }
 
 void
