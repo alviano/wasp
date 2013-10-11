@@ -27,6 +27,7 @@
 #ifndef LITERAL_H
 #define	LITERAL_H
 
+#include <cstdint>
 #include <cassert>
 using namespace std;
 
@@ -105,17 +106,17 @@ class Literal
         
         inline Literal getOppositeLiteral();
 
-        Variable* variable;
+        uintptr_t signedVariable;
 };
 
 Literal::Literal(
     const Literal& l )
 {
-    this->variable = l.variable; 
+    this->signedVariable = l.signedVariable; 
 }
 
 Literal::Literal(
-    Variable* v ) : variable( v )
+    Variable* v ) : signedVariable( reinterpret_cast< uintptr_t >( v ) )
 {
     assert( isPositive() );
     assert( getVariable() == v );
@@ -123,7 +124,7 @@ Literal::Literal(
 
 Literal::Literal(
     Variable* v,
-    bool ) : variable( ( Variable* ) ( ( long long ) v | 1 ) )
+    bool ) : signedVariable( reinterpret_cast< uintptr_t >( v ) | 1 )
 {
     assert( !isPositive() );
     assert( getVariable() == v );
@@ -136,47 +137,47 @@ Literal::~Literal()
 bool
 Literal::isPositive() const
 {
-    return !( ( long long ) variable & 1 );
+    return !( signedVariable & 1 );
 }
 
 unsigned int
 Literal::getSign() const
 {
-    assert( "Variable has not been set." && variable != NULL );
-	return ( long long ) variable & 1;
+    assert( "Variable has not been set." && signedVariable != 0 );
+	return signedVariable & 1;
 }
 
 unsigned int
 Literal::getOppositeSign() const
 {
-    assert( "Variable has not been set." && variable != NULL );	
-    return ( ~( ( long long ) variable ) ) & 1;
+    assert( "Variable has not been set." && signedVariable != 0 );
+    return ( ~signedVariable ) & 1;
 }
 
 const Variable*
 Literal::getVariable() const
 {
-    return ( Variable* ) ( ( long long ) variable & ( ~1 ) );
+    return reinterpret_cast< Variable* >( signedVariable & ( ~1 ) );
 }
 
 Variable*
 Literal::getVariable()
 {
-    return ( Variable* ) ( ( long long ) variable & ( ~1 ) );
+    return reinterpret_cast< Variable* >( signedVariable & ( ~1 ) );
 }
 
 bool
 Literal::operator==(
     const Literal& literal ) const
 {
-    return ( getVariable() == literal.getVariable() );
+    return signedVariable == literal.signedVariable;
 }
 
 bool
 Literal::operator!=(
     const Literal& literal ) const
 {
-    return ( getVariable() != literal.getVariable() );
+    return !( *this == literal );
 }
 
 bool

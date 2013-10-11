@@ -290,7 +290,7 @@ Clause::visitForHeuristic(
             return;
         }
         literals[ i ].visitForHeuristic( heuristicVisitor );
-    }while( i++ < literals.size() )
+    }while( ++i < literals.size() );
 }
 
 void
