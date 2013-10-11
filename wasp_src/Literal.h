@@ -134,7 +134,7 @@ Literal::Literal(
 
 Literal::Literal(
     unsigned int sign,
-    Variable* v ) : signedVariable( ( Variable* ) ( ( long long ) v | sign ) )
+    Variable* v ) : signedVariable( reinterpret_cast< uintptr_t >( v ) | sign )
 {
     assert( sign == 0 || sign == 1 );
     assert( ( sign == 0 && isPositive() ) || ( sign == 1 && !isPositive() ) );
