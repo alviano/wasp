@@ -91,6 +91,8 @@ class Literal
         
 	private:
         
+        inline Literal( unsigned int sign, Variable* variable );
+        
         /**
          * This function returns 0 if the literal is positive, 1 otherwise.
          */
@@ -99,7 +101,7 @@ class Literal
         /**
          * This function returns 1 if the literal is positive, 0 otherwise.
          */
-        inline unsigned int getOppositeSign() const;
+        inline unsigned int getOppositeSign() const;                
         
         inline bool isPositive() const;
         
@@ -126,6 +128,15 @@ Literal::Literal(
     bool ) : variable( ( Variable* ) ( ( long long ) v | 1 ) )
 {
     assert( !isPositive() );
+    assert( getVariable() == v );
+}
+
+Literal::Literal(
+    unsigned int sign,
+    Variable* v ) : variable( ( Variable* ) ( ( long long ) v | sign ) )
+{
+    assert( sign == 0 || sign == 1 );
+    assert( ( sign == 0 && isPositive() ) || ( sign == 1 && !isPositive() ) );
     assert( getVariable() == v );
 }
 
@@ -287,18 +298,20 @@ Literal::onAging(
 Literal
 Literal::getOppositeLiteral()
 {
-    if( isPositive() )
-    {
-        //create a negative literal
-        Literal lit( getVariable(), false );
-        return lit;
-    }
-    else
-    {
-        //create a positive literal        
-        Literal lit( getVariable() );
-        return lit;
-    }    
+    Literal lit( getOppositeSign(), getVariable() );
+    return lit;
+//    if( isPositive() )
+//    {
+//        //create a negative literal
+//        Literal lit( getVariable(), false );
+//        return lit;
+//    }
+//    else
+//    {
+//        //create a positive literal        
+//        Literal lit( getVariable() );
+//        return lit;
+//    }    
 }
 
 unsigned int

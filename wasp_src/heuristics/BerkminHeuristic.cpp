@@ -66,8 +66,7 @@ BerkminHeuristic::topMostUndefinedLearnedClause(
             break;
         
         assert( *it != NULL );
-        LearnedClause& learnedClause = *( *it );                
-        
+        LearnedClause& learnedClause = *( *it );        
         learnedClause.visitForHeuristic( &visitor );
         
         if( visitor.hasChosenLiteral() )

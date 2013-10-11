@@ -259,11 +259,11 @@ Solver::solve()
     
     while( hasUndefinedLiterals() )
     {
-        
+        /*
         static unsigned int PROVA = 0;
         static time_t PROVA_TIME = time( 0 );
         
-        /*
+        
         unsigned int end = 3000000;
         unsigned int printValue = 10000;
         
