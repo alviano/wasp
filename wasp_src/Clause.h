@@ -287,6 +287,7 @@ Clause::visitForHeuristic(
                     attachFirstWatch();
                 }
             }
+            
             return;
         }
         literals[ i ].visitForHeuristic( heuristicVisitor );
