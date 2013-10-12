@@ -1,0 +1,27 @@
+To run pyregtest.py:
+
+    pyregtest.py <command> <testcase> <checker> <report-builder>
+    
+
+<command> is the command to be tested. It is a space-separated list and may include flags as well as pipelines of two or more commands (please, use spaces also around | ).
+
+
+<testcase> is a python file specifying at least an input and an output variables. It may also specify flags (space-separated list; default ""), and timeout (in seconds; default 10).
+
+
+<checker> is a python file specifying a function
+
+    checker(expectedOutput, actualOutput, actualError)
+    
+
+<report-builder> is a python file specifying functions
+
+    reportStartTest(args, testcase)
+    reportStreams(output, error)
+    reportFailure(expected, actual)
+    reportSuccess(expected, actual)
+    reportTimeout(output, error)
+    reportEndTest(args, testcase)
+
+
+For details, refer to existing files.
