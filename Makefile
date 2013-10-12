@@ -53,6 +53,31 @@ static: $(OBJS) $(DEPS)
 run: $(BINARY)
 	./$(BINARY)
 
+########## Tests
+
+TESTS_DIR = tests
+
+TESTS_TESTER = $(TESTS_DIR)/pyregtest.py
+
+TESTS_COMMAND_AllAnswerSets = "/home/malvi/workspaces/wasp/wasp/formato_numerico/build/dl -- -silent | /home/malvi/workspaces/wasp/wasp/build/src/wasp_mg" #"gringo | $(BINARY)"
+
+TESTS_CHECKER_AllAnswerSets = $(TESTS_DIR)/allAnswerSets.checker.py
+
+TESTS_REPORT_text = $(TESTS_DIR)/text.report.py
+
+TESTS_DIR_wasp1_AllAnswerSets = $(TESTS_DIR)/wasp1/AllAnswerSets
+TESTS_SRC_wasp1_AllAnswerSets = $(shell find $(TESTS_DIR_wasp1_AllAnswerSets) -name '*.test.py')
+TESTS_OUT_wasp1_AllAnswerSets = $(patsubst %.test.py,%.test.py., $(TESTS_SRC_wasp1_AllAnswerSets))
+
+tests: tests_wasp1
+
+tests_wasp1: tests_wasp1_AllAnswerSets
+
+tests_wasp1_AllAnswerSets: $(TESTS_OUT_wasp1_AllAnswerSets)
+
+$(TESTS_DIR)/%.test.py.: $(TESTS_DIR)/%.test.py
+	@$(TESTS_TESTER) $(TESTS_COMMAND_AllAnswerSets) $< $(TESTS_CHECKER_AllAnswerSets) $(TESTS_REPORT_text)
+
 ########## Clean
 
 clean:
