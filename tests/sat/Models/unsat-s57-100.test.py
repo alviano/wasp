@@ -131,3 +131,5 @@ p cnf 57 124
 output = """
 unsat
 """
+
+timeout = 20
