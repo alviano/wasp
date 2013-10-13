@@ -38,4 +38,5 @@ def checker(actualOutput, actualError):
             reportSuccess("SATISFIABLE", models)
     elif len(models) > 0:
         reportFailure("UNSATISFIABLE", models)
-
+    else:
+        reportSuccess("UNSATISFIABLE", "UNSATISFIABLE")
