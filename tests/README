@@ -11,7 +11,7 @@ To run pyregtest.py:
 
 <checker> is a python file specifying a function
 
-    checker(expectedOutput, actualOutput, actualError)
+    checker(actualOutput, actualError)
     
 
 <report-builder> is a python file specifying functions

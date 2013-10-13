@@ -74,6 +74,6 @@ else:
     err = err.decode()
     reportStreams(out, err)
 
-    checker(output, out, err)
+    checker(out, err)
 
 reportEndTest(args, testcase)

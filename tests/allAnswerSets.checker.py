@@ -8,8 +8,9 @@ def decodeModels(string):
             
     return sorted(models)
     
-def checker(expectedOutput, actualOutput, actualError):
-    expectedModels = decodeModels(expectedOutput)
+def checker(actualOutput, actualError):
+    global output
+    expectedModels = decodeModels(output)
     actualModels = decodeModels(actualOutput)
     if expectedModels != actualModels:
         reportFailure(expectedModels, actualModels)
