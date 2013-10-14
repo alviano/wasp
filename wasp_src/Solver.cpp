@@ -124,7 +124,7 @@ Solver::onLiteralAssigned(
         bool result = literal.setTrue();
         assert( result );
     }
-    else
+    else        
     {
         conflict = !literal.setTrue();
         if( conflict )
@@ -223,30 +223,84 @@ Solver::decreaseLearnedClausesActivity()
 }
 
 bool
+Solver::addClauseFromModelAndRestart()
+{
+    assert( !assignedVariables.empty() );
+    
+    Clause* clause = new Clause();
+    
+    Literal lastInsertedLiteral;
+    
+    for( unsigned int i = 0; i < assignedVariables.size(); i++ )
+    {
+        Variable* v = assignedVariables[ i ];
+        if( !v->hasImplicant() && v->getDecisionLevel() != 0 )
+        {
+            if( v->isTrue() )
+            {
+                Literal lit( v, false );
+                lastInsertedLiteral = lit;
+                clause->addLiteral( lit );
+            }
+            else
+            {
+                Literal lit( v );
+                lastInsertedLiteral = lit;
+                clause->addLiteral( lit );
+            }
+        }
+    }
+    
+    if( clause->size() == 0 )
+    {
+        delete clause;
+        return false;
+    }
+    
+    this->onRestarting();
+    if( clause->size() > 1 )
+    {
+        clause->attachClause();
+        addClause( clause );
+    }
+    else
+    {        
+        delete clause;        
+        if( !propagateLiteralAsDeterministicConsequence( lastInsertedLiteral ) )
+            return false;
+        
+    }
+    
+    return true;
+}
+
+bool
 Solver::preprocessing()
 {
     unsigned size = trueLiterals.size();
     for( unsigned int i = 0; i < size; ++i )
     {
         Literal literal = trueLiterals[ i ];
-        onLiteralAssigned( literal, NULL );
-        
-        if( conflictDetected() )
-        {
+        if( !propagateLiteralAsDeterministicConsequence( literal ) )
             return false;
-        }
-        
-        while( hasNextLiteralToPropagate() )
-        {
-            Literal literalToPropagate = getNextLiteralToPropagate();
-//            literalToPropagate.setOrderInThePropagation( numberOfAssignedLiterals() );
-            propagate( literalToPropagate );
-            
-            if( conflictDetected() )
-            {
-                return false;
-            }
-        }
+//        onLiteralAssigned( literal, NULL );
+//        
+//        if( conflictDetected() )
+//        {
+//            return false;
+//        }
+//        
+//        while( hasNextLiteralToPropagate() )
+//        {
+//            Literal literalToPropagate = getNextLiteralToPropagate();
+////            literalToPropagate.setOrderInThePropagation( numberOfAssignedLiterals() );
+//            propagate( literalToPropagate );
+//            
+//            if( conflictDetected() )
+//            {
+//                return false;
+//            }
+//        }
     }
     assert( !conflictDetected() );
     return true;
@@ -255,23 +309,16 @@ Solver::preprocessing()
 bool 
 Solver::solve()
 {
-    init();
-    if( !preprocessing() )
-    {
-        foundIncoherence();
-        return false;
-    }
-    
     while( hasUndefinedLiterals() )
     {
         /*
         static unsigned int PROVA = 0;
         static time_t PROVA_TIME = time( 0 );
-        
-        
+
+
         unsigned int end = 3000000;
         unsigned int printValue = 10000;
-        
+
         if( ++PROVA > end ) {
             cerr << "PROVA END!" << endl;
             return false;
@@ -281,22 +328,19 @@ Solver::solve()
             cout << PROVA << " " << learnedClauses.size() <<  " " << ( time( 0 ) - PROVA_TIME ) << endl;
         }
         //*/
-        
+
         assert( !conflictDetected() );
         chooseLiteral();
-
+        
         while( hasNextLiteralToPropagate() )
-        {            
+        {
             Literal literalToPropagate = getNextLiteralToPropagate();
-            
-//            literalToPropagate.setOrderInThePropagation( numberOfAssignedLiterals() );
             propagate( literalToPropagate );
-            
+
             if( conflictDetected() )
             {
                 if( getCurrentDecisionLevel() == 0 )
-                {
-                    foundIncoherence();
+                {                        
                     return false;
                 }
 
@@ -304,8 +348,7 @@ Solver::solve()
                 assert( hasNextLiteralToPropagate() || getCurrentDecisionLevel() == 0 );
             }
         }
-    }
+    }    
     
-    printAnswerSet();
     return true;
 }

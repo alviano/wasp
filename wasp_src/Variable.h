@@ -69,6 +69,7 @@ class Variable
         inline void setUndefined();
 
         inline bool isImplicant( const Clause* clause ) const;
+        inline bool hasImplicant() const;
         inline void setImplicant( Clause* clause );
 
         inline unsigned int getDecisionLevel() const;
@@ -247,6 +248,12 @@ Variable::isImplicant(
     const Clause* clause ) const
 {
     return !this->isUndefined() && implicant == clause;
+}
+
+bool
+Variable::hasImplicant() const
+{
+    return implicant != NULL;
 }
 
 void

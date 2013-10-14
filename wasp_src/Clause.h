@@ -119,7 +119,7 @@ Clause::addLiteral(
 void
 Clause::attachFirstWatch()
 {
-    assert( "Unary clause must be removed." && literals.size() > 1 );    
+    assert( "Unary clause must be removed." && literals.size() > 1 );
     /*iterator_firstWatch =*/ literals[ 0 ].addWatchedClause( this );
 //    assert( "The iterator must point to this clause." && this == *iterator_firstWatch );
 }

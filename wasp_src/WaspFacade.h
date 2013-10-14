@@ -26,11 +26,65 @@
 #ifndef WASPFACADE_H
 #define	WASPFACADE_H
 
+#include "Constants.h"
+#include "Solver.h"
+#include "input/Dimacs.h"
+#include "inputBuilders/SATFormulaBuilder.h"
+
 class WaspFacade
 {
-    
+    public:
+        inline WaspFacade();
+        inline ~WaspFacade();
+        inline void readInput();
+        inline void solve();
+        
+    private:
+        Solver solver;
+        unsigned int numberOfModels;
+        unsigned int maxModels;
 };
 
+WaspFacade::WaspFacade() : numberOfModels( 0 ), maxModels( UINT_MAX )
+{
+}
+
+WaspFacade::~WaspFacade()
+{
+
+}
+
+void
+WaspFacade::readInput()
+{
+    SATFormulaBuilder satFormulaBuilder( &solver );    
+    Dimacs dimacs( &satFormulaBuilder );
+    dimacs.parse();
+    maxModels = 1;
+}
+
+void
+WaspFacade::solve()
+{
+    solver.init();
+    if( !solver.preprocessing() )
+    {
+        solver.foundIncoherence();
+        return;
+    }
+    
+    while( numberOfModels < maxModels && solver.solve() )
+    {
+        solver.printAnswerSet();
+        numberOfModels++;
+        if( !solver.addClauseFromModelAndRestart() )
+            break;        
+    }
+    
+    if( numberOfModels == 0 )
+    {
+        solver.foundIncoherence();
+    }
+}
 
 #endif	/* WASPFACADE_H */
-

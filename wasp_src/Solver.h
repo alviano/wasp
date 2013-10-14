@@ -73,7 +73,8 @@ class Solver
 //        inline AuxLiteral* getAuxLiteral( unsigned int id );
         
         inline void addClause( Clause* clause );
-        inline void addLearnedClause( LearnedClause* learnedClause );        
+        inline void addLearnedClause( LearnedClause* learnedClause );
+        bool addClauseFromModelAndRestart();
         
         Literal getLiteral( int lit );
         inline void addTrueLiteral( int lit );
@@ -88,7 +89,9 @@ class Solver
         inline unsigned int getCurrentDecisionLevel();
         inline void incrementCurrentDecisionLevel();
         
-        void onLiteralAssigned( Literal literal, Clause* implicant );        
+        void onLiteralAssigned( Literal literal, Clause* implicant );
+        
+        inline bool propagateLiteralAsDeterministicConsequence( Literal literal );
         
         void decreaseLearnedClausesActivity();
         void onDeletingLearnedClausesThresholdBased();
@@ -114,7 +117,7 @@ class Solver
         inline bool conflictDetected();
         inline void foundIncoherence();
         inline bool hasUndefinedLiterals();
-        inline void printAnswerSet();
+        inline void printAnswerSet();        
         
         void unroll( unsigned int level );
         inline void unrollOne();
@@ -140,7 +143,7 @@ class Solver
         vector< Literal > trueLiterals;
         vector< Literal > literalsToPropagate;
 
-        unsigned int currentDecisionLevel;
+        unsigned int currentDecisionLevel;        
         
         vector< Variable* > assignedVariables;
         int iteratorOnAssignedVariables;
@@ -165,7 +168,7 @@ class Solver
 
         OutputBuilder* outputBuilder;
         
-        UnorderedSet< Variable* > undefinedVariables;        
+        UnorderedSet< Variable* > undefinedVariables;                
 };
 
 Solver::Solver() : currentDecisionLevel( 0 ), conflict( false ), conflictLiteral( NULL ), conflictClause( NULL )
@@ -181,7 +184,7 @@ Solver::Solver() : currentDecisionLevel( 0 ), conflict( false ), conflictLiteral
     decisionHeuristic = new BerkminHeuristic();
     
     outputBuilder = new DimacsOutputBuilder();    
-//    outputBuilder = new WaspOutputBuilder();
+//    outputBuilder = new WaspOutputBuilder();    
 }
 
 void
@@ -308,8 +311,8 @@ Solver::deleteLearnedClause(
     unsigned int position )//List< LearnedClause* >::iterator iterator )
 {
     learnedClause->detachClause();
-    
-    delete learnedClause;    
+
+    delete learnedClause;
 //    learnedClauses.erase( iterator );
     learnedClauses.erase( position );
 }
@@ -374,7 +377,7 @@ void
 Solver::chooseLiteral()
 {
     Literal choice = decisionHeuristic->makeAChoice( *this );    
-    setAChoice( choice );    
+    setAChoice( choice );
 }
 
 void
@@ -433,6 +436,32 @@ void
 Solver::startIterationOnAssignedVariable()
 {
     iteratorOnAssignedVariables = assignedVariables.size() - 1;
+}
+
+bool
+Solver::propagateLiteralAsDeterministicConsequence(
+    Literal literal )
+{
+    onLiteralAssigned( literal, NULL );
+    if( conflictDetected() )
+    {
+        return false;
+    }
+
+    while( hasNextLiteralToPropagate() )
+    {
+        Literal literalToPropagate = getNextLiteralToPropagate();
+//            literalToPropagate.setOrderInThePropagation( numberOfAssignedLiterals() );
+        propagate( literalToPropagate );
+
+        if( conflictDetected() )
+        {
+            return false;
+        }
+    }    
+    assert( !conflictDetected() );
+
+    return true;
 }
 
 //bool

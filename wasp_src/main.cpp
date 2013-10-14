@@ -25,11 +25,7 @@
 
 #include <cstdlib>
 
-#include "input/Dimacs.h"
-#include "inputBuilders/SATFormulaBuilder.h"
-#include "Solver.h"
-#include "inputBuilders/ASPProgramBuilder.h"
-#include "input/GringoNumericFormat.h"
+#include "WaspFacade.h"
 using namespace std;
 
 int EXIT_CODE = 0;
@@ -39,26 +35,9 @@ int EXIT_CODE = 0;
  */
 int main( int argc, char** argv )
 {    
-    Solver solver;
-    
-    SATFormulaBuilder* satFormulaBuilder = new SATFormulaBuilder( &solver );
-    
-    Dimacs dimacs( satFormulaBuilder );
-    dimacs.parse();
-    
-    solver.solve();    
-    
-    delete satFormulaBuilder;
-    
-//    Solver solver;
-//    ASPProgramBuilder* aspProgramBuilder = new ASPProgramBuilder( &solver );
-//    
-//    GringoNumericFormat gringoNumericFormat( aspProgramBuilder );
-//    gringoNumericFormat.parse();
-//    
-//    solver.solve();
-//    
-//    delete aspProgramBuilder;
+    WaspFacade waspFacade;
+    waspFacade.readInput();
+    waspFacade.solve();
     
     return EXIT_CODE;
 }
