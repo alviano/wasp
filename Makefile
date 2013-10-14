@@ -81,6 +81,10 @@ TESTS_DIR_sat_Models = $(TESTS_DIR)/sat/Models
 TESTS_SRC_sat_Models = $(shell find $(TESTS_DIR_sat_Models) -name '*.test.py')
 TESTS_OUT_sat_Models = $(patsubst %.test.py,%.test.py.text, $(TESTS_SRC_sat_Models))
 
+TESTS_DIR_sat_Intensive = $(TESTS_DIR)/sat/Intensive
+TESTS_SRC_sat_Intensive = $(shell find $(TESTS_DIR_sat_Intensive) -name '*.test.py')
+TESTS_OUT_sat_Intensive = $(patsubst %.test.py,%.test.py.text, $(TESTS_SRC_sat_Intensive))
+
 tests: tests_wasp1 tests_sat
 
 tests_wasp1: tests_wasp1_AllAnswerSets
@@ -90,13 +94,17 @@ tests_wasp1_AllAnswerSets: $(TESTS_OUT_wasp1_AllAnswerSets)
 $(TESTS_OUT_wasp1_AllAnswerSets):
 	@$(TESTS_TESTER) $(TESTS_COMMAND_AllAnswerSets) $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_AllAnswerSets) $(TESTS_REPORT_text)
 
-tests_sat: tests_sat_models
+tests_sat: tests_sat_models tests_sat_intensive
 
 tests_sat_models: $(TESTS_OUT_sat_Models)
 
 $(TESTS_OUT_sat_Models):
 	@$(TESTS_TESTER) $(TESTS_COMMAND_SatModel) $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_SatModels) $(TESTS_REPORT_text)
 
+tests_sat_intensive: $(TESTS_OUT_sat_Intensive)
+
+$(TESTS_OUT_sat_Intensive):
+	@$(TESTS_TESTER) $(TESTS_COMMAND_SatModel) $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_SatModels) $(TESTS_REPORT_text)
 
 ########## Clean
 

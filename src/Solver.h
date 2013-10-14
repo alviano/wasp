@@ -417,8 +417,8 @@ Solver::setAChoice(
 const Variable*
 Solver::getNextAssignedVariable()
 {
-    const Variable* tmp = assignedVariables[ iteratorOnAssignedVariables-- ];    
-    return tmp;
+    assert( iteratorOnAssignedVariables >= 0 );
+    return assignedVariables[ iteratorOnAssignedVariables-- ];
 }
 
 bool

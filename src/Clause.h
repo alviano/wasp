@@ -216,8 +216,6 @@ Clause::attachClause(
 void
 Clause::detachClause()
 {
-    //detachFirstWatch();
-    //detachSecondWatch();
     literals[ 0 ].findAndEraseWatchedClause( this );
     literals[ 1 ].findAndEraseWatchedClause( this );
 }
