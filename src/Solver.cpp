@@ -22,15 +22,6 @@
 
 Solver::~Solver()
 {
-    assignedVariables.clear();
-    undefinedVariables.clear();
-    literalsToPropagate.clear();
-    
-    for( unsigned int i = 1; i < variables.size(); i++ )
-    {
-        delete variables[ i ];
-    }
-    
 //    for( unsigned int i = 0; i < auxLiterals.size(); i++ )
 //    {
 //        delete auxLiterals[ i ];
@@ -102,7 +93,6 @@ Solver::addVariableInternal(
     Variable* variable )
 {
     variables.push_back( variable );
-    undefinedVariables.insert( variable );
     
     variable->setHeuristicCounterForLiterals( heuristicCounterFactoryForLiteral );    
 }
@@ -112,19 +102,7 @@ Solver::onLiteralAssigned(
     Literal literal,
     Clause* implicant )
 {
-    Variable* variable = literal.getVariable();
-    assert( variable != NULL );
-    
-    if( undefinedVariables.erase( variable ) )
-    {
-        assignedVariables.push_back( variable );
-        literalsToPropagate.push_back( literal );
-        variable->setDecisionLevel( currentDecisionLevel );
-        variable->setImplicant( implicant );
-        bool result = literal.setTrue();
-        assert( result );
-    }
-    else
+    if( !variables.assign( literal, currentDecisionLevel, implicant ) )
     {
         conflict = !literal.setTrue();
         if( conflict )
@@ -140,8 +118,8 @@ Solver::unroll(
     unsigned int level )
 {
     assert( "Level is not valid." && level < unrollVector.size() && currentDecisionLevel >= level );
-    assert( "Vector for unroll is inconsistent" && assignedVariables.size() >= unrollVector[ level ] );    
-    unsigned int toUnroll = assignedVariables.size() - unrollVector[ level ];
+    assert( "Vector for unroll is inconsistent" && variables.numberOfAssignedLiterals() >= unrollVector[ level ] );    
+    unsigned int toUnroll = variables.numberOfAssignedLiterals() - unrollVector[ level ];
     unsigned int toPop = currentDecisionLevel - level;
     
     currentDecisionLevel = level;
@@ -157,14 +135,15 @@ Solver::unroll(
         unrollVector.pop_back();
         toPop--;
     }
-    literalsToPropagate.clear();
+    
+    variables.resetLiteralsToPropagate();
 }
 
 Literal
 Solver::getLiteral(
     int lit )
 {
-    assert( "Lit is out of range." && static_cast< unsigned >( abs( lit ) ) < variables.size() );
+    assert( "Lit is out of range." && static_cast< unsigned >( abs( lit ) ) < variables.numberOfVariables() );
     if( lit > 0 )
     {
         Literal literal( variables[ lit ] );
