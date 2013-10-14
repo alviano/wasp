@@ -26,26 +26,23 @@
 #ifndef WATCHEDLIST_H
 #define	WATCHEDLIST_H
 
+#include <algorithm>
 #include <cassert>
 #include <iostream>
+#include <vector>
 #include <unordered_map>
 
-#include "stl/List.h"
 #include "Constants.h"
 using namespace std;
 
 template< class T >
-class WatchedList : private List< T >
+class WatchedList : private vector< T >
 {
 	public:
-        typedef typename List< T >::iterator iterator;
-        typedef typename List< T >::const_iterator const_iterator;
 	    inline WatchedList();
 
-	    using List< T >::size;
-        using List< T >::begin;
-        using List< T >::end;
-        using List< T >::erase;
+	    using vector< T >::size;
+        using vector< T >::empty;
         
         inline void add( T element );
         inline void remove( T element );
@@ -57,8 +54,8 @@ class WatchedList : private List< T >
 	private:
 	    WatchedList( const WatchedList& );
 	    WatchedList& operator=( const WatchedList& );
-        unordered_map< T, WatchedList< T >::iterator > elementsPosition;
-        iterator it;
+	    unordered_map< T, unsigned > position;
+        unsigned nextIndex;
 };
 
 template< class T >
@@ -87,10 +84,9 @@ void
 WatchedList< T >::add( 
     T element )
 {
-    List< T >::push_front( element );
-    assert( elementsPosition.find( element ) == elementsPosition.end() );
-    elementsPosition[ element ] = List< T >::begin();
-//    return List< T >::begin();
+    assert( find( vector< T >::begin(), vector< T >::end(), element ) == vector< T >::end() );
+    position[ element ] = size();
+    vector< T >::push_back( element );
 }
 
 template< class T >
@@ -98,16 +94,21 @@ void
 WatchedList< T >::remove(
     T element )
 {
-    assert( elementsPosition.find( element ) != elementsPosition.end() );
-    erase( elementsPosition[ element ] );
-    elementsPosition.erase( element );
+    assert( vector< T >::operator[]( position[ element ] ) == element );
+    
+    --nextIndex;
+    unsigned pos = position[ element ];
+    vector< T >::operator[]( pos ) = vector< T >::back();
+    position[ vector< T >::back() ] = pos;
+    position.erase( element );
+    vector< T >::pop_back();
 }
 
 template< class T >
 bool
 WatchedList< T >::hasNext()
 {
-    return it != end();
+    return nextIndex < size();
 }
 
 template< class T >
@@ -115,14 +116,14 @@ T
 WatchedList< T >::next()
 {
     
-    return *( it++ );
+    return vector< T >::operator[]( nextIndex++ );
 }
 
 template< class T >
 void
 WatchedList< T >::startIteration()
 {
-    it = begin();
+    nextIndex = 0;
 }
 
 #endif	/* WATCHEDLIST_H */

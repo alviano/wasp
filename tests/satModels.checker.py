@@ -26,6 +26,10 @@ def checkModel(model):
 def checker(actualOutput, actualError):
     global output
     
+    if( actualError ):
+        reportFailure(output, actualError)
+        return
+        
     models = decodeModels(actualOutput)
     if output.strip().lower() == "sat":
         if len(models) == 0:

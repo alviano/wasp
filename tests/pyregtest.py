@@ -53,6 +53,8 @@ def run(args):
     global timeout
     
     try:
+        if timeout < 0:
+            return
         begin = time.time()
         process = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (out, err) = process.communicate(out, timeout=timeout)
