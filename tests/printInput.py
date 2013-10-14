@@ -12,4 +12,4 @@ for i in ['input']:
     if i not in locals():
         sys.exit("Testcase %s does not provide variable '%s'" % (testcase, i))
         
-print(input)
+print(input.strip())

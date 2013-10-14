@@ -43,6 +43,8 @@ class Literal
 
 	public:
 
+        static inline Literal createFromAssignedVariable( Variable* );
+
 		// Instantiate a positive literal
 		inline Literal( Variable* = NULL );
 
@@ -63,6 +65,7 @@ class Literal
 
 		inline void addWatchedClause( Clause* clause );
         inline void eraseWatchedClause( Clause* clause );
+        inline void findAndEraseWatchedClause( Clause* clauses );
 
 //        inline void addWaspRule( WaspRule* waspRule );
 
@@ -110,6 +113,15 @@ class Literal
 
         uintptr_t signedVariable;
 };
+
+Literal
+Literal::createFromAssignedVariable(
+    Variable* v )
+{
+    assert( TRUE == 2 && FALSE == 1 );
+
+    return Literal( v->getTruthValue() & 1, v );
+}
 
 Literal::Literal(
     const Literal& l )
@@ -317,6 +329,15 @@ Literal::eraseWatchedClause(
     assert( "Variable has not been set." && getVariable() != NULL );
     getVariable()->eraseWatchedClause( clause, getSign() );
 }
+
+void
+Literal::findAndEraseWatchedClause(
+    Clause* clause )
+{
+    assert( "Variable has not been set." && getVariable() != NULL );
+    getVariable()->findAndEraseWatchedClause( clause, getSign() );
+}
+
 
 void
 Literal::visitForHeuristic( 

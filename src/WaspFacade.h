@@ -78,7 +78,7 @@ WaspFacade::solve()
         solver.printAnswerSet();
         numberOfModels++;
         if( !solver.addClauseFromModelAndRestart() )
-            break;        
+            break;
     }
     
     if( numberOfModels == 0 )

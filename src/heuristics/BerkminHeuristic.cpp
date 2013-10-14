@@ -57,16 +57,15 @@ Literal
 BerkminHeuristic::topMostUndefinedLearnedClause(
    Solver& solver )
 {
-    const Vector< LearnedClause* >& learnedClauses = solver.getLearnedClauses();
+    const List< LearnedClause* >& learnedClauses = solver.getLearnedClauses();
     unsigned int count = 0;
-//    for( List< LearnedClause* >::const_reverse_iterator it = learnedClauses.rbegin(); it != learnedClauses.rend(); ++it )
-    for( unsigned int i = 0; i < learnedClauses.size(); i++ )
+    for( List< LearnedClause* >::const_reverse_iterator it = learnedClauses.rbegin(); it != learnedClauses.rend(); ++it )
     {
         if( count++ > maxBerkminNumber )
             break;
         
-        assert( learnedClauses[ i ] != NULL );
-        LearnedClause& learnedClause = *( learnedClauses[ i ] );
+        assert( *it != NULL );
+        LearnedClause& learnedClause = **it;
         
         TopMostUndefinedClauseVisitor visitor;
         learnedClause.visitForHeuristic( &visitor );

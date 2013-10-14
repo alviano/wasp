@@ -22,15 +22,6 @@
 
 Solver::~Solver()
 {
-    assignedVariables.clear();
-    undefinedVariables.clear();
-    literalsToPropagate.clear();
-    
-    for( unsigned int i = 1; i < variables.size(); i++ )
-    {
-        delete variables[ i ];
-    }
-    
 //    for( unsigned int i = 0; i < auxLiterals.size(); i++ )
 //    {
 //        delete auxLiterals[ i ];
@@ -102,7 +93,6 @@ Solver::addVariableInternal(
     Variable* variable )
 {
     variables.push_back( variable );
-    undefinedVariables.insert( variable );
     
     variable->setHeuristicCounterForLiterals( heuristicCounterFactoryForLiteral );    
 }
@@ -112,19 +102,7 @@ Solver::onLiteralAssigned(
     Literal literal,
     Clause* implicant )
 {
-    Variable* variable = literal.getVariable();
-    assert( variable != NULL );
-    
-    if( undefinedVariables.erase( variable ) )
-    {
-        assignedVariables.push_back( variable );
-        literalsToPropagate.push_back( literal );
-        variable->setDecisionLevel( currentDecisionLevel );
-        variable->setImplicant( implicant );
-        bool result = literal.setTrue();
-        assert( result );
-    }
-    else        
+    if( !variables.assign( literal, currentDecisionLevel, implicant ) )
     {
         conflict = !literal.setTrue();
         if( conflict )
@@ -140,8 +118,8 @@ Solver::unroll(
     unsigned int level )
 {
     assert( "Level is not valid." && level < unrollVector.size() && currentDecisionLevel >= level );
-    assert( "Vector for unroll is inconsistent" && assignedVariables.size() >= unrollVector[ level ] );    
-    unsigned int toUnroll = assignedVariables.size() - unrollVector[ level ];
+    assert( "Vector for unroll is inconsistent" && variables.numberOfAssignedLiterals() >= unrollVector[ level ] );    
+    unsigned int toUnroll = variables.numberOfAssignedLiterals() - unrollVector[ level ];
     unsigned int toPop = currentDecisionLevel - level;
     
     currentDecisionLevel = level;
@@ -157,14 +135,15 @@ Solver::unroll(
         unrollVector.pop_back();
         toPop--;
     }
-    literalsToPropagate.clear();
+    
+    variables.resetLiteralsToPropagate();
 }
 
 Literal
 Solver::getLiteral(
     int lit )
 {
-    assert( "Lit is out of range." && static_cast< unsigned >( abs( lit ) ) < variables.size() );
+    assert( "Lit is out of range." && static_cast< unsigned >( abs( lit ) ) < variables.numberOfVariables() );
     if( lit > 0 )
     {
         Literal literal( variables[ lit ] );
@@ -180,44 +159,37 @@ Solver::getLiteral(
 void
 Solver::onDeletingLearnedClausesThresholdBased()
 {
-//    for( List< LearnedClause* >::iterator it = learnedClauses.begin(); it != learnedClauses.end(); )
-    for( unsigned int i = 0; i < learnedClauses.size(); )
+    for( List< LearnedClause* >::iterator it = learnedClauses.begin(); it != learnedClauses.end(); )
     {
-        LearnedClause* currentClause = learnedClauses[ i ];
+        List< LearnedClause* >::iterator tmp_it = it++;
+        LearnedClause* currentClause = *tmp_it;
         if( deletionStrategy->hasToDeleteClauseThreshold( currentClause ) )
         {
-            deleteLearnedClause( currentClause, i );            
+            deleteLearnedClause( currentClause, tmp_it );            
         }
-        else
-            ++i;
     }
 }
 
 void
 Solver::onDeletingLearnedClausesAvgBased()
 {
-//    for( List< LearnedClause* >::iterator it = learnedClauses.begin(); it != learnedClauses.end() && deletionStrategy->continueIterationAvg(); )
-    for( unsigned int i = 0; i < learnedClauses.size(); )
+    for( List< LearnedClause* >::iterator it = learnedClauses.begin(); it != learnedClauses.end() && deletionStrategy->continueIterationAvg(); )
     {
-//        List< LearnedClause* >::iterator tmp_it = it++;
-//        LearnedClause* currentClause = *tmp_it;
-        LearnedClause* currentClause = learnedClauses[ i ];
+        List< LearnedClause* >::iterator tmp_it = it++;
+        LearnedClause* currentClause = *tmp_it;
         if( deletionStrategy->hasToDeleteClauseAvg( currentClause ) )
         {
-            deleteLearnedClause( currentClause, i );
+            deleteLearnedClause( currentClause, tmp_it );
         }
-        else
-            ++i;
     }
 }
 
 void
 Solver::decreaseLearnedClausesActivity()
 {
-//    for( List< LearnedClause* >::iterator it = learnedClauses.begin(); it != learnedClauses.end(); ++it )
-    for( unsigned int i = 0; i < learnedClauses.size(); i++ )
+    for( List< LearnedClause* >::iterator it = learnedClauses.begin(); it != learnedClauses.end(); ++it )
     {
-        LearnedClause* currentClause = learnedClauses[ i ];
+        LearnedClause* currentClause = *it;
         currentClause->decreaseActivity();
     }
 }
@@ -225,15 +197,16 @@ Solver::decreaseLearnedClausesActivity()
 bool
 Solver::addClauseFromModelAndRestart()
 {
-    assert( !assignedVariables.empty() );
+    assert( variables.numberOfAssignedLiterals() > 0 );
     
     Clause* clause = new Clause();
     
     Literal lastInsertedLiteral;
     
-    for( unsigned int i = 0; i < assignedVariables.size(); i++ )
+    for( unsigned int i = 1; i < variables.numberOfVariables(); i++ )
     {
-        Variable* v = assignedVariables[ i ];
+        Variable* v = variables[ i ];
+        assert( !v->isUndefined() );
         if( !v->hasImplicant() && v->getDecisionLevel() != 0 )
         {
             if( v->isTrue() )

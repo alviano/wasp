@@ -33,6 +33,7 @@ using namespace std;
 #include "Clause.h"
 #include "LearnedClause.h"
 #include "Variable.h"
+#include "Variables.h"
 #include "Literal.h"
 #include "WaspRule.h"
 #include "stl/List.h"
@@ -52,7 +53,6 @@ using namespace std;
 #include "heuristics/FirstUndefinedHeuristic.h"
 #include "learning/RestartsBasedDeletionStrategy.h"
 #include "learning/GeometricRestartsStrategy.h"
-#include "stl/Vector.h"
 
 class Solver
 {
@@ -107,7 +107,7 @@ class Solver
         inline unsigned int numberOfAuxVariables();
         
         inline const UnorderedSet< Variable* >& getUndefinedVariables();
-        inline const Vector< LearnedClause* >& getLearnedClauses();
+        inline const List< LearnedClause* >& getLearnedClauses();
         
         inline void setAChoice( Literal choice );        
         
@@ -125,9 +125,9 @@ class Solver
         
         void printProgram()
         {
-            for( unsigned int i = 0; i < clauses.size(); ++i )
+            for( List< Clause* >::const_iterator it = clauses.begin(); it != clauses.end(); ++it )
             {
-                cout << *( clauses[ i ] ) << endl;
+                cout << *it << endl;
             }
         }
         
@@ -138,21 +138,16 @@ class Solver
         }
                 
         void addVariableInternal( Variable* variable );
-        inline void deleteLearnedClause( LearnedClause* learnedClause, unsigned int position );//List< LearnedClause* >::iterator iterator );
+        inline void deleteLearnedClause( LearnedClause* learnedClause, List< LearnedClause* >::iterator iterator );
         
         vector< Literal > trueLiterals;
-        vector< Literal > literalsToPropagate;
 
         unsigned int currentDecisionLevel;        
         
-        vector< Variable* > assignedVariables;
-        int iteratorOnAssignedVariables;
-
-        /* Data structures */
-        vector< Variable* > variables;
+        Variables variables;
         
-        Vector< Clause* > clauses;
-        Vector< LearnedClause* > learnedClauses;
+        List< Clause* > clauses;
+        List< LearnedClause* > learnedClauses;
         
         bool conflict;
         vector< unsigned int > unrollVector;
@@ -167,14 +162,10 @@ class Solver
         DeletionStrategy* deletionStrategy;
 
         OutputBuilder* outputBuilder;
-        
-        UnorderedSet< Variable* > undefinedVariables;                
 };
 
 Solver::Solver() : currentDecisionLevel( 0 ), conflict( false ), conflictLiteral( NULL ), conflictClause( NULL )
 {
-    //Add a fake position.
-    variables.push_back( NULL );
 //    learningStrategy = new FirstUIPLearningStrategy( new SequenceBasedRestartsStrategy() );
     learningStrategy = new FirstUIPLearningStrategy( new SequenceBasedRestartsStrategy( 100000 ) );
 //    deletionStrategy = new AggressiveDeletionStrategy();
@@ -190,6 +181,7 @@ Solver::Solver() : currentDecisionLevel( 0 ), conflict( false ), conflictLiteral
 void
 Solver::init()
 {
+    variables.init();
     cout << COMMENT_DIMACS << " " << WASP_STRING << endl;
 }
 
@@ -225,16 +217,14 @@ Solver::addTrueLiteral(
 Literal
 Solver::getNextLiteralToPropagate()
 {
-    assert( !literalsToPropagate.empty() );
-    Literal tmp = literalsToPropagate.back();
-    literalsToPropagate.pop_back();
-    return tmp;
+    assert( variables.hasNextLiteralToPropagate() );
+    return variables.getNextLiteralToPropagate();
 }
         
 bool
 Solver::hasNextLiteralToPropagate() const
 {
-    return !literalsToPropagate.empty();
+    return variables.hasNextLiteralToPropagate();
 }
 
 unsigned int
@@ -247,7 +237,7 @@ void
 Solver::incrementCurrentDecisionLevel()
 {
     currentDecisionLevel++;
-    unrollVector.push_back( assignedVariables.size() );
+    unrollVector.push_back( variables.numberOfAssignedLiterals() );
     
     assert( currentDecisionLevel == unrollVector.size() );
 }
@@ -255,10 +245,7 @@ Solver::incrementCurrentDecisionLevel()
 void
 Solver::unrollLastVariable()
 {
-    Variable* tmp = assignedVariables.back();
-    assignedVariables.pop_back();
-    tmp->setUndefined();        
-    undefinedVariables.insert( tmp );
+    variables.unrollLastVariable();
 }
 
 void
@@ -308,13 +295,11 @@ Solver::onRestarting()
 void
 Solver::deleteLearnedClause( 
     LearnedClause* learnedClause,
-    unsigned int position )//List< LearnedClause* >::iterator iterator )
+    List< LearnedClause* >::iterator iterator )
 {
     learnedClause->detachClause();
-
-    delete learnedClause;
-//    learnedClauses.erase( iterator );
-    learnedClauses.erase( position );
+    delete learnedClause;    
+    learnedClauses.erase( iterator );
 }
 
 unsigned int
@@ -332,10 +317,11 @@ Solver::numberOfLearnedClauses()
 const UnorderedSet< Variable* >&
 Solver::getUndefinedVariables()
 {
-    return undefinedVariables;
+    // FIXME: this has to be avoided!
+    return variables.getUndefinedVariables();
 }
 
-const Vector< LearnedClause* >&
+const List< LearnedClause* >&
 Solver::getLearnedClauses()
 {
     return learnedClauses;
@@ -350,21 +336,13 @@ Solver::conflictDetected()
 bool
 Solver::hasUndefinedLiterals()
 {
-    return !undefinedVariables.empty();
+    return variables.hasUndefinedVariables();
 }
 
 void
 Solver::printAnswerSet()
 {
-    outputBuilder->startModel();
-    unsigned int size = assignedVariables.size();
-    for( unsigned int i = 0; i < size; ++i )
-    {
-        const Variable* v = assignedVariables[ i ];
-        if( !v->isHidden() )
-            outputBuilder->printVariable( v );
-    }
-    outputBuilder->endModel();
+    variables.printAnswerSet( outputBuilder );
 }
 
 void
@@ -400,13 +378,13 @@ Solver::clearConflictStatus()
 unsigned int
 Solver::numberOfAssignedLiterals()
 {
-    return assignedVariables.size();
+    return variables.numberOfAssignedLiterals();
 }
 
 unsigned int
 Solver::numberOfVariables()
 {
-    return variables.size();
+    return variables.numberOfVariables();
 }
 
 void
@@ -422,20 +400,19 @@ Solver::setAChoice(
 const Variable*
 Solver::getNextAssignedVariable()
 {
-    const Variable* tmp = assignedVariables[ iteratorOnAssignedVariables-- ];    
-    return tmp;
+    return variables.getNextAssignedVariable();
 }
 
 bool
 Solver::hasNextAssignedVariable() const
 {
-    return iteratorOnAssignedVariables >= 0;
+    return variables.hasNextAssignedVariable();
 }
 
 void
 Solver::startIterationOnAssignedVariable()
 {
-    iteratorOnAssignedVariables = assignedVariables.size() - 1;
+    variables.startIterationOnAssignedVariable();
 }
 
 bool
