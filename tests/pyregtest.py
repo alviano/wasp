@@ -61,6 +61,7 @@ def run(args):
         timeout = timeout - time.time() + begin
     except subprocess.TimeoutExpired:
         timeout = -1
+        process.kill()
         
 for i in range(0, len(args)):
     if args[i] == "|":
