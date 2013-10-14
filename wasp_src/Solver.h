@@ -52,7 +52,6 @@ using namespace std;
 #include "heuristics/FirstUndefinedHeuristic.h"
 #include "learning/RestartsBasedDeletionStrategy.h"
 #include "learning/GeometricRestartsStrategy.h"
-#include "stl/Vector.h"
 
 class Solver
 {
@@ -104,7 +103,7 @@ class Solver
         inline unsigned int numberOfAuxVariables();
         
         inline const UnorderedSet< Variable* >& getUndefinedVariables();
-        inline const Vector< LearnedClause* >& getLearnedClauses();
+        inline const List< LearnedClause* >& getLearnedClauses();
         
         inline void setAChoice( Literal choice );        
         
@@ -122,9 +121,9 @@ class Solver
         
         void printProgram()
         {
-            for( unsigned int i = 0; i < clauses.size(); ++i )
+            for( List< Clause* >::const_iterator it = clauses.begin(); it != clauses.end(); ++it )
             {
-                cout << *( clauses[ i ] ) << endl;
+                cout << *it << endl;
             }
         }
         
@@ -135,7 +134,7 @@ class Solver
         }
                 
         void addVariableInternal( Variable* variable );
-        inline void deleteLearnedClause( LearnedClause* learnedClause, unsigned int position );//List< LearnedClause* >::iterator iterator );
+        inline void deleteLearnedClause( LearnedClause* learnedClause, List< LearnedClause* >::iterator iterator );
         
         vector< Literal > trueLiterals;
         vector< Literal > literalsToPropagate;
@@ -148,8 +147,8 @@ class Solver
         /* Data structures */
         vector< Variable* > variables;
         
-        Vector< Clause* > clauses;
-        Vector< LearnedClause* > learnedClauses;
+        List< Clause* > clauses;
+        List< LearnedClause* > learnedClauses;
         
         bool conflict;
         vector< unsigned int > unrollVector;
@@ -305,13 +304,12 @@ Solver::onRestarting()
 void
 Solver::deleteLearnedClause( 
     LearnedClause* learnedClause,
-    unsigned int position )//List< LearnedClause* >::iterator iterator )
+    List< LearnedClause* >::iterator iterator )
 {
     learnedClause->detachClause();
     
     delete learnedClause;    
-//    learnedClauses.erase( iterator );
-    learnedClauses.erase( position );
+    learnedClauses.erase( iterator );
 }
 
 unsigned int
@@ -332,7 +330,7 @@ Solver::getUndefinedVariables()
     return undefinedVariables;
 }
 
-const Vector< LearnedClause* >&
+const List< LearnedClause* >&
 Solver::getLearnedClauses()
 {
     return learnedClauses;
