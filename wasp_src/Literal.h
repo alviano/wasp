@@ -63,6 +63,7 @@ class Literal
 
 		inline void addWatchedClause( Clause* clause );
         inline void eraseWatchedClause( Clause* clause );
+        inline void findAndEraseWatchedClause( Clause* clauses );
 
 //        inline void addWaspRule( WaspRule* waspRule );
 
@@ -325,6 +326,15 @@ Literal::eraseWatchedClause(
     assert( "Variable has not been set." && getVariable() != NULL );
     getVariable()->eraseWatchedClause( clause, getSign() );
 }
+
+void
+Literal::findAndEraseWatchedClause(
+    Clause* clause )
+{
+    assert( "Variable has not been set." && getVariable() != NULL );
+    getVariable()->findAndEraseWatchedClause( clause, getSign() );
+}
+
 
 void
 Literal::visitForHeuristic( 

@@ -216,8 +216,10 @@ Clause::attachClause(
 void
 Clause::detachClause()
 {
-    detachFirstWatch();
-    detachSecondWatch();
+    //detachFirstWatch();
+    //detachSecondWatch();
+    literals[ 0 ].findAndEraseWatchedClause( this );
+    literals[ 1 ].findAndEraseWatchedClause( this );
 }
 
 bool
@@ -271,27 +273,28 @@ Clause::visitForHeuristic(
 {
     assert( "Unary clauses must be removed." && literals.size() > 1 );
     
-    unsigned int i = 0;
-    do
+    if( literals[ 0 ].isTrue() )
+        return;
+    literals[ 0 ].visitForHeuristic( heuristicVisitor );
+    
+    if( literals[ 1 ].isTrue() )
+    {
+        swapLiterals( 0, 1 );
+        return;
+    }
+    literals[ 1 ].visitForHeuristic( heuristicVisitor );
+    
+    for( unsigned int i = 2; i < literals.size(); ++i )
     {
         if( literals[ i ].isTrue() )
         {
-            if( i > 0 )
-            {
-                if( i == 1 )
-                    swapLiterals( 0, i );
-                else
-                {
-                    detachFirstWatch();
-                    swapLiterals( 0, i );
-                    attachFirstWatch();
-                }
-            }
+            if( i > 2 )
+                swapLiterals( 2, i );
             
             return;
         }
         literals[ i ].visitForHeuristic( heuristicVisitor );
-    } while( ++i < literals.size() );
+    }
 }
 
 void

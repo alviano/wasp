@@ -83,6 +83,7 @@ class Variable
         
         inline void addWatchedClause( Clause* clause, unsigned int sign );        
         inline void eraseWatchedClause( Clause* clause, unsigned int sign );
+        inline void findAndEraseWatchedClause( Clause* clause, unsigned int sign );
         
         void setHeuristicCounterForLiterals( HeuristicCounterFactoryForLiteral* heuristicCounterFactoryForLiteral );
         inline const HeuristicCounterForLiteral* getPositiveHeuristicCounter() const;
@@ -306,6 +307,15 @@ Variable::eraseWatchedClause(
 {
     assert( "A literal must be true or false." && sign <= 1 );
     watchedLists[ sign ].remove( clause );
+}
+
+void
+Variable::findAndEraseWatchedClause( 
+    Clause* clause,
+    unsigned int sign )
+{
+    assert( "A literal must be positive or negative." && sign <= 1 );
+    watchedLists[ sign ].findAndRemove( clause );
 }
 
 const HeuristicCounterForLiteral*

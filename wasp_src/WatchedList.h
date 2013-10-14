@@ -31,6 +31,7 @@
 #include <iostream>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "Constants.h"
 using namespace std;
@@ -46,6 +47,7 @@ class WatchedList : private vector< T >
         
         inline void add( T element );
         inline void remove( T element );
+        inline void findAndRemove( T element );
         
         inline bool hasNext();
         inline T next();
@@ -54,7 +56,6 @@ class WatchedList : private vector< T >
 	private:
 	    WatchedList( const WatchedList& );
 	    WatchedList& operator=( const WatchedList& );
-	    unordered_map< T, unsigned > position;
         unsigned nextIndex;
 };
 
@@ -85,7 +86,6 @@ WatchedList< T >::add(
     T element )
 {
     assert( find( vector< T >::begin(), vector< T >::end(), element ) == vector< T >::end() );
-    position[ element ] = size();
     vector< T >::push_back( element );
 }
 
@@ -94,13 +94,19 @@ void
 WatchedList< T >::remove(
     T element )
 {
-    assert( vector< T >::operator[]( position[ element ] ) == element );
-    
-    --nextIndex;
-    unsigned pos = position[ element ];
-    vector< T >::operator[]( pos ) = vector< T >::back();
-    position[ vector< T >::back() ] = pos;
-    position.erase( element );
+    assert( nextIndex > 0 && nextIndex <= size() && vector< T >::operator[]( nextIndex - 1 ) == element );
+    vector< T >::operator[]( --nextIndex ) = vector< T >::back();
+    vector< T >::pop_back();
+}
+
+template< class T >
+void
+WatchedList< T >::findAndRemove(
+    T element )
+{
+    typename vector< T >::iterator it = find( vector< T >::begin(), vector< T >::end(), element );
+    assert( it != vector< T >::end() );
+    *it = vector< T >::back();
     vector< T >::pop_back();
 }
 
@@ -124,6 +130,7 @@ void
 WatchedList< T >::startIteration()
 {
     nextIndex = 0;
+    
 }
 
 #endif	/* WATCHEDLIST_H */
