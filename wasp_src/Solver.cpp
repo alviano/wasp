@@ -148,10 +148,7 @@ Solver::unroll(
     
     while( toUnroll > 0 )
     {
-        Variable* tmp = assignedVariables.back();
-        assignedVariables.pop_back();
-        tmp->setUndefined();        
-        this->undefinedVariables.insert( tmp );
+        unrollLastVariable();
         toUnroll--;
     }
     
@@ -183,37 +180,44 @@ Solver::getLiteral(
 void
 Solver::onDeletingLearnedClausesThresholdBased()
 {
-    for( List< LearnedClause* >::iterator it = learnedClauses.begin(); it != learnedClauses.end(); )
+//    for( List< LearnedClause* >::iterator it = learnedClauses.begin(); it != learnedClauses.end(); )
+    for( unsigned int i = 0; i < learnedClauses.size(); )
     {
-        List< LearnedClause* >::iterator tmp_it = it++;
-        LearnedClause* currentClause = *tmp_it;
+        LearnedClause* currentClause = learnedClauses[ i ];
         if( deletionStrategy->hasToDeleteClauseThreshold( currentClause ) )
         {
-            deleteLearnedClause( currentClause, tmp_it );
+            deleteLearnedClause( currentClause, i );            
         }
+        else
+            ++i;
     }
 }
 
 void
 Solver::onDeletingLearnedClausesAvgBased()
 {
-    for( List< LearnedClause* >::iterator it = learnedClauses.begin(); it != learnedClauses.end() && deletionStrategy->continueIterationAvg(); )
+//    for( List< LearnedClause* >::iterator it = learnedClauses.begin(); it != learnedClauses.end() && deletionStrategy->continueIterationAvg(); )
+    for( unsigned int i = 0; i < learnedClauses.size(); )
     {
-        List< LearnedClause* >::iterator tmp_it = it++;
-        LearnedClause* currentClause = *tmp_it;
+//        List< LearnedClause* >::iterator tmp_it = it++;
+//        LearnedClause* currentClause = *tmp_it;
+        LearnedClause* currentClause = learnedClauses[ i ];
         if( deletionStrategy->hasToDeleteClauseAvg( currentClause ) )
         {
-            deleteLearnedClause( currentClause, tmp_it );
+            deleteLearnedClause( currentClause, i );
         }
+        else
+            ++i;
     }
 }
 
 void
 Solver::decreaseLearnedClausesActivity()
 {
-    for( List< LearnedClause* >::iterator it = learnedClauses.begin(); it != learnedClauses.end(); ++it )
+//    for( List< LearnedClause* >::iterator it = learnedClauses.begin(); it != learnedClauses.end(); ++it )
+    for( unsigned int i = 0; i < learnedClauses.size(); i++ )
     {
-        LearnedClause* currentClause = *it;
+        LearnedClause* currentClause = learnedClauses[ i ];
         currentClause->decreaseActivity();
     }
 }
