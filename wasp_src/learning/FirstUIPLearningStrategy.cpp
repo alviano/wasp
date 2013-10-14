@@ -33,7 +33,6 @@ FirstUIPLearningStrategy::onConflict(
     assert( "No conflict literal is set." && conflictLiteral != NULL );
     assert( "Learned clause has to be NULL in the beginning." && learnedClause == NULL );    
     assert( "The variablesToConsider structure must to be empty in the beginning." && variablesToConsider.empty() );
-//    assert( "The literalsToNavigate structure must to be empty in the beginning." && literalsToNavigate.empty() );
 
     learnedClause = new LearnedClause();
     decisionLevel = solver.getCurrentDecisionLevel();
@@ -43,7 +42,6 @@ FirstUIPLearningStrategy::onConflict(
     conflictLiteral.onLearning( this );
 
     //If there is only one element, this element is the first UIP.
-//	while( literalsToNavigate.size() > 1 )
     while( variablesToConsider.size() > 1 )
 	{
         //Get next literal.
@@ -98,35 +96,16 @@ FirstUIPLearningStrategy::getNextLiteralToNavigate(
     {
         assert( solver.hasNextAssignedVariable() );
         const Variable* next = solver.getNextAssignedVariable();
+        assert( !next->isUndefined() );
+        solver.unrollLastVariable();
+        assert( next->isUndefined() );
         if( variablesToConsider.find( next ) != variablesToConsider.end() )
         {
             Literal literal = variablesToConsider[ next ];
             variablesToConsider.erase( next );
             return literal;
         }
-    }
-    
-//    assert( "There is no next literal: list is empty." && !literalsToNavigate.empty() );
-//
-//    list< Literal >::iterator it = literalsToNavigate.begin();
-//    list< Literal >::iterator maxLiteralIterator = it;
-//    unsigned int max = ( *maxLiteralIterator ).getOrderInThePropagation();
-//    ++it;
-//    
-//    for( ; it != literalsToNavigate.end(); ++it )
-//    {
-//        Literal current = *it;
-//        if( max < current.getOrderInThePropagation() )
-//        {
-//            max = current.getOrderInThePropagation();
-//            maxLiteralIterator = it;
-//        }
-//    }
-//    
-//    //The most recent literal.
-//    Literal maxLiteral = *maxLiteralIterator;
-//    literalsToNavigate.erase( maxLiteralIterator );
-//    return maxLiteral;
+    }    
 }
 
 void
@@ -153,10 +132,10 @@ FirstUIPLearningStrategy::addLiteralInLearnedClause(
     Literal literal )
 {
     assert( "Learned clause is not initialized." && learnedClause != NULL );
-    
-//    if( addedVariables.insert( literal ).second )
+
     if( addedVariables.insert( literal.getVariable() ).second )
     {
+        assert( !literal.isUndefined() );
         if( literal.getDecisionLevel() > maxDecisionLevel )
         {
             maxDecisionLevel = literal.getDecisionLevel();
@@ -170,10 +149,9 @@ void
 FirstUIPLearningStrategy::addLiteralToNavigate( 
     Literal literal )
 {
-//    if( addedVariables.insert( literal ).second && addedVariables.insert( literal.getOppositeLiteral() ).second )
     if( addedVariables.insert( literal.getVariable() ).second )
     {
+        assert( !literal.isUndefined() );
         variablesToConsider[ literal.getVariable() ] = literal;
     }
-        //literalsToNavigate.push_back( literal );
 }

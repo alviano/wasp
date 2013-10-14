@@ -260,7 +260,7 @@ Variable::setImplicant(
 unsigned int
 Variable::getDecisionLevel() const
 {
-    assert( "Undefined literals have no decision level." && !isUndefined() );
+//    assert( "Undefined literals have no decision level." && !isUndefined() );
     return decisionLevel;
 }
 

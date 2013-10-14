@@ -98,7 +98,6 @@ FirstUIPLearningStrategy::clearDataStructures()
 {
     learnedClause = NULL;    
     maxDecisionLevel = 0;
-//    literalsToNavigate.clear();
     variablesToConsider.clear();
     addedVariables.clear();
 }

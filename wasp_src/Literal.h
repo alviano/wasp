@@ -251,14 +251,6 @@ Literal::isImplicant(
     return getVariable()->isImplicant( clause );
 }
 
-//void
-//Literal::setImplicant(
-//    Clause* clause )
-//{
-//    assert( "Variable has not been set." && getVariable() != NULL );
-//    return getVariable()->setImplicant( clause );
-//}
-
 bool
 Literal::setTrue()
 {
