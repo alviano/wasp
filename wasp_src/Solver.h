@@ -28,31 +28,30 @@
 
 #include <cassert>
 #include <vector>
-#include <list>
 using namespace std;
 
-#include "../Clause.h"
-#include "../LearnedClause.h"
-#include "../Variable.h"
-#include "../Literal.h"
-#include "../WaspRule.h"
-#include "../stl/List.h"
-#include "../stl/UnorderedSet.h"
-#include "../learning/AggressiveDeletionStrategy.h"
-#include "../learning/DeletionStrategy.h"
-#include "../learning/FirstUIPLearningStrategy.h"
-#include "../learning/LearningStrategy.h"
-#include "../learning/SequenceBasedRestartsStrategy.h"
-#include "../heuristics/BerkminHeuristic.h"
-#include "../heuristics/DecisionHeuristic.h"
-#include "../heuristics/factories/HeuristicCounterFactoryForLiteral.h"
-#include "../heuristics/factories/BerkminCounterFactory.h"
-#include "../outputBuilders/OutputBuilder.h"
-#include "../outputBuilders/DimacsOutputBuilder.h"
-#include "../outputBuilders/WaspOutputBuilder.h"
-#include "../heuristics/FirstUndefinedHeuristic.h"
-#include "../learning/RestartsBasedDeletionStrategy.h"
-#include "../learning/GeometricRestartsStrategy.h"
+#include "Clause.h"
+#include "LearnedClause.h"
+#include "Variable.h"
+#include "Literal.h"
+#include "WaspRule.h"
+#include "stl/List.h"
+#include "stl/UnorderedSet.h"
+#include "learning/AggressiveDeletionStrategy.h"
+#include "learning/DeletionStrategy.h"
+#include "learning/FirstUIPLearningStrategy.h"
+#include "learning/LearningStrategy.h"
+#include "learning/SequenceBasedRestartsStrategy.h"
+#include "heuristics/BerkminHeuristic.h"
+#include "heuristics/DecisionHeuristic.h"
+#include "heuristics/factories/HeuristicCounterFactoryForLiteral.h"
+#include "heuristics/factories/BerkminCounterFactory.h"
+#include "outputBuilders/OutputBuilder.h"
+#include "outputBuilders/DimacsOutputBuilder.h"
+#include "outputBuilders/WaspOutputBuilder.h"
+#include "heuristics/FirstUndefinedHeuristic.h"
+#include "learning/RestartsBasedDeletionStrategy.h"
+#include "learning/GeometricRestartsStrategy.h"
 
 class Solver
 {
@@ -60,10 +59,10 @@ class Solver
         inline Solver();
         ~Solver();
         
-        virtual void init() = 0;
+        inline void init();
         virtual bool preprocessing();
         virtual bool solve();
-        virtual void propagate( Literal literalToPropagate ) = 0;
+        inline void propagate( Literal literalToPropagate );
         
         void addVariable( const string& name );
         void addVariable();
@@ -81,6 +80,10 @@ class Solver
         inline Literal getNextLiteralToPropagate();
         inline bool hasNextLiteralToPropagate() const;        
         
+        inline const Variable* getNextAssignedVariable();
+        inline bool hasNextAssignedVariable() const;
+        inline void startIterationOnAssignedVariable();
+
         inline unsigned int getCurrentDecisionLevel();
         inline void incrementCurrentDecisionLevel();
         
@@ -132,12 +135,13 @@ class Solver
         void addVariableInternal( Variable* variable );
         inline void deleteLearnedClause( LearnedClause* learnedClause, List< LearnedClause* >::iterator iterator );
         
-        list< Literal > trueLiterals;        
-        list< Literal > literalsToPropagate;
-        
+        vector< Literal > trueLiterals;
+        vector< Literal > literalsToPropagate;
+
         unsigned int currentDecisionLevel;
         
         List< Variable* > assignedVariables;
+        List< Variable* >::reverse_iterator iteratorOnAssignedVariables;
         
         /* Data structures */
         vector< Variable* > variables;
@@ -156,7 +160,7 @@ class Solver
         
         LearningStrategy* learningStrategy;
         DeletionStrategy* deletionStrategy;
-        
+
         OutputBuilder* outputBuilder;
         
         UnorderedSet< Variable* > undefinedVariables;        
@@ -176,6 +180,19 @@ Solver::Solver() : currentDecisionLevel( 0 ), conflict( false ), conflictLiteral
     
     outputBuilder = new DimacsOutputBuilder();    
 //    outputBuilder = new WaspOutputBuilder();
+}
+
+void
+Solver::init()
+{
+    cout << COMMENT_DIMACS << " " << WASP_STRING << endl;
+}
+
+void
+Solver::propagate(
+    Literal literalToPropagate )
+{
+    literalToPropagate.unitPropagation( *this );
 }
 
 void
@@ -349,7 +366,7 @@ Solver::chooseLiteral()
 void
 Solver::analyzeConflict()
 {    
-    conflictLiteral.setOrderInThePropagation( numberOfAssignedLiterals() + 1 );
+//    conflictLiteral.setOrderInThePropagation( numberOfAssignedLiterals() + 1 );
     learningStrategy->onConflict( conflictLiteral, conflictClause, *this );
     decisionHeuristic->onLearning( *this );
     clearConflictStatus();
@@ -376,13 +393,33 @@ Solver::numberOfVariables()
 }
 
 void
-Solver::setAChoice( 
+Solver::setAChoice(
     Literal choice )
 {
     assert( choice != NULL );
     incrementCurrentDecisionLevel();
     assert( choice.isUndefined() );
     onLiteralAssigned( choice, NULL );
+}
+
+const Variable*
+Solver::getNextAssignedVariable()
+{    
+    const Variable* tmp = *iteratorOnAssignedVariables;
+    ++iteratorOnAssignedVariables;
+    return tmp;
+}
+
+bool
+Solver::hasNextAssignedVariable() const
+{
+    return iteratorOnAssignedVariables != assignedVariables.rend();
+}
+
+void
+Solver::startIterationOnAssignedVariable()
+{
+    iteratorOnAssignedVariables = assignedVariables.rbegin();
 }
 
 //bool

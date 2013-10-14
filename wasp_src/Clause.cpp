@@ -18,7 +18,7 @@
 
 #include "Clause.h"
 #include "Literal.h"
-#include "solvers/Solver.h"
+#include "Solver.h"
 
 #include <vector>
 using namespace std;

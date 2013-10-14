@@ -28,8 +28,10 @@
 
 #include "LearningStrategy.h"
 #include <unordered_set>
-#include <list>
+#include <unordered_map>
 using namespace std;
+
+#include "../Literal.h"
 
 class Variable;
 
@@ -49,7 +51,7 @@ class FirstUIPLearningStrategy : public LearningStrategy
          * 
          * @return the next literal to consider.
          */
-        Literal getNextLiteralToNavigate();
+        Literal getNextLiteralToNavigate( Solver& solver );
         
         /**
          * This method cleans data structures.
@@ -67,7 +69,7 @@ class FirstUIPLearningStrategy : public LearningStrategy
          * The literal added by this method is a literal which should be navigated.
          * @param literal the literal to navigate.
          */
-        void addLiteralToNavigate( Literal literal );                
+        void addLiteralToNavigate( Literal literal );     
         
         /**
          * The literals already added.
@@ -77,7 +79,9 @@ class FirstUIPLearningStrategy : public LearningStrategy
         /**
          * Literals to explore in the implication graph.
          */
-        list< Literal > literalsToNavigate;
+//        List< Literal > literalsToNavigate;
+        
+        unordered_map< const Variable*, Literal > variablesToConsider;
         
         unsigned int maxDecisionLevel;
         
@@ -94,7 +98,8 @@ FirstUIPLearningStrategy::clearDataStructures()
 {
     learnedClause = NULL;    
     maxDecisionLevel = 0;
-    literalsToNavigate.clear();
+//    literalsToNavigate.clear();
+    variablesToConsider.clear();
     addedVariables.clear();
 }
 

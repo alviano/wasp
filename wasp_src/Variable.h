@@ -74,8 +74,8 @@ class Variable
         inline unsigned int getDecisionLevel() const;
         inline void setDecisionLevel( unsigned int decisionLevel );
 
-        inline unsigned int getOrderInThePropagation() const;
-        inline void setOrderInThePropagation( unsigned int order );
+//        inline unsigned int getOrderInThePropagation() const;
+//        inline void setOrderInThePropagation( unsigned int order );
 
         inline TruthValue getTruthValue() const;
 
@@ -270,19 +270,19 @@ Variable::setDecisionLevel(
     decisionLevel = dl;
 }
 
-unsigned int
-Variable::getOrderInThePropagation() const
-{
-    assert( "Undefined literals have not been propagated." && !isUndefined() );
-    return orderInThePropagation;
-}
-
-void
-Variable::setOrderInThePropagation(
-    unsigned int order )
-{
-    orderInThePropagation = order;
-}
+//unsigned int
+//Variable::getOrderInThePropagation() const
+//{
+//    assert( "Undefined literals have not been propagated." && !isUndefined() );
+//    return orderInThePropagation;
+//}
+//
+//void
+//Variable::setOrderInThePropagation(
+//    unsigned int order )
+//{
+//    orderInThePropagation = order;
+//}
 
 TruthValue
 Variable::getTruthValue() const
@@ -298,7 +298,6 @@ Variable::addWatchedClause(
     assert( "A literal must be true or false." && sign <= 1 );    
     watchedLists[ sign ].add( clause );
 }
-
 
 void
 Variable::eraseWatchedClause( 

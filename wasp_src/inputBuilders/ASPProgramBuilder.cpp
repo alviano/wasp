@@ -19,7 +19,7 @@
 #include "ASPProgramBuilder.h"
 #include "../Clause.h"
 #include "../Literal.h"
-#include "../solvers/Solver.h"
+#include "../Solver.h"
 #include "../WaspRule.h"
 
 #include <iostream>

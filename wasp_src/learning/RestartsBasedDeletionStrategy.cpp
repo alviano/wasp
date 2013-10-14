@@ -17,7 +17,7 @@
  */
 
 #include "RestartsBasedDeletionStrategy.h"
-#include "../solvers/Solver.h"
+#include "../Solver.h"
 
 #include <cmath>
 

@@ -22,7 +22,7 @@
 #include "../Variable.h"
 #include "../LearnedClause.h"
 #include "../Literal.h"
-#include "../solvers/Solver.h"
+#include "../Solver.h"
 #include "visitors/TopMostUndefinedClauseVisitor.h"
 #include "visitors/HigherGlobalCounterVisitor.h"
 #include "visitors/MostOccurrencesVisitor.h"

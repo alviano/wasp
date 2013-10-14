@@ -19,7 +19,7 @@
 #include "FirstUIPLearningStrategy.h"
 #include "../Clause.h"
 #include "../Literal.h"
-#include "../solvers/Solver.h"
+#include "../Solver.h"
 
 #include <cassert>
 
@@ -31,8 +31,9 @@ FirstUIPLearningStrategy::onConflict(
 {
     clearDataStructures();
     assert( "No conflict literal is set." && conflictLiteral != NULL );
-    assert( "Learned clause has to be NULL in the beginning." && learnedClause == NULL );
-    assert( "The literalsToNavigate structure must to be empty in the beginning." && literalsToNavigate.empty() );
+    assert( "Learned clause has to be NULL in the beginning." && learnedClause == NULL );    
+    assert( "The variablesToConsider structure must to be empty in the beginning." && variablesToConsider.empty() );
+//    assert( "The literalsToNavigate structure must to be empty in the beginning." && literalsToNavigate.empty() );
 
     learnedClause = new LearnedClause();
     decisionLevel = solver.getCurrentDecisionLevel();
@@ -42,20 +43,21 @@ FirstUIPLearningStrategy::onConflict(
     conflictLiteral.onLearning( this );
 
     //If there is only one element, this element is the first UIP.
-	while( literalsToNavigate.size() > 1 )
+//	while( literalsToNavigate.size() > 1 )
+    while( variablesToConsider.size() > 1 )
 	{
         //Get next literal.
-		Literal currentLiteral = getNextLiteralToNavigate();
+		Literal currentLiteral = getNextLiteralToNavigate( solver );
 
         assert( "Literal cannot be NULL." && currentLiteral != NULL );
         //Compute implicants of the literal.
         currentLiteral.onLearning( this );
 	}
 
-    assert( "At this point of the computation the first UIP is computed." && literalsToNavigate.size() == 1 );
+    assert( "At this point of the computation the first UIP is computed." && variablesToConsider.size() == 1 );
 
-	Literal firstUIP = literalsToNavigate.back();
-    literalsToNavigate.pop_back();
+	Literal firstUIP = getNextLiteralToNavigate( solver );//literalsToNavigate.back();
+    //literalsToNavigate.pop_back();
 	learnedClause->addLiteral( firstUIP );   
     
     assert( learnedClause->size() > 0 );
@@ -87,29 +89,44 @@ FirstUIPLearningStrategy::onConflict(
 }
 
 Literal
-FirstUIPLearningStrategy::getNextLiteralToNavigate()
+FirstUIPLearningStrategy::getNextLiteralToNavigate(
+    Solver& solver )
 {
-    assert( "There is no next literal: list is empty." && !literalsToNavigate.empty() );
+    solver.startIterationOnAssignedVariable();    
     
-    list< Literal >::iterator it = literalsToNavigate.begin();
-    list< Literal >::iterator maxLiteralIterator = it;
-    unsigned int max = ( *maxLiteralIterator ).getOrderInThePropagation();
-    ++it;
-    
-    for( ; it != literalsToNavigate.end(); ++it )
+    while( true )
     {
-        Literal current = *it;
-        if( max < current.getOrderInThePropagation() )
+        assert( solver.hasNextAssignedVariable() );
+        const Variable* next = solver.getNextAssignedVariable();
+        if( variablesToConsider.find( next ) != variablesToConsider.end() )
         {
-            max = current.getOrderInThePropagation();
-            maxLiteralIterator = it;
+            Literal literal = variablesToConsider[ next ];
+            variablesToConsider.erase( next );
+            return literal;
         }
     }
     
-    //The most recent literal.
-    Literal maxLiteral = *maxLiteralIterator;
-    literalsToNavigate.erase( maxLiteralIterator );
-    return maxLiteral;
+//    assert( "There is no next literal: list is empty." && !literalsToNavigate.empty() );
+//
+//    list< Literal >::iterator it = literalsToNavigate.begin();
+//    list< Literal >::iterator maxLiteralIterator = it;
+//    unsigned int max = ( *maxLiteralIterator ).getOrderInThePropagation();
+//    ++it;
+//    
+//    for( ; it != literalsToNavigate.end(); ++it )
+//    {
+//        Literal current = *it;
+//        if( max < current.getOrderInThePropagation() )
+//        {
+//            max = current.getOrderInThePropagation();
+//            maxLiteralIterator = it;
+//        }
+//    }
+//    
+//    //The most recent literal.
+//    Literal maxLiteral = *maxLiteralIterator;
+//    literalsToNavigate.erase( maxLiteralIterator );
+//    return maxLiteral;
 }
 
 void
@@ -155,5 +172,8 @@ FirstUIPLearningStrategy::addLiteralToNavigate(
 {
 //    if( addedVariables.insert( literal ).second && addedVariables.insert( literal.getOppositeLiteral() ).second )
     if( addedVariables.insert( literal.getVariable() ).second )
-        literalsToNavigate.push_back( literal );
+    {
+        variablesToConsider[ literal.getVariable() ] = literal;
+    }
+        //literalsToNavigate.push_back( literal );
 }

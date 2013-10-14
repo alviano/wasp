@@ -20,7 +20,7 @@
 #include "../../Literal.h"
 #include "../../Variable.h"
 
-#include "../../solvers/Solver.h"
+#include "../../Solver.h"
 
 #include <cassert>
 
@@ -65,7 +65,7 @@ HigherGlobalCounterVisitor::estimatePropagation(
     while( solver->hasNextLiteralToPropagate() )
     {
         Literal literalToPropagate = solver->getNextLiteralToPropagate();
-        literalToPropagate.setOrderInThePropagation( solver->numberOfAssignedLiterals() );
+//        literalToPropagate.setOrderInThePropagation( solver->numberOfAssignedLiterals() );
         solver->propagate( literalToPropagate );
         
         if( solver->conflictDetected() )

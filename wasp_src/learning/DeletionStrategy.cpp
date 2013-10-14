@@ -18,7 +18,7 @@
 
 #include "DeletionStrategy.h"
 #include "../LearnedClause.h"
-#include "../solvers/Solver.h"
+#include "../Solver.h"
 
 bool
 DeletionStrategy::hasToDeleteClauseThreshold(

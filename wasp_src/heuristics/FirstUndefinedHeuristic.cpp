@@ -19,7 +19,7 @@
 #include "FirstUndefinedHeuristic.h"
 
 #include "../Literal.h"
-#include "../solvers/Solver.h"
+#include "../Solver.h"
 
 Literal
 FirstUndefinedHeuristic::makeAChoice(

@@ -21,7 +21,7 @@
 #include "Literal.h"
 #include "heuristics/factories/HeuristicCounterFactoryForLiteral.h"
 #include "heuristics/visitors/HeuristicVisitor.h"
-#include "solvers/Solver.h"
+#include "Solver.h"
 
 ostream& operator<<( 
     ostream& out,

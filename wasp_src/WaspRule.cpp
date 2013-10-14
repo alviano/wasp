@@ -17,7 +17,7 @@
  */
 
 #include "WaspRule.h"
-#include "solvers/Solver.h"
+#include "Solver.h"
 #include "inputBuilders/AbstractBuilder.h"
 
 ostream&

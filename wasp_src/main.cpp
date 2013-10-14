@@ -27,9 +27,7 @@
 
 #include "input/Dimacs.h"
 #include "inputBuilders/SATFormulaBuilder.h"
-#include "solvers/Solver.h"
-#include "solvers/SATSolver.h"
-#include "solvers/ASPSolver.h"
+#include "Solver.h"
 #include "inputBuilders/ASPProgramBuilder.h"
 #include "input/GringoNumericFormat.h"
 using namespace std;
@@ -41,7 +39,7 @@ int EXIT_CODE = 0;
  */
 int main( int argc, char** argv )
 {    
-    SATSolver solver;
+    Solver solver;
     
     SATFormulaBuilder* satFormulaBuilder = new SATFormulaBuilder( &solver );
     
@@ -52,7 +50,7 @@ int main( int argc, char** argv )
     
     delete satFormulaBuilder;
     
-//    ASPSolver solver;
+//    Solver solver;
 //    ASPProgramBuilder* aspProgramBuilder = new ASPProgramBuilder( &solver );
 //    
 //    GringoNumericFormat gringoNumericFormat( aspProgramBuilder );

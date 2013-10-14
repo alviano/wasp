@@ -18,7 +18,7 @@
 
 #include "Solver.h"
 
-#include "../inputBuilders/AbstractBuilder.h"
+#include "inputBuilders/AbstractBuilder.h"
 
 Solver::~Solver()
 {
@@ -221,9 +221,10 @@ Solver::decreaseLearnedClausesActivity()
 bool
 Solver::preprocessing()
 {
-    for( list< Literal >::iterator it = trueLiterals.begin(); it != trueLiterals.end(); ++it )
+    unsigned size = trueLiterals.size();
+    for( unsigned int i = 0; i < size; ++i )
     {
-        Literal literal = *it;
+        Literal literal = trueLiterals[ i ];
         onLiteralAssigned( literal, NULL );
         
         if( conflictDetected() )
@@ -234,7 +235,7 @@ Solver::preprocessing()
         while( hasNextLiteralToPropagate() )
         {
             Literal literalToPropagate = getNextLiteralToPropagate();
-            literalToPropagate.setOrderInThePropagation( numberOfAssignedLiterals() );           
+//            literalToPropagate.setOrderInThePropagation( numberOfAssignedLiterals() );
             propagate( literalToPropagate );
             
             if( conflictDetected() )
@@ -284,7 +285,7 @@ Solver::solve()
         {            
             Literal literalToPropagate = getNextLiteralToPropagate();
             
-            literalToPropagate.setOrderInThePropagation( numberOfAssignedLiterals() );
+//            literalToPropagate.setOrderInThePropagation( numberOfAssignedLiterals() );
             propagate( literalToPropagate );
             
             if( conflictDetected() )

@@ -39,7 +39,7 @@ class OutputBuilder
 	public:
 	    virtual ~OutputBuilder() {}
         virtual void startModel() = 0;
-        virtual void printVariable( Variable* ) = 0;
+        virtual void printVariable( const Variable* ) = 0;
         virtual void endModel() = 0;
         virtual void onProgramIncoherent() = 0;
 //        virtual void onAnswerSetFoundWithWeakConstraint( Interpretation&, Program& );

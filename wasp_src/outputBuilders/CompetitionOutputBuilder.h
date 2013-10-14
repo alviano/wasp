@@ -33,7 +33,7 @@ class CompetitionOutputBuilder : public OutputBuilder
 	public:
         inline CompetitionOutputBuilder();
         virtual void startModel();
-        virtual void printVariable( Variable* );
+        virtual void printVariable( const Variable* );
         virtual void endModel();
         virtual void onProgramIncoherent();
 };

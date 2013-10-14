@@ -59,7 +59,7 @@ TESTS_DIR = tests
 
 TESTS_TESTER = $(TESTS_DIR)/pyregtest.py
 
-TESTS_COMMAND_AllAnswerSets = "/home/malvi/workspaces/wasp/wasp/formato_numerico/build/dl -- -silent | /home/malvi/workspaces/wasp/wasp/build/src/wasp_mg" #"gringo | $(BINARY)"
+TESTS_COMMAND_AllAnswerSets = "gringo | $(BINARY)"
 TESTS_COMMAND_SatModel = "$(BINARY)"
 
 TESTS_CHECKER_AllAnswerSets = $(TESTS_DIR)/allAnswerSets.checker.py

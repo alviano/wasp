@@ -19,8 +19,8 @@
 #include "Literal.h"
 #include "Clause.h"
 #include "WaspRule.h"
+#include "Solver.h"
 #include "heuristics/visitors/HeuristicVisitor.h"
-#include "solvers/Solver.h"
 
 #include <cassert>
 

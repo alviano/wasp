@@ -30,7 +30,7 @@ CompetitionOutputBuilder::startModel()
 
 void
 CompetitionOutputBuilder::printVariable(
-    Variable* variable )
+    const Variable* variable )
 {
     if( variable->isTrue() )
     {

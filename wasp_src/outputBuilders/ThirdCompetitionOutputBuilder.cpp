@@ -27,7 +27,7 @@ ThirdCompetitionOutputBuilder::startModel()
 
 void
 ThirdCompetitionOutputBuilder::printVariable(
-    Variable* variable )
+    const Variable* variable )
 {
     if( variable->isTrue() )
     {

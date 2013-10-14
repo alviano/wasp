@@ -69,8 +69,8 @@ class Literal
         inline unsigned int getDecisionLevel() const;
 //        inline void setDecisionLevel( unsigned int );
 
-        inline unsigned int getOrderInThePropagation() const;
-        inline void setOrderInThePropagation( unsigned int order );
+//        inline unsigned int getOrderInThePropagation() const;
+//        inline void setOrderInThePropagation( unsigned int order );
 
         inline bool isImplicant( const Clause* clause ) const;
 //        inline void setImplicant( Clause* clause );
@@ -227,20 +227,20 @@ Literal::getDecisionLevel() const
 //    getVariable()->setDecisionLevel( dl );
 //}
 
-unsigned int
-Literal::getOrderInThePropagation() const
-{
-    assert( "Variable has not been set." && getVariable() != NULL );
-    return getVariable()->getOrderInThePropagation();
-}
-
-void
-Literal::setOrderInThePropagation( 
-    unsigned int order )
-{
-    assert( "Variable has not been set." && getVariable() != NULL );
-    getVariable()->setOrderInThePropagation( order );
-}
+//unsigned int
+//Literal::getOrderInThePropagation() const
+//{
+//    assert( "Variable has not been set." && getVariable() != NULL );
+//    return getVariable()->getOrderInThePropagation();
+//}
+//
+//void
+//Literal::setOrderInThePropagation( 
+//    unsigned int order )
+//{
+//    assert( "Variable has not been set." && getVariable() != NULL );
+//    getVariable()->setOrderInThePropagation( order );
+//}
 
 bool
 Literal::isImplicant(

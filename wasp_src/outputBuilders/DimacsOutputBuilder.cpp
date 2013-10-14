@@ -37,7 +37,7 @@ DimacsOutputBuilder::startModel()
 
 void 
 DimacsOutputBuilder::printVariable(
-    Variable* variable )
+    const Variable* variable )
 {    
     if( variable->isTrue() )
     {

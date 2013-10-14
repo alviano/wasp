@@ -30,7 +30,7 @@ WaspOutputBuilder::startModel()
 
 void
 WaspOutputBuilder::printVariable( 
-    Variable* variable )
+    const Variable* variable )
 {
     if( variable->isTrue() )
     {
