@@ -26,7 +26,7 @@ cxxflags.gprof0x = \
 
 ####
 
-SOURCE_DIR = wasp_src
+SOURCE_DIR = src
 BUILD_DIR = build/$(BUILD)
 
 BINARY = $(BUILD_DIR)/wasp
