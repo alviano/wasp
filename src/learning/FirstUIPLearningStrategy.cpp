@@ -32,8 +32,8 @@ FirstUIPLearningStrategy::onConflict(
     clearDataStructures();
     assert( "No conflict literal is set." && conflictLiteral != NULL );
     assert( "Learned clause has to be NULL in the beginning." && learnedClause == NULL );
-    assert( "The counter must be equal to 0." && counter == 0 );
-    assert( "Data structures must be empty." && addedVariablesInClause.empty() && visitedVariables.empty() );
+    assert( "The counter must be equal to 0." && visitedVariablesCounter == 0 );
+    assert( "Data structures must be empty." && visitedVariables.empty() );
     
     
     learnedClause = new LearnedClause();
@@ -47,7 +47,7 @@ FirstUIPLearningStrategy::onConflict(
     solver.startIterationOnAssignedVariable();
     
     //If there is only one element, this element is the first UIP.
-    while( visitedVariables.size() - counter > 1 )
+    while( visitedVariables.size() - visitedVariablesCounter > 1 )
 	{
         //Get next literal.
 		Literal currentLiteral = getNextLiteralToNavigate( solver );        
@@ -102,7 +102,7 @@ FirstUIPLearningStrategy::getNextLiteralToNavigate(
 
         if( visitedVariables.find( next.getVariable() ) != visitedVariables.end() )
         {
-            counter++;            
+            ++visitedVariablesCounter;            
             return next;
         }        
     }    
@@ -133,7 +133,7 @@ FirstUIPLearningStrategy::addLiteralInLearnedClause(
 {
     assert( "Learned clause is not initialized." && learnedClause != NULL );
 
-    if( addedVariablesInClause.insert( literal.getVariable() ).second )
+    if( visitedVariables.insert( literal.getVariable() ).second )
     {
         assert( !literal.isUndefined() );
         if( literal.getDecisionLevel() > maxDecisionLevel )
@@ -142,6 +142,7 @@ FirstUIPLearningStrategy::addLiteralInLearnedClause(
             maxPosition = learnedClause->size();
         }
         learnedClause->addLiteral( literal );
+        ++visitedVariablesCounter;
     }
 }
 
@@ -149,5 +150,5 @@ void
 FirstUIPLearningStrategy::addLiteralToNavigate( 
     Literal literal )
 {
-    visitedVariables.insert( literal.getVariable() );    
+    visitedVariables.insert( literal.getVariable() );
 }
