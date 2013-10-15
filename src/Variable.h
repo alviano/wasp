@@ -227,8 +227,8 @@ Variable::setTruthValue(
      * In case you don't want to perform this check in the solver, you can
      * simply return truthValue == truth;
      */
-    assert( "A variable is assigned twice with the same truthValue." && truthValue != truth );
-    return false;
+    //assert( "A variable is assigned twice with the same truthValue." && truthValue != truth );
+    return truthValue == truth;
 }
 
 bool

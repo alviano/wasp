@@ -25,7 +25,8 @@ Literal
 FirstUndefinedHeuristic::makeAChoice(
     Solver& solver )
 {
-    Variable* variable = solver.getUndefinedVariables().at( 0 );
+    Variable* variable = solver.getNextUndefinedVariable(); // solver.getUndefinedVariables().at( 0 );
+    assert( "The literal must be undefined." && variable->isUndefined() );
     return Literal( variable, false );
 }
 

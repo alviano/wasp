@@ -106,7 +106,7 @@ class Solver
         inline unsigned int numberOfVariables();
         inline unsigned int numberOfAuxVariables();
         
-        inline const UnorderedSet< Variable* >& getUndefinedVariables();
+        //inline const UnorderedSet< Variable* >& getUndefinedVariables();
         inline const List< LearnedClause* >& getLearnedClauses();
         
         inline void setAChoice( Literal choice );        
@@ -117,6 +117,9 @@ class Solver
         inline bool conflictDetected();
         inline void foundIncoherence();
         inline bool hasUndefinedLiterals();
+        //inline void startIterationOnUndefinedVariables() { variables.startIterationOnUndefinedVariables(); }
+        inline bool hasNextUndefinedVariable() { return variables.hasNextUndefinedVariable(); }
+        inline Variable* getNextUndefinedVariable() { return variables.getNextUndefinedVariable(); }
         inline void printAnswerSet();        
         
         void unroll( unsigned int level );
@@ -314,12 +317,14 @@ Solver::numberOfLearnedClauses()
     return learnedClauses.size();
 }
 
+/*
 const UnorderedSet< Variable* >&
 Solver::getUndefinedVariables()
 {
     // FIXME: this has to be avoided!
     return variables.getUndefinedVariables();
 }
+*/
 
 const List< LearnedClause* >&
 Solver::getLearnedClauses()
@@ -336,7 +341,10 @@ Solver::conflictDetected()
 bool
 Solver::hasUndefinedLiterals()
 {
-    return variables.hasUndefinedVariables();
+    if( variables.numberOfAssignedLiterals() >= variables.numberOfVariables() )
+        return false;
+    variables.startIterationOnUndefinedVariables();
+    return variables.hasNextUndefinedVariable();
 }
 
 void

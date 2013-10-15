@@ -85,17 +85,18 @@ Literal
 BerkminHeuristic::pickLiteralUsingActivity(
     Solver& solver )
 {
-    const UnorderedSet< Variable* >& undefinedVariable = solver.getUndefinedVariables();
+    //const UnorderedSet< Variable* >& undefinedVariable = solver.getUndefinedVariables();
     HigherGlobalCounterVisitor higherGlobalCounterVisitor( &solver );
     MostOccurrencesVisitor mostOccurrencesVisitor;
-    for( unsigned int i = 0; i < undefinedVariable.size(); ++i )
-    {
-        Variable* variable = undefinedVariable.at( i );
+    Variable* variable = NULL;
+    //for( unsigned int i = 0; i < undefinedVariable.size(); ++i )
+    do{
+        variable = solver.getNextUndefinedVariable(); //undefinedVariable.at( i );
         
         assert( "The literal must be undefined." && variable->isUndefined() );
         variable->visitForHeuristic( &higherGlobalCounterVisitor );
         variable->visitForHeuristic( &mostOccurrencesVisitor );
-    }
+    }while( solver.hasNextUndefinedVariable() );
         
     if( higherGlobalCounterVisitor.hasChosenLiteral() )
     {
@@ -111,8 +112,8 @@ BerkminHeuristic::pickLiteralUsingActivity(
         return chosenLiteral;
     }
     
-    assert( "The literal must be undefined." && undefinedVariable.at( 0 )->isUndefined() );
-    return Literal( undefinedVariable.at( 0 ), false );
+    assert( "The literal must be undefined." && variable->isUndefined() );
+    return Literal( variable, false );
 }
 
 void

@@ -104,8 +104,9 @@ Solver::onLiteralAssigned(
 {
     if( !variables.assign( literal, currentDecisionLevel, implicant ) )
     {
-        conflict = !literal.setTrue();
-        if( conflict )
+        conflict = true;
+        //conflict = !literal.setTrue();
+        //if( conflict )
         {
             conflictLiteral = literal;
             conflictClause = implicant;

@@ -58,9 +58,12 @@ class Variables
         inline unsigned numberOfAssignedLiterals() const { return assignedVariablesSize; }
         inline unsigned numberOfVariables() const { return variables.size(); }
         
-        inline const UnorderedSet< Variable* >& getUndefinedVariables() const { return undefinedVariables; }
+        inline Variable* getNextUndefinedVariable();
+        inline bool hasNextUndefinedVariable();
+        inline void startIterationOnUndefinedVariables() { iteratorOnUndefinedVariables = 0; }
+        //inline const UnorderedSet< Variable* >& getUndefinedVariables() const { return undefinedVariables; }
         
-        inline bool hasUndefinedVariables() const { return !undefinedVariables.empty(); }
+        //inline bool hasUndefinedVariables() const { return !undefinedVariables.empty(); }
         
         inline void printAnswerSet( OutputBuilder* outputBuilder ) const;
         
@@ -72,15 +75,18 @@ class Variables
         Variable** assignedVariables;
         unsigned assignedVariablesSize;
         int iteratorOnAssignedVariables;
+        unsigned iteratorOnUndefinedVariables;
         int nextLiteralToPropagate;
 
         /* Data structures */
         vector< Variable* > variables;
         
-        UnorderedSet< Variable* > undefinedVariables;      
+        //UnorderedSet< Variable* > undefinedVariables;      
 };
 
-Variables::Variables() : nextLiteralToPropagate( 0 )
+Variables::Variables()
+: iteratorOnUndefinedVariables( 0 ),
+  nextLiteralToPropagate( 0 )
 {
     assignedVariables = NULL;
 
@@ -114,7 +120,7 @@ Variables::push_back(
     assert( v != NULL );
     assert( assignedVariables == NULL );
     variables.push_back( v );
-    undefinedVariables.insert( v );
+    //undefinedVariables.insert( v );
 }
 
 Literal
@@ -130,7 +136,7 @@ Variables::unrollLastVariable()
     assert( assignedVariables > 0 );
     Variable* tmp = assignedVariables[ --assignedVariablesSize ];
     tmp->setUndefined();        
-    undefinedVariables.insert( tmp );
+    //undefinedVariables.insert( tmp );
 }
 
 const Variable*
@@ -151,6 +157,26 @@ Variables::startIterationOnAssignedVariable()
 {
     assert( assignedVariablesSize > 0 );
     iteratorOnAssignedVariables = assignedVariablesSize - 1;
+}
+
+Variable*
+Variables::getNextUndefinedVariable()
+{
+    assert( iteratorOnUndefinedVariables >= 0 && iteratorOnUndefinedVariables < variables.size() );
+    assert( variables[ iteratorOnUndefinedVariables ]->isUndefined() );
+    return variables[ iteratorOnUndefinedVariables ];
+}
+
+bool
+Variables::hasNextUndefinedVariable()
+{
+    assert( 0 <= iteratorOnUndefinedVariables && iteratorOnUndefinedVariables < variables.size() );
+    while( ++iteratorOnUndefinedVariables < variables.size() )
+    {
+        if( variables[ iteratorOnUndefinedVariables ]->isUndefined() )
+            return true;
+    }
+    return false;
 }
 
 void
@@ -175,20 +201,12 @@ Variables::assign(
 {
     Variable* variable = literal.getVariable();
     assert( variable != NULL );
-
-    if( undefinedVariables.erase( variable ) )
+    assert( assignedVariablesSize < variables.size() );
+    if( literal.setTrue() )
     {
-        assert( assignedVariablesSize < variables.size() );
         assignedVariables[ assignedVariablesSize++ ] = variable;
-        //literalsToPropagate.push_back( literal );
         variable->setDecisionLevel( level );
         variable->setImplicant( implicant );
-        #ifndef NDEBUG
-        bool result = literal.setTrue();
-        assert( result );
-        #else
-        literal.setTrue();
-        #endif
         return true;
     }
     return false;
