@@ -18,7 +18,6 @@
 
 #include "SequenceBasedRestartsStrategy.h"
 
-#include <cassert>
 #include <cmath>
 
 void

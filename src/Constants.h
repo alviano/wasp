@@ -32,6 +32,21 @@
 #define FALSE 1
 #define TRUE 2
 
+#define AGGRESSIVE_DELETION_POLICY 0
+#define RESTARTS_BASED_DELETION_POLICY 1
+
+#define HEURISTIC_BERKMIN 0
+#define HEURISTIC_FIRST_UNDEFINED 1
+
+#define WASP_OUTPUT 0
+#define COMPETITION_OUTPUT 1
+#define DIMACS_OUTPUT 2
+#define SILENT_OUTPUT 3
+#define THIRD_COMPETITION_OUTPUT 4
+
+#define SEQUENCE_BASED_RESTARTS_POLICY 0
+#define GEOMETRIC_RESTARTS_POLICY 1
+
 /*
  * Wasp constants
  */
@@ -82,7 +97,10 @@
 typedef double Activity;
 typedef unsigned int BERKMIN_HEURISTIC_COUNTER;
 typedef unsigned int TruthValue;
-
+typedef unsigned int DELETION_POLICY;
+typedef unsigned int HEURISTIC_POLICY;
+typedef unsigned int OUTPUT_POLICY;
+typedef unsigned int RESTARTS_POLICY;
 
 #endif	/* CONSTANTS_H */
 

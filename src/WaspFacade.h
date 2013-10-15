@@ -26,6 +26,9 @@
 #ifndef WASPFACADE_H
 #define	WASPFACADE_H
 
+#include <cassert>
+using namespace std;
+
 #include "Constants.h"
 #include "Solver.h"
 #include "input/Dimacs.h"
@@ -39,19 +42,26 @@ class WaspFacade
         inline void readInput();
         inline void solve();
         
+        inline void setDeletionPolicy( DELETION_POLICY );
+        inline void setHeuristicPolicy( HEURISTIC_POLICY, unsigned int heuristicLimit );
+        inline void setOutputPolicy( OUTPUT_POLICY );
+        inline void setRestartsPolicy( RESTARTS_POLICY, unsigned int threshold );
+        inline void setMaxModels( unsigned int max );
+        inline void setPrintProgram( bool printProgram );        
+        
     private:
         Solver solver;
         unsigned int numberOfModels;
         unsigned int maxModels;
+        bool printProgram;
 };
 
-WaspFacade::WaspFacade() : numberOfModels( 0 ), maxModels( UINT_MAX )
+WaspFacade::WaspFacade() : numberOfModels( 0 ), maxModels( 1 ), printProgram( false )
 {
 }
 
 WaspFacade::~WaspFacade()
 {
-
 }
 
 void
@@ -60,12 +70,17 @@ WaspFacade::readInput()
     SATFormulaBuilder satFormulaBuilder( &solver );    
     Dimacs dimacs( &satFormulaBuilder );
     dimacs.parse();
-    maxModels = 1;
 }
 
 void
 WaspFacade::solve()
 {
+    if( printProgram )
+    {
+        solver.printProgram();
+        return;
+    }
+    
     solver.init();
     if( !solver.preprocessing() )
     {
@@ -85,6 +100,116 @@ WaspFacade::solve()
     {
         solver.foundIncoherence();
     }
+}
+
+void
+WaspFacade::setDeletionPolicy(
+    DELETION_POLICY deletionPolicy )
+{
+    switch( deletionPolicy )
+    {
+        case AGGRESSIVE_DELETION_POLICY:
+            solver.setAggressiveDeletionStrategy();
+            break;
+
+        case RESTARTS_BASED_DELETION_POLICY:
+            solver.setRestartsBasedDeletionStrategy();
+            break;
+            
+        default:
+            solver.setAggressiveDeletionStrategy();
+            break;
+    }
+}
+
+void
+WaspFacade::setHeuristicPolicy(
+    HEURISTIC_POLICY heuristicPolicy,
+    unsigned int heuristicLimit )
+{
+    switch( heuristicPolicy )
+    {
+        case HEURISTIC_BERKMIN:
+            assert( heuristicLimit > 0 );
+            solver.setHeuristicBerkmin( heuristicLimit );
+            break;
+        
+        case HEURISTIC_FIRST_UNDEFINED:
+            solver.setHeuristicFirstUndefined();
+            break;
+    
+        default:
+            solver.setHeuristicBerkmin( 512 );
+            break;
+    }
+}
+
+void
+WaspFacade::setOutputPolicy(
+    OUTPUT_POLICY outputPolicy )
+{
+    switch( outputPolicy )
+    {
+        case WASP_OUTPUT:
+            solver.setWaspOutput();
+            break;
+            
+        case COMPETITION_OUTPUT:
+            solver.setCompetitionOutput();
+            break;
+            
+        case DIMACS_OUTPUT:
+            solver.setDimacsOutput();
+            break;
+            
+        case SILENT_OUTPUT:
+            solver.setSilentOutput();
+            break;
+            
+        case THIRD_COMPETITION_OUTPUT:
+            solver.setThirdCompetitionOutput();
+            break;
+            
+        default:
+            solver.setWaspOutput();
+            break;
+    }
+}
+
+void
+WaspFacade::setRestartsPolicy(
+    RESTARTS_POLICY restartsPolicy,
+    unsigned int threshold )
+{
+    assert( threshold > 0 );
+    switch( restartsPolicy )
+    {
+        case SEQUENCE_BASED_RESTARTS_POLICY:
+            solver.setSequenceBasedRestarts( threshold );
+            break;
+            
+        case GEOMETRIC_RESTARTS_POLICY:
+            solver.setGeometricRestarts( threshold );
+            break;
+            
+        default:
+            solver.setSequenceBasedRestarts( threshold );
+            break;
+    }
+}
+
+void
+WaspFacade::setMaxModels(
+    unsigned int max )
+{
+    maxModels = max;
+}
+
+void
+WaspFacade::setPrintProgram(
+    bool print )
+{
+    printProgram = print;
 }
 
 #endif	/* WASPFACADE_H */

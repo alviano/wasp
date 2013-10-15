@@ -53,6 +53,9 @@ using namespace std;
 #include "heuristics/FirstUndefinedHeuristic.h"
 #include "learning/RestartsBasedDeletionStrategy.h"
 #include "learning/GeometricRestartsStrategy.h"
+#include "outputBuilders/SilentOutputBuilder.h"
+#include "outputBuilders/ThirdCompetitionOutputBuilder.h"
+#include "outputBuilders/CompetitionOutputBuilder.h"
 
 class Solver
 {
@@ -82,7 +85,8 @@ class Solver
         inline Literal getNextLiteralToPropagate();
         inline bool hasNextLiteralToPropagate() const;        
         
-        inline const Variable* getNextAssignedVariable();
+//        inline const Variable* getNextAssignedVariable();
+        inline Literal getOppositeLiteralFromLastAssignedVariable();
         inline bool hasNextAssignedVariable() const;
         inline void startIterationOnAssignedVariable();
 
@@ -126,11 +130,26 @@ class Solver
         inline void unrollOne();
         inline void unrollLastVariable();
         
+        /* OPTIONS */
+        inline void setHeuristicBerkmin( unsigned int berkminMaxNumber );
+        inline void setHeuristicFirstUndefined();
+
+        inline void setCompetitionOutput();
+        inline void setWaspOutput();
+        inline void setDimacsOutput();
+        inline void setSilentOutput();
+        inline void setThirdCompetitionOutput();
+
+        inline void setGeometricRestarts( unsigned int threshold );
+        inline void setSequenceBasedRestarts( unsigned int threshold );
+        inline void setAggressiveDeletionStrategy();
+        inline void setRestartsBasedDeletionStrategy();
+        
         void printProgram()
         {
             for( List< Clause* >::const_iterator it = clauses.begin(); it != clauses.end(); ++it )
             {
-                cout << *it << endl;
+                cout << *( *it ) << endl;
             }
         }
         
@@ -169,16 +188,78 @@ class Solver
 
 Solver::Solver() : currentDecisionLevel( 0 ), conflict( false ), conflictLiteral( NULL ), conflictClause( NULL )
 {
-//    learningStrategy = new FirstUIPLearningStrategy( new SequenceBasedRestartsStrategy() );
-    learningStrategy = new FirstUIPLearningStrategy( new SequenceBasedRestartsStrategy( 100000 ) );
-//    deletionStrategy = new AggressiveDeletionStrategy();
+}
+
+void
+Solver::setHeuristicBerkmin( 
+    unsigned int berkminMaxNumber )
+{   
+    assert( berkminMaxNumber > 0 );
+    heuristicCounterFactoryForLiteral = new BerkminCounterFactory();    
+    decisionHeuristic = new BerkminHeuristic( berkminMaxNumber );
+}
+
+void
+Solver::setHeuristicFirstUndefined()
+{
+    //TODO: Maybe we should create an empty counter or something similar.
+    decisionHeuristic = new FirstUndefinedHeuristic();
+}
+
+void
+Solver::setCompetitionOutput()
+{
+    outputBuilder = new CompetitionOutputBuilder();
+}
+
+void
+Solver::setWaspOutput()
+{
+    outputBuilder = new WaspOutputBuilder();
+}
+
+void
+Solver::setDimacsOutput()
+{
+    outputBuilder = new DimacsOutputBuilder();
+}
+
+void
+Solver::setSilentOutput()
+{
+    outputBuilder = new SilentOutputBuilder();
+}
+
+void
+Solver::setThirdCompetitionOutput()
+{
+    outputBuilder = new ThirdCompetitionOutputBuilder();
+}
+        
+void
+Solver::setGeometricRestarts(
+    unsigned int threshold )
+{
+    learningStrategy = new FirstUIPLearningStrategy( new GeometricRestartsStrategy( threshold ) );
+}
+
+void
+Solver::setSequenceBasedRestarts(
+    unsigned int threshold )
+{
+    learningStrategy = new FirstUIPLearningStrategy( new SequenceBasedRestartsStrategy( threshold ) );
+}
+
+void
+Solver::setAggressiveDeletionStrategy()
+{
+    deletionStrategy = new AggressiveDeletionStrategy();
+}
+
+void
+Solver::setRestartsBasedDeletionStrategy()
+{
     deletionStrategy = new RestartsBasedDeletionStrategy();
-    
-    heuristicCounterFactoryForLiteral = new BerkminCounterFactory();
-    decisionHeuristic = new BerkminHeuristic();
-    
-    outputBuilder = new DimacsOutputBuilder();    
-//    outputBuilder = new WaspOutputBuilder();    
 }
 
 void
@@ -368,8 +449,7 @@ Solver::chooseLiteral()
 
 void
 Solver::analyzeConflict()
-{    
-//    conflictLiteral.setOrderInThePropagation( numberOfAssignedLiterals() + 1 );
+{
     learningStrategy->onConflict( conflictLiteral, conflictClause, *this );
     decisionHeuristic->onLearning( *this );
     clearConflictStatus();
@@ -405,10 +485,10 @@ Solver::setAChoice(
     onLiteralAssigned( choice, NULL );
 }
 
-const Variable*
-Solver::getNextAssignedVariable()
+Literal
+Solver::getOppositeLiteralFromLastAssignedVariable()
 {
-    return variables.getNextAssignedVariable();
+    return variables.getOppositeLiteralFromLastAssignedVariable();
 }
 
 bool

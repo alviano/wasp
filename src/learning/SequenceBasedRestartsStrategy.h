@@ -26,6 +26,8 @@
 #ifndef SEQUENCEBASEDRESTARTSSTRATEGY_H
 #define	SEQUENCEBASEDRESTARTSSTRATEGY_H
 
+#include <cassert>
+
 #include "RestartsStrategy.h"
 
 class SequenceBasedRestartsStrategy : public RestartsStrategy
@@ -46,6 +48,7 @@ class SequenceBasedRestartsStrategy : public RestartsStrategy
 SequenceBasedRestartsStrategy::SequenceBasedRestartsStrategy( 
     unsigned int threshold ) : RestartsStrategy( threshold ), numberOfRestarts( 1 )
 {
+    assert( threshold >= 32 );
     nextRestartValue = computeRestartNumber( numberOfRestarts ) * threshold;
 }
 

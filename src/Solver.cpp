@@ -308,7 +308,7 @@ Solver::solve()
         
         while( hasNextLiteralToPropagate() )
         {
-            Literal literalToPropagate = getNextLiteralToPropagate();
+            Literal literalToPropagate = getNextLiteralToPropagate();            
             propagate( literalToPropagate );
 
             if( conflictDetected() )

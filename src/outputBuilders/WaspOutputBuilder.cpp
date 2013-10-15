@@ -25,6 +25,7 @@ using namespace std;
 void
 WaspOutputBuilder::startModel()
 {
+    first = true;
     cout << "{";
 }
 

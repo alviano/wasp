@@ -26,12 +26,15 @@
 #ifndef GEOMETRICRESTARTSSTRATEGY_H
 #define	GEOMETRICRESTARTSSTRATEGY_H
 
+#include <cassert>
+using namespace std;
+
 #include "RestartsStrategy.h"
 
 class GeometricRestartsStrategy : public RestartsStrategy
 {
     public:
-        inline GeometricRestartsStrategy( unsigned int threshold );
+        inline GeometricRestartsStrategy( unsigned int threshold = 100 );
         virtual bool onLearningClause();
         virtual void onLearningUnaryClause();
         
@@ -42,6 +45,7 @@ class GeometricRestartsStrategy : public RestartsStrategy
 GeometricRestartsStrategy::GeometricRestartsStrategy(
     unsigned int threshold ) : RestartsStrategy( threshold )
 {
+    assert( threshold > 100 );
     nextRestartValue = threshold;   
 }
 
