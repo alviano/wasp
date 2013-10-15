@@ -26,6 +26,9 @@
 #ifndef GEOMETRICRESTARTSSTRATEGY_H
 #define	GEOMETRICRESTARTSSTRATEGY_H
 
+#include <cassert>
+using namespace std;
+
 #include "RestartsStrategy.h"
 
 class GeometricRestartsStrategy : public RestartsStrategy

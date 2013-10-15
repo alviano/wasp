@@ -26,6 +26,8 @@
 #ifndef SEQUENCEBASEDRESTARTSSTRATEGY_H
 #define	SEQUENCEBASEDRESTARTSSTRATEGY_H
 
+#include <cassert>
+
 #include "RestartsStrategy.h"
 
 class SequenceBasedRestartsStrategy : public RestartsStrategy

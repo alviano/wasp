@@ -56,7 +56,7 @@ namespace wasp
     */
     class TraceLevels
     {
-        friend struct Options;
+        friend class Options;
 
         public:
             unsigned std;
