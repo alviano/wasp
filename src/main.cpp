@@ -26,6 +26,7 @@
 #include <cstdlib>
 
 #include "WaspFacade.h"
+#include "Options.h"
 using namespace std;
 
 int EXIT_CODE = 0;
@@ -34,11 +35,13 @@ int EXIT_CODE = 0;
  * 
  */
 int main( int argc, char** argv )
-{    
+{
+    wasp::Options::parse( argc, argv );
     WaspFacade waspFacade;
+    wasp::Options::setOptions( waspFacade );    
     waspFacade.readInput();
     waspFacade.solve();
-    
+
     return EXIT_CODE;
 }
 

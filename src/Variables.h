@@ -65,7 +65,7 @@ class Variables
         inline void printAnswerSet( OutputBuilder* outputBuilder ) const;
         
         inline bool assign( Literal literal, int level, Clause* implicant );
-        
+
         inline Variable* operator[]( unsigned idx ) { return variables[ idx ]; }
         
     private:

@@ -34,7 +34,7 @@
 class BerkminHeuristic : public DecisionHeuristic
 {
     public:
-        inline BerkminHeuristic( unsigned int maxBerkminNumber = 512 );
+        inline BerkminHeuristic( unsigned int maxBerkminNumber = UINT_MAX );
         virtual ~BerkminHeuristic();
         virtual Literal makeAChoice( Solver& solver );
         virtual void onLearning( Solver& solver );

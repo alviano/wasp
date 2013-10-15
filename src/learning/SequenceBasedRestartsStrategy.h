@@ -46,6 +46,7 @@ class SequenceBasedRestartsStrategy : public RestartsStrategy
 SequenceBasedRestartsStrategy::SequenceBasedRestartsStrategy( 
     unsigned int threshold ) : RestartsStrategy( threshold ), numberOfRestarts( 1 )
 {
+    assert( threshold >= 32 );
     nextRestartValue = computeRestartNumber( numberOfRestarts ) * threshold;
 }
 
