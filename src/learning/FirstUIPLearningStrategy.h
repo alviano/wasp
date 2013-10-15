@@ -63,13 +63,13 @@ class FirstUIPLearningStrategy : public LearningStrategy
          * Add a literal in the new learned clause.
          * @param literal the literal to add.
          */
-        void addLiteralInLearnedClause( Literal literal );
+        inline void addLiteralInLearnedClause( Literal literal );
         
         /**
          * The literal added by this method is a literal which should be navigated.
          * @param literal the literal to navigate.
          */
-        void addLiteralToNavigate( Literal literal );     
+        inline void addLiteralToNavigate( Literal literal );     
         
         /**
          * The variables of the current conflict level which have been visited.

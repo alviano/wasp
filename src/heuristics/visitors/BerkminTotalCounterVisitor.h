@@ -28,6 +28,9 @@
 
 #include "HeuristicVisitor.h"
 
+#include "../../Variable.h"
+#include "../counters/BerkminCounters.h"
+
 class HeuristicCounterForLiteral;
 
 class BerkminTotalCounterVisitor : public HeuristicVisitor
@@ -38,13 +41,33 @@ class BerkminTotalCounterVisitor : public HeuristicVisitor
         
     protected:
         virtual void choosePolarity( Variable* ) = 0;
-        BERKMIN_HEURISTIC_COUNTER getLiteralCounter( const HeuristicCounterForLiteral* heuristicCounter ) const;
-        BERKMIN_HEURISTIC_COUNTER getTotalCounter( const Variable* ) const;
+        inline BERKMIN_HEURISTIC_COUNTER getLiteralCounter( const HeuristicCounterForLiteral* heuristicCounter ) const;
+        inline BERKMIN_HEURISTIC_COUNTER getTotalCounter( const Variable* ) const;
         BERKMIN_HEURISTIC_COUNTER maxCounter;
 };
 
 BerkminTotalCounterVisitor::BerkminTotalCounterVisitor() : HeuristicVisitor(), maxCounter( 0 )
 {
 }
+
+
+BERKMIN_HEURISTIC_COUNTER
+BerkminTotalCounterVisitor::getLiteralCounter( 
+    const HeuristicCounterForLiteral* heuristicCounter ) const
+{
+    assert( heuristicCounter != NULL );
+    const BerkminCounters* berkminCounter = static_cast< const BerkminCounters* >( heuristicCounter );    
+    return berkminCounter->getCounter();
+}
+
+BERKMIN_HEURISTIC_COUNTER
+BerkminTotalCounterVisitor::getTotalCounter( 
+    const Variable* variable ) const
+{
+    assert( variable != NULL );
+    BERKMIN_HEURISTIC_COUNTER totalCounter = getLiteralCounter( variable->getPositiveHeuristicCounter() ) + getLiteralCounter( variable->getNegativeHeuristicCounter() );
+    return totalCounter;
+}
+
 #endif	/* HIGHERGLOBALCOUNTERVISITOR_H */
 

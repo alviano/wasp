@@ -17,8 +17,6 @@
  */
 
 #include "BerkminTotalCounterVisitor.h"
-#include "../../Variable.h"
-#include "../counters/BerkminCounters.h"
 #include <cassert>
 
 void
@@ -36,20 +34,3 @@ BerkminTotalCounterVisitor::onNavigatingVariable(
     }
 }
 
-BERKMIN_HEURISTIC_COUNTER
-BerkminTotalCounterVisitor::getLiteralCounter( 
-    const HeuristicCounterForLiteral* heuristicCounter ) const
-{
-    assert( heuristicCounter != NULL );
-    const BerkminCounters* berkminCounter = static_cast< const BerkminCounters* >( heuristicCounter );    
-    return berkminCounter->getCounter();
-}
-
-BERKMIN_HEURISTIC_COUNTER
-BerkminTotalCounterVisitor::getTotalCounter( 
-    const Variable* variable ) const
-{
-    assert( variable != NULL );
-    BERKMIN_HEURISTIC_COUNTER totalCounter = getLiteralCounter( variable->getPositiveHeuristicCounter() ) + getLiteralCounter( variable->getNegativeHeuristicCounter() );
-    return totalCounter;
-}

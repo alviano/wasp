@@ -109,25 +109,6 @@ FirstUIPLearningStrategy::getNextLiteralToNavigate(
 }
 
 void
-FirstUIPLearningStrategy::onNavigatingLiteral( 
-    Literal literal )
-{
-    assert( literal != NULL );
-    unsigned int literalDecisionLevel = literal.getDecisionLevel();
-    
-    if( literalDecisionLevel == decisionLevel )
-    {
-        literal.onNavigatingImplicationGraph();
-        addLiteralToNavigate( literal );
-    }
-    else if( literalDecisionLevel > 0 )
-    {
-        literal.onNavigatingLearnedClause();
-        addLiteralInLearnedClause( literal );
-    }
-}
-
-void
 FirstUIPLearningStrategy::addLiteralInLearnedClause( 
     Literal literal )
 {
@@ -152,3 +133,23 @@ FirstUIPLearningStrategy::addLiteralToNavigate(
 {
     visitedVariables.insert( literal.getVariable() );
 }
+
+void
+FirstUIPLearningStrategy::onNavigatingLiteral( 
+    Literal literal )
+{
+    assert( literal != NULL );
+    unsigned int literalDecisionLevel = literal.getDecisionLevel();
+    
+    if( literalDecisionLevel == decisionLevel )
+    {
+        literal.onNavigatingImplicationGraph();
+        addLiteralToNavigate( literal );
+    }
+    else if( literalDecisionLevel > 0 )
+    {
+        literal.onNavigatingLearnedClause();
+        addLiteralInLearnedClause( literal );
+    }
+}
+
