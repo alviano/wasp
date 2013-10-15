@@ -77,21 +77,25 @@ namespace wasp
 TraceLevels Options::traceLevels;
 #endif
 
-DELETION_POLICY Options::deletionPolicy = AGGRESSIVE_DELETION_POLICY;
+//DELETION_POLICY Options::deletionPolicy = AGGRESSIVE_DELETION_POLICY;
+DELETION_POLICY Options::deletionPolicy = RESTARTS_BASED_DELETION_POLICY;
 
 HEURISTIC_POLICY Options::heuristicPolicy = HEURISTIC_BERKMIN;
 
 vector< const char* > Options::inputFiles;
 
-unsigned int Options::maxBerkminNumber = UINT_MAX;
+//unsigned int Options::maxBerkminNumber = UINT_MAX;
+unsigned int Options::maxBerkminNumber = 512;
 
-OUTPUT_POLICY Options::outputPolicy = WASP_OUTPUT;
+//OUTPUT_POLICY Options::outputPolicy = WASP_OUTPUT;
+OUTPUT_POLICY Options::outputPolicy = DIMACS_OUTPUT;
 
 bool Options::printProgram = false;
 
 RESTARTS_POLICY Options::restartsPolicy = SEQUENCE_BASED_RESTARTS_POLICY;
 
-unsigned int Options::restartsThreshold = 32;
+//unsigned int Options::restartsThreshold = 32;
+unsigned int Options::restartsThreshold = 100000;
 
 unsigned int Options::timeLimit = 0;
 

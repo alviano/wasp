@@ -85,7 +85,8 @@ class Solver
         inline Literal getNextLiteralToPropagate();
         inline bool hasNextLiteralToPropagate() const;        
         
-        inline const Variable* getNextAssignedVariable();
+//        inline const Variable* getNextAssignedVariable();
+        inline Literal getOppositeLiteralFromLastAssignedVariable();
         inline bool hasNextAssignedVariable() const;
         inline void startIterationOnAssignedVariable();
 
@@ -440,8 +441,7 @@ Solver::chooseLiteral()
 
 void
 Solver::analyzeConflict()
-{    
-//    conflictLiteral.setOrderInThePropagation( numberOfAssignedLiterals() + 1 );
+{
     learningStrategy->onConflict( conflictLiteral, conflictClause, *this );
     decisionHeuristic->onLearning( *this );
     clearConflictStatus();
@@ -477,10 +477,10 @@ Solver::setAChoice(
     onLiteralAssigned( choice, NULL );
 }
 
-const Variable*
-Solver::getNextAssignedVariable()
+Literal
+Solver::getOppositeLiteralFromLastAssignedVariable()
 {
-    return variables.getNextAssignedVariable();
+    return variables.getOppositeLiteralFromLastAssignedVariable();
 }
 
 bool

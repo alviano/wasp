@@ -44,6 +44,7 @@ class Literal
 	public:
 
         static inline Literal createFromAssignedVariable( Variable* );
+        static inline Literal createOppositeFromAssignedVariable( Variable* );
 
 		// Instantiate a positive literal
 		inline Literal( Variable* = NULL );
@@ -119,8 +120,15 @@ Literal::createFromAssignedVariable(
     Variable* v )
 {
     assert( TRUE == 2 && FALSE == 1 );
-
     return Literal( v->getTruthValue() & 1, v );
+}
+
+Literal
+Literal::createOppositeFromAssignedVariable(
+    Variable* v )
+{
+    assert( TRUE == 2 && FALSE == 1 );
+    return Literal( ~( v->getTruthValue() ) & 1, v );
 }
 
 Literal::Literal(

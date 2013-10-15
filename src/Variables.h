@@ -48,7 +48,7 @@ class Variables
         inline bool hasNextLiteralToPropagate() const { return static_cast< unsigned >( nextLiteralToPropagate ) < assignedVariablesSize; }
         inline Literal getNextLiteralToPropagate();
         
-        inline const Variable* getNextAssignedVariable();
+        inline Literal getOppositeLiteralFromLastAssignedVariable();        
         inline bool hasNextAssignedVariable() const;
         inline void startIterationOnAssignedVariable();
         
@@ -133,11 +133,11 @@ Variables::unrollLastVariable()
     undefinedVariables.insert( tmp );
 }
 
-const Variable*
-Variables::getNextAssignedVariable()
+Literal
+Variables::getOppositeLiteralFromLastAssignedVariable()
 {
-    assert( iteratorOnAssignedVariables >= 0 && static_cast< unsigned >( iteratorOnAssignedVariables ) < assignedVariablesSize );
-    return assignedVariables[ iteratorOnAssignedVariables-- ];
+    assert( iteratorOnAssignedVariables >= 0 && static_cast< unsigned >( iteratorOnAssignedVariables ) < assignedVariablesSize );    
+    return Literal::createOppositeFromAssignedVariable( assignedVariables[ iteratorOnAssignedVariables-- ] );    
 }
 
 bool

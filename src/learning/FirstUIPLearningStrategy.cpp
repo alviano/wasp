@@ -31,35 +31,36 @@ FirstUIPLearningStrategy::onConflict(
 {
     clearDataStructures();
     assert( "No conflict literal is set." && conflictLiteral != NULL );
-    assert( "Learned clause has to be NULL in the beginning." && learnedClause == NULL );    
-    assert( "The variablesToConsider structure must to be empty in the beginning." && variablesToConsider.empty() );
-
+    assert( "Learned clause has to be NULL in the beginning." && learnedClause == NULL );
+    assert( "The counter must be equal to 0." && counter == 0 );
+    assert( "Data structures must be empty." && addedVariablesInClause.empty() && visitedVariables.empty() );
+    
+    
     learnedClause = new LearnedClause();
     decisionLevel = solver.getCurrentDecisionLevel();
 
     //Compute implicants of the conflicting literal.
     conflictClause->onLearning( this );
-    conflictLiteral.onLearning( this );
+    conflictLiteral.onLearning( this );    
 
+    visitedVariables.insert( conflictLiteral.getVariable() );
+    solver.startIterationOnAssignedVariable();
+    
     //If there is only one element, this element is the first UIP.
-    while( variablesToConsider.size() > 1 )
+    while( visitedVariables.size() - counter > 1 )
 	{
         //Get next literal.
-		Literal currentLiteral = getNextLiteralToNavigate( solver );
-
-        assert( "Literal cannot be NULL." && currentLiteral != NULL );
+		Literal currentLiteral = getNextLiteralToNavigate( solver );        
         //Compute implicants of the literal.
         currentLiteral.onLearning( this );
 	}
 
-    assert( "At this point of the computation the first UIP is computed." && variablesToConsider.size() == 1 );
-
-	Literal firstUIP = getNextLiteralToNavigate( solver );//literalsToNavigate.back();
+    Literal firstUIP = getNextLiteralToNavigate( solver );
+    
     //literalsToNavigate.pop_back();
-	learnedClause->addLiteral( firstUIP );   
+	learnedClause->addLiteral( firstUIP );    
     
     assert( learnedClause->size() > 0 );
-    
     if( learnedClause->size() == 1 )
     {
         solver.onLearningUnaryClause( firstUIP, learnedClause );
@@ -89,22 +90,21 @@ FirstUIPLearningStrategy::onConflict(
 Literal
 FirstUIPLearningStrategy::getNextLiteralToNavigate(
     Solver& solver )
-{
-    solver.startIterationOnAssignedVariable();    
-    
+{    
     while( true )
     {
         assert( solver.hasNextAssignedVariable() );
-        const Variable* next = solver.getNextAssignedVariable();
-        assert( !next->isUndefined() );
+        Literal next = solver.getOppositeLiteralFromLastAssignedVariable();
+
+        assert( !next.isUndefined() );
         solver.unrollLastVariable();
-        assert( next->isUndefined() );
-        if( variablesToConsider.find( next ) != variablesToConsider.end() )
+        assert( next.isUndefined() );
+
+        if( visitedVariables.find( next.getVariable() ) != visitedVariables.end() )
         {
-            Literal literal = variablesToConsider[ next ];
-            variablesToConsider.erase( next );
-            return literal;
-        }
+            counter++;            
+            return next;
+        }        
     }    
 }
 
@@ -133,7 +133,7 @@ FirstUIPLearningStrategy::addLiteralInLearnedClause(
 {
     assert( "Learned clause is not initialized." && learnedClause != NULL );
 
-    if( addedVariables.insert( literal.getVariable() ).second )
+    if( addedVariablesInClause.insert( literal.getVariable() ).second )
     {
         assert( !literal.isUndefined() );
         if( literal.getDecisionLevel() > maxDecisionLevel )
@@ -149,9 +149,5 @@ void
 FirstUIPLearningStrategy::addLiteralToNavigate( 
     Literal literal )
 {
-    if( addedVariables.insert( literal.getVariable() ).second )
-    {
-        assert( !literal.isUndefined() );
-        variablesToConsider[ literal.getVariable() ] = literal;
-    }
+    visitedVariables.insert( literal.getVariable() );    
 }
