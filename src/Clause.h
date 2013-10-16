@@ -65,7 +65,7 @@ class Clause
         inline void detachClause();
 
         inline void onLearning( LearningStrategy* strategy );
-        void onLiteralFalse( Literal literal, Solver& solver );
+        inline void onLiteralFalse( Literal literal, Solver& solver );
 
         inline unsigned int size() const;
         inline void visitForHeuristic( HeuristicVisitor* );
@@ -94,14 +94,12 @@ class Clause
         inline void setWatchesInRandomPositions();
         
         inline void attachFirstWatch();
-        inline void attachSecondWatch();
-        inline void detachFirstWatch();
+        inline void attachSecondWatch();        
         inline void detachSecondWatch();
         
         void updateWatch( Solver& solver );
-        void updateSecondWatch( Solver& solver );
-        
-        inline void swapLiterals( unsigned int pos1, unsigned int pos2 );        
+
+        inline void swapLiterals( unsigned int pos1, unsigned int pos2 );
 };
 
 Clause::Clause()
@@ -134,14 +132,7 @@ Clause::attachSecondWatch()
     assert( "Unary clause must be removed." && literals.size() > 1 );
     literals[ 1 ].addWatchedClause( this );
 }
-        
-void
-Clause::detachFirstWatch()
-{
-    assert( "The watchToDetach points to a NULL literal." && literals[ 0 ] != NULL );
-    literals[ 0 ].eraseWatchedClause( this/*iterator_firstWatch*/ );
-}
-        
+
 void
 Clause::detachSecondWatch()
 {
@@ -271,6 +262,30 @@ Clause::swapLiterals(
     assert( "First position is out of range." && pos1 < literals.size() );
     assert( "Second position is out of range." && pos2 < literals.size() ); 
     std::swap( literals[ pos1 ], literals[ pos2 ] );
+}
+
+void
+Clause::onLiteralFalse(
+    Literal literal,
+    Solver& solver )
+{
+    assert( "The literal must be false." && literal.isFalse() );    
+    assert( "Unary clauses must be removed." && literals.size() > 1 );
+
+    if( literal == literals[ 0 ] )
+    {
+        //The watch to update should be always in position 1.
+        literals[ 0 ] = literals[ 1 ];
+        literals[ 1 ] = literal;
+    }
+
+    assert( "Literal is not watched." && literal == literals[ 1 ] );
+    //if the clause is already satisfied do nothing.
+    if( !literals[ 0 ].isTrue() )
+    {
+        //update watch
+        updateWatch( solver );
+    }
 }
 
 #endif	/* CLAUSE_H */

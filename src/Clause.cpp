@@ -47,30 +47,6 @@ Clause::print(
     return out;
 }
 
-void
-Clause::onLiteralFalse(
-    Literal literal,
-    Solver& solver )
-{
-    assert( "The literal must be false." && literal.isFalse() );    
-    assert( "Unary clauses must be removed." && literals.size() > 1 );
-
-    if( literal == literals[ 0 ] )
-    {
-        //The watch to update should be always in position 1.
-        literals[ 0 ] = literals[ 1 ];
-        literals[ 1 ] = literal;
-    }
-
-    assert( "Literal is not watched." && literal == literals[ 1 ] );
-    //if the clause is already satisfied do nothing.
-    if( !literals[ 0 ].isTrue() )
-    {
-        //update watch
-        updateWatch( solver );
-    }
-}
-
 //void
 //Clause::updateFirstWatch(
 //    Solver& solver )

@@ -120,8 +120,7 @@ WatchedList< T >::hasNext()
 template< class T >
 T
 WatchedList< T >::next()
-{
-    
+{    
     return vector< T >::operator[]( nextIndex++ );
 }
 
