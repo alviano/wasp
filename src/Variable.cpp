@@ -80,7 +80,8 @@ Variable::unitPropagation(
     watchedLists[ sign ].startIteration();
     while( watchedLists[ sign ].hasNext() && !solver.conflictDetected() )
     {
-        Clause* clause = watchedLists[ sign ].next();        
+        Clause* clause = watchedLists[ sign ].next();
+        trace( solving, 3, "Considering clause %s.\n", clause->clauseToCharStar() );
         clause->onLiteralFalse( literal, solver );
     }
 }

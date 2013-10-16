@@ -35,14 +35,16 @@ FirstUIPLearningStrategy::onConflict(
     assert( "The counter must be equal to 0." && visitedVariablesCounter == 0 );
     assert( "Data structures must be empty." && visitedVariables.empty() );
     
-    
     learnedClause = new LearnedClause();
     decisionLevel = solver.getCurrentDecisionLevel();
 
+    trace( solving, 2, "Starting First UIP Learning Strategy. Current Level: %d.\n", decisionLevel );
+    
     //Compute implicants of the conflicting literal.
     conflictClause->onLearning( this );
     conflictLiteral.onLearning( this );    
 
+    trace( solving, 2, "Conflict literal: %s.\n", conflictLiteral.literalToCharStar() );
     visitedVariables.insert( conflictLiteral.getVariable() );
     solver.startIterationOnAssignedVariable();
     
@@ -50,17 +52,22 @@ FirstUIPLearningStrategy::onConflict(
     while( visitedVariables.size() - visitedVariablesCounter > 1 )
 	{
         //Get next literal.
-		Literal currentLiteral = getNextLiteralToNavigate( solver );        
+		Literal currentLiteral = getNextLiteralToNavigate( solver );
+        trace( solving, 3, "Navigating %s for calculating UIP.\n", currentLiteral.literalToCharStar() );
         //Compute implicants of the literal.
         currentLiteral.onLearning( this );
 	}
 
     Literal firstUIP = getNextLiteralToNavigate( solver );
+    trace( solving, 2, "First UIP: %s.\n", firstUIP.literalToCharStar() );
     
     //literalsToNavigate.pop_back();
 	learnedClause->addLiteral( firstUIP );    
     
     assert( learnedClause->size() > 0 );
+    
+    trace( solving, 2, "Learned Clause: %s.\n", learnedClause->clauseToCharStar() );
+    
     if( learnedClause->size() == 1 )
     {
         solver.onLearningUnaryClause( firstUIP, learnedClause );

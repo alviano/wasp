@@ -29,6 +29,8 @@
 
 #include <cstdint>
 #include <cassert>
+#include <sstream>
+#include <string>
 using namespace std;
 
 #include "Constants.h"
@@ -93,6 +95,19 @@ class Literal
         inline unsigned int numberOfWatchedClauses() const;
         inline Variable* getVariable();
         inline const Variable* getVariable() const;
+        
+        #ifdef TRACE_ON
+        inline const char* literalToCharStar()
+        {
+            stringstream s;
+            if( !this->isPositive() )
+                s << "not ";
+
+            s << *( this->getVariable() );
+
+            return s.str().c_str();
+        }        
+        #endif
         
 	private:
         

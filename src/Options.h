@@ -43,14 +43,14 @@ namespace wasp
     class Options
     {
         public:
+            #ifdef TRACE_ON
+            static TraceLevels traceLevels;
+            #endif
+
             static void parse( int argc, char* const* argv );
             static void setOptions( WaspFacade& waspFacade );
         
         private:
-
-            #ifdef TRACE_ON
-            static TraceLevels traceLevels;
-            #endif
 
             static DELETION_POLICY deletionPolicy;
 

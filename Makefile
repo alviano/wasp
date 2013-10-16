@@ -7,6 +7,10 @@ cxxflags.debug = \
  -Wall -std=c++11
 linkflags.debug = \
  -lm
+cxxflags.trace = \
+ -Wall -std=c++11 -DTRACE_ON
+linkflags.trace = \
+ -lm
 cxxflags.release = \
  -Wall -std=c++11 -DNDEBUG -O3
 linkflags.release = \
@@ -20,6 +24,10 @@ linkflags.gprof = \
 cxxflags.debug0x = \
  -Wall -std=c++0x
 linkflags.debug0x = \
+ -lm
+cxxflags.trace0x = \
+ -Wall -std=c++0x -DTRACE_ON
+linkflags.trace = \
  -lm
 cxxflags.release0x = \
  -Wall -std=c++0x -DNDEBUG -O3

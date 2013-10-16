@@ -71,6 +71,15 @@ class Clause
         
         inline void visitForHeuristic( HeuristicVisitor* );
         
+        #ifdef TRACE_ON
+        inline const char* clauseToCharStar()
+        {
+            stringstream s;
+            this->print( s );
+            return s.str().c_str();
+        }        
+        #endif
+        
     protected:
         inline bool isImplicantOfALiteral() const;
         vector< Literal > literals;

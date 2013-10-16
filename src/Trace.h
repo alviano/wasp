@@ -36,7 +36,7 @@
     #   define setTraceLevel( type, level )
 #else
     #   define trace( type, level, msg, ... ) \
-        if( options.traceLevels.type >= level ) \
+        if( wasp::Options::traceLevels.type >= level ) \
         { \
             for( unsigned __indent_Level__ = 0; __indent_Level__ < level; ++__indent_Level__ ) \
                 fprintf( stderr, " " ); \
@@ -46,7 +46,7 @@
         if( condition ) \
             trace( type, level, msg, ##__VA_ARGS__ )
     #   define setTraceLevel( type, level ) \
-            options.traceLevels.type = level
+            wasp::Options::traceLevels.type = level
 
 namespace wasp
 {
@@ -61,9 +61,9 @@ namespace wasp
         public:
             unsigned std;
             unsigned parser;
-            unsigned mg;
-            unsigned mc;
-            unsigned us;
+            unsigned solving;
+            unsigned modelchecker;
+            unsigned unfoundedset;
 
         private:
             TraceLevels() : std( 0 ), parser( 0 ){}

@@ -35,6 +35,8 @@ using namespace std;
 #include "Variable.h"
 #include "Variables.h"
 #include "Literal.h"
+#include "Options.h"
+#include "Trace.h"
 #include "WaspRule.h"
 #include "stl/List.h"
 #include "stl/UnorderedSet.h"
@@ -328,6 +330,7 @@ void
 Solver::propagate(
     Literal literalToPropagate )
 {
+    trace( solving, 1, "Propagating: %s.\n", literalToPropagate.literalToCharStar() );
     literalToPropagate.unitPropagation( *this );
 }
 
@@ -400,6 +403,7 @@ Solver::onLearningClause(
     unsigned int backjumpingLevel )
 {
     assert( "Backjumping level is not valid." && backjumpingLevel < currentDecisionLevel );
+    trace( solving, 2, "Learned clause and backjumping to level %d.", backjumpingLevel );
     unroll( backjumpingLevel );    
     
     assert( "Each learned clause has to be an asserting clause." && literalToPropagate != NULL );
@@ -426,6 +430,7 @@ Solver::onLearningUnaryClause(
 void
 Solver::onRestarting()
 {
+    trace( solving, 1, "Performing restart.\n" );
     deletionStrategy->onRestarting();
     decisionHeuristic->onRestarting( *this );
     unroll( 0 );
@@ -436,6 +441,7 @@ Solver::deleteLearnedClause(
     LearnedClause* learnedClause,
     List< LearnedClause* >::iterator iterator )
 {
+    trace( solving, 4, "Deleting learned clause %s.", learnedClause->clauseToCharStar() );
     learnedClause->detachClause();
     delete learnedClause;    
     learnedClauses.erase( iterator );
@@ -498,13 +504,15 @@ Solver::foundIncoherence()
 void
 Solver::chooseLiteral()
 {
-    Literal choice = decisionHeuristic->makeAChoice( *this );    
+    Literal choice = decisionHeuristic->makeAChoice( *this );
+    trace( solving, 1, "Choice: %s.\n", choice.literalToCharStar() );
     setAChoice( choice );
 }
 
 void
 Solver::analyzeConflict()
 {
+    trace( solving, 1, "Analyzing conflict.\n" );
     learningStrategy->onConflict( conflictLiteral, conflictClause, *this );
     decisionHeuristic->onLearning( *this );
     clearConflictStatus();
@@ -571,7 +579,6 @@ Solver::propagateLiteralAsDeterministicConsequence(
     while( hasNextLiteralToPropagate() )
     {
         Literal literalToPropagate = getNextLiteralToPropagate();
-//            literalToPropagate.setOrderInThePropagation( numberOfAssignedLiterals() );
         propagate( literalToPropagate );
 
         if( conflictDetected() )
