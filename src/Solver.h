@@ -64,12 +64,12 @@ class Solver
         ~Solver();
         
         inline void init();
-        virtual bool preprocessing();
-        virtual bool solve();
+        bool preprocessing();
+        bool solve();
         inline void propagate( Literal literalToPropagate );
         
-        void addVariable( const string& name );
-        void addVariable();
+        inline void addVariable( const string& name );
+        inline void addVariable();
         
 //        AuxLiteral* addAuxVariable();
 //        inline bool existsAuxLiteral( unsigned int id ) const;
@@ -79,7 +79,7 @@ class Solver
         inline void addLearnedClause( LearnedClause* learnedClause );
         bool addClauseFromModelAndRestart();
         
-        Literal getLiteral( int lit );
+        inline Literal getLiteral( int lit );
         inline void addTrueLiteral( int lit );
         
         inline Literal getNextLiteralToPropagate();
@@ -93,7 +93,7 @@ class Solver
         inline unsigned int getCurrentDecisionLevel();
         inline void incrementCurrentDecisionLevel();
         
-        void onLiteralAssigned( Literal literal, Clause* implicant );
+        inline void onLiteralAssigned( Literal literal, Clause* implicant );
         
         inline bool propagateLiteralAsDeterministicConsequence( Literal literal );
         
@@ -159,7 +159,7 @@ class Solver
             assert( "The copy constructor has been disabled." && 0 );
         }
                 
-        void addVariableInternal( Variable* variable );
+        inline void addVariableInternal( Variable* variable );
         inline void deleteLearnedClause( LearnedClause* learnedClause, List< LearnedClause* >::iterator iterator );
         
         vector< Literal > trueLiterals;
@@ -263,10 +263,65 @@ Solver::setRestartsBasedDeletionStrategy()
 }
 
 void
+Solver::addVariable( 
+    const string& name )
+{    
+    Variable* variable = new Variable( name );
+    addVariableInternal( variable );
+}
+
+void
+Solver::addVariable()
+{
+    Variable* variable = new Variable();
+    addVariableInternal( variable );
+}
+
+void
+Solver::addVariableInternal(
+    Variable* variable )
+{
+    variables.push_back( variable );    
+    variable->setHeuristicCounterForLiterals( heuristicCounterFactoryForLiteral );    
+}
+
+
+Literal
+Solver::getLiteral(
+    int lit )
+{
+    assert( "Lit is out of range." && static_cast< unsigned >( abs( lit ) ) < variables.numberOfVariables() );
+    return lit > 0 ? Literal( variables[ lit ] ) : Literal( variables[ -lit ], false );
+//    if( lit > 0 )
+//    {
+//        Literal literal( variables[ lit ] );
+//        return literal;
+//    }
+//    else
+//    {
+//        Literal literal( variables[ -lit ], false );
+//        return literal;
+//    }    
+}
+
+void
 Solver::init()
 {
     variables.init();
     cout << COMMENT_DIMACS << " " << WASP_STRING << endl;
+}
+
+void 
+Solver::onLiteralAssigned(
+    Literal literal,
+    Clause* implicant )
+{
+    if( !variables.assign( literal, currentDecisionLevel, implicant ) )
+    {
+        conflict = true;
+        conflictLiteral = literal;
+        conflictClause = implicant;        
+    }
 }
 
 void

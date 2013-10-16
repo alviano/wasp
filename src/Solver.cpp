@@ -56,65 +56,6 @@ Solver::~Solver()
 }
 
 void
-Solver::addVariable( 
-    const string& name )
-{    
-    Variable* variable = new Variable( name );
-    addVariableInternal( variable );
-}
-
-void
-Solver::addVariable()
-{
-    Variable* variable = new Variable();
-    addVariableInternal( variable );
-}
-
-//AuxLiteral*
-//Solver::addAuxVariable()
-//{
-//    AuxLiteral* auxLiteral = new AuxLiteral();
-//    NegativeLiteral* negativeLiteral = new NegativeLiteral();
-//    
-//    negativeLiteral->setOppositeLiteral( auxLiteral );
-//    auxLiteral->setOppositeLiteral( negativeLiteral );
-//    
-//    auxLiterals.push_back( auxLiteral );
-//    undefinedLiterals.insert( auxLiteral );
-//    
-//    auxLiteral->setHeuristicCounter( heuristicCounterFactoryForLiteral );
-//    negativeLiteral->setHeuristicCounter( heuristicCounterFactoryForLiteral );
-//    
-//    return auxLiteral;
-//}
-
-void
-Solver::addVariableInternal(
-    Variable* variable )
-{
-    variables.push_back( variable );
-    
-    variable->setHeuristicCounterForLiterals( heuristicCounterFactoryForLiteral );    
-}
-
-void 
-Solver::onLiteralAssigned(
-    Literal literal,
-    Clause* implicant )
-{
-    if( !variables.assign( literal, currentDecisionLevel, implicant ) )
-    {
-        conflict = true;
-        //conflict = !literal.setTrue();
-        //if( conflict )
-        {
-            conflictLiteral = literal;
-            conflictClause = implicant;
-        }
-    }
-}
-
-void
 Solver::unroll(
     unsigned int level )
 {
@@ -138,23 +79,6 @@ Solver::unroll(
     }
     
     variables.resetLiteralsToPropagate();
-}
-
-Literal
-Solver::getLiteral(
-    int lit )
-{
-    assert( "Lit is out of range." && static_cast< unsigned >( abs( lit ) ) < variables.numberOfVariables() );
-    if( lit > 0 )
-    {
-        Literal literal( variables[ lit ] );
-        return literal;
-    }
-    else
-    {
-        Literal literal( variables[ -lit ], false );
-        return literal;
-    }    
 }
 
 void
@@ -257,24 +181,6 @@ Solver::preprocessing()
         Literal literal = trueLiterals[ i ];
         if( !propagateLiteralAsDeterministicConsequence( literal ) )
             return false;
-//        onLiteralAssigned( literal, NULL );
-//        
-//        if( conflictDetected() )
-//        {
-//            return false;
-//        }
-//        
-//        while( hasNextLiteralToPropagate() )
-//        {
-//            Literal literalToPropagate = getNextLiteralToPropagate();
-////            literalToPropagate.setOrderInThePropagation( numberOfAssignedLiterals() );
-//            propagate( literalToPropagate );
-//            
-//            if( conflictDetected() )
-//            {
-//                return false;
-//            }
-//        }
     }
     assert( !conflictDetected() );
     return true;

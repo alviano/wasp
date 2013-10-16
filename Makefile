@@ -19,11 +19,16 @@ linkflags.gprof = \
 # for g++ <= 4.6
 cxxflags.debug0x = \
  -Wall -std=c++0x
+linkflags.debug0x = \
+ -lm
 cxxflags.release0x = \
  -Wall -std=c++0x -DNDEBUG -O3
+linkflags.release0x = \
+ -lm
 cxxflags.gprof0x = \
  -Wall -std=c++0x -DNDEBUG -O3 -g -pg 
-
+linkflags.gprof0x = \
+ -lm -g -pg
 ####
 
 SOURCE_DIR = src
