@@ -64,6 +64,7 @@ namespace wasp
             unsigned solving;
             unsigned modelchecker;
             unsigned unfoundedset;
+            unsigned heuristic;
 
         private:
             TraceLevels() : std( 0 ), parser( 0 ){}

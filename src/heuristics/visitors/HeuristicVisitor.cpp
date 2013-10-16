@@ -22,14 +22,5 @@
 Literal
 HeuristicVisitor::getChosenLiteral()
 {
-    if( chosenPolarity )
-    {
-        Literal literal( chosenVariable );
-        return literal;
-    }
-    else
-    {
-        Literal literal( chosenVariable, false );
-        return literal;
-    }
+    return chosenPolarity ? Literal( chosenVariable ) : Literal( chosenVariable, false );    
 }

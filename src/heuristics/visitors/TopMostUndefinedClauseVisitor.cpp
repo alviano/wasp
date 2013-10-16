@@ -30,10 +30,10 @@ TopMostUndefinedClauseVisitor::choosePolarity(
     assert( "Variable has not been set." && variable != NULL );
     if( getLiteralCounter( variable->getPositiveHeuristicCounter() ) > getLiteralCounter( variable->getNegativeHeuristicCounter() ) )
     {
-        setChosenLiteral( variable, true );
+        setChosenPolarity( true );
     }
     else
     {
-        setChosenLiteral( variable, false );
+        setChosenPolarity( false );
     }
 }

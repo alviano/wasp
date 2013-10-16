@@ -70,16 +70,9 @@ class Literal
         inline void eraseWatchedClause( Clause* clause );
         inline void findAndEraseWatchedClause( Clause* clauses );
 
-//        inline void addWaspRule( WaspRule* waspRule );
-
         inline unsigned int getDecisionLevel() const;
-//        inline void setDecisionLevel( unsigned int );
-
-//        inline unsigned int getOrderInThePropagation() const;
-//        inline void setOrderInThePropagation( unsigned int order );
 
         inline bool isImplicant( const Clause* clause ) const;
-//        inline void setImplicant( Clause* clause );
         
         inline void onLearning( LearningStrategy* strategy );
 
@@ -90,7 +83,6 @@ class Literal
         inline void visitForHeuristic( HeuristicVisitor* );
 
         inline void unitPropagation( Solver& solver );
-//        void supportPropagation( Solver& solver );
         
         inline unsigned int numberOfWatchedClauses() const;
         inline Variable* getVariable();
@@ -242,7 +234,7 @@ Literal::isFalse() const
 
 bool
 Literal::isUndefined() const
-{
+{    
     assert( "Variable has not been set." && getVariable() != NULL );
     return getVariable()->isUndefined();
 }
@@ -253,29 +245,6 @@ Literal::getDecisionLevel() const
     assert( "Variable has not been set." && getVariable() != NULL );
     return getVariable()->getDecisionLevel();
 }
-
-//void
-//Literal::setDecisionLevel( 
-//    unsigned int dl )
-//{
-//    assert( "Variable has not been set." && getVariable() != NULL );
-//    getVariable()->setDecisionLevel( dl );
-//}
-
-//unsigned int
-//Literal::getOrderInThePropagation() const
-//{
-//    assert( "Variable has not been set." && getVariable() != NULL );
-//    return getVariable()->getOrderInThePropagation();
-//}
-//
-//void
-//Literal::setOrderInThePropagation( 
-//    unsigned int order )
-//{
-//    assert( "Variable has not been set." && getVariable() != NULL );
-//    getVariable()->setOrderInThePropagation( order );
-//}
 
 bool
 Literal::isImplicant(

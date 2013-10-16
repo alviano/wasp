@@ -45,7 +45,7 @@ class Solver;
 class Clause
 {
     friend ostream &operator<<( ostream & out, const Clause & clause );
-    
+
     public:
         inline Clause();
         virtual ~Clause() {}
@@ -56,7 +56,7 @@ class Clause
          * 
          * @param size the numbers of literals.
          */
-        inline Clause( unsigned int size );        
+        inline Clause( unsigned int size );
 
         inline void addLiteral( Literal literal );
 
@@ -68,32 +68,28 @@ class Clause
         void onLiteralFalse( Literal literal, Solver& solver );
 
         inline unsigned int size() const;
-        
         inline void visitForHeuristic( HeuristicVisitor* );
-        
+
         #ifdef TRACE_ON
         inline const char* clauseToCharStar()
         {
             stringstream s;
             this->print( s );
             return s.str().c_str();
-        }        
+        }
         #endif
-        
+
     protected:
         inline bool isImplicantOfALiteral() const;
         vector< Literal > literals;
-        
+
         virtual ostream& print( ostream& out ) const;
-        
+
     private:
         Clause( const Clause& )
         {
             assert( "The copy constructor has been disabled." && 0 );
         }
-
-//        WatchedList< Clause* >::iterator iterator_firstWatch;
-//        WatchedList< Clause* >::iterator iterator_secondWatch;
         
         inline void setWatchesInRandomPositions();
         
@@ -129,23 +125,20 @@ void
 Clause::attachFirstWatch()
 {
     assert( "Unary clause must be removed." && literals.size() > 1 );
-    /*iterator_firstWatch =*/ literals[ 0 ].addWatchedClause( this );
-//    assert( "The iterator must point to this clause." && this == *iterator_firstWatch );
+    literals[ 0 ].addWatchedClause( this );
 }
 
 void
 Clause::attachSecondWatch()
 {
     assert( "Unary clause must be removed." && literals.size() > 1 );
-    /*iterator_secondWatch =*/ literals[ 1 ].addWatchedClause( this );
-//    assert( "The iterator must point to this clause." && this == *iterator_secondWatch );
+    literals[ 1 ].addWatchedClause( this );
 }
         
 void
 Clause::detachFirstWatch()
 {
     assert( "The watchToDetach points to a NULL literal." && literals[ 0 ] != NULL );
-//    assert( "The iterator must point to this clause." && this == *iterator_firstWatch );
     literals[ 0 ].eraseWatchedClause( this/*iterator_firstWatch*/ );
 }
         
@@ -153,7 +146,6 @@ void
 Clause::detachSecondWatch()
 {
     assert( "The watchToDetach points to a NULL literal." && literals[ 1 ] != NULL );
-//    assert( "The iterator must point to this clause." && this == *iterator_secondWatch );
     literals[ 1 ].eraseWatchedClause( this/*iterator_secondWatch*/ );
 }
 
@@ -180,40 +172,7 @@ Clause::attachClause(
     #endif
 
     swapLiterals( 0, first );
-    if( second == 0 )
-        swapLiterals( 1, first );
-    else
-        swapLiterals( 1, second );
-    
-//    if( first != 0 && second != 0 )
-//    {
-//        swapLiterals( 0, first );
-//        if( second != 1 )
-//            swapLiterals( 1, second );
-//    }
-//    else if( first != 0 && second == 0 )
-//    {        
-//        if( first == 1 )
-//        {
-//            //In this case second is equal to 0 and first is equal to 1. You need to do just one swap.
-//            swapLiterals( 0, 1 );
-//        }
-//        else
-//        {        
-//            swapLiterals( 1, second );
-//            swapLiterals( 0, first );   
-//        }
-//    }
-//    else
-//    {
-//        assert( first == 0 );        
-//        //Useless to do: swapLiterals( 0, first );
-//        assert( second != 0 );
-//        if( second != 1 )
-//        {
-//            swapLiterals( 1, second );
-//        }
-//    }
+    second == 0 ? swapLiterals( 1, first ) : swapLiterals( 1, second );    
 
     assert( literals[ 0 ] == tmp1 );
     assert( literals[ 1 ] == tmp2 );

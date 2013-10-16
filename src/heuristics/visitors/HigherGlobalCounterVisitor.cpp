@@ -27,30 +27,30 @@
 void
 HigherGlobalCounterVisitor::choosePolarity(
     Variable* variable )
-{    
-    assert( "Solver has not been set." && solver != NULL );
-    
-    Literal positiveLiteral( variable );
+{
+    trace( heuristic, 2, "Higher Global Counter: choose polarity.\n" );
+    assert( "Solver has not been set." && solver != NULL );    
+    assert( "Variable has not been set." && variable != NULL );
+
+    Literal positiveLiteral( variable );    
     unsigned int value1 = estimatePropagation( positiveLiteral );
+    trace( heuristic, 2, "Estimated propagation of positive literal %s, value: %d.\n", positiveLiteral.literalToCharStar(), value1 );
     if( value1 == UINT_MAX )
     {
-        setChosenLiteral( variable, true );        
-//        chosenLiteral = positiveLiteral;
+        setChosenPolarity( true );
         return;
     }
     
     Literal negativeLiteral( variable, false );
     unsigned int value2 = estimatePropagation( negativeLiteral );
-
+    trace( heuristic, 2, "Estimated propagation of negative literal %s, value: %d.\n", negativeLiteral.literalToCharStar(), value2 );
     if( value1 > value2 )
     {
-        setChosenLiteral( variable, true );
-//        chosenLiteral = positiveLiteral;
+        setChosenPolarity( true );
     }
     else
     {
-        setChosenLiteral( variable, false );
-//        chosenLiteral = negativeLiteral;
+        setChosenPolarity( false );
     }
 }
 
@@ -65,9 +65,7 @@ HigherGlobalCounterVisitor::estimatePropagation(
     while( solver->hasNextLiteralToPropagate() )
     {
         Literal literalToPropagate = solver->getNextLiteralToPropagate();
-//        literalToPropagate.setOrderInThePropagation( solver->numberOfAssignedLiterals() );
-        solver->propagate( literalToPropagate );
-        
+        solver->propagate( literalToPropagate );        
         if( solver->conflictDetected() )
         {
             solver->unrollOne();
@@ -75,9 +73,8 @@ HigherGlobalCounterVisitor::estimatePropagation(
             return UINT_MAX;
         }
     }
-    
     unsigned int lookaheadValue = literal.numberOfWatchedClauses() + solver->numberOfAssignedLiterals();
     
-    solver->unrollOne();    
+    solver->unrollOne();
     return lookaheadValue;
 }

@@ -22,6 +22,8 @@
 #include "../Clause.h"
 #include "../Constants.h"
 #include "../ErrorMessage.h"
+#include "../Trace.h"
+#include "../Options.h"
 
 #include <cassert>
 #include <sstream>
@@ -145,6 +147,7 @@ Dimacs::readAllClauses(
 {
 //    if( !weighted )
 //    {
+    trace( parser, 1, "Starting reading %d clauses.\n", numberOfClauses );
     for( unsigned int i = 0; i < numberOfClauses; i++ )
     {
         readClause( input );
@@ -186,26 +189,28 @@ Dimacs::readClause(
     istream& input )
 {   
     unordered_set< int > tempSet;
-    
+
     bool trivial = false;
-    
+
     Clause* clause = builder->startClause();
-    
+
     //a variable containing the literal to read
     int next;
-    
+
     //read the next literal
     input >> next;
-    
+
+    if( next == 0 )
+    {
+        ErrorMessage::errorDuringParsing( "Empty clause are not allowed.");
+    }
+
     //storing the first literal in case the clause is unary.
-    int firstLiteral = next;    
+    int firstLiteral = next;
     do
     {
-        if( next == 0 )
-        {
-            ErrorMessage::errorDuringParsing( "Empty clause are not allowed.");
-        }            
-        
+        assert( next != 0 );
+
         //insert the current literal in the set
         tempSet.insert( next );
         
@@ -232,6 +237,7 @@ Dimacs::readClause(
     //if the clause is not trivial add it in the formula
     if( !trivial )
     {
+        trace( parser, 1, "Adding clause %s.\n", clause->clauseToCharStar() );
         builder->endClause( clause );        
     }
     else
@@ -354,6 +360,7 @@ void
 Dimacs::insertVariables(
     unsigned int numberOfVariables )
 {
+    trace( parser, 1, "Adding %d variables.\n", numberOfVariables );
     for( unsigned int i = 1; i <= numberOfVariables; i++ )
     {
         stringstream ss;

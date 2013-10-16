@@ -37,19 +37,18 @@ class BerkminTotalCounterVisitor : public HeuristicVisitor
 {
     public:
         inline BerkminTotalCounterVisitor();
-        void onNavigatingVariable( Variable* );
-        
+        void onNavigatingVariable( Variable* );        
+
     protected:
-        virtual void choosePolarity( Variable* ) = 0;
+        virtual void choosePolarity( Variable* variable ) = 0;
         inline BERKMIN_HEURISTIC_COUNTER getLiteralCounter( const HeuristicCounterForLiteral* heuristicCounter ) const;
         inline BERKMIN_HEURISTIC_COUNTER getTotalCounter( const Variable* ) const;
-        BERKMIN_HEURISTIC_COUNTER maxCounter;
+        BERKMIN_HEURISTIC_COUNTER maxCounter;        
 };
 
 BerkminTotalCounterVisitor::BerkminTotalCounterVisitor() : HeuristicVisitor(), maxCounter( 0 )
 {
 }
-
 
 BERKMIN_HEURISTIC_COUNTER
 BerkminTotalCounterVisitor::getLiteralCounter( 

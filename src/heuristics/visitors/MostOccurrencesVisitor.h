@@ -36,6 +36,9 @@ class MostOccurrencesVisitor : public HeuristicVisitor
         inline MostOccurrencesVisitor();
         virtual void onNavigatingVariable( Variable* variable );
         
+    protected:
+        virtual void choosePolarity( Variable* variable );
+        
     private:
         unsigned int maxOccurrences;
 };
@@ -45,4 +48,3 @@ MostOccurrencesVisitor::MostOccurrencesVisitor() : HeuristicVisitor(), maxOccurr
 }
 
 #endif	/* MOSTOCCURRENCESVISITOR_H */
-

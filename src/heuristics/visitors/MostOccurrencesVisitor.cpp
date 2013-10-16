@@ -31,14 +31,20 @@ MostOccurrencesVisitor::onNavigatingVariable(
     if( numberOfOccurrences > maxOccurrences )
     {
         maxOccurrences = numberOfOccurrences;
-        if( variable->numberOfPositiveWatchedClauses() > variable->numberOfNegativeWatchedClauses() )
-        {
-            setChosenLiteral( variable, true );
-        }
-        else
-        {
-            setChosenLiteral( variable, false );
-        }
-         
+        setChosenVariable( variable );
+    }
+}
+
+void
+MostOccurrencesVisitor::choosePolarity(
+    Variable* variable )
+{
+    if( variable->numberOfPositiveWatchedClauses() > variable->numberOfNegativeWatchedClauses() )
+    {
+        setChosenPolarity( true );
+    }
+    else
+    {
+        setChosenPolarity( false );
     }
 }

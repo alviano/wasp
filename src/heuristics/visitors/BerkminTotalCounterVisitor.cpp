@@ -30,7 +30,7 @@ BerkminTotalCounterVisitor::onNavigatingVariable(
     if( totalCounter > maxCounter )
     {
         maxCounter = totalCounter;
-        choosePolarity( variable );
+        setChosenVariable( variable );
     }
 }
 

@@ -31,6 +31,8 @@ class Literal;
 
 #include <cassert>
 #include <cstdlib>
+#include <iostream>
+using namespace std;
 #include "../../Constants.h"
 
 class HeuristicVisitor
@@ -38,11 +40,14 @@ class HeuristicVisitor
     public:
         inline HeuristicVisitor();
         virtual void onNavigatingVariable( Variable* ) = 0;
+        inline void endIteration();
         inline bool hasChosenLiteral() const;
-        Literal getChosenLiteral();
+        Literal getChosenLiteral();        
         
-    protected:
-        inline void setChosenLiteral( Variable* variable, bool polarity );        
+    protected:        
+        virtual void choosePolarity( Variable* variable ) = 0;
+        inline void setChosenVariable( Variable* variable );
+        inline void setChosenPolarity( bool polarity );
         
     private:
         Variable* chosenVariable;
@@ -54,12 +59,18 @@ HeuristicVisitor::HeuristicVisitor() : chosenVariable( NULL ), chosenPolarity( f
 }
 
 void
-HeuristicVisitor::setChosenLiteral(
-    Variable* variable,
-    bool polarity )
+HeuristicVisitor::setChosenVariable(
+    Variable* variable )
 {
     assert( "Variable must be set." && variable != NULL );
     chosenVariable = variable;
+}
+
+void
+HeuristicVisitor::setChosenPolarity(    
+    bool polarity )
+{
+    assert( "Variable must be set." && chosenVariable != NULL );
     chosenPolarity = polarity;
 }
 
@@ -69,5 +80,13 @@ HeuristicVisitor::hasChosenLiteral() const
     return chosenVariable != NULL;
 }
 
-#endif	/* HEURISTICVISITOR_H */
+void
+HeuristicVisitor::endIteration()
+{
+    if( chosenVariable != NULL )
+    {
+        choosePolarity( chosenVariable );
+    }
+}
 
+#endif	/* HEURISTICVISITOR_H */

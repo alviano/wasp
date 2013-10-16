@@ -41,7 +41,6 @@ class HigherGlobalCounterVisitor : public BerkminTotalCounterVisitor
          * This function performs a lookahead step in order to choose the
          * polarity of a literal.
          * 
-         * @param variable The chosen variable.
          */
         virtual void choosePolarity( Variable* variable );
         
