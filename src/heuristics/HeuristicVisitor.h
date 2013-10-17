@@ -16,24 +16,28 @@
  *
  */
 
-#include "TopMostUndefinedClauseVisitor.h"
+/* 
+ * File:   HeuristicVisitor.h
+ * Author: Carmine Dodaro
+ *
+ * Created on 03 September 2013, 16.50
+ */
 
-#include "../../Literal.h"
-#include "../../Variable.h"
-#include "../counters/BerkminCounters.h"
-#include <cassert>
+#ifndef HEURISTICVISITOR_H
+#define	HEURISTICVISITOR_H
 
-void
-TopMostUndefinedClauseVisitor::choosePolarity(
-    Variable* variable )
+class Clause;
+
+class HeuristicVisitor
 {
-    assert( "Variable has not been set." && variable != NULL );
-    if( getLiteralCounter( variable->getPositiveHeuristicCounter() ) > getLiteralCounter( variable->getNegativeHeuristicCounter() ) )
-    {
-        setChosenPolarity( true );
-    }
-    else
-    {
-        setChosenPolarity( false );
-    }
+    public:
+        inline HeuristicVisitor();
+        virtual void visit( Clause* ) = 0;
+        virtual void onNavigatingVariable( Variable* ) = 0;
+};
+
+HeuristicVisitor::HeuristicVisitor()
+{
 }
+
+#endif	/* HEURISTICVISITOR_H */

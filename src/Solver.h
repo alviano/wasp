@@ -529,9 +529,9 @@ Solver::foundIncoherence()
 void
 Solver::chooseLiteral()
 {
-    Literal choice = decisionHeuristic->makeAChoice( *this );
+    Literal choice = decisionHeuristic->makeAChoice( *this );    
     trace( solving, 1, "Choice: %s.\n", choice.literalToCharStar() );
-    setAChoice( choice );
+    setAChoice( choice );    
 }
 
 void

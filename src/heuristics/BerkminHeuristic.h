@@ -27,33 +27,77 @@
 #define	BERKMINHEURISTIC_H
 
 #include "DecisionHeuristic.h"
+#include "HeuristicVisitor.h"
+#include "counters/BerkminCounters.h"
 
-//#include <vector>
-//using namespace std;
+#include "../Trace.h"
+#include "../Variable.h"
 
-class BerkminHeuristic : public DecisionHeuristic
+#include <cassert>
+using namespace std;
+
+class BerkminHeuristic : public DecisionHeuristic, public HeuristicVisitor
 {
     public:
         inline BerkminHeuristic( unsigned int maxBerkminNumber );
         virtual ~BerkminHeuristic();
-        virtual Literal makeAChoice( Solver& solver );
+
+    protected:
+        virtual Literal makeAChoiceProtected( Solver& solver );
         virtual void onLearning( Solver& solver );
         virtual void onRestarting( Solver& solver );
+        virtual void visit( Clause* );
+        void onNavigatingVariable( Variable* );
+        bool onNavigatingVariableForMostOccurrences( Variable* );
         
-    protected:
-        virtual Literal pickLiteralUsingLearnedClauses( Solver& solver );
-        virtual Literal pickLiteralUsingActivity( Solver& solver );
-//        virtual bool tieBreak( vector< Literal* >& );
+        virtual void pickLiteralUsingLearnedClauses( Solver& solver );
+        virtual void pickLiteralUsingActivity( Solver& solver );
         
+        virtual void choosePolarityTopMostUndefinedClause();
+        virtual void choosePolarityHigherGlobalCounter( Solver& solver );
+        virtual void choosePolarityMostOccurrences();
+        inline void resetCounters();
+
     private:
-        Literal topMostUndefinedLearnedClause( Solver& solver );
+        void topMostUndefinedLearnedClause( Solver& solver );        
+        unsigned int estimatePropagation( Literal literal, Solver& solver );
         unsigned int maxBerkminNumber;
         unsigned int numberOfConflicts;
+
+        inline BERKMIN_HEURISTIC_COUNTER getLiteralCounter( const HeuristicCounterForLiteral* heuristicCounter ) const;
+        inline BERKMIN_HEURISTIC_COUNTER getTotalCounter( const Variable* ) const;
+        BERKMIN_HEURISTIC_COUNTER maxCounter;
+        unsigned int maxOccurrences;
 };
 
-BerkminHeuristic::BerkminHeuristic( 
-    unsigned int max ) : maxBerkminNumber( max ), numberOfConflicts( 0 )
+BerkminHeuristic::BerkminHeuristic(
+    unsigned int max ) : maxBerkminNumber( max ), numberOfConflicts( 0 ), maxCounter( 0 ), maxOccurrences( 0 )
 {
+}
+
+BERKMIN_HEURISTIC_COUNTER
+BerkminHeuristic::getLiteralCounter( 
+    const HeuristicCounterForLiteral* heuristicCounter ) const
+{
+    assert( heuristicCounter != NULL );
+    const BerkminCounters* berkminCounter = static_cast< const BerkminCounters* >( heuristicCounter );    
+    return berkminCounter->getCounter();
+}
+
+BERKMIN_HEURISTIC_COUNTER
+BerkminHeuristic::getTotalCounter( 
+    const Variable* variable ) const
+{
+    assert( variable != NULL );
+    BERKMIN_HEURISTIC_COUNTER totalCounter = getLiteralCounter( variable->getPositiveHeuristicCounter() ) + getLiteralCounter( variable->getNegativeHeuristicCounter() );
+    return totalCounter;
+}
+
+void
+BerkminHeuristic::resetCounters()
+{
+    maxCounter = 0;
+    maxOccurrences = 0;
 }
 
 #endif	/* BERKMINHEURISTIC_H */
