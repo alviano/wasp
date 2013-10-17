@@ -59,6 +59,8 @@ using namespace std;
 #include "outputBuilders/SilentOutputBuilder.h"
 #include "outputBuilders/ThirdCompetitionOutputBuilder.h"
 #include "learning/deletion/MinisatDeletionStrategy.h"
+#include "learning/restarts/NoRestartsStrategy.h"
+#include "learning/restarts/MinisatRestartsStrategy.h"
 
 class Solver
 {
@@ -145,6 +147,8 @@ class Solver
 
         inline void setGeometricRestarts( unsigned int threshold );
         inline void setSequenceBasedRestarts( unsigned int threshold );
+        inline void setMinisatRestarts( unsigned int threshold );
+        inline void disableRestarts();
         inline void setAggressiveDeletionStrategy();
         inline void setRestartsBasedDeletionStrategy();
         inline void setMinisatDeletionStrategy();
@@ -252,6 +256,19 @@ Solver::setSequenceBasedRestarts(
     unsigned int threshold )
 {
     learningStrategy = new FirstUIPLearningStrategy( new SequenceBasedRestartsStrategy( threshold ) );
+}
+
+void
+Solver::setMinisatRestarts( 
+    unsigned int threshold )
+{
+    learningStrategy = new FirstUIPLearningStrategy( new MinisatRestartsStrategy( threshold ) );
+}        
+
+void
+Solver::disableRestarts()
+{
+    learningStrategy = new FirstUIPLearningStrategy( new NoRestartsStrategy() );
 }
 
 void

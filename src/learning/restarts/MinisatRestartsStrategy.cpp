@@ -16,23 +16,14 @@
  *
  */
 
-#include "MinisatDeletionStrategy.h"
-#include "../../Solver.h"
+#include "SequenceBasedRestartsStrategy.h"
+#include "MinisatRestartsStrategy.h"
 
-bool
-MinisatDeletionStrategy::onLearningProtected(
-    Solver& solver )
-{
-    if( maxLearned == 0.0 )
-    {
-        maxLearned = solver.numberOfClauses() * learnedSizeFactor;
-    }
-    
-    return ( ( int ) ( solver.numberOfLearnedClauses() - solver.numberOfAssignedLiterals() ) >= maxLearned );
-}
+#include <cmath>
 
 void
-MinisatDeletionStrategy::onRestarting()
+MinisatRestartsStrategy::computeNextRestartValue()
 {
-    maxLearned *= learnedSizeIncrement;
+    computeRestartBase();
+    nextRestartValue =  restartBase * threshold;
 }

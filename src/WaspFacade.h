@@ -119,6 +119,7 @@ WaspFacade::setDeletionPolicy(
             
         case MINISAT_DELETION_POLICY:
             solver.setMinisatDeletionStrategy();
+            break;
 
         default:
             solver.setAggressiveDeletionStrategy();
@@ -194,6 +195,14 @@ WaspFacade::setRestartsPolicy(
             
         case GEOMETRIC_RESTARTS_POLICY:
             solver.setGeometricRestarts( threshold );
+            break;
+            
+        case MINISAT_RESTARTS_POLICY:
+            solver.setMinisatRestarts( threshold );
+            break;
+            
+        case NO_RESTARTS_POLICY:
+            solver.disableRestarts();
             break;
             
         default:

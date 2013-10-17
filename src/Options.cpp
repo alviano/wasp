@@ -43,32 +43,36 @@ namespace wasp
 // Options without a short alias must use non-ascii codes.
 // Here are all the "only-long" options ordered by code.
 
-/* TRACE_OPTIONS */
+/* TRACE OPTIONS */
 #define OPTIONID_trace_heuristic ( 'z' + 1 )
 #define OPTIONID_trace_parser ( 'z' + 2 )
 #define OPTIONID_trace_checker ( 'z' + 3 )
 #define OPTIONID_trace_solving ( 'z' + 4 )
 #define OPTIONID_trace_us ( 'z' + 5 )
 
-/* OUTPUT_OPTIONS */
+/* OUTPUT OPTIONS */
 #define OPTIONID_silent ( 'z' + 20 )
 #define OPTIONID_competition_output ( 'z' + 21 )
 #define OPTIONID_third_competition_output ( 'z' + 22 )
 #define OPTIONID_printprogram ( 'z' + 23 )
 
-/* HEURISTIC_OPTIONS */
+/* HEURISTIC OPTIONS */
 #define OPTIONID_fuheuristic ( 'z' + 30 )
 #define OPTIONID_berkminheuristic ( 'z' + 31 )
 
-/* LEARNING_OPTIONS */
+/* RESTART OPTIONS */
 #define OPTIONID_geometric_restarts ( 'z' + 50 )
 #define OPTIONID_sequence_based_restarts ( 'z' + 51 )
-#define OPTIONID_aggressive_deletion ( 'z' + 52 )
-#define OPTIONID_restarts_based_deletion ( 'z' + 53 )
-#define OPTIONID_minisat_deletion ( 'z' + 54 )
+#define OPTIONID_minisat_restarts ( 'z' + 52 )
+#define OPTIONID_disable_restarts ( 'z' + 53 )
 
-/* INPUT_OPTIONS */
-#define OPTIONID_dimacs ( 'z' + 70 )
+/* DELETION OPTIONS */
+#define OPTIONID_aggressive_deletion ( 'z' + 70 )
+#define OPTIONID_restarts_based_deletion ( 'z' + 71 )
+#define OPTIONID_minisat_deletion ( 'z' + 72 )
+
+/* INPUT OPTIONS */
+#define OPTIONID_dimacs ( 'z' + 90 )
 
 /* GENERIC OPTIONS */
 #define OPTIONID_stdin ( 'z' + 100 )
@@ -122,34 +126,38 @@ Options::parse(
         // Here are all the long options ordered by long name.
         static struct option longOptions[] =
             {
-                /* TRACE_OPTIONS */
+                /* TRACE OPTIONS */
                 { "trace-parser", required_argument, NULL, OPTIONID_trace_parser },
                 { "trace-solving", required_argument, NULL, OPTIONID_trace_solving },
                 { "trace-mc", required_argument, NULL, OPTIONID_trace_checker },
                 { "trace-us", required_argument, NULL, OPTIONID_trace_us },
                 { "trace-heuristic", required_argument, NULL, OPTIONID_trace_heuristic },
                 
-                /* OUTPUT_OPTIONS */
+                /* OUTPUT OPTIONS */
                 { "competition-output", no_argument, NULL, OPTIONID_competition_output },
                 { "silent", no_argument, NULL, OPTIONID_silent },                
                 { "third-competition-output", no_argument, NULL, OPTIONID_third_competition_output },
                 { "printprogram", no_argument, NULL, OPTIONID_printprogram },
 
-                /* HEURISTIC_OPTIONS */
+                /* HEURISTIC OPTIONS */
                 { "heuristic-berkmin", optional_argument, NULL, OPTIONID_berkminheuristic },
                 { "heuristic-firstundefined", no_argument, NULL, OPTIONID_fuheuristic },                
                 
-                /* LEARNING_OPTIONS */
+                /* RESTART OPTIONS */                
+                { "geometric-restarts", optional_argument, NULL, OPTIONID_geometric_restarts },
+                { "minisat-restarts", optional_argument, NULL, OPTIONID_minisat_restarts },
+                { "disable-restarts", no_argument, NULL, OPTIONID_disable_restarts },
                 { "sequence-based-restarts", optional_argument, NULL, OPTIONID_sequence_based_restarts },
-                { "geometric-restarts", optional_argument, NULL, OPTIONID_geometric_restarts },                
+                
+                /* DELETION OPTIONS */
                 { "aggressive-deletion", no_argument, NULL, OPTIONID_aggressive_deletion },
                 { "restarts-based-deletion", no_argument, NULL, OPTIONID_restarts_based_deletion },
                 { "minisat-deletion", no_argument, NULL, OPTIONID_minisat_deletion },
                 
-                /* INPUT_OPTIONS */
+                /* INPUT OPTIONS */
                 { "dimacs", no_argument, NULL, OPTIONID_dimacs },                
                 
-                /* GENERIC_OPTIONS*/
+                /* GENERIC OPTIONS*/
                 { "help", no_argument, NULL, OPTIONID_help },
                 { "stdin", no_argument, NULL, OPTIONID_stdin },
                 { "time-limit", required_argument, NULL, OPTIONID_time_limit },
@@ -247,6 +255,20 @@ Options::parse(
                     if( restartsThreshold < 100 )
                         restartsThreshold = 100;
                 }
+                break;
+                
+            case OPTIONID_minisat_restarts:
+                restartsPolicy = MINISAT_RESTARTS_POLICY;
+                if( optarg )
+                {
+                    restartsThreshold = atoi( optarg );
+                    if( restartsThreshold < 100 )
+                        restartsThreshold = 100;
+                }
+                break;
+                
+            case OPTIONID_disable_restarts:
+                restartsPolicy = NO_RESTARTS_POLICY;
                 break;
                 
             case OPTIONID_aggressive_deletion:
