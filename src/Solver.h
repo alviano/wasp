@@ -40,24 +40,25 @@ using namespace std;
 #include "WaspRule.h"
 #include "stl/List.h"
 #include "stl/UnorderedSet.h"
-#include "learning/AggressiveDeletionStrategy.h"
-#include "learning/DeletionStrategy.h"
-#include "learning/FirstUIPLearningStrategy.h"
 #include "learning/LearningStrategy.h"
-#include "learning/SequenceBasedRestartsStrategy.h"
+#include "learning/FirstUIPLearningStrategy.h"
+#include "learning/deletion/AggressiveDeletionStrategy.h"
+#include "learning/deletion/DeletionStrategy.h"
+#include "learning/deletion/RestartsBasedDeletionStrategy.h"
+#include "learning/restarts/GeometricRestartsStrategy.h"
+#include "learning/restarts/SequenceBasedRestartsStrategy.h"
 #include "heuristics/BerkminHeuristic.h"
 #include "heuristics/DecisionHeuristic.h"
-#include "heuristics/factories/HeuristicCounterFactoryForLiteral.h"
-#include "heuristics/factories/BerkminCounterFactory.h"
-#include "outputBuilders/OutputBuilder.h"
-#include "outputBuilders/DimacsOutputBuilder.h"
-#include "outputBuilders/WaspOutputBuilder.h"
 #include "heuristics/FirstUndefinedHeuristic.h"
-#include "learning/RestartsBasedDeletionStrategy.h"
-#include "learning/GeometricRestartsStrategy.h"
+#include "heuristics/factories/BerkminCounterFactory.h"
+#include "heuristics/factories/HeuristicCounterFactoryForLiteral.h"
+#include "outputBuilders/CompetitionOutputBuilder.h"
+#include "outputBuilders/DimacsOutputBuilder.h"
+#include "outputBuilders/OutputBuilder.h"
+#include "outputBuilders/WaspOutputBuilder.h"
 #include "outputBuilders/SilentOutputBuilder.h"
 #include "outputBuilders/ThirdCompetitionOutputBuilder.h"
-#include "outputBuilders/CompetitionOutputBuilder.h"
+#include "learning/deletion/MinisatDeletionStrategy.h"
 
 class Solver
 {
@@ -146,6 +147,7 @@ class Solver
         inline void setSequenceBasedRestarts( unsigned int threshold );
         inline void setAggressiveDeletionStrategy();
         inline void setRestartsBasedDeletionStrategy();
+        inline void setMinisatDeletionStrategy();
         
         void printProgram()
         {
@@ -262,6 +264,12 @@ void
 Solver::setRestartsBasedDeletionStrategy()
 {
     deletionStrategy = new RestartsBasedDeletionStrategy();
+}
+
+void
+Solver::setMinisatDeletionStrategy()
+{
+    deletionStrategy = new MinisatDeletionStrategy();
 }
 
 void

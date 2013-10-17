@@ -26,7 +26,7 @@
 #ifndef LEARNINGSTRATEGY_H
 #define	LEARNINGSTRATEGY_H
 
-#include "RestartsStrategy.h"
+#include "restarts/RestartsStrategy.h"
 
 #include <cassert>
 #include <iostream>

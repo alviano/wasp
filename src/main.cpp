@@ -36,10 +36,10 @@ int EXIT_CODE = 0;
  */
 int main( int argc, char** argv )
 {
-    wasp::Options::parse( argc, argv );
+    wasp::Options::parse( argc, argv );    
     WaspFacade waspFacade;
-    wasp::Options::setOptions( waspFacade );    
-    waspFacade.readInput();
+    wasp::Options::setOptions( waspFacade );
+    waspFacade.readInput();    
     waspFacade.solve();
 
     return EXIT_CODE;

@@ -26,7 +26,7 @@
 #include "Options.h"
 
 #include "ErrorMessage.h"
-//#include "Help.h"
+#include "Help.h"
 #include "WaspFacade.h"
 
 #include <getopt.h>
@@ -44,12 +44,11 @@ namespace wasp
 // Here are all the "only-long" options ordered by code.
 
 /* TRACE_OPTIONS */
-#define OPTIONID_trace_std ( 'z' + 1 )
+#define OPTIONID_trace_heuristic ( 'z' + 1 )
 #define OPTIONID_trace_parser ( 'z' + 2 )
 #define OPTIONID_trace_checker ( 'z' + 3 )
 #define OPTIONID_trace_solving ( 'z' + 4 )
 #define OPTIONID_trace_us ( 'z' + 5 )
-#define OPTIONID_trace_heuristic ( 'z' + 6 )
 
 /* OUTPUT_OPTIONS */
 #define OPTIONID_silent ( 'z' + 20 )
@@ -66,6 +65,7 @@ namespace wasp
 #define OPTIONID_sequence_based_restarts ( 'z' + 51 )
 #define OPTIONID_aggressive_deletion ( 'z' + 52 )
 #define OPTIONID_restarts_based_deletion ( 'z' + 53 )
+#define OPTIONID_minisat_deletion ( 'z' + 54 )
 
 /* INPUT_OPTIONS */
 #define OPTIONID_dimacs ( 'z' + 70 )
@@ -124,7 +124,6 @@ Options::parse(
             {
                 /* TRACE_OPTIONS */
                 { "trace-parser", required_argument, NULL, OPTIONID_trace_parser },
-                { "trace-std", required_argument, NULL, OPTIONID_trace_std },
                 { "trace-solving", required_argument, NULL, OPTIONID_trace_solving },
                 { "trace-mc", required_argument, NULL, OPTIONID_trace_checker },
                 { "trace-us", required_argument, NULL, OPTIONID_trace_us },
@@ -141,10 +140,11 @@ Options::parse(
                 { "heuristic-firstundefined", no_argument, NULL, OPTIONID_fuheuristic },                
                 
                 /* LEARNING_OPTIONS */
-                { "sequence-based-restarts", required_argument, NULL, OPTIONID_sequence_based_restarts },
+                { "sequence-based-restarts", optional_argument, NULL, OPTIONID_sequence_based_restarts },
                 { "geometric-restarts", optional_argument, NULL, OPTIONID_geometric_restarts },                
-                { "aggressive-deletion", required_argument, NULL, OPTIONID_aggressive_deletion },
-                { "restarts-based-deletion", optional_argument, NULL, OPTIONID_restarts_based_deletion },                
+                { "aggressive-deletion", no_argument, NULL, OPTIONID_aggressive_deletion },
+                { "restarts-based-deletion", no_argument, NULL, OPTIONID_restarts_based_deletion },
+                { "minisat-deletion", no_argument, NULL, OPTIONID_minisat_deletion },
                 
                 /* INPUT_OPTIONS */
                 { "dimacs", no_argument, NULL, OPTIONID_dimacs },                
@@ -181,10 +181,6 @@ Options::parse(
 
             case OPTIONID_trace_parser:
                 setTraceLevel( parser, atoi( optarg ) );
-                break;
-
-            case OPTIONID_trace_std:
-                setTraceLevel( std, atoi( optarg ) );
                 break;
 
             case OPTIONID_trace_checker:
@@ -260,13 +256,17 @@ Options::parse(
             case OPTIONID_restarts_based_deletion:
                 deletionPolicy = RESTARTS_BASED_DELETION_POLICY;
                 break;
+                
+            case OPTIONID_minisat_deletion:
+                deletionPolicy = MINISAT_DELETION_POLICY;
+                break;
 
             case OPTIONID_dimacs:
                 outputPolicy = DIMACS_OUTPUT;
                 break; 
                 
             case OPTIONID_help:
-//                Help::printHelp();
+                Help::printHelp();
                 exit( 0 );
                 break;
 

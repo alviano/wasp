@@ -49,7 +49,6 @@ Dimacs::parse()
     this->parse( cin );
 }
 
-
 void
 Dimacs::parse(
     istream& input )

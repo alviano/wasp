@@ -59,7 +59,6 @@ namespace wasp
         friend class Options;
 
         public:
-            unsigned std;
             unsigned parser;
             unsigned solving;
             unsigned modelchecker;
@@ -67,7 +66,7 @@ namespace wasp
             unsigned heuristic;
 
         private:
-            TraceLevels() : std( 0 ), parser( 0 ){}
+            TraceLevels() : parser( 0 ){}
     };
 };
 #endif

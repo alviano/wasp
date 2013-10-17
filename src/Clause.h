@@ -137,7 +137,7 @@ void
 Clause::detachSecondWatch()
 {
     assert( "The watchToDetach points to a NULL literal." && literals[ 1 ] != NULL );
-    literals[ 1 ].eraseWatchedClause( this/*iterator_secondWatch*/ );
+    literals[ 1 ].eraseWatchedClause( this );
 }
 
 void

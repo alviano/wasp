@@ -88,11 +88,12 @@ WaspFacade::solve()
         return;
     }
     
-    while( numberOfModels < maxModels && solver.solve() )
+    while( solver.solve() )
     {
         solver.printAnswerSet();
-        numberOfModels++;
-        if( !solver.addClauseFromModelAndRestart() )
+        if( ++numberOfModels >= maxModels )
+            break;
+        else if( !solver.addClauseFromModelAndRestart() )
             break;
     }
     
@@ -116,6 +117,9 @@ WaspFacade::setDeletionPolicy(
             solver.setRestartsBasedDeletionStrategy();
             break;
             
+        case MINISAT_DELETION_POLICY:
+            solver.setMinisatDeletionStrategy();
+
         default:
             solver.setAggressiveDeletionStrategy();
             break;

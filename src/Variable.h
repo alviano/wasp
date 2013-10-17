@@ -144,8 +144,8 @@ class Variable
         WatchedList< Clause* > watchedLists[ 2 ];
         
         /**
-         * Position 0 of this vector contains the heuristic counter of the negative literal associated with this variable.
-         * Position 1 of this vector contains the heuristic counter of the positive literal associated with this variable.
+         * Position 0 of this vector contains the heuristic counter of the positive literal associated with this variable.
+         * Position 1 of this vector contains the heuristic counter of the negative literal associated with this variable.
          */
         HeuristicCounterForLiteral* heuristicCounters[ 2 ];
 };
