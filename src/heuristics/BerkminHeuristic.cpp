@@ -108,10 +108,10 @@ BerkminHeuristic::pickLiteralUsingActivity(
 }
 
 void
-BerkminHeuristic::pickLiteralFromTopMostUndefinedLearnedClause(
+BerkminHeuristic::pickLiteralFromTopMostUnsatisfiedLearnedClause(
    Solver& solver )
 {
-    trace( heuristic, 1, "Starting TopMostUndefinedLearnedClause.\n" );
+    trace( heuristic, 1, "Starting TopMostUnsatisfiedLearnedClause.\n" );
     trace( heuristic, 1, "Considering %d learned clauses.\n", numberOfLearnedClausesToConsider );
 
     unsigned int count = 0;
@@ -142,7 +142,7 @@ BerkminHeuristic::makeAChoice(
     trace( heuristic, 1, "Starting Berkmin Heuristic.\n" );
 
     chosenVariable = NULL;
-    pickLiteralFromTopMostUndefinedLearnedClause( solver );
+    pickLiteralFromTopMostUnsatisfiedLearnedClause( solver );
     
     if( chosenVariable == NULL )
         pickLiteralUsingActivity( solver );

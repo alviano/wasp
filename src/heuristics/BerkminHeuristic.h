@@ -50,7 +50,7 @@ class BerkminHeuristic : public DecisionHeuristic, public UndefinedCollector
 
     private:
         inline void pickLiteralUsingActivity( Solver& solver );
-        inline void pickLiteralFromTopMostUndefinedLearnedClause( Solver& solver );        
+        inline void pickLiteralFromTopMostUnsatisfiedLearnedClause( Solver& solver );        
         
         inline void choosePolarityTopMostUndefinedClause();
         inline void choosePolarityHigherGlobalCounter( Solver& solver );
