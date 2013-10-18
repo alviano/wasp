@@ -80,3 +80,11 @@ Clause::notifyImplication(
     solver.onLiteralAssigned( literals[ 0 ], this );
 }
 
+bool
+Clause::isUnsatisfied() const
+{
+    for( unsigned i = 0; i < literals.size(); ++i )
+        if( literals[ i ].isTrue() )
+            return false;
+    return true;
+}

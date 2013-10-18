@@ -71,6 +71,7 @@ class Clause
 
         inline unsigned int size() const;
         inline bool checkUnsatisfiedAndOptimize( UndefinedCollector* collector );
+        bool isUnsatisfied() const;
 
         #ifdef TRACE_ON
         inline const char* clauseToCharStar()

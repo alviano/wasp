@@ -128,7 +128,7 @@ BerkminHeuristic::pickLiteralFromTopMostUndefinedLearnedClause(
         {
             assert( chosenVariable != NULL );
             assert( Literal( chosenVariable ).isUndefined() );
-            assert( chosenVariableByOccurrences != NULL );
+            assert( learnedClause.isUnsatisfied() );
             chosenPolarity = getLiteralCounter( chosenVariable->getPositiveHeuristicCounter() ) > getLiteralCounter( chosenVariable->getNegativeHeuristicCounter() );
             break;
         }
