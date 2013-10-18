@@ -153,6 +153,10 @@ class Solver
         inline void setRestartsBasedDeletionStrategy();
         inline void setMinisatDeletionStrategy();
         
+        typedef List< LearnedClause* >::reverse_iterator LearnedClausesReverseIterator;
+        inline LearnedClausesReverseIterator learnedClauses_rbegin() { return learnedClauses.rbegin(); }
+        inline LearnedClausesReverseIterator learnedClauses_rend() { return learnedClauses.rend(); }
+        
         void printProgram()
         {
             for( List< Clause* >::const_iterator it = clauses.begin(); it != clauses.end(); ++it )

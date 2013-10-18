@@ -20,7 +20,6 @@
 #include "Clause.h"
 #include "Literal.h"
 #include "heuristics/factories/HeuristicCounterFactoryForLiteral.h"
-#include "heuristics/HeuristicVisitor.h"
 #include "Solver.h"
 
 ostream& operator<<( 

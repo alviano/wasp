@@ -32,6 +32,8 @@
 
 #include "Literal.h"
 #include "learning/LearningStrategy.h"
+#include "heuristics/UndefinedCollector.h"
+
 using namespace std;
 
 class Solver;
@@ -68,7 +70,7 @@ class Clause
         inline void onLiteralFalse( Literal literal, Solver& solver );
 
         inline unsigned int size() const;
-        inline bool accept( HeuristicVisitor* );
+        inline bool checkUnsatisfiedAndOptimize( UndefinedCollector* collector );
 
         #ifdef TRACE_ON
         inline const char* clauseToCharStar()
@@ -97,7 +99,8 @@ class Clause
         inline void attachSecondWatch();        
         inline void detachSecondWatch();
         
-        void updateWatch( Solver& solver );
+        inline void updateWatch( Solver& solver );
+        void notifyImplication( Solver& solver );
 
         inline void swapLiterals( unsigned int pos1, unsigned int pos2 );
 };
@@ -225,18 +228,22 @@ Clause::onLearning(
 }
 
 bool
-Clause::accept( 
-    HeuristicVisitor* heuristicVisitor )
+Clause::checkUnsatisfiedAndOptimize( 
+    UndefinedCollector* collector )
 {
     assert( "Unary clauses must be removed." && literals.size() > 1 );
     
     if( literals.back().isTrue() )
         return false;
-    literals.back().accept( heuristicVisitor );
+    Variable* variable = literals.back().getVariable();
+    if( variable->isUndefined() )
+        collector->collectUndefined( variable );
     
     if( literals[ 0 ].isTrue() )
         return false;
-    literals[ 0 ].accept( heuristicVisitor );
+    variable = literals[ 0 ].getVariable();
+    if( variable->isUndefined() )
+        collector->collectUndefined( variable );
     
     unsigned size = literals.size() - 1;
     for( unsigned int i = 1; i < size; ++i )
@@ -250,7 +257,9 @@ Clause::accept(
             
             return false;
         }
-        literals[ i ].accept( heuristicVisitor );
+        variable = literals[ i ].getVariable();
+        if( variable->isUndefined() )
+            collector->collectUndefined( variable );
     }
     
     return true;
@@ -264,6 +273,36 @@ Clause::swapLiterals(
     assert( "First position is out of range." && pos1 < literals.size() );
     assert( "Second position is out of range." && pos2 < literals.size() ); 
     std::swap( literals[ pos1 ], literals[ pos2 ] );
+}
+
+
+void
+Clause::updateWatch(
+    Solver& solver )
+{
+    assert( "Unary clauses must be removed." && literals.size() > 1 );
+    
+    unsigned int size = literals.size();
+    for( unsigned int i = 2; i < size; ++i )
+    {
+        if( !literals[ i ].isFalse() )
+        {
+            //Detach the old watch
+            detachSecondWatch();
+
+            //Swap the two literals
+            swapLiterals( 1, i );
+
+            //Attach the watch in the new position
+            attachSecondWatch();            
+            return;
+        }
+    }
+    
+    assert( "The other watched literal cannot be true." && !literals[ 0 ].isTrue() );
+    
+    //Propagate literals[ 0 ];
+    notifyImplication( solver );
 }
 
 void

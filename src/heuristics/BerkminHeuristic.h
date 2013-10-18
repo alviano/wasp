@@ -27,7 +27,7 @@
 #define	BERKMINHEURISTIC_H
 
 #include "DecisionHeuristic.h"
-#include "HeuristicVisitor.h"
+#include "UndefinedCollector.h"
 #include "counters/BerkminCounters.h"
 
 #include "../Trace.h"
@@ -36,7 +36,7 @@
 #include <cassert>
 using namespace std;
 
-class BerkminHeuristic : public DecisionHeuristic, public HeuristicVisitor
+class BerkminHeuristic : public DecisionHeuristic, public UndefinedCollector
 {
     public:
         inline BerkminHeuristic( unsigned int numberOfLearnedClausesToConsider = static_cast< unsigned >( -1 ) );
@@ -46,12 +46,9 @@ class BerkminHeuristic : public DecisionHeuristic, public HeuristicVisitor
         virtual void onLearning( Solver& solver );
         virtual void onRestart( Solver& solver );
         
-        virtual void visit( Clause* );
-        virtual void visit( Variable* );
+        virtual void collectUndefined( Variable* );
 
     private:
-        inline bool onNavigatingVariableForMostOccurrences( Variable* );
-        
         inline void pickLiteralUsingActivity( Solver& solver );
         inline void pickLiteralFromTopMostUndefinedLearnedClause( Solver& solver );        
         
@@ -59,8 +56,6 @@ class BerkminHeuristic : public DecisionHeuristic, public HeuristicVisitor
         inline void choosePolarityHigherGlobalCounter( Solver& solver );
         inline void choosePolarityMostOccurrences();
         inline void resetCounters();
-
-        inline Literal getChosenLiteral();
 
         Variable* chosenVariableByOccurrences;
         unsigned int maxOccurrences;
@@ -76,6 +71,9 @@ class BerkminHeuristic : public DecisionHeuristic, public HeuristicVisitor
 
         inline BERKMIN_HEURISTIC_COUNTER getLiteralCounter( const HeuristicCounterForLiteral* heuristicCounter ) const;
         inline BERKMIN_HEURISTIC_COUNTER getTotalCounter( const Variable* ) const;
+        
+        inline void updateMaxCounter( Variable* );
+        inline void updateMaxOccurrences( Variable* );
 };
 
 BerkminHeuristic::BerkminHeuristic(

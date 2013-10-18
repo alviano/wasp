@@ -29,6 +29,43 @@ BerkminHeuristic::~BerkminHeuristic()
 }
 
 void
+BerkminHeuristic::updateMaxCounter(
+    Variable* variable )
+{
+    assert( "Variable has not been set." && variable != NULL );
+    assert( "Variable must be undefined." && variable->isUndefined() );
+
+    BERKMIN_HEURISTIC_COUNTER totalCounter = getTotalCounter( variable );
+    if( totalCounter > maxCounter )
+    {
+        maxCounter = totalCounter;
+        chosenVariable = variable;
+    }
+}
+
+void
+BerkminHeuristic::updateMaxOccurrences(
+    Variable* variable )
+{
+    assert( "Variable has not been set." && variable != NULL );
+    assert( "Variable must be undefined." && variable->isUndefined() );
+
+    unsigned int numberOfOccurrences = variable->numberOfPositiveWatchedClauses() + variable->numberOfNegativeWatchedClauses();
+    if( numberOfOccurrences > maxOccurrences )
+    {
+        maxOccurrences = numberOfOccurrences;
+        chosenVariableByOccurrences = variable;
+    }
+}
+
+void
+BerkminHeuristic::collectUndefined(
+    Variable* variable )
+{
+    updateMaxCounter( variable );
+}
+
+void
 BerkminHeuristic::pickLiteralUsingActivity(
     Solver& solver )
 {
@@ -45,7 +82,8 @@ BerkminHeuristic::pickLiteralUsingActivity(
         
         assert( "Variable has not been set." && variable != NULL );
         assert( "The literal must be undefined." && variable->isUndefined() );
-        visit( variable );
+        updateMaxCounter( variable );
+        updateMaxOccurrences( variable );
     } while( solver.hasNextUndefinedVariable() );
     
     if( chosenVariable != NULL )
@@ -74,23 +112,21 @@ BerkminHeuristic::pickLiteralFromTopMostUndefinedLearnedClause(
    Solver& solver )
 {
     trace( heuristic, 1, "Starting TopMostUndefinedLearnedClause.\n" );
-    const List< LearnedClause* >& learnedClauses = solver.getLearnedClauses();
-
     trace( heuristic, 1, "Considering %d learned clauses.\n", numberOfLearnedClausesToConsider );
+
     unsigned int count = 0;
-    for( List< LearnedClause* >::const_reverse_iterator it = learnedClauses.rbegin(); it != learnedClauses.rend(); ++it )
+    for( Solver::LearnedClausesReverseIterator it = solver.learnedClauses_rbegin(); it != solver.learnedClauses_rend(); ++it )
     {        
-        if( count++ > numberOfLearnedClausesToConsider )
+        if( ++count > numberOfLearnedClausesToConsider )
             break;
 
         resetCounters();
         assert( *it != NULL );
         LearnedClause& learnedClause = **it;
         trace( heuristic, 1, "Learned clause %d: %s.\n", count, learnedClause.clauseToCharStar() );
-        visit( &learnedClause );
-
-        if( chosenVariable != NULL )
+        if( learnedClause.checkUnsatisfiedAndOptimize( this ) )
         {
+            assert( chosenVariable != NULL );
             assert( Literal( chosenVariable ).isUndefined() );
             assert( chosenVariableByOccurrences != NULL );
             chosenPolarity = getLiteralCounter( chosenVariable->getPositiveHeuristicCounter() ) > getLiteralCounter( chosenVariable->getNegativeHeuristicCounter() );
@@ -130,35 +166,6 @@ void
 BerkminHeuristic::onRestart(
     Solver& )
 {
-}
-
-void
-BerkminHeuristic::visit(
-    Clause* clause )
-{
-    clause->accept( this );
-}
-
-void
-BerkminHeuristic::visit(
-    Variable* variable )
-{
-    assert( "Variable has not been set." && variable != NULL );
-    assert( "Variable must be undefined." && variable->isUndefined() );
-    
-    BERKMIN_HEURISTIC_COUNTER totalCounter = getTotalCounter( variable );
-    if( totalCounter > maxCounter )
-    {
-        maxCounter = totalCounter;
-        chosenVariable = variable;
-    }
-
-    unsigned int numberOfOccurrences = variable->numberOfPositiveWatchedClauses() + variable->numberOfNegativeWatchedClauses();
-    if( numberOfOccurrences > maxOccurrences )
-    {
-        maxOccurrences = numberOfOccurrences;
-        chosenVariableByOccurrences = variable;
-    }
 }
 
 void

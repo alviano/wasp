@@ -74,30 +74,9 @@ Clause::print(
 //}
 
 void
-Clause::updateWatch(
+Clause::notifyImplication(
     Solver& solver )
 {
-    assert( "Unary clauses must be removed." && literals.size() > 1 );
-    
-    unsigned int size = literals.size();
-    for( unsigned int i = 2; i < size; ++i )
-    {
-        if( !literals[ i ].isFalse() )
-        {
-            //Detach the old watch
-            detachSecondWatch();
-
-            //Swap the two literals
-            swapLiterals( 1, i );
-
-            //Attach the watch in the new position
-            attachSecondWatch();            
-            return;
-        }
-    }
-    
-    assert( "The other watched literal cannot be true." && !literals[ 0 ].isTrue() );
-    
-    //Propagate literals[ 0 ];
     solver.onLiteralAssigned( literals[ 0 ], this );
 }
+

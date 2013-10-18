@@ -17,29 +17,24 @@
  */
 
 /* 
- * File:   HeuristicVisitor.h
+ * File:   UndefinedCollector.h
  * Author: Carmine Dodaro
  *
  * Created on 03 September 2013, 16.50
  */
 
-#ifndef HEURISTICVISITOR_H
-#define	HEURISTICVISITOR_H
+#ifndef UNDEFINEDCOLLECTOR_H
+#define	UNDEFINEDCOLLECTOR_H
 
 class Clause;
 class Variable;
 
-class HeuristicVisitor
+class UndefinedCollector
 {
     public:
-        inline HeuristicVisitor();
-        virtual ~HeuristicVisitor() {}
-        virtual void visit( Clause* ) = 0;
-        virtual void visit( Variable* ) = 0;
+        inline UndefinedCollector() {}
+        virtual ~UndefinedCollector() {}
+        virtual void collectUndefined( Variable* ) = 0;
 };
 
-HeuristicVisitor::HeuristicVisitor()
-{
-}
-
-#endif	/* HEURISTICVISITOR_H */
+#endif	/* UNDEFINEDCOLLECTOR_H */

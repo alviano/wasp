@@ -43,7 +43,7 @@ args.extend(flags.split())
 reportStartTest(args, testcase)
 
 first = 0
-out = input.encode()
+out = input.strip().encode()
 err = ""
 
 def run(args):

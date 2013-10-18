@@ -20,7 +20,6 @@
 #include "Clause.h"
 #include "WaspRule.h"
 #include "Solver.h"
-#include "heuristics/HeuristicVisitor.h"
 
 #include <cassert>
 

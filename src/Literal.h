@@ -80,8 +80,6 @@ class Literal
         inline void onNavigatingImplicationGraph();
         inline void onAging( unsigned int );
 
-        inline void accept( HeuristicVisitor* );
-
         inline void unitPropagation( Solver& solver );
         
         inline unsigned int numberOfWatchedClauses() const;
@@ -328,15 +326,6 @@ Literal::findAndEraseWatchedClause(
 {
     assert( "Variable has not been set." && getVariable() != NULL );
     getVariable()->findAndEraseWatchedClause( clause, getSign() );
-}
-
-
-void
-Literal::accept( 
-    HeuristicVisitor* heuristicVisitor )
-{
-    assert( "Variable has not been set." && getVariable() != NULL );
-    getVariable()->accept( heuristicVisitor );
 }
 
 void

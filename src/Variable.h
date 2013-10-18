@@ -31,7 +31,6 @@
 #include "Constants.h"
 #include "WatchedList.h"
 #include "heuristics/counters/HeuristicCounterForLiteral.h"
-#include "heuristics/HeuristicVisitor.h"
 
 using namespace std;
 
@@ -97,8 +96,6 @@ class Variable
         inline unsigned int numberOfNegativeWatchedClauses() const;
         inline unsigned int numberOfPositiveWatchedClauses() const;
         inline unsigned int numberOfWatchedClauses( unsigned int sign ) const;
-        
-        inline void accept( HeuristicVisitor* heuristicVisitor );
         
         void unitPropagation( Solver& solver, Literal literal, unsigned int sign );
         
@@ -388,15 +385,6 @@ Variable::onAging(
     unsigned int sign )
 {
     getHeuristicCounterInternal( sign )->onAging( value );
-}
-
-void
-Variable::accept(
-    HeuristicVisitor* heuristicVisitor )
-{    
-    assert( "Heuristic visitor has not been set." && heuristicVisitor != NULL );
-    if( isUndefined() )
-        heuristicVisitor->visit( this );
 }
 
 #endif /* VARIABLE_H */
