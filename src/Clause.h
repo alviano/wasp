@@ -68,7 +68,7 @@ class Clause
         inline void onLiteralFalse( Literal literal, Solver& solver );
 
         inline unsigned int size() const;
-        inline void visitForHeuristic( HeuristicVisitor* );
+        inline bool accept( HeuristicVisitor* );
 
         #ifdef TRACE_ON
         inline const char* clauseToCharStar()
@@ -224,19 +224,19 @@ Clause::onLearning(
     }
 }
 
-void
-Clause::visitForHeuristic( 
+bool
+Clause::accept( 
     HeuristicVisitor* heuristicVisitor )
 {
     assert( "Unary clauses must be removed." && literals.size() > 1 );
     
     if( literals.back().isTrue() )
-        return;
-    literals.back().visitForHeuristic( heuristicVisitor );
+        return false;
+    literals.back().accept( heuristicVisitor );
     
     if( literals[ 0 ].isTrue() )
-        return;
-    literals[ 0 ].visitForHeuristic( heuristicVisitor );
+        return false;
+    literals[ 0 ].accept( heuristicVisitor );
     
     unsigned size = literals.size() - 1;
     for( unsigned int i = 1; i < size; ++i )
@@ -248,10 +248,12 @@ Clause::visitForHeuristic(
             else
                 swapLiterals( i, size );
             
-            return;
+            return false;
         }
-        literals[ i ].visitForHeuristic( heuristicVisitor );
+        literals[ i ].accept( heuristicVisitor );
     }
+    
+    return true;
 }
 
 void

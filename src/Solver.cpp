@@ -155,7 +155,7 @@ Solver::addClauseFromModelAndRestart()
         return false;
     }
     
-    this->onRestarting();
+    this->onRestart();
     if( clause->size() > 1 )
     {
         clause->attachClause();

@@ -35,7 +35,7 @@ RestartsBasedDeletionStrategy::onLearningProtected(
 }
 
 void
-RestartsBasedDeletionStrategy::onRestarting()    
+RestartsBasedDeletionStrategy::onRestart()    
 {
     countRestarts++;
 }

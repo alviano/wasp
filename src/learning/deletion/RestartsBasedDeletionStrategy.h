@@ -32,7 +32,7 @@ class RestartsBasedDeletionStrategy : public DeletionStrategy
 {
     public:
         inline RestartsBasedDeletionStrategy();
-        virtual void onRestarting();
+        virtual void onRestart();
         
     protected:
         virtual bool onLearningProtected( Solver& solver );

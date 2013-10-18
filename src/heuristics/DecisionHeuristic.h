@@ -35,75 +35,13 @@ class DecisionHeuristic
     public:
         inline DecisionHeuristic();
         virtual ~DecisionHeuristic() {}
-        inline Literal makeAChoice( Solver& solver );
+        virtual Literal makeAChoice( Solver& solver ) = 0;
         virtual void onLearning( Solver& solver ) = 0;
-        virtual void onRestarting( Solver& solver ) = 0;
-
-    protected:
-        virtual Literal makeAChoiceProtected( Solver& solver ) = 0;
-        inline Literal getChosenLiteral();
-        inline Variable* getChosenVariable();
-
-        inline bool hasChosenLiteral() const;
-        inline void setChosenVariable( Variable* variable );
-        inline void setChosenPolarity( bool polarity );        
-
-    private:
-        inline void reset();
-        Variable* chosenVariable;
-        bool chosenPolarity;
+        virtual void onRestart( Solver& solver ) = 0;
 };
 
-DecisionHeuristic::DecisionHeuristic() : chosenVariable( NULL )
+DecisionHeuristic::DecisionHeuristic()
 {
-}
-
-Literal
-DecisionHeuristic::makeAChoice(
-    Solver& solver )
-{
-    reset();
-    return makeAChoiceProtected( solver );
-}
-
-Variable*
-DecisionHeuristic::getChosenVariable()
-{
-    return chosenVariable;
-}
-
-Literal
-DecisionHeuristic::getChosenLiteral()
-{
-    assert( chosenVariable != NULL );
-    return chosenPolarity ? Literal( chosenVariable ) : Literal( chosenVariable, false );
-}
-
-bool
-DecisionHeuristic::hasChosenLiteral() const
-{
-    return chosenVariable != NULL;
-}
-
-void
-DecisionHeuristic::setChosenVariable(
-    Variable* variable )
-{
-    assert( "Variable has not been set." && variable != NULL );
-    chosenVariable = variable;
-}
-
-void
-DecisionHeuristic::setChosenPolarity(
-    bool polarity )
-{
-    chosenPolarity = polarity;
-}
-
-void
-DecisionHeuristic::reset()
-{
-    chosenVariable = NULL;
 }
 
 #endif	/* DECISIONHEURISTIC_H */

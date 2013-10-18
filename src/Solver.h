@@ -107,7 +107,7 @@ class Solver
         void onDeletingLearnedClausesAvgBased();
         inline void onLearningClause( Literal literalToPropagate, LearnedClause* learnedClause, unsigned int backjumpingLevel );
         inline void onLearningUnaryClause( Literal literalToPropagate, LearnedClause* learnedClause );        
-        inline void onRestarting();        
+        inline void onRestart();        
         
         inline unsigned int numberOfClauses();
         inline unsigned int numberOfLearnedClauses();        
@@ -445,7 +445,7 @@ Solver::onLearningUnaryClause(
     Literal literalToPropagate,
     LearnedClause* learnedClause )
 {
-    onRestarting();
+    onRestart();
     onLiteralAssigned( literalToPropagate, NULL );
 
     assert( "Learned clause has not been calculated." && learnedClause != NULL );    
@@ -453,11 +453,11 @@ Solver::onLearningUnaryClause(
 }
 
 void
-Solver::onRestarting()
+Solver::onRestart()
 {
     trace( solving, 1, "Performing restart.\n" );
-    deletionStrategy->onRestarting();
-    decisionHeuristic->onRestarting( *this );
+    deletionStrategy->onRestart();
+    decisionHeuristic->onRestart( *this );
     unroll( 0 );
 }
 

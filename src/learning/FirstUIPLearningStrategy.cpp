@@ -84,7 +84,7 @@ FirstUIPLearningStrategy::onConflict(
         bool restartRequired = restartsStrategy->onLearningClause();
         if( restartRequired )
         {
-            solver.onRestarting();
+            solver.onRestart();
         }
         else
         {

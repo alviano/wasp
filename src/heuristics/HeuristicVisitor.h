@@ -27,13 +27,15 @@
 #define	HEURISTICVISITOR_H
 
 class Clause;
+class Variable;
 
 class HeuristicVisitor
 {
     public:
         inline HeuristicVisitor();
+        virtual ~HeuristicVisitor() {}
         virtual void visit( Clause* ) = 0;
-        virtual void onNavigatingVariable( Variable* ) = 0;
+        virtual void visit( Variable* ) = 0;
 };
 
 HeuristicVisitor::HeuristicVisitor()

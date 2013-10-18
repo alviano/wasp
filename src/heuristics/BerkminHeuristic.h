@@ -39,39 +39,47 @@ using namespace std;
 class BerkminHeuristic : public DecisionHeuristic, public HeuristicVisitor
 {
     public:
-        inline BerkminHeuristic( unsigned int maxBerkminNumber );
+        inline BerkminHeuristic( unsigned int numberOfLearnedClausesToConsider = static_cast< unsigned >( -1 ) );
         virtual ~BerkminHeuristic();
-
-    protected:
-        virtual Literal makeAChoiceProtected( Solver& solver );
+        
+        virtual Literal makeAChoice( Solver& solver );
         virtual void onLearning( Solver& solver );
-        virtual void onRestarting( Solver& solver );
+        virtual void onRestart( Solver& solver );
+        
         virtual void visit( Clause* );
-        void onNavigatingVariable( Variable* );
-        bool onNavigatingVariableForMostOccurrences( Variable* );
-        
-        virtual void pickLiteralUsingLearnedClauses( Solver& solver );
-        virtual void pickLiteralUsingActivity( Solver& solver );
-        
-        virtual void choosePolarityTopMostUndefinedClause();
-        virtual void choosePolarityHigherGlobalCounter( Solver& solver );
-        virtual void choosePolarityMostOccurrences();
-        inline void resetCounters();
+        virtual void visit( Variable* );
 
     private:
-        void topMostUndefinedLearnedClause( Solver& solver );        
+        inline bool onNavigatingVariableForMostOccurrences( Variable* );
+        
+        inline void pickLiteralUsingActivity( Solver& solver );
+        inline void pickLiteralFromTopMostUndefinedLearnedClause( Solver& solver );        
+        
+        inline void choosePolarityTopMostUndefinedClause();
+        inline void choosePolarityHigherGlobalCounter( Solver& solver );
+        inline void choosePolarityMostOccurrences();
+        inline void resetCounters();
+
+        inline Literal getChosenLiteral();
+
+        Variable* chosenVariableByOccurrences;
+        unsigned int maxOccurrences;
+        BERKMIN_HEURISTIC_COUNTER maxCounter;
+
+        Variable* chosenVariable;
+        bool chosenPolarity;
+    
+        unsigned int numberOfLearnedClausesToConsider;
+
         unsigned int estimatePropagation( Literal literal, Solver& solver );
-        unsigned int maxBerkminNumber;
         unsigned int numberOfConflicts;
 
         inline BERKMIN_HEURISTIC_COUNTER getLiteralCounter( const HeuristicCounterForLiteral* heuristicCounter ) const;
         inline BERKMIN_HEURISTIC_COUNTER getTotalCounter( const Variable* ) const;
-        BERKMIN_HEURISTIC_COUNTER maxCounter;
-        unsigned int maxOccurrences;
 };
 
 BerkminHeuristic::BerkminHeuristic(
-    unsigned int max ) : maxBerkminNumber( max ), numberOfConflicts( 0 ), maxCounter( 0 ), maxOccurrences( 0 )
+    unsigned int max ) : chosenVariableByOccurrences( NULL ), maxOccurrences( 0 ), maxCounter( 0 ), chosenVariable( NULL ), chosenPolarity( true ), numberOfLearnedClausesToConsider( max ), numberOfConflicts( 0 )
 {
 }
 
@@ -96,8 +104,8 @@ BerkminHeuristic::getTotalCounter(
 void
 BerkminHeuristic::resetCounters()
 {
-    maxCounter = 0;
-    maxOccurrences = 0;
+    maxCounter = maxOccurrences = 0;
+    chosenVariableByOccurrences = NULL;
 }
 
 #endif	/* BERKMINHEURISTIC_H */

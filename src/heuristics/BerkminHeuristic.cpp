@@ -28,39 +28,59 @@ BerkminHeuristic::~BerkminHeuristic()
 {
 }
 
-Literal
-BerkminHeuristic::makeAChoiceProtected(
+void
+BerkminHeuristic::pickLiteralUsingActivity(
     Solver& solver )
 {
-    trace( heuristic, 1, "Starting Berkmin Heuristic.\n" );
-    pickLiteralUsingLearnedClauses( solver );
+    trace( heuristic, 1, "Starting pickLiteralUsingActivity.\n" );
     
-    if( !hasChosenLiteral() )
-        pickLiteralUsingActivity( solver );
+    assert( "This variable should be reset at the beginning of the heuristic." && chosenVariable == NULL );
     
-    assert( hasChosenLiteral() );
-    return getChosenLiteral();
+    resetCounters();
+
+    Variable* variable = NULL;
+    do
+    {
+        variable = solver.getNextUndefinedVariable();
+        
+        assert( "Variable has not been set." && variable != NULL );
+        assert( "The literal must be undefined." && variable->isUndefined() );
+        visit( variable );
+    } while( solver.hasNextUndefinedVariable() );
+    
+    if( chosenVariable != NULL )
+    {
+        assert( Literal( chosenVariable ).isUndefined() );
+        choosePolarityHigherGlobalCounter( solver );
+        return;
+    }
+    
+    if( chosenVariableByOccurrences != NULL )
+    {
+        assert( Literal( chosenVariableByOccurrences ).isUndefined() );
+        chosenVariable = chosenVariableByOccurrences;
+        chosenPolarity = chosenVariable->numberOfPositiveWatchedClauses() > chosenVariable->numberOfNegativeWatchedClauses();
+    }
+    
+    trace( heuristic, 1, "Choosing last undefined literal.\n" );
+    assert( "Variable has not been set." && variable != NULL );
+    assert( "The literal must be undefined." && variable->isUndefined() );
+    chosenVariable = variable;
+    chosenPolarity = false;
 }
 
 void
-BerkminHeuristic::pickLiteralUsingLearnedClauses(
-    Solver& solver )
-{
-    topMostUndefinedLearnedClause( solver );
-}
-
-void
-BerkminHeuristic::topMostUndefinedLearnedClause(
+BerkminHeuristic::pickLiteralFromTopMostUndefinedLearnedClause(
    Solver& solver )
 {
     trace( heuristic, 1, "Starting TopMostUndefinedLearnedClause.\n" );
     const List< LearnedClause* >& learnedClauses = solver.getLearnedClauses();
 
-    trace( heuristic, 1, "Considering %d learned clauses.\n", maxBerkminNumber );
+    trace( heuristic, 1, "Considering %d learned clauses.\n", numberOfLearnedClausesToConsider );
     unsigned int count = 0;
     for( List< LearnedClause* >::const_reverse_iterator it = learnedClauses.rbegin(); it != learnedClauses.rend(); ++it )
     {        
-        if( count++ > maxBerkminNumber )
+        if( count++ > numberOfLearnedClausesToConsider )
             break;
 
         resetCounters();
@@ -69,56 +89,33 @@ BerkminHeuristic::topMostUndefinedLearnedClause(
         trace( heuristic, 1, "Learned clause %d: %s.\n", count, learnedClause.clauseToCharStar() );
         visit( &learnedClause );
 
-        if( hasChosenLiteral() )
+        if( chosenVariable != NULL )
         {
-            choosePolarityTopMostUndefinedClause();
+            assert( Literal( chosenVariable ).isUndefined() );
+            assert( chosenVariableByOccurrences != NULL );
+            chosenPolarity = getLiteralCounter( chosenVariable->getPositiveHeuristicCounter() ) > getLiteralCounter( chosenVariable->getNegativeHeuristicCounter() );
             break;
         }
     }
 }
 
-void
-BerkminHeuristic::pickLiteralUsingActivity(
+Literal
+BerkminHeuristic::makeAChoice(
     Solver& solver )
 {
-    resetCounters();
-    trace( heuristic, 1, "Starting pickLiteralUsingActivity.\n" );
-    Variable* variable = NULL;
-    Variable* mostOccurrencesMax = NULL;
-    
-    do
-    {
-        variable = solver.getNextUndefinedVariable();
-        
-        assert( "Variable has not been set." && variable != NULL );
-        assert( "The literal must be undefined." && variable->isUndefined() );
-        onNavigatingVariable( variable );
+    trace( heuristic, 1, "Starting Berkmin Heuristic.\n" );
 
-        if( onNavigatingVariableForMostOccurrences( variable ) )
-        {            
-            mostOccurrencesMax = variable;
-        }
-
-    } while( solver.hasNextUndefinedVariable() );
+    chosenVariable = NULL;
+    pickLiteralFromTopMostUndefinedLearnedClause( solver );
     
-    if( hasChosenLiteral() )
-    {
-        choosePolarityHigherGlobalCounter( solver );
-        return;
-    }
-    
-    if( mostOccurrencesMax != NULL )
-    {
-        setChosenVariable( mostOccurrencesMax );
-        choosePolarityMostOccurrences();
-        return;
-    }
+    if( chosenVariable == NULL )
+        pickLiteralUsingActivity( solver );
 
-    trace( heuristic, 1, "Choosing first undefined literal.\n" );
-    assert( "Variable has not been set." && variable != NULL );
-    assert( "The literal must be undefined." && variable->isUndefined() );
-    setChosenVariable( variable );
-    setChosenPolarity( false );
+    assert( chosenVariable != NULL );
+    assert( Literal( chosenVariable ).isUndefined() );
+    
+    // FIXME: use a different constructor
+    return chosenPolarity ? Literal( chosenVariable ) : Literal( chosenVariable, false );
 }
 
 void
@@ -130,7 +127,7 @@ BerkminHeuristic::onLearning(
 }
 
 void
-BerkminHeuristic::onRestarting(
+BerkminHeuristic::onRestart(
     Solver& )
 {
 }
@@ -139,11 +136,11 @@ void
 BerkminHeuristic::visit(
     Clause* clause )
 {
-    clause->visitForHeuristic( this );
+    clause->accept( this );
 }
 
 void
-BerkminHeuristic::onNavigatingVariable(
+BerkminHeuristic::visit(
     Variable* variable )
 {
     assert( "Variable has not been set." && variable != NULL );
@@ -153,37 +150,15 @@ BerkminHeuristic::onNavigatingVariable(
     if( totalCounter > maxCounter )
     {
         maxCounter = totalCounter;
-        setChosenVariable( variable );
+        chosenVariable = variable;
     }
-}
 
-bool
-BerkminHeuristic::onNavigatingVariableForMostOccurrences(
-    Variable* variable )
-{
-    assert( "Variable has not been set." && variable != NULL );
-    assert( "Variable must be undefined." && variable->isUndefined() );    
     unsigned int numberOfOccurrences = variable->numberOfPositiveWatchedClauses() + variable->numberOfNegativeWatchedClauses();
     if( numberOfOccurrences > maxOccurrences )
     {
         maxOccurrences = numberOfOccurrences;
-        return true;
+        chosenVariableByOccurrences = variable;
     }
-    
-    return false;
-}
-
-void
-BerkminHeuristic::choosePolarityTopMostUndefinedClause()
-{
-    assert( "Variable has not been set." && getChosenVariable() != NULL );
-    setChosenPolarity( getLiteralCounter( getChosenVariable()->getPositiveHeuristicCounter() ) > getLiteralCounter( getChosenVariable()->getNegativeHeuristicCounter() ) );
-}
-
-void
-BerkminHeuristic::choosePolarityMostOccurrences()
-{
-    setChosenPolarity( getChosenVariable()->numberOfPositiveWatchedClauses() > getChosenVariable()->numberOfNegativeWatchedClauses() );
 }
 
 void
@@ -191,22 +166,23 @@ BerkminHeuristic::choosePolarityHigherGlobalCounter(
     Solver& solver )
 {
     trace( heuristic, 2, "Higher Global Counter: choose polarity.\n" );
-    assert( "Variable has not been set." && getChosenVariable() != NULL );
+    assert( "Variable has not been set." && chosenVariable != NULL );
 
-    Literal positiveLiteral( getChosenVariable() );    
+    Literal positiveLiteral( chosenVariable );    
     unsigned int value1 = estimatePropagation( positiveLiteral, solver );
     trace( heuristic, 2, "Estimated propagation of positive literal %s, value: %d.\n", positiveLiteral.literalToCharStar(), value1 );
     if( value1 == UINT_MAX )
     {
-        setChosenPolarity( true );
+        trace( heuristic, 3, "Conflict detected by look-ahead!\n" );
+        chosenPolarity = true;
         return;
     }
     
-    Literal negativeLiteral( getChosenVariable(), false );
+    Literal negativeLiteral( chosenVariable, false );
     unsigned int value2 = estimatePropagation( negativeLiteral, solver );
     trace( heuristic, 2, "Estimated propagation of negative literal %s, value: %d.\n", negativeLiteral.literalToCharStar(), value2 );
     
-    setChosenPolarity( value1 > value2 );
+    chosenPolarity = value1 > value2;
 }
 
 unsigned int

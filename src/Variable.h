@@ -31,13 +31,13 @@
 #include "Constants.h"
 #include "WatchedList.h"
 #include "heuristics/counters/HeuristicCounterForLiteral.h"
+#include "heuristics/HeuristicVisitor.h"
 
 using namespace std;
 
 class Clause;
 class HeuristicCounterForLiteral;
 class HeuristicCounterFactoryForLiteral;
-class HeuristicVisitor;
 class LearningStrategy;
 class Literal;
 class Solver;
@@ -98,7 +98,7 @@ class Variable
         inline unsigned int numberOfPositiveWatchedClauses() const;
         inline unsigned int numberOfWatchedClauses( unsigned int sign ) const;
         
-        void visitForHeuristic( HeuristicVisitor* heuristicVisitor );
+        inline void accept( HeuristicVisitor* heuristicVisitor );
         
         void unitPropagation( Solver& solver, Literal literal, unsigned int sign );
         
@@ -388,6 +388,15 @@ Variable::onAging(
     unsigned int sign )
 {
     getHeuristicCounterInternal( sign )->onAging( value );
+}
+
+void
+Variable::accept(
+    HeuristicVisitor* heuristicVisitor )
+{    
+    assert( "Heuristic visitor has not been set." && heuristicVisitor != NULL );
+    if( isUndefined() )
+        heuristicVisitor->visit( this );
 }
 
 #endif /* VARIABLE_H */

@@ -32,7 +32,7 @@ MinisatDeletionStrategy::onLearningProtected(
 }
 
 void
-MinisatDeletionStrategy::onRestarting()
+MinisatDeletionStrategy::onRestart()
 {
     maxLearned *= learnedSizeIncrement;
 }

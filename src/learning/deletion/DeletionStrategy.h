@@ -40,7 +40,7 @@ class DeletionStrategy
         bool hasToDeleteClauseThreshold( LearnedClause* clause );
         bool hasToDeleteClauseAvg( LearnedClause* clause );
         void onLearning( Solver& solver, LearnedClause* clause );
-        virtual void onRestarting(){}
+        virtual void onRestart(){}
         
     protected:
         inline void decrementActivity();

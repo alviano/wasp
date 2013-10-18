@@ -22,7 +22,7 @@
 #include "../Solver.h"
 
 Literal
-FirstUndefinedHeuristic::makeAChoiceProtected(
+FirstUndefinedHeuristic::makeAChoice(
     Solver& solver )
 {
     Variable* variable = solver.getNextUndefinedVariable(); // solver.getUndefinedVariables().at( 0 );
@@ -37,7 +37,7 @@ FirstUndefinedHeuristic::onLearning(
 }
         
 void
-FirstUndefinedHeuristic::onRestarting(
+FirstUndefinedHeuristic::onRestart(
     Solver& )
 {
 }

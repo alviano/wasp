@@ -60,15 +60,6 @@ Variable::onLearning(
 }
 
 void
-Variable::visitForHeuristic(
-    HeuristicVisitor* heuristicVisitor )
-{    
-    assert( "Heuristic visitor has not been set." && heuristicVisitor != NULL );
-    if( isUndefined() )
-        heuristicVisitor->onNavigatingVariable( this );
-}
-
-void
 Variable::unitPropagation(
     Solver& solver,
     Literal literal,
