@@ -121,7 +121,9 @@ $(TESTS_OUT_sat_Intensive):
 
 ########## Clean
 
-clean:
+clean-dep:
+	rm -f $(DEPS)
+clean: clean-dep
 	rm -f $(OBJS)
 
 distclean: clean
