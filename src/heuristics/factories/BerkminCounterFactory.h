@@ -29,14 +29,14 @@
 #include "HeuristicCounterFactoryForLiteral.h"
 #include "../counters/BerkminCounters.h"
 
-class BerkminCounterFactory : public HeuristicCounterFactoryForLiteral
-{
-    public:        
-        virtual HeuristicCounterForLiteral* createHeuristicCounter()
-        {
-            return new BerkminCounters();
-        }
-};
+//class BerkminCounterFactory : public HeuristicCounterFactoryForLiteral
+//{
+//    public:        
+//        virtual HeuristicCounterForLiteral* createHeuristicCounter()
+//        {
+//            return new BerkminCounters();
+//        }
+//};
 
 #endif	/* BERKMINCOUNTERFACTORY_H */
 

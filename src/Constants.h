@@ -98,7 +98,6 @@
  * New types
  */
 typedef double Activity;
-typedef unsigned int BERKMIN_HEURISTIC_COUNTER;
 typedef unsigned int TruthValue;
 typedef unsigned int DELETION_POLICY;
 typedef unsigned int HEURISTIC_POLICY;

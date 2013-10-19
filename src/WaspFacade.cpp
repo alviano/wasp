@@ -106,7 +106,6 @@ WaspFacade::setHeuristicPolicy(
     {
         case HEURISTIC_BERKMIN:
             assert( heuristicLimit > 0 );
-//            heuristicCounterFactoryForLiteral = new BerkminCounterFactory();    
             solver.setHeuristic( new BerkminHeuristic( heuristicLimit ) );
             break;
         
@@ -115,7 +114,6 @@ WaspFacade::setHeuristicPolicy(
             break;
     
         default:
-//            heuristicCounterFactoryForLiteral = new BerkminCounterFactory();    
             solver.setHeuristic( new BerkminHeuristic( 512 ) );
             break;
     }

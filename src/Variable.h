@@ -50,9 +50,11 @@ class Variable
 
     public:
         
-        inline Variable();
-        inline Variable( const string& name );
+        inline Variable( unsigned id );
+        inline Variable( unsigned id, const string& name );
         ~Variable();
+
+        inline unsigned getId() const { return id; }
 
         inline bool isHidden() const;
         inline void setName( string& name );
@@ -69,6 +71,7 @@ class Variable
 
         inline bool isImplicant( const Clause* clause ) const;
         inline bool hasImplicant() const;
+        inline Clause* getImplicant() const { return implicant; }
         inline void setImplicant( Clause* clause );
 
         inline unsigned int getDecisionLevel() const;
@@ -89,8 +92,6 @@ class Variable
         inline const HeuristicCounterForLiteral* getPositiveHeuristicCounter() const;
         inline const HeuristicCounterForLiteral* getNegativeHeuristicCounter() const;
         
-        inline void onNavigatingLearnedClause( unsigned int sign );
-        inline void onNavigatingImplicationGraph( unsigned int sign );
         inline void onAging( unsigned int value, unsigned int sign );
         
         inline unsigned int numberOfNegativeWatchedClauses() const;
@@ -99,15 +100,11 @@ class Variable
         
         void unitPropagation( Solver& solver, Literal literal, unsigned int sign );
         
-//    protected:
-//        
-//        inline const Clause* getImplicant() const;
-    
     private:
 
-        inline HeuristicCounterForLiteral* getHeuristicCounterInternal( unsigned int sign );        
-
         inline Variable( const Variable& );
+
+        unsigned id;
 
         /**
          * The level in the backtracking tree in which this literal has been derived.  
@@ -139,15 +136,11 @@ class Variable
          * Position 1 of this vector contains the watchedList of the negative literal associated with this variable.
          */
         WatchedList< Clause* > watchedLists[ 2 ];
-        
-        /**
-         * Position 0 of this vector contains the heuristic counter of the positive literal associated with this variable.
-         * Position 1 of this vector contains the heuristic counter of the negative literal associated with this variable.
-         */
-        HeuristicCounterForLiteral* heuristicCounters[ 2 ];
 };
 
-Variable::Variable() :
+Variable::Variable(
+    unsigned id_ ) :
+    id( id_ ),
     decisionLevel( 0 ),
     name( "" ),
     truthValue( UNDEFINED ),
@@ -156,7 +149,9 @@ Variable::Variable() :
 }
 
 Variable::Variable(
+    unsigned id_, 
     const string& n ) :
+    id( id_ ),
     decisionLevel( 0 ),
     name( n ),
     truthValue( UNDEFINED ),
@@ -322,29 +317,6 @@ Variable::findAndEraseWatchedClause(
     watchedLists[ sign ].findAndRemove( clause );
 }
 
-const HeuristicCounterForLiteral*
-Variable::getPositiveHeuristicCounter() const
-{
-    assert( "Heuristic has not been set." && heuristicCounters[ 1 ] != NULL );
-    return heuristicCounters[ 0 ];
-}
-
-const HeuristicCounterForLiteral*
-Variable::getNegativeHeuristicCounter() const
-{
-    assert( "Heuristic has not been set." && heuristicCounters[ 0 ] != NULL );
-    return heuristicCounters[ 1 ];
-}
-
-HeuristicCounterForLiteral*
-Variable::getHeuristicCounterInternal(
-    unsigned int sign )
-{
-    assert( "A literal must be true or false." && sign <= 1 );
-    assert( "Heuristic has not been set." && heuristicCounters[ sign ] != NULL );
-    return heuristicCounters[ sign ];
-}
-
 unsigned int
 Variable::numberOfNegativeWatchedClauses() const
 {
@@ -366,25 +338,11 @@ Variable::numberOfWatchedClauses(
 }
 
 void
-Variable::onNavigatingLearnedClause(
-    unsigned int sign )
-{
-    getHeuristicCounterInternal( sign )->onNavigatingLearnedClause();
-}
-
-void
-Variable::onNavigatingImplicationGraph(
-    unsigned int sign )
-{
-    getHeuristicCounterInternal( sign )->onNavigatingImplicationGraph();
-}
-
-void
 Variable::onAging(
     unsigned int value,
     unsigned int sign )
 {
-    getHeuristicCounterInternal( sign )->onAging( value );
+    //getHeuristicCounterInternal( sign )->onAging( value );
 }
 
 #endif /* VARIABLE_H */

@@ -18,26 +18,26 @@
 
 #include "BerkminCounters.h"
 
-void
-BerkminCounters::onNavigatingLearnedClause()
-{
-    globalCounter++;
-    counter++;
-}
-
-void
-BerkminCounters::onNavigatingImplicationGraph()
-{
-    globalCounter++;
-    counter++;
-}
-
-void
-BerkminCounters::onAging(
-    unsigned int value )
-{
-    if( value == 0 )
-        return;
-    
-    counter = counter / value;
-}
+//void
+//BerkminCounters::onNavigatingLearnedClause()
+//{
+//    globalCounter++;
+//    counter++;
+//}
+//
+//void
+//BerkminCounters::onNavigatingImplicationGraph()
+//{
+//    globalCounter++;
+//    counter++;
+//}
+//
+//void
+//BerkminCounters::onAging(
+//    unsigned int value )
+//{
+//    if( value == 0 )
+//        return;
+//    
+//    counter = counter / value;
+//}

@@ -46,9 +46,31 @@ class BerkminHeuristic : public DecisionHeuristic, public UndefinedCollector
         virtual void onLearning( Solver& solver );
         virtual void onRestart( Solver& solver );
         
+        virtual void onNewVariable( Variable& variable );
+        
         virtual void collectUndefined( Variable* );
+        
+        virtual void onLiteralInvolvedInConflict( Literal literal );
 
     private:
+        struct VariableCounters
+        {
+            public:
+                VariableCounters() { counter[ 0 ] = counter[ 1 ] = globalCounter[ 0 ] = globalCounter[ 1 ] = 0; }
+                
+                unsigned getPositiveCounter() const { return counter[ 0 ]; }
+                unsigned getNegativeCounter() const { return counter[ 1 ]; }
+                unsigned getTotalCounter() const { return counter[ 0 ] + counter[ 1 ]; }
+                
+                /**
+                 * Position 0 of this vector contains the heuristic counter of the positive literal associated with this variable.
+                 * Position 1 of this vector contains the heuristic counter of the negative literal associated with this variable.
+                 */
+                // FIXME: introduce macros to refer to positive and negative positions
+                unsigned counter[ 2 ];
+                unsigned globalCounter[ 2 ];
+        };
+    
         inline void pickLiteralUsingActivity( Solver& solver );
         inline void pickLiteralFromTopMostUnsatisfiedLearnedClause( Solver& solver );        
         
@@ -57,9 +79,11 @@ class BerkminHeuristic : public DecisionHeuristic, public UndefinedCollector
         inline void choosePolarityMostOccurrences();
         inline void resetCounters();
 
+        vector< VariableCounters > variableCounters;
+
         Variable* chosenVariableByOccurrences;
         unsigned int maxOccurrences;
-        BERKMIN_HEURISTIC_COUNTER maxCounter;
+        unsigned maxCounter;
 
         Variable* chosenVariable;
         bool chosenPolarity;
@@ -69,9 +93,6 @@ class BerkminHeuristic : public DecisionHeuristic, public UndefinedCollector
         unsigned int estimatePropagation( Literal literal, Solver& solver );
         unsigned int numberOfConflicts;
 
-        inline BERKMIN_HEURISTIC_COUNTER getLiteralCounter( const HeuristicCounterForLiteral* heuristicCounter ) const;
-        inline BERKMIN_HEURISTIC_COUNTER getTotalCounter( const Variable* ) const;
-        
         inline void updateMaxCounter( Variable* );
         inline void updateMaxOccurrences( Variable* );
 };
@@ -79,24 +100,8 @@ class BerkminHeuristic : public DecisionHeuristic, public UndefinedCollector
 BerkminHeuristic::BerkminHeuristic(
     unsigned int max ) : chosenVariableByOccurrences( NULL ), maxOccurrences( 0 ), maxCounter( 0 ), chosenVariable( NULL ), chosenPolarity( true ), numberOfLearnedClausesToConsider( max ), numberOfConflicts( 0 )
 {
-}
-
-BERKMIN_HEURISTIC_COUNTER
-BerkminHeuristic::getLiteralCounter( 
-    const HeuristicCounterForLiteral* heuristicCounter ) const
-{
-    assert( heuristicCounter != NULL );
-    const BerkminCounters* berkminCounter = static_cast< const BerkminCounters* >( heuristicCounter );    
-    return berkminCounter->getCounter();
-}
-
-BERKMIN_HEURISTIC_COUNTER
-BerkminHeuristic::getTotalCounter( 
-    const Variable* variable ) const
-{
-    assert( variable != NULL );
-    BERKMIN_HEURISTIC_COUNTER totalCounter = getLiteralCounter( variable->getPositiveHeuristicCounter() ) + getLiteralCounter( variable->getNegativeHeuristicCounter() );
-    return totalCounter;
+    // variable 0 is not used
+    variableCounters.push_back( VariableCounters() );
 }
 
 void

@@ -26,15 +26,15 @@
 #ifndef HEURISTICCOUNTERFACTORYFORLITERAL_H
 #define	HEURISTICCOUNTERFACTORYFORLITERAL_H
 
-#include <cassert>
-class HeuristicCounterForLiteral;
-
-class HeuristicCounterFactoryForLiteral
-{
-    public:
-        virtual ~HeuristicCounterFactoryForLiteral() {}
-        virtual HeuristicCounterForLiteral* createHeuristicCounter() = 0;        
-};
+//#include <cassert>
+//class HeuristicCounterForLiteral;
+//
+//class HeuristicCounterFactoryForLiteral
+//{
+//    public:
+//        virtual ~HeuristicCounterFactoryForLiteral() {}
+//        virtual HeuristicCounterForLiteral* createHeuristicCounter() = 0;        
+//};
 
 #endif	/* HEURISTICCOUNTERFACTORYFORLITERAL_H */
 

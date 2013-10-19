@@ -224,6 +224,7 @@ Clause::onLearning(
     for( unsigned int i = 0; i < literals.size(); i++ )
     {
         Literal literal = literals[ i ];
+        assert( literal != NULL );
         strategy->onNavigatingLiteral( literal );
     }
 }

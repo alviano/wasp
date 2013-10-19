@@ -26,14 +26,14 @@
 #ifndef HEURISTICCOUNTERFORLITERAL_H
 #define	HEURISTICCOUNTERFORLITERAL_H
 
-class HeuristicCounterForLiteral
-{
-    public:
-        virtual ~HeuristicCounterForLiteral() {}
-        virtual void onNavigatingLearnedClause() = 0;
-        virtual void onNavigatingImplicationGraph() = 0;
-        virtual void onAging( unsigned int value ) = 0;        
-};
+//class HeuristicCounterForLiteral
+//{
+//    public:
+//        virtual ~HeuristicCounterForLiteral() {}
+//        virtual void onNavigatingLearnedClause() = 0;
+//        virtual void onNavigatingImplicationGraph() = 0;
+//        virtual void onAging( unsigned int value ) = 0;        
+//};
 
 #endif	/* HEURISTICCOUNTERFORLITERAL_H */
 

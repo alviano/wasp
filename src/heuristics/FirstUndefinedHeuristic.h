@@ -28,6 +28,8 @@
 
 #include "DecisionHeuristic.h"
 
+#include "../Literal.h"
+
 class FirstUndefinedHeuristic : public DecisionHeuristic
 {
     public:
@@ -36,6 +38,10 @@ class FirstUndefinedHeuristic : public DecisionHeuristic
         virtual Literal makeAChoice( Solver& solver );
         virtual void onLearning( Solver& solver );
         virtual void onRestart( Solver& solver );
+        
+        virtual void onNewVariable( Variable& variable ) {}
+        
+        virtual void onLiteralInvolvedInConflict( Literal literal ) {}
         
     protected:
         

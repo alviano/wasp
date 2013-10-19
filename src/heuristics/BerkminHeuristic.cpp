@@ -35,7 +35,8 @@ BerkminHeuristic::updateMaxCounter(
     assert( "Variable has not been set." && variable != NULL );
     assert( "Variable must be undefined." && variable->isUndefined() );
 
-    BERKMIN_HEURISTIC_COUNTER totalCounter = getTotalCounter( variable );
+    assert( variable->getId() < variableCounters.size() );
+    unsigned totalCounter = variableCounters[ variable->getId() ].getTotalCounter();
     if( totalCounter > maxCounter )
     {
         maxCounter = totalCounter;
@@ -129,7 +130,7 @@ BerkminHeuristic::pickLiteralFromTopMostUnsatisfiedLearnedClause(
             assert( chosenVariable != NULL );
             assert( Literal( chosenVariable ).isUndefined() );
             assert( learnedClause.isUnsatisfied() );
-            chosenPolarity = getLiteralCounter( chosenVariable->getPositiveHeuristicCounter() ) > getLiteralCounter( chosenVariable->getNegativeHeuristicCounter() );
+            chosenPolarity = variableCounters[ chosenVariable->getId() ].getPositiveCounter() > variableCounters[ chosenVariable->getId() ].getNegativeCounter();
             break;
         }
     }
@@ -216,4 +217,19 @@ BerkminHeuristic::estimatePropagation(
     
     solver.unrollOne();
     return lookaheadValue;
+}
+
+void
+BerkminHeuristic::onNewVariable(
+    Variable& variable )
+{
+    variableCounters.push_back( VariableCounters() );
+}
+
+void 
+BerkminHeuristic::onLiteralInvolvedInConflict( 
+    Literal literal )
+{
+    ++( variableCounters[ literal.getVariable()->getId() ].globalCounter[ literal.getSign() ] );
+    ++( variableCounters[ literal.getVariable()->getId() ].counter[ literal.getSign() ] );
 }

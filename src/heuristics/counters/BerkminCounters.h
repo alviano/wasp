@@ -29,37 +29,37 @@
 #include "HeuristicCounterForLiteral.h"
 #include "../../Constants.h"
 
-class BerkminCounters : public HeuristicCounterForLiteral
-{
-    public:
-        inline BerkminCounters();
-        virtual void onNavigatingLearnedClause();
-        virtual void onNavigatingImplicationGraph();
-        virtual void onAging( unsigned int value );
-        
-        inline BERKMIN_HEURISTIC_COUNTER getCounter() const;
-        inline BERKMIN_HEURISTIC_COUNTER getGlobalCounter() const;
-        
-    private:
-        BERKMIN_HEURISTIC_COUNTER counter;
-        BERKMIN_HEURISTIC_COUNTER globalCounter;
-};
-
-BerkminCounters::BerkminCounters() : counter( 0 ), globalCounter( 0 )
-{
-}
-
-BERKMIN_HEURISTIC_COUNTER
-BerkminCounters::getCounter() const
-{
-    return counter;
-}
-
-BERKMIN_HEURISTIC_COUNTER
-BerkminCounters::getGlobalCounter() const
-{
-    return globalCounter;
-}
+//class BerkminCounters : public HeuristicCounterForLiteral
+//{
+//    public:
+//        inline BerkminCounters();
+//        virtual void onNavigatingLearnedClause();
+//        virtual void onNavigatingImplicationGraph();
+//        virtual void onAging( unsigned int value );
+//        
+//        inline BERKMIN_HEURISTIC_COUNTER getCounter() const;
+//        inline BERKMIN_HEURISTIC_COUNTER getGlobalCounter() const;
+//        
+//    private:
+//        BERKMIN_HEURISTIC_COUNTER counter;
+//        BERKMIN_HEURISTIC_COUNTER globalCounter;
+//};
+//
+//BerkminCounters::BerkminCounters() : counter( 0 ), globalCounter( 0 )
+//{
+//}
+//
+//BERKMIN_HEURISTIC_COUNTER
+//BerkminCounters::getCounter() const
+//{
+//    return counter;
+//}
+//
+//BERKMIN_HEURISTIC_COUNTER
+//BerkminCounters::getGlobalCounter() const
+//{
+//    return globalCounter;
+//}
 
 #endif	/* BERKMINCOUNTERS_H */
 

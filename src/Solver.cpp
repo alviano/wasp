@@ -40,9 +40,6 @@ Solver::~Solver()
     if( deletionStrategy )
         delete deletionStrategy;
     
-    if( heuristicCounterFactoryForLiteral )
-        delete heuristicCounterFactoryForLiteral;
-    
     if( decisionHeuristic )
         delete decisionHeuristic;
     

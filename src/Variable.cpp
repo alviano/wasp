@@ -32,20 +32,20 @@ ostream& operator<<(
 
 Variable::~Variable()
 {
-    if( heuristicCounters[ 0 ] )
-        delete heuristicCounters[ 0 ];
-    
-    if( heuristicCounters[ 1 ] )
-        delete heuristicCounters[ 1 ];
+//    if( heuristicCounters[ 0 ] )
+//        delete heuristicCounters[ 0 ];
+//    
+//    if( heuristicCounters[ 1 ] )
+//        delete heuristicCounters[ 1 ];
 }
 
-void
-Variable::setHeuristicCounterForLiterals( 
-    HeuristicCounterFactoryForLiteral* heuristicCounterFactoryForLiteral )
-{
-    heuristicCounters[ 0 ] = heuristicCounterFactoryForLiteral->createHeuristicCounter();
-    heuristicCounters[ 1 ] = heuristicCounterFactoryForLiteral->createHeuristicCounter();
-}
+//void
+//Variable::setHeuristicCounterForLiterals( 
+//    HeuristicCounterFactoryForLiteral* heuristicCounterFactoryForLiteral )
+//{
+//    heuristicCounters[ 0 ] = heuristicCounterFactoryForLiteral->createHeuristicCounter();
+//    heuristicCounters[ 1 ] = heuristicCounterFactoryForLiteral->createHeuristicCounter();
+//}
 
 void
 Variable::onLearning( 

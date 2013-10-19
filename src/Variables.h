@@ -89,7 +89,7 @@ Variables::Variables()
   nextLiteralToPropagate( 0 )
 {
     assignedVariables = NULL;
-
+    
     //Add a fake position.
     variables.push_back( NULL );
 }

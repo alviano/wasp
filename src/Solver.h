@@ -44,7 +44,7 @@ using namespace std;
 #include "heuristics/DecisionHeuristic.h"
 #include "outputBuilders/OutputBuilder.h"
 #include "learning/deletion/DeletionStrategy.h"
-#include "heuristics/factories/BerkminCounterFactory.h"
+
 class Solver
 {
     public:
@@ -136,13 +136,14 @@ class Solver
             }
         }
         
+        inline void onLiteralInvolvedInConflict( Literal l ) { decisionHeuristic->onLiteralInvolvedInConflict( l ); }
+        
     private:
-        Solver( const Solver& )
+        Solver( const Solver& ) : learning( *this )
         {
             assert( "The copy constructor has been disabled." && 0 );
         }
                 
-        inline void addVariableInternal( Variable* variable );
         inline void deleteLearnedClause( LearnedClause* learnedClause, List< LearnedClause* >::iterator iterator );
         
         vector< Literal > trueLiterals;
@@ -159,16 +160,13 @@ class Solver
         Literal conflictLiteral;
         Clause* conflictClause;
         
-        DecisionHeuristic* decisionHeuristic;
-        HeuristicCounterFactoryForLiteral* heuristicCounterFactoryForLiteral;
-        
         Learning learning;
+        DecisionHeuristic* decisionHeuristic;        
         DeletionStrategy* deletionStrategy;
-
         OutputBuilder* outputBuilder;
 };
 
-Solver::Solver() : currentDecisionLevel( 0 ), conflictLiteral( NULL ), conflictClause( NULL )
+Solver::Solver() : currentDecisionLevel( 0 ), conflictLiteral( NULL ), conflictClause( NULL ), learning( *this ), decisionHeuristic( NULL ), deletionStrategy( NULL ), outputBuilder( NULL )
 {
 }
 
@@ -177,7 +175,8 @@ Solver::setHeuristic(
     DecisionHeuristic* value )
 {
     assert( value != NULL );
-    heuristicCounterFactoryForLiteral = new BerkminCounterFactory();    
+    if( decisionHeuristic != NULL )
+        delete decisionHeuristic;
     decisionHeuristic = value;
 }
 
@@ -186,6 +185,8 @@ Solver::setOutputBuilder(
     OutputBuilder* value )
 {
     assert( value != NULL );
+    if( outputBuilder != NULL )
+        delete outputBuilder;
     outputBuilder = value;
 }
 
@@ -202,6 +203,8 @@ Solver::setDeletionStrategy(
     DeletionStrategy* value )
 {
     assert( value != NULL );
+    if( deletionStrategy != NULL )
+        delete deletionStrategy;
     deletionStrategy = value;
 }
 
@@ -209,23 +212,21 @@ void
 Solver::addVariable( 
     const string& name )
 {    
-    Variable* variable = new Variable( name );
-    addVariableInternal( variable );
+    Variable* variable = new Variable( variables.numberOfVariables(), name );
+    variables.push_back( variable );
+    assert( variables.numberOfVariables()-1 == variable->getId() );
+    assert( decisionHeuristic != NULL );
+    decisionHeuristic->onNewVariable( *variable );
 }
 
 void
 Solver::addVariable()
 {
-    Variable* variable = new Variable();
-    addVariableInternal( variable );
-}
-
-void
-Solver::addVariableInternal(
-    Variable* variable )
-{
-    variables.push_back( variable );    
-    variable->setHeuristicCounterForLiterals( heuristicCounterFactoryForLiteral );    
+    Variable* variable = new Variable( variables.numberOfVariables() );
+    variables.push_back( variable );
+    assert( variables.numberOfVariables() == variable->getId() );
+    assert( decisionHeuristic != NULL );
+    decisionHeuristic->onNewVariable( *variable );
 }
 
 Literal
@@ -451,7 +452,7 @@ void
 Solver::analyzeConflict()
 {
     trace( solving, 1, "Analyzing conflict.\n" );
-    learning.onConflict( conflictLiteral, conflictClause, *this );
+    learning.onConflict( conflictLiteral, conflictClause );
     decisionHeuristic->onLearning( *this );
     clearConflictStatus();
 }

@@ -43,15 +43,18 @@ class Variable;
 class Learning
 {
     public:
-        inline Learning();
+        inline Learning( Solver& solver );
         inline ~Learning();
         
         void onNavigatingLiteral( Literal );
-        void onConflict( Literal conflictLiteral, Clause* conflictClause, Solver& solver );
+        void onConflict( Literal conflictLiteral, Clause* conflictClause );
         
         inline void setRestartsStrategy( RestartsStrategy* value );
         
     private:
+    
+        Solver& solver;
+        
         /**
          * This method cleans data structures.
          * It should be called in the end of each iteration.
@@ -91,7 +94,7 @@ class Learning
          * 
          * @return the next lStrategyiteral to consider.
          */
-        Literal getNextLiteralToNavigate( Solver& solver );
+        Literal getNextLiteralToNavigate();
         
         /**
          * The variables of the current conflict level which have been visited.
@@ -105,7 +108,7 @@ class Learning
         unsigned int visitedVariablesCounter;
 };
 
-Learning::Learning() : decisionLevel( 0 ), learnedClause( NULL ), restartsStrategy( NULL ), maxDecisionLevel( 0 ), visitedVariablesCounter( 0 )
+Learning::Learning( Solver& s ) : solver( s ), decisionLevel( 0 ), learnedClause( NULL ), restartsStrategy( NULL ), maxDecisionLevel( 0 ), visitedVariablesCounter( 0 )
 {
 }
 
@@ -129,6 +132,8 @@ Learning::setRestartsStrategy(
     RestartsStrategy* value )
 {
     assert( value != NULL );
+    if( restartsStrategy != NULL )
+        delete restartsStrategy;
     restartsStrategy = value;    
 }
 

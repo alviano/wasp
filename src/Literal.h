@@ -76,8 +76,6 @@ class Literal
         
         inline void onLearning( Learning* strategy );
 
-        inline void onNavigatingLearnedClause();
-        inline void onNavigatingImplicationGraph();
         inline void onAging( unsigned int );
 
         inline void unitPropagation( Solver& solver );
@@ -99,14 +97,14 @@ class Literal
         }        
         #endif
         
-	private:
-        
-        inline Literal( unsigned int sign, Variable* variable );
-        
         /**
          * This function returns 0 if the literal is positive, 1 otherwise.
          */
         inline unsigned int getSign() const;
+        
+	private:
+        
+        inline Literal( unsigned int sign, Variable* variable );
         
         /**
          * This function returns 1 if the literal is positive, 0 otherwise.
@@ -266,20 +264,6 @@ Literal::onLearning(
 {
     assert( "Variable has not been set." && getVariable() != NULL );
     getVariable()->onLearning( strategy );
-}
-
-void
-Literal::onNavigatingLearnedClause()
-{
-    assert( "Variable has not been set." && getVariable() != NULL );
-    getVariable()->onNavigatingLearnedClause( getSign() );
-}
-
-void
-Literal::onNavigatingImplicationGraph()
-{
-    assert( "Variable has not been set." && getVariable() != NULL );
-    getVariable()->onNavigatingImplicationGraph( getSign() );
 }
 
 void

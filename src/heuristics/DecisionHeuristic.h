@@ -27,8 +27,10 @@
 #define	DECISIONHEURISTIC_H
 
 #include <cassert>
-#include "../Literal.h"
+
+class Literal;
 class Solver;
+class Variable;
 
 class DecisionHeuristic
 {
@@ -38,6 +40,10 @@ class DecisionHeuristic
         virtual Literal makeAChoice( Solver& solver ) = 0;
         virtual void onLearning( Solver& solver ) = 0;
         virtual void onRestart( Solver& solver ) = 0;
+        
+        virtual void onNewVariable( Variable& variable ) = 0;
+        
+        virtual void onLiteralInvolvedInConflict( Literal literal ) = 0;
 };
 
 DecisionHeuristic::DecisionHeuristic()

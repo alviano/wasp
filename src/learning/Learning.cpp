@@ -26,8 +26,7 @@
 void
 Learning::onConflict(
     Literal conflictLiteral,
-    Clause* conflictClause,
-    Solver& solver )
+    Clause* conflictClause )
 {
     clearDataStructures();
     assert( "No conflict literal is set." && conflictLiteral != NULL );
@@ -42,7 +41,8 @@ Learning::onConflict(
     
     //Compute implicants of the conflicting literal.
     conflictClause->onLearning( this );
-    conflictLiteral.onLearning( this );    
+    assert( conflictLiteral.getVariable()->getImplicant() != NULL ); // malvi: not sure on this assert
+    conflictLiteral.getVariable()->getImplicant()->onLearning( this );    
 
     trace( solving, 2, "Conflict literal: %s.\n", conflictLiteral.literalToCharStar() );
     visitedVariables.insert( conflictLiteral.getVariable() );
@@ -52,13 +52,14 @@ Learning::onConflict(
     while( visitedVariables.size() - visitedVariablesCounter > 1 )
 	{
         //Get next literal.
-		Literal currentLiteral = getNextLiteralToNavigate( solver );
+		Literal currentLiteral = getNextLiteralToNavigate();
         trace( solving, 3, "Navigating %s for calculating UIP.\n", currentLiteral.literalToCharStar() );
         //Compute implicants of the literal.
-        currentLiteral.onLearning( this );
+        if( conflictLiteral.getVariable()->getImplicant() != NULL )
+            currentLiteral.getVariable()->getImplicant()->onLearning( this );
 	}
 
-    Literal firstUIP = getNextLiteralToNavigate( solver );
+    Literal firstUIP = getNextLiteralToNavigate();
     trace( solving, 2, "First UIP: %s.\n", firstUIP.literalToCharStar() );
     
     //literalsToNavigate.pop_back();
@@ -97,8 +98,7 @@ Learning::onConflict(
 }
 
 Literal
-Learning::getNextLiteralToNavigate(
-    Solver& solver )
+Learning::getNextLiteralToNavigate()
 {    
     while( true )
     {
@@ -152,12 +152,14 @@ Learning::onNavigatingLiteral(
     
     if( literalDecisionLevel == decisionLevel )
     {
-        literal.onNavigatingImplicationGraph();
+        // FIXME: Do we need to distinguish between the two cases? onNavigatingImplicationGraph();
+        solver.onLiteralInvolvedInConflict( literal );
         addLiteralToNavigate( literal );
     }
     else if( literalDecisionLevel > 0 )
     {
-        literal.onNavigatingLearnedClause();
+        // FIXME: Do we need to distinguish between the two cases? literal.onNavigatingLearnedClause();
+        solver.onLiteralInvolvedInConflict( literal );
         addLiteralInLearnedClause( literal );
     }
 }
