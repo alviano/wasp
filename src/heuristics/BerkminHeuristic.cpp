@@ -75,18 +75,16 @@ BerkminHeuristic::pickLiteralUsingActivity(
     assert( "This variable should be reset at the beginning of the heuristic." && chosenVariable == NULL );
     
     resetCounters();
+    //solver.startIterationOnUndefinedVariables();
 
-    Variable* variable = NULL;
+    Variable* variable = solver.getFirstUndefined();
     do
     {
-        variable = solver.getNextUndefinedVariable();
-        
         assert( "Variable has not been set." && variable != NULL );
         assert( "The literal must be undefined." && variable->isUndefined() );
         updateMaxCounter( variable );
         updateMaxOccurrences( variable );
-    } while( solver.hasNextUndefinedVariable() );
-    
+    }while( ( variable = solver.getNextUndefined( variable ) ) != NULL );
     if( chosenVariable != NULL )
     {
         assert( Literal( chosenVariable ).isUndefined() );
@@ -99,13 +97,14 @@ BerkminHeuristic::pickLiteralUsingActivity(
         assert( Literal( chosenVariableByOccurrences ).isUndefined() );
         chosenVariable = chosenVariableByOccurrences;
         chosenPolarity = chosenVariable->numberOfPositiveWatchedClauses() > chosenVariable->numberOfNegativeWatchedClauses();
+        return;
     }
-    
+
     trace( heuristic, 1, "Choosing last undefined literal.\n" );
-    assert( "Variable has not been set." && variable != NULL );
-    assert( "The literal must be undefined." && variable->isUndefined() );
-    chosenVariable = variable;
+    chosenVariable = solver.getFirstUndefined();
     chosenPolarity = false;
+    assert( "Variable has not been set." && chosenVariable != NULL );
+    assert( "The literal must be undefined." && chosenVariable->isUndefined() );
 }
 
 void

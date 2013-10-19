@@ -98,9 +98,6 @@ class Solver
         inline unsigned int numberOfVariables();
         inline unsigned int numberOfAuxVariables();
         
-        //inline const UnorderedSet< Variable* >& getUndefinedVariables();
-        inline const List< LearnedClause* >& getLearnedClauses();
-        
         inline void setAChoice( Literal choice );        
         
         inline void analyzeConflict();
@@ -109,9 +106,11 @@ class Solver
         inline bool conflictDetected();
         inline void foundIncoherence();
         inline bool hasUndefinedLiterals();
-        //inline void startIterationOnUndefinedVariables() { variables.startIterationOnUndefinedVariables(); }
-        inline bool hasNextUndefinedVariable() { return variables.hasNextUndefinedVariable(); }
-        inline Variable* getNextUndefinedVariable() { return variables.getNextUndefinedVariable(); }
+//        inline void startIterationOnUndefinedVariables() { variables.startIterationOnUndefinedVariables(); }
+//        inline bool hasNextUndefinedVariable() { return variables.hasNextUndefinedVariable(); }
+//        inline Variable* getNextUndefinedVariable() { return variables.getNextUndefinedVariable(); }
+        inline Variable* getFirstUndefined() { return variables.getFirstUndefined(); }
+        inline Variable* getNextUndefined( Variable* v ) { return variables.getNextUndefined( v ); }
         inline void printAnswerSet();        
         
         void unroll( unsigned int level );
@@ -212,9 +211,9 @@ void
 Solver::addVariable( 
     const string& name )
 {    
-    Variable* variable = new Variable( variables.numberOfVariables(), name );
+    Variable* variable = new Variable( variables.numberOfVariables()+1, name );
     variables.push_back( variable );
-    assert( variables.numberOfVariables()-1 == variable->getId() );
+    assert( variables.numberOfVariables() == variable->getId() );
     assert( decisionHeuristic != NULL );
     decisionHeuristic->onNewVariable( *variable );
 }
@@ -222,7 +221,7 @@ Solver::addVariable(
 void
 Solver::addVariable()
 {
-    Variable* variable = new Variable( variables.numberOfVariables() );
+    Variable* variable = new Variable( variables.numberOfVariables()+1 );
     variables.push_back( variable );
     assert( variables.numberOfVariables() == variable->getId() );
     assert( decisionHeuristic != NULL );
@@ -233,7 +232,7 @@ Literal
 Solver::getLiteral(
     int lit )
 {
-    assert( "Lit is out of range." && static_cast< unsigned >( abs( lit ) ) < variables.numberOfVariables() && abs( lit ) > 0);
+    assert( "Lit is out of range." && static_cast< unsigned >( abs( lit ) ) <= variables.numberOfVariables() && abs( lit ) > 0);
     return lit > 0 ? Literal( variables[ lit ] ) : Literal( variables[ -lit ], false );
 //    if( lit > 0 )
 //    {
@@ -398,21 +397,6 @@ Solver::numberOfLearnedClauses()
     return learnedClauses.size();
 }
 
-/*
-const UnorderedSet< Variable* >&
-Solver::getUndefinedVariables()
-{
-    // FIXME: this has to be avoided!
-    return variables.getUndefinedVariables();
-}
-*/
-
-const List< LearnedClause* >&
-Solver::getLearnedClauses()
-{
-    return learnedClauses;
-}
-
 bool
 Solver::conflictDetected()
 {
@@ -422,10 +406,7 @@ Solver::conflictDetected()
 bool
 Solver::hasUndefinedLiterals()
 {
-    if( variables.numberOfAssignedLiterals() >= variables.numberOfVariables() )
-        return false;
-    variables.startIterationOnUndefinedVariables();
-    return variables.hasNextUndefinedVariable();
+    return variables.numberOfAssignedLiterals() < variables.numberOfVariables();
 }
 
 void

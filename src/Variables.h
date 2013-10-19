@@ -30,7 +30,6 @@
 
 #include "Variable.h"
 #include "Literal.h"
-#include "stl/UnorderedSet.h"
 #include "outputBuilders/OutputBuilder.h"
 
 using namespace std;
@@ -56,14 +55,13 @@ class Variables
         inline void resetLiteralsToPropagate() { nextLiteralToPropagate = assignedVariablesSize; }
         
         inline unsigned numberOfAssignedLiterals() const { return assignedVariablesSize; }
-        inline unsigned numberOfVariables() const { return variables.size(); }
+        inline unsigned numberOfVariables() const { assert( variables[ 0 ] == NULL ); return variables.size() - 1; }
         
-        inline Variable* getNextUndefinedVariable();
-        inline bool hasNextUndefinedVariable();
-        inline void startIterationOnUndefinedVariables() { iteratorOnUndefinedVariables = 0; }
-        //inline const UnorderedSet< Variable* >& getUndefinedVariables() const { return undefinedVariables; }
-        
-        //inline bool hasUndefinedVariables() const { return !undefinedVariables.empty(); }
+//        inline Variable* getNextUndefinedVariable();
+//        inline bool hasNextUndefinedVariable();
+//        inline void startIterationOnUndefinedVariables();
+        inline Variable* getFirstUndefined();
+        inline Variable* getNextUndefined( Variable* v );
         
         inline void printAnswerSet( OutputBuilder* outputBuilder ) const;
         
@@ -75,21 +73,23 @@ class Variables
         Variable** assignedVariables;
         unsigned assignedVariablesSize;
         int iteratorOnAssignedVariables;
-        unsigned iteratorOnUndefinedVariables;
+//        unsigned iteratorOnUndefinedVariables;
         int nextLiteralToPropagate;
-
+        unsigned noUndefinedBefore;
+        
         /* Data structures */
         vector< Variable* > variables;
         
-        //UnorderedSet< Variable* > undefinedVariables;      
+        inline bool checkNoUndefinedBefore( unsigned idx ) const;
 };
 
 Variables::Variables()
-: iteratorOnUndefinedVariables( 0 ),
-  nextLiteralToPropagate( 0 )
+: assignedVariables ( NULL ),
+  assignedVariablesSize( 0 ),
+//  iteratorOnUndefinedVariables( 0 ),
+  nextLiteralToPropagate( 0 ),
+  noUndefinedBefore( 1 )
 {
-    assignedVariables = NULL;
-    
     //Add a fake position.
     variables.push_back( NULL );
 }
@@ -111,6 +111,10 @@ Variables::init()
     assert( assignedVariables == NULL );
     assignedVariables = new Variable*[ variables.size() * 120 / 100 ];
     assignedVariablesSize = 0;
+    
+    assert( noUndefinedBefore == 1 );
+    assert( variables.size() >= 2 );
+    assert( variables[ 1 ] != NULL );
 }
 
 void
@@ -120,7 +124,6 @@ Variables::push_back(
     assert( v != NULL );
     assert( assignedVariables == NULL );
     variables.push_back( v );
-    //undefinedVariables.insert( v );
 }
 
 Literal
@@ -134,9 +137,13 @@ void
 Variables::unrollLastVariable()
 {
     assert( assignedVariables > 0 );
-    Variable* tmp = assignedVariables[ --assignedVariablesSize ];
-    tmp->setUndefined();        
-    //undefinedVariables.insert( tmp );
+    Variable* variable = assignedVariables[ --assignedVariablesSize ];
+    variable->setUndefined();
+    if( variable->getId() < noUndefinedBefore )
+    {
+        noUndefinedBefore = variable->getId();
+    }
+    assert( checkNoUndefinedBefore( noUndefinedBefore ) );
 }
 
 Literal
@@ -155,29 +162,79 @@ Variables::hasNextAssignedVariable() const
 void
 Variables::startIterationOnAssignedVariable()
 {
-    assert( assignedVariablesSize > 0 );
+    assert( assignedVariablesSize >= 0 );
     iteratorOnAssignedVariables = assignedVariablesSize - 1;
 }
 
-Variable*
-Variables::getNextUndefinedVariable()
+//Variable*
+//Variables::getNextUndefinedVariable()
+//{
+//    assert( variables[ 0 ] == NULL );
+//    assert( iteratorOnUndefinedVariables >= 1 && iteratorOnUndefinedVariables < variables.size() );
+//    assert( variables[ iteratorOnUndefinedVariables ]->isUndefined() );
+//    return variables[ iteratorOnUndefinedVariables ];
+//}
+
+Variable* 
+Variables::getFirstUndefined()
 {
-    assert( iteratorOnUndefinedVariables >= 0 && iteratorOnUndefinedVariables < variables.size() );
-    assert( variables[ iteratorOnUndefinedVariables ]->isUndefined() );
-    return variables[ iteratorOnUndefinedVariables ];
+    assert( variables[ 0 ] == NULL );
+    assert( noUndefinedBefore >= 1 );
+    assert( checkNoUndefinedBefore( noUndefinedBefore ) );
+    while( noUndefinedBefore < variables.size() )
+    {
+        if( variables[ noUndefinedBefore ]->isUndefined() )
+        {
+            return variables[ noUndefinedBefore ];
+        }
+        ++noUndefinedBefore;
+    }
+    assert( 0 );
+    return NULL;
 }
 
-bool
-Variables::hasNextUndefinedVariable()
+Variable*
+Variables::getNextUndefined(
+    Variable* v )
 {
-    assert( 0 <= iteratorOnUndefinedVariables && iteratorOnUndefinedVariables < variables.size() );
-    while( ++iteratorOnUndefinedVariables < variables.size() )
-    {
-        if( variables[ iteratorOnUndefinedVariables ]->isUndefined() )
-            return true;
-    }
-    return false;
+    assert( v != NULL );
+    for( unsigned i = v->getId() + 1; i < variables.size(); ++i )
+        if( variables[ i ]->isUndefined() )
+            return variables[ i ];
+    return NULL;
 }
+
+//void
+//Variables::startIterationOnUndefinedVariables()
+//{
+//    assert( variables[ 0 ] == NULL );
+//    assert( noUndefinedBefore >= 1 );
+//    assert( checkNoUndefinedBefore( noUndefinedBefore ) );
+//    while( noUndefinedBefore < variables.size() )
+//    {
+//        if( variables[ noUndefinedBefore ]->isUndefined() )
+//        {
+//            iteratorOnUndefinedVariables = noUndefinedBefore;
+//            return;
+//        }
+//        ++noUndefinedBefore;
+//    }
+//    assert( 0 );
+//}
+// 
+//bool
+//Variables::hasNextUndefinedVariable()
+//{
+//    assert( variables[ 0 ] == NULL );
+//    assert( 0 <= iteratorOnUndefinedVariables && iteratorOnUndefinedVariables < variables.size() );
+//    while( ++iteratorOnUndefinedVariables < variables.size() )
+//    {
+//        assert( variables[ iteratorOnUndefinedVariables ] != NULL );
+//        if( variables[ iteratorOnUndefinedVariables ]->isUndefined() )
+//            return true;
+//    }
+//    return false;
+//}
 
 void
 Variables::printAnswerSet(
@@ -210,6 +267,16 @@ Variables::assign(
         return true;
     }
     return false;
+}
+
+bool
+Variables::checkNoUndefinedBefore(
+    unsigned idx ) const
+{
+    for( unsigned i = 1; i < idx; ++i )
+        if( variables[ i ]->isUndefined() )
+            return false;
+    return true;
 }
 
 #endif
