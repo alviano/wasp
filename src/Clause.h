@@ -85,6 +85,7 @@ class Clause
     protected:
         inline bool isImplicantOfALiteral() const;
         vector< Literal > literals;
+        unsigned lastSwapIndex;
 
         virtual ostream& print( ostream& out ) const;
 
@@ -106,12 +107,12 @@ class Clause
         inline void swapLiterals( unsigned int pos1, unsigned int pos2 );
 };
 
-Clause::Clause()
+Clause::Clause() : lastSwapIndex( 1 )
 {
 }
 
 Clause::Clause(
-    unsigned int size )
+    unsigned int size ) : lastSwapIndex( 1 )
 {
     literals.reserve( size );
 }
@@ -189,7 +190,7 @@ Clause::isImplicantOfALiteral() const
     assert( "Unary clauses must be removed." && literals.size() > 1 );
 
     //We assume that the literal inferred is always in the first position.
-    return ( literals[ 0 ].isImplicant( this ) );// || literals[ 1 ]->isImplicant( this ) );
+    return ( literals[ 0 ].isImplicant( this ) );
 }
 
 void
@@ -284,16 +285,16 @@ Clause::updateWatch(
 {
     assert( "Unary clauses must be removed." && literals.size() > 1 );
     
-    unsigned int size = literals.size();
-    for( unsigned int i = 2; i < size; ++i )
+    for( unsigned i = lastSwapIndex + 1; i < literals.size(); ++i )
     {
         if( !literals[ i ].isFalse() )
         {
             //Detach the old watch
             detachSecondWatch();
 
+            lastSwapIndex = i;
             //Swap the two literals
-            swapLiterals( 1, i );
+            swapLiterals( 1, lastSwapIndex );
 
             //Attach the watch in the new position
             attachSecondWatch();            
@@ -301,6 +302,23 @@ Clause::updateWatch(
         }
     }
     
+    for( unsigned i = 2; i <= lastSwapIndex; ++i )
+    {
+        if( !literals[ i ].isFalse() )
+        {
+            //Detach the old watch
+            detachSecondWatch();
+
+            lastSwapIndex = i;
+            //Swap the two literals
+            swapLiterals( 1, lastSwapIndex );
+
+            //Attach the watch in the new position
+            attachSecondWatch();            
+            return;
+        }
+    }
+
     assert( "The other watched literal cannot be true." && !literals[ 0 ].isTrue() );
     
     //Propagate literals[ 0 ];
