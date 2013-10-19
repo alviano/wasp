@@ -41,14 +41,10 @@ using namespace std;
 #include "stl/List.h"
 #include "stl/UnorderedSet.h"
 #include "learning/Learning.h"
-#include "heuristics/BerkminHeuristic.h"
 #include "heuristics/DecisionHeuristic.h"
-#include "heuristics/FirstUndefinedHeuristic.h"
-#include "heuristics/factories/BerkminCounterFactory.h"
-#include "heuristics/factories/HeuristicCounterFactoryForLiteral.h"
 #include "outputBuilders/OutputBuilder.h"
 #include "learning/deletion/DeletionStrategy.h"
-
+#include "heuristics/factories/BerkminCounterFactory.h"
 class Solver
 {
     public:
@@ -123,9 +119,7 @@ class Solver
         inline void unrollLastVariable();
         
         /* OPTIONS */
-        inline void setHeuristicBerkmin( unsigned int berkminMaxNumber );
-        inline void setHeuristicFirstUndefined();
-
+        inline void setHeuristic( DecisionHeuristic* value );
         inline void setOutputBuilder( OutputBuilder* value );
         inline void setRestartsStrategy( RestartsStrategy* value );
         inline void setDeletionStrategy( DeletionStrategy* value );
@@ -179,19 +173,12 @@ Solver::Solver() : currentDecisionLevel( 0 ), conflictLiteral( NULL ), conflictC
 }
 
 void
-Solver::setHeuristicBerkmin( 
-    unsigned int berkminMaxNumber )
-{   
-    assert( berkminMaxNumber > 0 );
-    heuristicCounterFactoryForLiteral = new BerkminCounterFactory();    
-    decisionHeuristic = new BerkminHeuristic( berkminMaxNumber );
-}
-
-void
-Solver::setHeuristicFirstUndefined()
+Solver::setHeuristic(
+    DecisionHeuristic* value )
 {
-    //TODO: Maybe we should create an empty counter or something similar.
-    decisionHeuristic = new FirstUndefinedHeuristic();
+    assert( value != NULL );
+    heuristicCounterFactoryForLiteral = new BerkminCounterFactory();    
+    decisionHeuristic = value;
 }
 
 void
@@ -240,7 +227,6 @@ Solver::addVariableInternal(
     variables.push_back( variable );    
     variable->setHeuristicCounterForLiterals( heuristicCounterFactoryForLiteral );    
 }
-
 
 Literal
 Solver::getLiteral(

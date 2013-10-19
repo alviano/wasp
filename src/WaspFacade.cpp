@@ -33,6 +33,11 @@
 #include "outputBuilders/CompetitionOutputBuilder.h"
 #include "outputBuilders/DimacsOutputBuilder.h"
 
+#include "heuristics/BerkminHeuristic.h"
+#include "heuristics/FirstUndefinedHeuristic.h"
+#include "heuristics/factories/BerkminCounterFactory.h"
+#include "heuristics/factories/HeuristicCounterFactoryForLiteral.h"
+
 void
 WaspFacade::readInput()
 {
@@ -102,15 +107,17 @@ WaspFacade::setHeuristicPolicy(
     {
         case HEURISTIC_BERKMIN:
             assert( heuristicLimit > 0 );
-            solver.setHeuristicBerkmin( heuristicLimit );
+//            heuristicCounterFactoryForLiteral = new BerkminCounterFactory();    
+            solver.setHeuristic( new BerkminHeuristic( heuristicLimit ) );
             break;
         
         case HEURISTIC_FIRST_UNDEFINED:
-            solver.setHeuristicFirstUndefined();
+            solver.setHeuristic( new FirstUndefinedHeuristic() );
             break;
     
         default:
-            solver.setHeuristicBerkmin( 512 );
+//            heuristicCounterFactoryForLiteral = new BerkminCounterFactory();    
+            solver.setHeuristic( new BerkminHeuristic( 512 ) );
             break;
     }
 }
