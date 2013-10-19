@@ -1,5 +1,3 @@
-timeout = 50
-
 input = """
 c num blocks = 1
 c num vars = 250

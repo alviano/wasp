@@ -1,5 +1,3 @@
-timeout = 100
-
 input = """
 c   #vars: 243   #clauses: 1095   #literals: 3347
 c 

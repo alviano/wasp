@@ -25,7 +25,7 @@ for i in ['input', 'output']:
 if 'flags' not in locals():
     flags = ""
 if 'timeout' not in locals():
-    timeout = 10
+    timeout = 100
     
 exec(open(checker).read())
 for i in ['checker']:
