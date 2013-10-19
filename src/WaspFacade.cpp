@@ -41,8 +41,7 @@
 void
 WaspFacade::readInput()
 {
-    SATFormulaBuilder satFormulaBuilder( &solver );    
-    Dimacs dimacs( &satFormulaBuilder );
+    Dimacs dimacs( solver );
     dimacs.parse();
 }
 

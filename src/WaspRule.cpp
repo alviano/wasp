@@ -18,7 +18,6 @@
 
 #include "WaspRule.h"
 #include "Solver.h"
-#include "inputBuilders/AbstractBuilder.h"
 
 ostream&
 WaspRule::print(

@@ -18,8 +18,6 @@
 
 #include "Solver.h"
 
-#include "inputBuilders/AbstractBuilder.h"
-
 Solver::~Solver()
 {
 //    for( unsigned int i = 0; i < auxLiterals.size(); i++ )

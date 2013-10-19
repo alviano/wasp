@@ -29,14 +29,14 @@
 #include <iostream>
 using namespace std;
 
-class AbstractBuilder;
+class Solver;
 
 class Dimacs
 {
 
 public:
 
-    Dimacs( AbstractBuilder* builder );
+    Dimacs( Solver& solver );
   
     /**
      * This function read instruction from standard input and
@@ -68,7 +68,7 @@ private:
 //        
     void readFormulaInfo( istream & input );        
     
-    AbstractBuilder* builder;
+    Solver& solver;
     
     unsigned int numberOfClauses;
     

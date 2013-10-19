@@ -26,161 +26,162 @@
 #include <sstream>
 using namespace std;
 
-ASPProgramBuilder::ASPProgramBuilder(
-    Solver* s ) : SATFormulaBuilder( s )
-{
-}
-
-AuxLiteral*
-ASPProgramBuilder::newAuxVar()
-{
-    #ifdef NDEBUG    
-//        return solver->addAuxVariable();
-    #else
-//        AuxLiteral* tmp = solver->addAuxVariable();
-//        stringstream s;
-//        s << "#aux" << solver->numberOfAuxVariables();
-//        string n = s.str();
-//        tmp->setName( n );
-//        return tmp;
-    #endif
-
-    assert( 0 );
-    return NULL;
-}
-
-WaspRule*
-ASPProgramBuilder::startWaspRule(
-    unsigned int size )
-{
-    trie.startInsertion();
-    return new WaspRule( size );
-}
-
-void
-ASPProgramBuilder::addLiteralInWaspRule(
-    int lit,
-    WaspRule* waspRule )
-{
-    trie.addElement( -lit );
-//    Literal* literal = solver->getLiteral( lit );
-//    waspRule->addLiteral( literal );
-}
-
-void
-ASPProgramBuilder::setAuxLiteralInWaspRule(
-    AuxLiteral* auxLiteral,
-    WaspRule* waspRule )
-{    
-//    waspRule->addLiteral( auxLiteral );
-//    waspRule->setAuxLiteral( auxLiteral );
-//    auxLiteral->setWaspRule( waspRule );
-}
-
-AuxLiteral*
-ASPProgramBuilder::endWaspRule(
-    WaspRule* waspRule )
-{
-//    unsigned int id = trie.endInsertion();
-//    if( solver->existsAuxLiteral( id ) )
-//    {
-//        delete waspRule;
-//        return solver->getAuxLiteral( id );
-//    }
-//    else
-//    {
-//        AuxLiteral* auxLiteral = this->newAuxVar();
-//        this->setAuxLiteralInWaspRule( auxLiteral, waspRule );
+// TODO: remove
+//ASPProgramBuilder::ASPProgramBuilder(
+//    Solver* s ) : SATFormulaBuilder( s )
+//{
+//}
 //
-//        solver->addClause( waspRule );
-//        waspRule->attachClause();
-//        waspRule->attachWaspRule();
+//AuxLiteral*
+//ASPProgramBuilder::newAuxVar()
+//{
+//    #ifdef NDEBUG    
+////        return solver->addAuxVariable();
+//    #else
+////        AuxLiteral* tmp = solver->addAuxVariable();
+////        stringstream s;
+////        s << "#aux" << solver->numberOfAuxVariables();
+////        string n = s.str();
+////        tmp->setName( n );
+////        return tmp;
+//    #endif
 //
-//        return auxLiteral;
+//    assert( 0 );
+//    return NULL;
+//}
+//
+//WaspRule*
+//ASPProgramBuilder::startWaspRule(
+//    unsigned int size )
+//{
+//    trie.startInsertion();
+//    return new WaspRule( size );
+//}
+//
+//void
+//ASPProgramBuilder::addLiteralInWaspRule(
+//    int lit,
+//    WaspRule* waspRule )
+//{
+//    trie.addElement( -lit );
+////    Literal* literal = solver->getLiteral( lit );
+////    waspRule->addLiteral( literal );
+//}
+//
+//void
+//ASPProgramBuilder::setAuxLiteralInWaspRule(
+//    AuxLiteral* auxLiteral,
+//    WaspRule* waspRule )
+//{    
+////    waspRule->addLiteral( auxLiteral );
+////    waspRule->setAuxLiteral( auxLiteral );
+////    auxLiteral->setWaspRule( waspRule );
+//}
+//
+//AuxLiteral*
+//ASPProgramBuilder::endWaspRule(
+//    WaspRule* waspRule )
+//{
+////    unsigned int id = trie.endInsertion();
+////    if( solver->existsAuxLiteral( id ) )
+////    {
+////        delete waspRule;
+////        return solver->getAuxLiteral( id );
+////    }
+////    else
+////    {
+////        AuxLiteral* auxLiteral = this->newAuxVar();
+////        this->setAuxLiteralInWaspRule( auxLiteral, waspRule );
+////
+////        solver->addClause( waspRule );
+////        waspRule->attachClause();
+////        waspRule->attachWaspRule();
+////
+////        return auxLiteral;
+////    }
+//    assert( 0 );
+//    return NULL;
+//}
+//
+//void
+//ASPProgramBuilder::startBuilding()
+//{
+//    newVar();
+//}
+//
+//void
+//ASPProgramBuilder::endBuilding()
+//{
+//    /*
+//     * Modelling support for all atoms.
+//     * 
+//     */
+//    unsigned int numberOfVariables = solver->numberOfVariables();
+//    
+//    for( unsigned int i = 2; i < numberOfVariables; i++ )
+//    {
+//        if( supportedVariables.find( i ) != supportedVariables.end() )
+//            continue;
+//        
+//        vector< Literal* >& literalsToAdd = mapForSupport[ i ];
+//        unsigned int size = literalsToAdd.size();
+//        
+//        if( size > 0 )
+//        {
+//            Clause* clause = this->startClause( size + 1 );
+//            this->addLiteralInClause( -i, clause );
+//
+//            for( unsigned int j = 0; j < size; j++ )
+//            {
+////                clause->addLiteral( literalsToAdd[ j ] );
+//            }
+//
+//            this->endClause( clause );
+//        }
+//        else
+//        {
+//            this->addTrueLiteral( -i );
+//        }
 //    }
-    assert( 0 );
-    return NULL;
-}
-
-void
-ASPProgramBuilder::startBuilding()
-{
-    newVar();
-}
-
-void
-ASPProgramBuilder::endBuilding()
-{
-    /*
-     * Modelling support for all atoms.
-     * 
-     */
-    unsigned int numberOfVariables = solver->numberOfVariables();
-    
-    for( unsigned int i = 2; i < numberOfVariables; i++ )
-    {
-        if( supportedVariables.find( i ) != supportedVariables.end() )
-            continue;
-        
-        vector< Literal* >& literalsToAdd = mapForSupport[ i ];
-        unsigned int size = literalsToAdd.size();
-        
-        if( size > 0 )
-        {
-            Clause* clause = this->startClause( size + 1 );
-            this->addLiteralInClause( -i, clause );
-
-            for( unsigned int j = 0; j < size; j++ )
-            {
-//                clause->addLiteral( literalsToAdd[ j ] );
-            }
-
-            this->endClause( clause );
-        }
-        else
-        {
-            this->addTrueLiteral( -i );
-        }
-    }
-}
-
-void
-ASPProgramBuilder::addSupportingLiteralForHeadAtom( 
-    unsigned int variable,
-    int lit )
-{
-//    Literal* literal = solver->getLiteral( lit );
-//    mapForSupport[ variable ].push_back( literal );
-}
-        
-void
-ASPProgramBuilder::addSupportingAuxLiteralForHeadAtom( 
-    unsigned int variable,
-    AuxLiteral* auxLiteral )
-{
-//    mapForSupport[ variable ].push_back( auxLiteral );
-}
-
-void
-ASPProgramBuilder::setAtomName(
-    unsigned int variable,
-    string& name )
-{
-//    Variable* literal = static_cast< Variable* >( solver->getVariable( variable ) );
-//    literal->setName( name );
-}
-
-void
-ASPProgramBuilder::addAuxLiteralInClause(
-    AuxLiteral* auxLiteral,
-    Clause* clause )
-{
-//    clause->addLiteral( auxLiteral->getOppositeLiteral() );
-}
-
-void
-ASPProgramBuilder::addSupportedVariable(
-    unsigned int variable )
-{
-    supportedVariables.insert( variable );
-}
+//}
+//
+//void
+//ASPProgramBuilder::addSupportingLiteralForHeadAtom( 
+//    unsigned int variable,
+//    int lit )
+//{
+////    Literal* literal = solver->getLiteral( lit );
+////    mapForSupport[ variable ].push_back( literal );
+//}
+//        
+//void
+//ASPProgramBuilder::addSupportingAuxLiteralForHeadAtom( 
+//    unsigned int variable,
+//    AuxLiteral* auxLiteral )
+//{
+////    mapForSupport[ variable ].push_back( auxLiteral );
+//}
+//
+//void
+//ASPProgramBuilder::setAtomName(
+//    unsigned int variable,
+//    string& name )
+//{
+////    Variable* literal = static_cast< Variable* >( solver->getVariable( variable ) );
+////    literal->setName( name );
+//}
+//
+//void
+//ASPProgramBuilder::addAuxLiteralInClause(
+//    AuxLiteral* auxLiteral,
+//    Clause* clause )
+//{
+////    clause->addLiteral( auxLiteral->getOppositeLiteral() );
+//}
+//
+//void
+//ASPProgramBuilder::addSupportedVariable(
+//    unsigned int variable )
+//{
+//    supportedVariables.insert( variable );
+//}

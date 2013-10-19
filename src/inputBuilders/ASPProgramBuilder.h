@@ -37,6 +37,8 @@ class AuxLiteral;
 class Solver;
 class WaspRule;
 
+// TODO: move what is useful in GringoNumericFormat. Then, remove this file
+/*
 class ASPProgramBuilder : public SATFormulaBuilder
 {
     public:        
@@ -65,6 +67,7 @@ class ASPProgramBuilder : public SATFormulaBuilder
         unordered_map< unsigned int, vector< Literal* > > mapForSupport;
         unordered_set< unsigned int > supportedVariables;
 };
+*/
 
 #endif	/* ASPPROGRAMBUILDER_H */
 

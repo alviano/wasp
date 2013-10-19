@@ -68,7 +68,7 @@ class Solver
         bool addClauseFromModelAndRestart();
         
         inline Literal getLiteral( int lit );
-        inline void addTrueLiteral( int lit );
+        inline void addTrueLiteral( Literal lit );
         
         inline Literal getNextLiteralToPropagate();
         inline bool hasNextLiteralToPropagate() const;        
@@ -232,7 +232,7 @@ Literal
 Solver::getLiteral(
     int lit )
 {
-    assert( "Lit is out of range." && static_cast< unsigned >( abs( lit ) ) < variables.numberOfVariables() );
+    assert( "Lit is out of range." && static_cast< unsigned >( abs( lit ) ) < variables.numberOfVariables() && abs( lit ) > 0);
     return lit > 0 ? Literal( variables[ lit ] ) : Literal( variables[ -lit ], false );
 //    if( lit > 0 )
 //    {
@@ -289,10 +289,9 @@ Solver::addLearnedClause(
 
 void
 Solver::addTrueLiteral(
-    int lit )
+    Literal lit )
 {
-    Literal literal = getLiteral( lit );
-    trueLiterals.push_back( literal );
+    trueLiterals.push_back( lit );
 }
 
 Literal

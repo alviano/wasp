@@ -16,150 +16,152 @@
  *
  */
 
-#include "SATFormulaBuilder.h"
-#include "../Clause.h"
-#include "../Literal.h"
-#include "../Solver.h"
-#include "../WaspRule.h"
-#include "../ErrorMessage.h"
+// TODO: useless. Remove!
 
-#include <iostream>
-using namespace std;
-
-SATFormulaBuilder::SATFormulaBuilder(
-    Solver* s ) : solver( s )
-{
-}
-
-void
-SATFormulaBuilder::newVar()
-{
-    solver->addVariable();
-}
-
-void
-SATFormulaBuilder::newVar( 
-    const string& name )
-{
-    solver->addVariable( name );
-}
-
-Clause* 
-SATFormulaBuilder::startClause()
-{
-    return new Clause();
-}
-
-Clause* 
-SATFormulaBuilder::startClause( 
-    unsigned int size )
-{
-    return new Clause( size );
-}
-
-void 
-SATFormulaBuilder::addLiteralInClause( 
-    int lit, 
-    Clause* clause )
-{
-    Literal literal = solver->getLiteral( lit );
-    addLiteralInClause( literal, clause );
-}
-
-void 
-SATFormulaBuilder::addLiteralInClause( 
-    Literal literal,
-    Clause* clause )
-{
-    assert( literal != NULL );
-    clause->addLiteral( literal );
-}
-
-void
-SATFormulaBuilder::addAuxLiteralInClause(
-    AuxLiteral*,
-    Clause* )
-{
-    ErrorMessage::errorGeneric( "This method should be invoked only by the ASPSolver. Maybe you are using a wrong builder.");
-}
-
-void 
-SATFormulaBuilder::endClause(
-    Clause* clause )
-{
-    assert( "Clauses must contain at least two literals." && clause->size() > 1 );
-    solver->addClause( clause );
-    clause->attachClause();
-}
-
-WaspRule*
-SATFormulaBuilder::startWaspRule(
-    unsigned int )
-{
-    ErrorMessage::errorGeneric( "This method should be invoked only by the ASPSolver. Maybe you are using a wrong builder.");
-    return NULL;
-}
-
-void
-SATFormulaBuilder::addSupportedVariable(
-    unsigned int )
-{
-    ErrorMessage::errorGeneric( "This method should be invoked only by the ASPSolver. Maybe you are using a wrong builder.");
-}
-
-void
-SATFormulaBuilder::addLiteralInWaspRule(
-    int,
-    WaspRule* )
-{
-    ErrorMessage::errorGeneric( "This method should be invoked only by the ASPSolver. Maybe you are using a wrong builder.");
-}
-
-AuxLiteral*
-SATFormulaBuilder::endWaspRule(
-    WaspRule* )
-{
-    ErrorMessage::errorGeneric( "This method should be invoked only by the ASPSolver. Maybe you are using a wrong builder.");
-    return NULL;
-}
-
-void 
-SATFormulaBuilder::addTrueLiteral(
-    int lit )
-{
-    solver->addTrueLiteral( lit );
-}
-
-void
-SATFormulaBuilder::startBuilding()
-{
-}
-
-void
-SATFormulaBuilder::endBuilding()
-{
-}
-
-void
-SATFormulaBuilder::addSupportingLiteralForHeadAtom( 
-    unsigned int,
-    int )
-{
-    ErrorMessage::errorGeneric( "This method should be invoked only by the ASPSolver. Maybe you are using a wrong builder.");
-}
-        
-void
-SATFormulaBuilder::addSupportingAuxLiteralForHeadAtom( 
-    unsigned int,
-    AuxLiteral* )
-{
-    ErrorMessage::errorGeneric( "This method should be invoked only by the ASPSolver. Maybe you are using a wrong builder.");
-}
-
-void
-SATFormulaBuilder::setAtomName(
-    unsigned int,
-    string& )
-{
-    ErrorMessage::errorGeneric( "This method should be invoked only by the ASPSolver. Maybe you are using a wrong builder.");
-}
+//#include "SATFormulaBuilder.h"
+//#include "../Clause.h"
+//#include "../Literal.h"
+//#include "../Solver.h"
+//#include "../WaspRule.h"
+//#include "../ErrorMessage.h"
+//
+//#include <iostream>
+//using namespace std;
+//
+//SATFormulaBuilder::SATFormulaBuilder(
+//    Solver* s ) : solver( s )
+//{
+//}
+//
+//void
+//SATFormulaBuilder::newVar()
+//{
+//    solver->addVariable();
+//}
+//
+//void
+//SATFormulaBuilder::newVar( 
+//    const string& name )
+//{
+//    solver->addVariable( name );
+//}
+//
+//Clause* 
+//SATFormulaBuilder::startClause()
+//{
+//    return new Clause();
+//}
+//
+//Clause* 
+//SATFormulaBuilder::startClause( 
+//    unsigned int size )
+//{
+//    return new Clause( size );
+//}
+//
+//void 
+//SATFormulaBuilder::addLiteralInClause( 
+//    int lit, 
+//    Clause* clause )
+//{
+//    Literal literal = solver->getLiteral( lit );
+//    addLiteralInClause( literal, clause );
+//}
+//
+//void 
+//SATFormulaBuilder::addLiteralInClause( 
+//    Literal literal,
+//    Clause* clause )
+//{
+//    assert( literal != NULL );
+//    clause->addLiteral( literal );
+//}
+//
+//void
+//SATFormulaBuilder::addAuxLiteralInClause(
+//    AuxLiteral*,
+//    Clause* )
+//{
+//    ErrorMessage::errorGeneric( "This method should be invoked only by the ASPSolver. Maybe you are using a wrong builder.");
+//}
+//
+//void 
+//SATFormulaBuilder::endClause(
+//    Clause* clause )
+//{
+//    assert( "Clauses must contain at least two literals." && clause->size() > 1 );
+//    solver->addClause( clause );
+//    clause->attachClause();
+//}
+//
+//WaspRule*
+//SATFormulaBuilder::startWaspRule(
+//    unsigned int )
+//{
+//    ErrorMessage::errorGeneric( "This method should be invoked only by the ASPSolver. Maybe you are using a wrong builder.");
+//    return NULL;
+//}
+//
+//void
+//SATFormulaBuilder::addSupportedVariable(
+//    unsigned int )
+//{
+//    ErrorMessage::errorGeneric( "This method should be invoked only by the ASPSolver. Maybe you are using a wrong builder.");
+//}
+//
+//void
+//SATFormulaBuilder::addLiteralInWaspRule(
+//    int,
+//    WaspRule* )
+//{
+//    ErrorMessage::errorGeneric( "This method should be invoked only by the ASPSolver. Maybe you are using a wrong builder.");
+//}
+//
+//AuxLiteral*
+//SATFormulaBuilder::endWaspRule(
+//    WaspRule* )
+//{
+//    ErrorMessage::errorGeneric( "This method should be invoked only by the ASPSolver. Maybe you are using a wrong builder.");
+//    return NULL;
+//}
+//
+//void 
+//SATFormulaBuilder::addTrueLiteral(
+//    int lit )
+//{
+//    solver->addTrueLiteral( lit );
+//}
+//
+//void
+//SATFormulaBuilder::startBuilding()
+//{
+//}
+//
+//void
+//SATFormulaBuilder::endBuilding()
+//{
+//}
+//
+//void
+//SATFormulaBuilder::addSupportingLiteralForHeadAtom( 
+//    unsigned int,
+//    int )
+//{
+//    ErrorMessage::errorGeneric( "This method should be invoked only by the ASPSolver. Maybe you are using a wrong builder.");
+//}
+//        
+//void
+//SATFormulaBuilder::addSupportingAuxLiteralForHeadAtom( 
+//    unsigned int,
+//    AuxLiteral* )
+//{
+//    ErrorMessage::errorGeneric( "This method should be invoked only by the ASPSolver. Maybe you are using a wrong builder.");
+//}
+//
+//void
+//SATFormulaBuilder::setAtomName(
+//    unsigned int,
+//    string& )
+//{
+//    ErrorMessage::errorGeneric( "This method should be invoked only by the ASPSolver. Maybe you are using a wrong builder.");
+//}

@@ -27,13 +27,14 @@
 #ifndef _GRINGONUMERICFORMAT_H
 #define	_GRINGONUMERICFORMAT_H
 
-#include "../inputBuilders/AbstractBuilder.h"
+#include "../Solver.h"
 
+// TODO: the program has to be built in this class! No need of a separate builder. Revise this class.
 class GringoNumericFormat
 {
     public:
 
-        inline GringoNumericFormat( AbstractBuilder* p );
+        inline GringoNumericFormat( Solver& s );
         ~GringoNumericFormat();
 
         /**
@@ -67,13 +68,13 @@ class GringoNumericFormat
 
         void addNewVariable( unsigned int variable );
 
-        AbstractBuilder* builder;
+        Solver& solver;
 
         unsigned int max;              
 };
 
 GringoNumericFormat::GringoNumericFormat(
-    AbstractBuilder* b ) : builder( b ), max( 1 )
+    Solver& s ) : solver( s ), max( 1 )
 {
 }
 

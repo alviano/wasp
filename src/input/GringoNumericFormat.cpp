@@ -26,6 +26,9 @@
 #include <unordered_set>
 using namespace std;
 
+
+// TODO: revise
+/*
 GringoNumericFormat::~GringoNumericFormat()
 {    
 }
@@ -410,3 +413,4 @@ GringoNumericFormat::addNewVariable(
         max++;
     }
 }
+*/

@@ -18,7 +18,7 @@
 
 #include "Dimacs.h"
 
-#include "../inputBuilders/AbstractBuilder.h"
+#include "../Solver.h"
 #include "../Clause.h"
 #include "../Constants.h"
 #include "../ErrorMessage.h"
@@ -31,7 +31,7 @@
 using namespace std;
 
 Dimacs::Dimacs(
-    AbstractBuilder* b ) : builder( b )
+    Solver& s ) : solver( s )
 {
 }
 
@@ -53,7 +53,6 @@ void
 Dimacs::parse(
     istream& input )
 {
-    builder->startBuilding();
     char type;
     
     while( input >> type )
@@ -78,7 +77,6 @@ Dimacs::parse(
     {
         ErrorMessage::errorDuringParsing( "Unexpected symbol.");
     }
-    builder->endBuilding();
 }
 
 void
@@ -191,7 +189,7 @@ Dimacs::readClause(
 
     bool trivial = false;
 
-    Clause* clause = builder->startClause();
+    Clause* clause = new Clause();
 
     //a variable containing the literal to read
     int next;
@@ -218,7 +216,7 @@ Dimacs::readClause(
             trivial = true;
         
         //add the literal in the clause
-        builder->addLiteralInClause( next, clause );
+        clause->addLiteral( solver.getLiteral( next ) );
         
         //read the next literal
         input >> next;
@@ -230,14 +228,15 @@ Dimacs::readClause(
     {
         assert( firstLiteral != 0 );
         trivial = true;
-        builder->addTrueLiteral( firstLiteral );
+        solver.addTrueLiteral( solver.getLiteral( firstLiteral ) );
     }
     
     //if the clause is not trivial add it in the formula
     if( !trivial )
     {
         trace( parser, 1, "Adding clause %s.\n", clause->clauseToCharStar() );
-        builder->endClause( clause );        
+        solver.addClause( clause );
+        clause->attachClause();
     }
     else
         delete clause;
@@ -364,6 +363,6 @@ Dimacs::insertVariables(
     {
         stringstream ss;
         ss << i;
-        builder->newVar( ss.str() );
+        solver.addVariable( ss.str() );
     }
 }
