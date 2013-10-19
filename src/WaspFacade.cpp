@@ -23,6 +23,9 @@
 #include "learning/restarts/GeometricRestartsStrategy.h"
 #include "learning/restarts/SequenceBasedRestartsStrategy.h"
 
+#include "learning/deletion/AggressiveDeletionStrategy.h"
+#include "learning/deletion/RestartsBasedDeletionStrategy.h"
+#include "learning/deletion/MinisatDeletionStrategy.h"
 
 void
 WaspFacade::readInput()
@@ -69,20 +72,17 @@ WaspFacade::setDeletionPolicy(
 {
     switch( deletionPolicy )
     {
-        case AGGRESSIVE_DELETION_POLICY:
-            solver.setAggressiveDeletionStrategy();
-            break;
-
         case RESTARTS_BASED_DELETION_POLICY:
-            solver.setRestartsBasedDeletionStrategy();
+            solver.setDeletionStrategy( new RestartsBasedDeletionStrategy() );
             break;
             
         case MINISAT_DELETION_POLICY:
-            solver.setMinisatDeletionStrategy();
+            solver.setDeletionStrategy( new MinisatDeletionStrategy() );
             break;
 
+        case AGGRESSIVE_DELETION_POLICY:
         default:
-            solver.setAggressiveDeletionStrategy();
+            solver.setDeletionStrategy( new AggressiveDeletionStrategy() );
             break;
     }
 }

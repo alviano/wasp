@@ -41,9 +41,6 @@ using namespace std;
 #include "stl/List.h"
 #include "stl/UnorderedSet.h"
 #include "learning/Learning.h"
-#include "learning/deletion/AggressiveDeletionStrategy.h"
-#include "learning/deletion/DeletionStrategy.h"
-#include "learning/deletion/RestartsBasedDeletionStrategy.h"
 #include "heuristics/BerkminHeuristic.h"
 #include "heuristics/DecisionHeuristic.h"
 #include "heuristics/FirstUndefinedHeuristic.h"
@@ -55,7 +52,7 @@ using namespace std;
 #include "outputBuilders/WaspOutputBuilder.h"
 #include "outputBuilders/SilentOutputBuilder.h"
 #include "outputBuilders/ThirdCompetitionOutputBuilder.h"
-#include "learning/deletion/MinisatDeletionStrategy.h"
+#include "learning/deletion/DeletionStrategy.h"
 
 class Solver
 {
@@ -141,13 +138,7 @@ class Solver
         inline void setThirdCompetitionOutput();
 
         inline void setRestartsStrategy( RestartsStrategy* value );
-        inline void setGeometricRestarts( unsigned int threshold );
-        inline void setSequenceBasedRestarts( unsigned int threshold );
-        inline void setMinisatRestarts( unsigned int threshold );
-        inline void disableRestarts();
-        inline void setAggressiveDeletionStrategy();
-        inline void setRestartsBasedDeletionStrategy();
-        inline void setMinisatDeletionStrategy();
+        inline void setDeletionStrategy( DeletionStrategy* value );
         
         typedef List< LearnedClause* >::reverse_iterator LearnedClausesReverseIterator;
         inline LearnedClausesReverseIterator learnedClauses_rbegin() { return learnedClauses.rbegin(); }
@@ -252,21 +243,11 @@ Solver::setRestartsStrategy(
 }
 
 void
-Solver::setAggressiveDeletionStrategy()
+Solver::setDeletionStrategy(
+    DeletionStrategy* value )
 {
-    deletionStrategy = new AggressiveDeletionStrategy();
-}
-
-void
-Solver::setRestartsBasedDeletionStrategy()
-{
-    deletionStrategy = new RestartsBasedDeletionStrategy();
-}
-
-void
-Solver::setMinisatDeletionStrategy()
-{
-    deletionStrategy = new MinisatDeletionStrategy();
+    assert( value != NULL );
+    deletionStrategy = value;
 }
 
 void
