@@ -41,7 +41,6 @@ using namespace std;
 #include "stl/List.h"
 #include "stl/UnorderedSet.h"
 #include "learning/LearningStrategy.h"
-#include "learning/FirstUIPLearningStrategy.h"
 #include "learning/deletion/AggressiveDeletionStrategy.h"
 #include "learning/deletion/DeletionStrategy.h"
 #include "learning/deletion/RestartsBasedDeletionStrategy.h"
@@ -251,27 +250,27 @@ void
 Solver::setGeometricRestarts(
     unsigned int threshold )
 {
-    learningStrategy = new FirstUIPLearningStrategy( new GeometricRestartsStrategy( threshold ) );
+    learningStrategy = new LearningStrategy( new GeometricRestartsStrategy( threshold ) );
 }
 
 void
 Solver::setSequenceBasedRestarts(
     unsigned int threshold )
 {
-    learningStrategy = new FirstUIPLearningStrategy( new SequenceBasedRestartsStrategy( threshold ) );
+    learningStrategy = new LearningStrategy( new SequenceBasedRestartsStrategy( threshold ) );
 }
 
 void
 Solver::setMinisatRestarts( 
     unsigned int threshold )
 {
-    learningStrategy = new FirstUIPLearningStrategy( new MinisatRestartsStrategy( threshold ) );
+    learningStrategy = new LearningStrategy( new MinisatRestartsStrategy( threshold ) );
 }        
 
 void
 Solver::disableRestarts()
 {
-    learningStrategy = new FirstUIPLearningStrategy( new NoRestartsStrategy() );
+    learningStrategy = new LearningStrategy( new NoRestartsStrategy() );
 }
 
 void
