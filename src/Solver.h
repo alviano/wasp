@@ -44,8 +44,6 @@ using namespace std;
 #include "learning/deletion/AggressiveDeletionStrategy.h"
 #include "learning/deletion/DeletionStrategy.h"
 #include "learning/deletion/RestartsBasedDeletionStrategy.h"
-#include "learning/restarts/GeometricRestartsStrategy.h"
-#include "learning/restarts/SequenceBasedRestartsStrategy.h"
 #include "heuristics/BerkminHeuristic.h"
 #include "heuristics/DecisionHeuristic.h"
 #include "heuristics/FirstUndefinedHeuristic.h"
@@ -58,8 +56,6 @@ using namespace std;
 #include "outputBuilders/SilentOutputBuilder.h"
 #include "outputBuilders/ThirdCompetitionOutputBuilder.h"
 #include "learning/deletion/MinisatDeletionStrategy.h"
-#include "learning/restarts/NoRestartsStrategy.h"
-#include "learning/restarts/MinisatRestartsStrategy.h"
 
 class Solver
 {
@@ -144,6 +140,7 @@ class Solver
         inline void setSilentOutput();
         inline void setThirdCompetitionOutput();
 
+        inline void setRestartsStrategy( RestartsStrategy* value );
         inline void setGeometricRestarts( unsigned int threshold );
         inline void setSequenceBasedRestarts( unsigned int threshold );
         inline void setMinisatRestarts( unsigned int threshold );
@@ -190,7 +187,7 @@ class Solver
         DecisionHeuristic* decisionHeuristic;
         HeuristicCounterFactoryForLiteral* heuristicCounterFactoryForLiteral;
         
-        Learning* learningStrategy;
+        Learning learning;
         DeletionStrategy* deletionStrategy;
 
         OutputBuilder* outputBuilder;
@@ -245,32 +242,13 @@ Solver::setThirdCompetitionOutput()
 {
     outputBuilder = new ThirdCompetitionOutputBuilder();
 }
-        
-void
-Solver::setGeometricRestarts(
-    unsigned int threshold )
-{
-    learningStrategy = new Learning( new GeometricRestartsStrategy( threshold ) );
-}
 
 void
-Solver::setSequenceBasedRestarts(
-    unsigned int threshold )
+Solver::setRestartsStrategy(
+    RestartsStrategy* value )
 {
-    learningStrategy = new Learning( new SequenceBasedRestartsStrategy( threshold ) );
-}
-
-void
-Solver::setMinisatRestarts( 
-    unsigned int threshold )
-{
-    learningStrategy = new Learning( new MinisatRestartsStrategy( threshold ) );
-}        
-
-void
-Solver::disableRestarts()
-{
-    learningStrategy = new Learning( new NoRestartsStrategy() );
+    assert( value != NULL );
+    learning.setRestartsStrategy( value );
 }
 
 void
@@ -539,7 +517,7 @@ void
 Solver::analyzeConflict()
 {
     trace( solving, 1, "Analyzing conflict.\n" );
-    learningStrategy->onConflict( conflictLiteral, conflictClause, *this );
+    learning.onConflict( conflictLiteral, conflictClause, *this );
     decisionHeuristic->onLearning( *this );
     clearConflictStatus();
 }

@@ -71,6 +71,7 @@ Learning::onConflict(
     if( learnedClause->size() == 1 )
     {
         solver.onLearningUnaryClause( firstUIP, learnedClause );
+        assert( "The strategy for restarts must be initialized." && restartsStrategy != NULL );
         restartsStrategy->onLearningUnaryClause();
     }
     else
@@ -81,6 +82,7 @@ Learning::onConflict(
         learnedClause->attachClause( learnedClause->size() - 1, maxPosition );
         solver.addLearnedClause( learnedClause );
 
+        assert( "The strategy for restarts must be initialized." && restartsStrategy != NULL );
         bool restartRequired = restartsStrategy->onLearningClause();
         if( restartRequired )
         {

@@ -43,11 +43,13 @@ class Variable;
 class Learning
 {
     public:
-        inline Learning( RestartsStrategy* restartsStrategy );
+        inline Learning();
         inline ~Learning();
         
         void onNavigatingLiteral( Literal );
         void onConflict( Literal conflictLiteral, Clause* conflictClause, Solver& solver );
+        
+        inline void setRestartsStrategy( RestartsStrategy* value );
         
     private:
         /**
@@ -93,7 +95,7 @@ class Learning
         
         /**
          * The variables of the current conflict level which have been visited.
-         */Strategy
+         */
         unordered_set< const Variable* > visitedVariables;        
         
         unsigned int maxDecisionLevel;
@@ -103,16 +105,13 @@ class Learning
         unsigned int visitedVariablesCounter;
 };
 
-Learning::Learning(
-    RestartsStrategy* strategy ): decisionLevel( 0 ), learnedClause( NULL ), maxDecisionLevel( 0 ), visitedVariablesCounter( 0 )
+Learning::Learning() : decisionLevel( 0 ), learnedClause( NULL ), restartsStrategy( NULL ), maxDecisionLevel( 0 ), visitedVariablesCounter( 0 )
 {
-    assert( "The strategy for restarts must be initialized." && strategy != NULL );
-    restartsStrategy = strategy;
 }
 
 Learning::~Learning()
 {
-    if( restartsStrategy )
+    if( restartsStrategy != NULL )
         delete restartsStrategy;
 }
 
@@ -123,6 +122,14 @@ Learning::clearDataStructures()
     maxDecisionLevel = 0;
     visitedVariables.clear();
     visitedVariablesCounter = 0;
+}
+
+void
+Learning::setRestartsStrategy( 
+    RestartsStrategy* value )
+{
+    assert( value != NULL );
+    restartsStrategy = value;    
 }
 
 #endif	/* LEARNING_H */

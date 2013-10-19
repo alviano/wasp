@@ -39,9 +39,6 @@ Solver::~Solver()
         learnedClauses.pop_back();
     }
         
-    if( learningStrategy )
-        delete learningStrategy;
-    
     if( deletionStrategy )
         delete deletionStrategy;
     
