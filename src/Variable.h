@@ -30,7 +30,6 @@
 #include <iostream>
 #include "Constants.h"
 #include "WatchedList.h"
-#include "heuristics/counters/HeuristicCounterForLiteral.h"
 
 using namespace std;
 

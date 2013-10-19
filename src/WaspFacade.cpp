@@ -35,8 +35,6 @@
 
 #include "heuristics/BerkminHeuristic.h"
 #include "heuristics/FirstUndefinedHeuristic.h"
-#include "heuristics/factories/BerkminCounterFactory.h"
-#include "heuristics/factories/HeuristicCounterFactoryForLiteral.h"
 
 void
 WaspFacade::readInput()

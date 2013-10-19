@@ -19,7 +19,6 @@
 #include "Variable.h"
 #include "Clause.h"
 #include "Literal.h"
-#include "heuristics/factories/HeuristicCounterFactoryForLiteral.h"
 #include "Solver.h"
 
 ostream& operator<<( 

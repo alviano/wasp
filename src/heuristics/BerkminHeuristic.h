@@ -28,7 +28,6 @@
 
 #include "DecisionHeuristic.h"
 #include "UndefinedCollector.h"
-#include "counters/BerkminCounters.h"
 
 #include "../Trace.h"
 #include "../Variable.h"
