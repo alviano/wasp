@@ -17,14 +17,14 @@
  */
 
 /* 
- * File:   LearningStrategy.h
+ * File:   Learning.h
  * Author: Carmine Dodaro
  *
  * Created on 27 July 2013, 9.51
  */
 
-#ifndef LEARNINGSTRATEGY_H
-#define	LEARNINGSTRATEGY_H
+#ifndef LEARNING_H
+#define	LEARNING_H
 
 #include "restarts/RestartsStrategy.h"
 
@@ -40,11 +40,11 @@ class Literal;
 class Solver;
 class Variable;
 
-class LearningStrategy
+class Learning
 {
     public:
-        inline LearningStrategy( RestartsStrategy* restartsStrategy );
-        inline ~LearningStrategy();
+        inline Learning( RestartsStrategy* restartsStrategy );
+        inline ~Learning();
         
         void onNavigatingLiteral( Literal );
         void onConflict( Literal conflictLiteral, Clause* conflictClause, Solver& solver );
@@ -87,13 +87,13 @@ class LearningStrategy
          * This method computes the next literal to navigate in the implication graph.
          * The most recent (in the order of derivation) literal should be processed before.          
          * 
-         * @return the next literal to consider.
+         * @return the next lStrategyiteral to consider.
          */
         Literal getNextLiteralToNavigate( Solver& solver );
         
         /**
          * The variables of the current conflict level which have been visited.
-         */
+         */Strategy
         unordered_set< const Variable* > visitedVariables;        
         
         unsigned int maxDecisionLevel;
@@ -103,21 +103,21 @@ class LearningStrategy
         unsigned int visitedVariablesCounter;
 };
 
-LearningStrategy::LearningStrategy(
+Learning::Learning(
     RestartsStrategy* strategy ): decisionLevel( 0 ), learnedClause( NULL ), maxDecisionLevel( 0 ), visitedVariablesCounter( 0 )
 {
     assert( "The strategy for restarts must be initialized." && strategy != NULL );
     restartsStrategy = strategy;
 }
 
-LearningStrategy::~LearningStrategy()
+Learning::~Learning()
 {
     if( restartsStrategy )
         delete restartsStrategy;
 }
 
 void
-LearningStrategy::clearDataStructures()
+Learning::clearDataStructures()
 {
     learnedClause = NULL;    
     maxDecisionLevel = 0;
@@ -125,5 +125,5 @@ LearningStrategy::clearDataStructures()
     visitedVariablesCounter = 0;
 }
 
-#endif	/* LEARNINGSTRATEGY_H */
+#endif	/* LEARNING_H */
 

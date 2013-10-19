@@ -74,7 +74,7 @@ class Literal
 
         inline bool isImplicant( const Clause* clause ) const;
         
-        inline void onLearning( LearningStrategy* strategy );
+        inline void onLearning( Learning* strategy );
 
         inline void onNavigatingLearnedClause();
         inline void onNavigatingImplicationGraph();
@@ -262,7 +262,7 @@ Literal::setTrue()
 
 void
 Literal::onLearning( 
-    LearningStrategy* strategy )
+    Learning* strategy )
 {
     assert( "Variable has not been set." && getVariable() != NULL );
     getVariable()->onLearning( strategy );

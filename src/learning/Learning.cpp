@@ -16,7 +16,7 @@
  *
  */
 
-#include "LearningStrategy.h"
+#include "Learning.h"
 #include "../Clause.h"
 #include "../Literal.h"
 #include "../Solver.h"
@@ -24,7 +24,7 @@
 #include <cassert>
 
 void
-LearningStrategy::onConflict(
+Learning::onConflict(
     Literal conflictLiteral,
     Clause* conflictClause,
     Solver& solver )
@@ -95,7 +95,7 @@ LearningStrategy::onConflict(
 }
 
 Literal
-LearningStrategy::getNextLiteralToNavigate(
+Learning::getNextLiteralToNavigate(
     Solver& solver )
 {    
     while( true )
@@ -116,7 +116,7 @@ LearningStrategy::getNextLiteralToNavigate(
 }
 
 void
-LearningStrategy::addLiteralInLearnedClause( 
+Learning::addLiteralInLearnedClause( 
     Literal literal )
 {
     assert( "Learned clause is not initialized." && learnedClause != NULL );
@@ -135,14 +135,14 @@ LearningStrategy::addLiteralInLearnedClause(
 }
 
 void
-LearningStrategy::addLiteralToNavigate( 
+Learning::addLiteralToNavigate( 
     Literal literal )
 {
     visitedVariables.insert( literal.getVariable() );
 }
 
 void
-LearningStrategy::onNavigatingLiteral( 
+Learning::onNavigatingLiteral( 
     Literal literal )
 {
     assert( literal != NULL );

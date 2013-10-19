@@ -31,7 +31,7 @@
 #include <vector>
 
 #include "Literal.h"
-#include "learning/LearningStrategy.h"
+#include "learning/Learning.h"
 #include "heuristics/UndefinedCollector.h"
 
 using namespace std;
@@ -66,7 +66,7 @@ class Clause
         inline void attachClause( unsigned int firstWatch, unsigned int secondWatch );
         inline void detachClause();
 
-        inline void onLearning( LearningStrategy* strategy );
+        inline void onLearning( Learning* strategy );
         inline void onLiteralFalse( Literal literal, Solver& solver );
 
         inline unsigned int size() const;
@@ -216,7 +216,7 @@ Clause::size() const
 
 void
 Clause::onLearning(
-    LearningStrategy* strategy )
+    Learning* strategy )
 {
     assert( "LearningStrategy is not initialized." && strategy != NULL );
 

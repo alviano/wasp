@@ -49,7 +49,7 @@ Variable::setHeuristicCounterForLiterals(
 
 void
 Variable::onLearning( 
-    LearningStrategy* strategy )
+    Learning* strategy )
 {    
     //The implicant can be NULL if the literal is a choice.
     if( implicant != NULL )

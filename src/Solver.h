@@ -40,7 +40,7 @@ using namespace std;
 #include "WaspRule.h"
 #include "stl/List.h"
 #include "stl/UnorderedSet.h"
-#include "learning/LearningStrategy.h"
+#include "learning/Learning.h"
 #include "learning/deletion/AggressiveDeletionStrategy.h"
 #include "learning/deletion/DeletionStrategy.h"
 #include "learning/deletion/RestartsBasedDeletionStrategy.h"
@@ -190,7 +190,7 @@ class Solver
         DecisionHeuristic* decisionHeuristic;
         HeuristicCounterFactoryForLiteral* heuristicCounterFactoryForLiteral;
         
-        LearningStrategy* learningStrategy;
+        Learning* learningStrategy;
         DeletionStrategy* deletionStrategy;
 
         OutputBuilder* outputBuilder;
@@ -250,27 +250,27 @@ void
 Solver::setGeometricRestarts(
     unsigned int threshold )
 {
-    learningStrategy = new LearningStrategy( new GeometricRestartsStrategy( threshold ) );
+    learningStrategy = new Learning( new GeometricRestartsStrategy( threshold ) );
 }
 
 void
 Solver::setSequenceBasedRestarts(
     unsigned int threshold )
 {
-    learningStrategy = new LearningStrategy( new SequenceBasedRestartsStrategy( threshold ) );
+    learningStrategy = new Learning( new SequenceBasedRestartsStrategy( threshold ) );
 }
 
 void
 Solver::setMinisatRestarts( 
     unsigned int threshold )
 {
-    learningStrategy = new LearningStrategy( new MinisatRestartsStrategy( threshold ) );
+    learningStrategy = new Learning( new MinisatRestartsStrategy( threshold ) );
 }        
 
 void
 Solver::disableRestarts()
 {
-    learningStrategy = new LearningStrategy( new NoRestartsStrategy() );
+    learningStrategy = new Learning( new NoRestartsStrategy() );
 }
 
 void

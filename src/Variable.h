@@ -37,7 +37,7 @@ using namespace std;
 class Clause;
 class HeuristicCounterForLiteral;
 class HeuristicCounterFactoryForLiteral;
-class LearningStrategy;
+class Learning;
 class Literal;
 class Solver;
 
@@ -79,7 +79,7 @@ class Variable
 
         inline TruthValue getTruthValue() const;
 
-        void onLearning( LearningStrategy* strategy );
+        void onLearning( Learning* strategy );
         
         inline void addWatchedClause( Clause* clause, unsigned int sign );        
         inline void eraseWatchedClause( Clause* clause, unsigned int sign );
