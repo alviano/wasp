@@ -46,12 +46,7 @@ using namespace std;
 #include "heuristics/FirstUndefinedHeuristic.h"
 #include "heuristics/factories/BerkminCounterFactory.h"
 #include "heuristics/factories/HeuristicCounterFactoryForLiteral.h"
-#include "outputBuilders/CompetitionOutputBuilder.h"
-#include "outputBuilders/DimacsOutputBuilder.h"
 #include "outputBuilders/OutputBuilder.h"
-#include "outputBuilders/WaspOutputBuilder.h"
-#include "outputBuilders/SilentOutputBuilder.h"
-#include "outputBuilders/ThirdCompetitionOutputBuilder.h"
 #include "learning/deletion/DeletionStrategy.h"
 
 class Solver
@@ -131,12 +126,7 @@ class Solver
         inline void setHeuristicBerkmin( unsigned int berkminMaxNumber );
         inline void setHeuristicFirstUndefined();
 
-        inline void setCompetitionOutput();
-        inline void setWaspOutput();
-        inline void setDimacsOutput();
-        inline void setSilentOutput();
-        inline void setThirdCompetitionOutput();
-
+        inline void setOutputBuilder( OutputBuilder* value );
         inline void setRestartsStrategy( RestartsStrategy* value );
         inline void setDeletionStrategy( DeletionStrategy* value );
         
@@ -205,33 +195,11 @@ Solver::setHeuristicFirstUndefined()
 }
 
 void
-Solver::setCompetitionOutput()
+Solver::setOutputBuilder(
+    OutputBuilder* value )
 {
-    outputBuilder = new CompetitionOutputBuilder();
-}
-
-void
-Solver::setWaspOutput()
-{
-    outputBuilder = new WaspOutputBuilder();
-}
-
-void
-Solver::setDimacsOutput()
-{
-    outputBuilder = new DimacsOutputBuilder();
-}
-
-void
-Solver::setSilentOutput()
-{
-    outputBuilder = new SilentOutputBuilder();
-}
-
-void
-Solver::setThirdCompetitionOutput()
-{
-    outputBuilder = new ThirdCompetitionOutputBuilder();
+    assert( value != NULL );
+    outputBuilder = value;
 }
 
 void

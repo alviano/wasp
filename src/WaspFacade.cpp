@@ -27,6 +27,12 @@
 #include "learning/deletion/RestartsBasedDeletionStrategy.h"
 #include "learning/deletion/MinisatDeletionStrategy.h"
 
+#include "outputBuilders/WaspOutputBuilder.h"
+#include "outputBuilders/SilentOutputBuilder.h"
+#include "outputBuilders/ThirdCompetitionOutputBuilder.h"
+#include "outputBuilders/CompetitionOutputBuilder.h"
+#include "outputBuilders/DimacsOutputBuilder.h"
+
 void
 WaspFacade::readInput()
 {
@@ -115,28 +121,25 @@ WaspFacade::setOutputPolicy(
 {
     switch( outputPolicy )
     {
-        case WASP_OUTPUT:
-            solver.setWaspOutput();
-            break;
-            
         case COMPETITION_OUTPUT:
-            solver.setCompetitionOutput();
+            solver.setOutputBuilder( new CompetitionOutputBuilder() );
             break;
             
         case DIMACS_OUTPUT:
-            solver.setDimacsOutput();
+            solver.setOutputBuilder( new DimacsOutputBuilder() );
             break;
             
         case SILENT_OUTPUT:
-            solver.setSilentOutput();
+            solver.setOutputBuilder( new SilentOutputBuilder() );
             break;
             
         case THIRD_COMPETITION_OUTPUT:
-            solver.setThirdCompetitionOutput();
+            solver.setOutputBuilder( new ThirdCompetitionOutputBuilder() );
             break;
             
+        case WASP_OUTPUT:
         default:
-            solver.setWaspOutput();
+            solver.setOutputBuilder( new WaspOutputBuilder() );
             break;
     }
 }
