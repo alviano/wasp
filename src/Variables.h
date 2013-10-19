@@ -69,6 +69,8 @@ class Variables
 
         inline Variable* operator[]( unsigned idx ) { return variables[ idx ]; }
         
+        inline void onUnroll();
+        
     private:
         Variable** assignedVariables;
         unsigned assignedVariablesSize;
@@ -139,11 +141,11 @@ Variables::unrollLastVariable()
     assert( assignedVariables > 0 );
     Variable* variable = assignedVariables[ --assignedVariablesSize ];
     variable->setUndefined();
-    if( variable->getId() < noUndefinedBefore )
-    {
-        noUndefinedBefore = variable->getId();
-    }
-    assert( checkNoUndefinedBefore( noUndefinedBefore ) );
+//    if( variable->getId() < noUndefinedBefore )
+//    {
+//        noUndefinedBefore = variable->getId();
+//    }
+//    assert( checkNoUndefinedBefore( noUndefinedBefore ) );
 }
 
 Literal
@@ -277,6 +279,19 @@ Variables::checkNoUndefinedBefore(
         if( variables[ i ]->isUndefined() )
             return false;
     return true;
+}
+
+void
+Variables::onUnroll()
+{
+    resetLiteralsToPropagate();
+    
+    noUndefinedBefore = 1;
+//    while( !variables[ noUndefinedBefore ]->isUndefined() )
+//    {
+//        ++noUndefinedBefore;
+//        assert( noUndefinedBefore < variables.size() );
+//    }
 }
 
 #endif

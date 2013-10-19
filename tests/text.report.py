@@ -16,7 +16,7 @@ def reportFailure(expected, actual):
     print("[FAIL!]", end=" ")
 
 def reportSuccess(expected, actual):
-    print("[OK   ]", end=" ");
+    print("[OK]   ", end=" ");
 
 def reportTimeout(output, error):
     print("[TIME!]", end=" ")
@@ -26,4 +26,4 @@ def reportEndTest(args, testcase):
     global report_command
     global report_begin
     diff = time.time() - report_begin
-    print("%10.3fs %s %s" % (diff, report_testcase, report_command))
+    print("%10.3f s  %s  %s" % (diff, report_testcase, report_command))

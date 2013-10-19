@@ -70,7 +70,7 @@ Solver::unroll(
         toPop--;
     }
     
-    variables.resetLiteralsToPropagate();
+    variables.onUnroll();
 }
 
 void
