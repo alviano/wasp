@@ -23,16 +23,26 @@
 
 #include <cassert>
 
+bool
+Learning::isVisitedVariablesEmpty() const
+{
+    for( unsigned i = 1; i < visitedVariables.size(); ++i )
+        if( visitedVariables[ i ] == numberOfCalls )
+            return false;
+    return true;
+}
+
 void
 Learning::onConflict(
     Literal conflictLiteral,
     Clause* conflictClause )
 {
+    ++numberOfCalls;
     clearDataStructures();
     assert( "No conflict literal is set." && conflictLiteral != NULL );
     assert( "Learned clause has to be NULL in the beginning." && learnedClause == NULL );
-    assert( "The counter must be equal to 0." && visitedVariablesCounter == 0 );
-    assert( "Data structures must be empty." && visitedVariables.empty() );
+    assert( "The counter must be equal to 0." && pendingVisitedVariables == 0 );
+    assert( isVisitedVariablesEmpty() );
     
     learnedClause = new LearnedClause();
     decisionLevel = solver.getCurrentDecisionLevel();
@@ -41,15 +51,15 @@ Learning::onConflict(
     
     //Compute implicants of the conflicting literal.
     conflictClause->onLearning( this );
-    assert( conflictLiteral.getVariable()->getImplicant() != NULL ); // malvi: not sure on this assert
+    assert( conflictLiteral.getVariable()->getImplicant() != NULL ); // FIXME: I added this assert. Is it right?
     conflictLiteral.getVariable()->getImplicant()->onLearning( this );    
 
     trace( solving, 2, "Conflict literal: %s.\n", conflictLiteral.literalToCharStar() );
-    visitedVariables.insert( conflictLiteral.getVariable() );
+    assert( conflictLiteral.getVariable()->getId() < visitedVariables.size() && visitedVariables[ conflictLiteral.getVariable()->getId() ] == numberOfCalls );
     solver.startIterationOnAssignedVariable();
     
     //If there is only one element, this element is the first UIP.
-    while( visitedVariables.size() - visitedVariablesCounter > 1 )
+    while( pendingVisitedVariables > 1 )
 	{
         //Get next literal.
 		Literal currentLiteral = getNextLiteralToNavigate();
@@ -62,7 +72,6 @@ Learning::onConflict(
     Literal firstUIP = getNextLiteralToNavigate();
     trace( solving, 2, "First UIP: %s.\n", firstUIP.literalToCharStar() );
     
-    //literalsToNavigate.pop_back();
 	learnedClause->addLiteral( firstUIP );    
     
     assert( learnedClause->size() > 0 );
@@ -109,9 +118,9 @@ Learning::getNextLiteralToNavigate()
         solver.unrollLastVariable();
         assert( next.isUndefined() );
 
-        if( visitedVariables.find( next.getVariable() ) != visitedVariables.end() )
+        if( visitedVariables[ next.getVariable()->getId() ] == numberOfCalls )
         {
-            ++visitedVariablesCounter;            
+            --pendingVisitedVariables;
             return next;
         }        
     }    
@@ -123,8 +132,9 @@ Learning::addLiteralInLearnedClause(
 {
     assert( "Learned clause is not initialized." && learnedClause != NULL );
 
-    if( visitedVariables.insert( literal.getVariable() ).second )
+    if( visitedVariables[ literal.getVariable()->getId() ] != numberOfCalls )
     {
+        visitedVariables[ literal.getVariable()->getId() ] = numberOfCalls;
         assert( !literal.isUndefined() );
         if( literal.getDecisionLevel() > maxDecisionLevel )
         {
@@ -132,7 +142,6 @@ Learning::addLiteralInLearnedClause(
             maxPosition = learnedClause->size();
         }
         learnedClause->addLiteral( literal );
-        ++visitedVariablesCounter;
     }
 }
 
@@ -140,7 +149,11 @@ void
 Learning::addLiteralToNavigate( 
     Literal literal )
 {
-    visitedVariables.insert( literal.getVariable() );
+    if( visitedVariables[ literal.getVariable()->getId() ] != numberOfCalls )
+    {
+        visitedVariables[ literal.getVariable()->getId() ] = numberOfCalls;
+        ++pendingVisitedVariables;    
+    }
 }
 
 void

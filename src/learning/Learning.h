@@ -30,7 +30,7 @@
 
 #include <cassert>
 #include <iostream>
-#include <unordered_set>
+#include <vector>
 
 using namespace std;
 
@@ -50,6 +50,8 @@ class Learning
         void onConflict( Literal conflictLiteral, Clause* conflictClause );
         
         inline void setRestartsStrategy( RestartsStrategy* value );
+        
+        inline void onNewVariable();
         
     private:
     
@@ -99,17 +101,20 @@ class Learning
         /**
          * The variables of the current conflict level which have been visited.
          */
-        unordered_set< const Variable* > visitedVariables;        
+        bool isVisitedVariablesEmpty() const;
+        vector< unsigned > visitedVariables;
+        unsigned int pendingVisitedVariables;
+        unsigned numberOfCalls;
         
         unsigned int maxDecisionLevel;
         
         unsigned int maxPosition;
-        
-        unsigned int visitedVariablesCounter;
 };
 
-Learning::Learning( Solver& s ) : solver( s ), decisionLevel( 0 ), learnedClause( NULL ), restartsStrategy( NULL ), maxDecisionLevel( 0 ), visitedVariablesCounter( 0 )
+Learning::Learning( Solver& s ) : solver( s ), decisionLevel( 0 ), learnedClause( NULL ), restartsStrategy( NULL ), pendingVisitedVariables( 0 ), numberOfCalls( 0 ), maxDecisionLevel( 0 )
 {
+    // variable 0 is not used
+    visitedVariables.push_back( 0 );
 }
 
 Learning::~Learning()
@@ -123,8 +128,12 @@ Learning::clearDataStructures()
 {
     learnedClause = NULL;    
     maxDecisionLevel = 0;
-    visitedVariables.clear();
-    visitedVariablesCounter = 0;
+    pendingVisitedVariables = 0;
+    if( numberOfCalls == 0 )
+    {
+        for( unsigned i = 1; i < visitedVariables.size(); ++i )
+            visitedVariables[ i ] = 0;
+    }
 }
 
 void
@@ -135,6 +144,12 @@ Learning::setRestartsStrategy(
     if( restartsStrategy != NULL )
         delete restartsStrategy;
     restartsStrategy = value;    
+}
+
+void
+Learning::onNewVariable()
+{
+    visitedVariables.push_back( 0 );
 }
 
 #endif	/* LEARNING_H */

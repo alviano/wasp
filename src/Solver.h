@@ -216,6 +216,7 @@ Solver::addVariable(
     assert( variables.numberOfVariables() == variable->getId() );
     assert( decisionHeuristic != NULL );
     decisionHeuristic->onNewVariable( *variable );
+    learning.onNewVariable();
 }
 
 void
