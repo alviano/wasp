@@ -183,7 +183,6 @@ class Solver
         List< Clause* > clauses;
         List< LearnedClause* > learnedClauses;
         
-        bool conflict;
         vector< unsigned int > unrollVector;
         
         Literal conflictLiteral;
@@ -198,7 +197,7 @@ class Solver
         OutputBuilder* outputBuilder;
 };
 
-Solver::Solver() : currentDecisionLevel( 0 ), conflict( false ), conflictLiteral( NULL ), conflictClause( NULL )
+Solver::Solver() : currentDecisionLevel( 0 ), conflictLiteral( NULL ), conflictClause( NULL )
 {
 }
 
@@ -349,7 +348,6 @@ Solver::onLiteralAssigned(
 {
     if( !variables.assign( literal, currentDecisionLevel, implicant ) )
     {
-        conflict = true;
         conflictLiteral = literal;
         conflictClause = implicant;        
     }
@@ -506,7 +504,7 @@ Solver::getLearnedClauses()
 bool
 Solver::conflictDetected()
 {
-    return conflict;
+    return conflictLiteral != NULL;
 }
 
 bool
@@ -550,7 +548,6 @@ Solver::analyzeConflict()
 void
 Solver::clearConflictStatus()
 {
-    conflict = false;
     conflictLiteral = NULL;
     conflictClause = NULL;
 }

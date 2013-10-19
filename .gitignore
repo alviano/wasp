@@ -13,3 +13,10 @@ build
 *.lai
 *.la
 *.a
+
+# Project files of Codelite
+*.project
+
+# gprof files
+gmon.out
+*.gprof
