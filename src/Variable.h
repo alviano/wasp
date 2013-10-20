@@ -99,6 +99,13 @@ class Variable
         
         void unitPropagation( Solver& solver, Literal literal, unsigned int sign );
         
+        #ifdef TRACE_ON
+        inline const char* variableToCharStar() const
+        {
+            return name.c_str();
+        }        
+        #endif
+        
     private:
 
         inline Variable( const Variable& );

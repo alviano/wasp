@@ -35,6 +35,7 @@
 
 #include "heuristics/BerkminHeuristic.h"
 #include "heuristics/FirstUndefinedHeuristic.h"
+#include "heuristics/MinisatHeuristic.h"
 
 void
 WaspFacade::readInput()
@@ -109,6 +110,10 @@ WaspFacade::setHeuristicPolicy(
         
         case HEURISTIC_FIRST_UNDEFINED:
             solver.setHeuristic( new FirstUndefinedHeuristic() );
+            break;
+            
+        case HEURISTIC_MINISAT:
+            solver.setHeuristic( new MinisatHeuristic() );
             break;
     
         default:

@@ -41,60 +41,11 @@ class FirstUndefinedHeuristic : public DecisionHeuristic
         
         virtual void onNewVariable( Variable& variable ) {}
         
-        virtual void onLiteralInvolvedInConflict( Literal literal ) {}
-        
-    protected:
-        
-        inline Literal getChosenLiteral();
-        inline Variable* getChosenVariable();
-
-        inline bool hasChosenLiteral() const;
-        inline void setChosenVariable( Variable* variable );
-        inline void setChosenPolarity( bool polarity );        
-
-        inline void reset() { chosenVariable = NULL; }
-        
-    private:
-        Variable* chosenVariable;
-        bool chosenPolarity;
+        virtual void onLiteralInvolvedInConflict( Literal literal ) {}        
 };
 
 FirstUndefinedHeuristic::FirstUndefinedHeuristic() : DecisionHeuristic()
 {
-}
-
-Variable*
-FirstUndefinedHeuristic::getChosenVariable()
-{
-    return chosenVariable;
-}
-
-Literal
-FirstUndefinedHeuristic::getChosenLiteral()
-{
-    assert( chosenVariable != NULL );
-    return chosenPolarity ? Literal( chosenVariable ) : Literal( chosenVariable, false );
-}
-
-bool
-FirstUndefinedHeuristic::hasChosenLiteral() const
-{
-    return chosenVariable != NULL;
-}
-
-void
-FirstUndefinedHeuristic::setChosenVariable(
-    Variable* variable )
-{
-    assert( "Variable has not been set." && variable != NULL );
-    chosenVariable = variable;
-}
-
-void
-FirstUndefinedHeuristic::setChosenPolarity(
-    bool polarity )
-{
-    chosenPolarity = polarity;
 }
 
 #endif	/* FIRSTUNDEFINEDHEURISTIC_H */
