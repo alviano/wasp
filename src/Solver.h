@@ -371,7 +371,7 @@ Solver::onRestart()
 {
     trace( solving, 1, "Performing restart.\n" );
     deletionStrategy->onRestart();
-    decisionHeuristic->onRestart( *this );
+    decisionHeuristic->onRestart();
     unroll( 0 );
 }
 
@@ -425,7 +425,7 @@ Solver::foundIncoherence()
 void
 Solver::chooseLiteral()
 {
-    Literal choice = decisionHeuristic->makeAChoice( *this );    
+    Literal choice = decisionHeuristic->makeAChoice();
     trace( solving, 1, "Choice: %s.\n", choice.literalToCharStar() );
     setAChoice( choice );    
 }
@@ -435,7 +435,7 @@ Solver::analyzeConflict()
 {
     trace( solving, 1, "Analyzing conflict.\n" );
     learning.onConflict( conflictLiteral, conflictClause );
-    decisionHeuristic->onLearning( *this );
+    decisionHeuristic->onLearning();
     clearConflictStatus();
 }
 

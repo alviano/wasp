@@ -35,20 +35,15 @@ class Variable;
 class DecisionHeuristic
 {
     public:
-        inline DecisionHeuristic();
         virtual ~DecisionHeuristic() {}
-        virtual Literal makeAChoice( Solver& solver ) = 0;
-        virtual void onLearning( Solver& solver ) = 0;
-        virtual void onRestart( Solver& solver ) = 0;
+        virtual Literal makeAChoice() = 0;
+        virtual void onLearning() = 0;
+        virtual void onRestart() = 0;
         
         virtual void onNewVariable( Variable& variable ) = 0;
         
         virtual void onLiteralInvolvedInConflict( Literal literal ) = 0;
 };
-
-DecisionHeuristic::DecisionHeuristic()
-{
-}
 
 #endif	/* DECISIONHEURISTIC_H */
 

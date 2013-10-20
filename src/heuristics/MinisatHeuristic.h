@@ -39,12 +39,12 @@ using namespace std;
 class MinisatHeuristic : public DecisionHeuristic
 {
     public:
-        inline MinisatHeuristic();
+        inline MinisatHeuristic( Solver& solver );
         virtual ~MinisatHeuristic();
 
-        virtual Literal makeAChoice( Solver& solver );
-        virtual void onLearning( Solver& solver );
-        virtual void onRestart( Solver& solver );
+        virtual Literal makeAChoice();
+        virtual void onLearning();
+        virtual void onRestart();
 
         virtual void onNewVariable( Variable& variable );
 
@@ -69,6 +69,8 @@ class MinisatHeuristic : public DecisionHeuristic
         inline void variableBumpActivity( const Variable* variable );
         inline Activity getVariableActivity( const Variable* variable );
 
+        Solver& solver;
+        
         vector< VariableCounters > variableCounters;
         Activity variableIncrement;
         Activity variableDecay;
@@ -77,7 +79,7 @@ class MinisatHeuristic : public DecisionHeuristic
         Variable* nextUndefinedVariable;   
 };
 
-MinisatHeuristic::MinisatHeuristic() : variableIncrement( 1.0 ), variableDecay( 1/0.95 ), chosenVariable( NULL ), nextUndefinedVariable( NULL )
+MinisatHeuristic::MinisatHeuristic( Solver& s ) : solver( s ), variableIncrement( 1.0 ), variableDecay( 1/0.95 ), chosenVariable( NULL ), nextUndefinedVariable( NULL )
 {
     // variable 0 is not used
     variableCounters.push_back( VariableCounters() );

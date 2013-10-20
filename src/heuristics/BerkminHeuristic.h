@@ -38,12 +38,12 @@ using namespace std;
 class BerkminHeuristic : public DecisionHeuristic, public UndefinedCollector
 {
     public:
-        inline BerkminHeuristic( unsigned int numberOfLearnedClausesToConsider = static_cast< unsigned >( -1 ) );
+        inline BerkminHeuristic( Solver& solver, unsigned int numberOfLearnedClausesToConsider = static_cast< unsigned >( -1 ) );
         virtual ~BerkminHeuristic();
         
-        virtual Literal makeAChoice( Solver& solver );
-        virtual void onLearning( Solver& solver );
-        virtual void onRestart( Solver& solver );
+        virtual Literal makeAChoice();
+        virtual void onLearning();
+        virtual void onRestart();
         
         virtual void onNewVariable( Variable& variable );
         
@@ -70,14 +70,15 @@ class BerkminHeuristic : public DecisionHeuristic, public UndefinedCollector
                 unsigned globalCounter[ 2 ];
         };
     
-        inline void pickLiteralUsingActivity( Solver& solver );
-        inline void pickLiteralFromTopMostUnsatisfiedLearnedClause( Solver& solver );        
+        inline void pickLiteralUsingActivity();
+        inline void pickLiteralFromTopMostUnsatisfiedLearnedClause();
         
         inline void choosePolarityTopMostUndefinedClause();
-        inline void choosePolarityHigherGlobalCounter( Solver& solver );
+        inline void choosePolarityHigherGlobalCounter();
         inline void choosePolarityMostOccurrences();
         inline void resetCounters();
 
+        Solver& solver;
         vector< VariableCounters > variableCounters;
 
         Variable* chosenVariableByOccurrences;
@@ -89,7 +90,7 @@ class BerkminHeuristic : public DecisionHeuristic, public UndefinedCollector
     
         unsigned int numberOfLearnedClausesToConsider;
 
-        unsigned int estimatePropagation( Literal literal, Solver& solver );
+        unsigned int estimatePropagation( Literal literal );
         unsigned int numberOfConflicts;
 
         inline void updateMaxCounter( Variable* );
@@ -97,7 +98,8 @@ class BerkminHeuristic : public DecisionHeuristic, public UndefinedCollector
 };
 
 BerkminHeuristic::BerkminHeuristic(
-    unsigned int max ) : chosenVariableByOccurrences( NULL ), maxOccurrences( 0 ), maxCounter( 0 ), chosenVariable( NULL ), chosenPolarity( true ), numberOfLearnedClausesToConsider( max ), numberOfConflicts( 0 )
+    Solver& s, 
+    unsigned int max ) : solver( s ), chosenVariableByOccurrences( NULL ), maxOccurrences( 0 ), maxCounter( 0 ), chosenVariable( NULL ), chosenPolarity( true ), numberOfLearnedClausesToConsider( max ), numberOfConflicts( 0 )
 {
     // variable 0 is not used
     variableCounters.push_back( VariableCounters() );

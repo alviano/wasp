@@ -33,18 +33,21 @@
 class FirstUndefinedHeuristic : public DecisionHeuristic
 {
     public:
-        inline FirstUndefinedHeuristic();
+        inline FirstUndefinedHeuristic( Solver& solver );
 
-        virtual Literal makeAChoice( Solver& solver );
-        virtual void onLearning( Solver& solver );
-        virtual void onRestart( Solver& solver );
+        virtual Literal makeAChoice();
+        virtual void onLearning();
+        virtual void onRestart();
         
         virtual void onNewVariable( Variable& variable ) {}
         
-        virtual void onLiteralInvolvedInConflict( Literal literal ) {}        
+        virtual void onLiteralInvolvedInConflict( Literal literal ) {}
+    
+    private:
+        Solver& solver;
 };
 
-FirstUndefinedHeuristic::FirstUndefinedHeuristic() : DecisionHeuristic()
+FirstUndefinedHeuristic::FirstUndefinedHeuristic( Solver& s ) : solver( s )
 {
 }
 

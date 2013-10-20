@@ -22,8 +22,7 @@
 #include "../Solver.h"
 
 Literal
-FirstUndefinedHeuristic::makeAChoice(
-    Solver& solver )
+FirstUndefinedHeuristic::makeAChoice()
 {
     Variable* variable = solver.getFirstUndefined();
     assert( "The literal must be undefined." && variable->isUndefined() );
@@ -31,13 +30,11 @@ FirstUndefinedHeuristic::makeAChoice(
 }
 
 void
-FirstUndefinedHeuristic::onLearning(
-    Solver& )
+FirstUndefinedHeuristic::onLearning()
 {
 }
         
 void
-FirstUndefinedHeuristic::onRestart(
-    Solver& )
+FirstUndefinedHeuristic::onRestart()
 {
 }

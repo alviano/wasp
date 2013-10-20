@@ -29,8 +29,7 @@ MinisatHeuristic::~MinisatHeuristic()
 }
 
 Literal
-MinisatHeuristic::makeAChoice(
-    Solver& solver )
+MinisatHeuristic::makeAChoice()
 {
     trace( heuristic, 1, "Starting Minisat Heuristic.\n" );
 
@@ -57,14 +56,12 @@ MinisatHeuristic::makeAChoice(
 }
 
 void
-MinisatHeuristic::onLearning(
-    Solver& )
+MinisatHeuristic::onLearning()
 {
 }
 
 void
-MinisatHeuristic::onRestart(
-    Solver& )
+MinisatHeuristic::onRestart()
 {
 }
 

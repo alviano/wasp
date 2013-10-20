@@ -67,8 +67,7 @@ BerkminHeuristic::collectUndefined(
 }
 
 void
-BerkminHeuristic::pickLiteralUsingActivity(
-    Solver& solver )
+BerkminHeuristic::pickLiteralUsingActivity()
 {
     trace( heuristic, 1, "Starting pickLiteralUsingActivity.\n" );
     
@@ -89,7 +88,7 @@ BerkminHeuristic::pickLiteralUsingActivity(
     if( chosenVariable != NULL )
     {
         assert( Literal( chosenVariable ).isUndefined() );
-        choosePolarityHigherGlobalCounter( solver );
+        choosePolarityHigherGlobalCounter();
         return;
     }
     
@@ -109,8 +108,7 @@ BerkminHeuristic::pickLiteralUsingActivity(
 }
 
 void
-BerkminHeuristic::pickLiteralFromTopMostUnsatisfiedLearnedClause(
-   Solver& solver )
+BerkminHeuristic::pickLiteralFromTopMostUnsatisfiedLearnedClause()
 {
     trace( heuristic, 1, "Starting TopMostUnsatisfiedLearnedClause.\n" );
     trace( heuristic, 1, "Considering %d learned clauses.\n", numberOfLearnedClausesToConsider );
@@ -137,16 +135,15 @@ BerkminHeuristic::pickLiteralFromTopMostUnsatisfiedLearnedClause(
 }
 
 Literal
-BerkminHeuristic::makeAChoice(
-    Solver& solver )
+BerkminHeuristic::makeAChoice()
 {
     trace( heuristic, 1, "Starting Berkmin Heuristic.\n" );
 
     chosenVariable = NULL;
-    pickLiteralFromTopMostUnsatisfiedLearnedClause( solver );
+    pickLiteralFromTopMostUnsatisfiedLearnedClause();
     
     if( chosenVariable == NULL )
-        pickLiteralUsingActivity( solver );
+        pickLiteralUsingActivity();
 
     assert( chosenVariable != NULL );
     assert( Literal( chosenVariable ).isUndefined() );
@@ -156,28 +153,25 @@ BerkminHeuristic::makeAChoice(
 }
 
 void
-BerkminHeuristic::onLearning(
-    Solver& )
+BerkminHeuristic::onLearning()
 {
     numberOfConflicts++;
     //TODO: Implement aging.
 }
 
 void
-BerkminHeuristic::onRestart(
-    Solver& )
+BerkminHeuristic::onRestart()
 {
 }
 
 void
-BerkminHeuristic::choosePolarityHigherGlobalCounter(
-    Solver& solver )
+BerkminHeuristic::choosePolarityHigherGlobalCounter()
 {
     trace( heuristic, 2, "Higher Global Counter: choose polarity.\n" );
     assert( "Variable has not been set." && chosenVariable != NULL );
 
     Literal positiveLiteral( chosenVariable );    
-    unsigned int value1 = estimatePropagation( positiveLiteral, solver );
+    unsigned int value1 = estimatePropagation( positiveLiteral );
     trace( heuristic, 2, "Estimated propagation of positive literal %s, value: %d.\n", positiveLiteral.literalToCharStar(), value1 );
     if( value1 == UINT_MAX )
     {
@@ -187,7 +181,7 @@ BerkminHeuristic::choosePolarityHigherGlobalCounter(
     }
     
     Literal negativeLiteral( chosenVariable, false );
-    unsigned int value2 = estimatePropagation( negativeLiteral, solver );
+    unsigned int value2 = estimatePropagation( negativeLiteral );
     trace( heuristic, 2, "Estimated propagation of negative literal %s, value: %d.\n", negativeLiteral.literalToCharStar(), value2 );
     
     chosenPolarity = value1 > value2;
@@ -195,8 +189,7 @@ BerkminHeuristic::choosePolarityHigherGlobalCounter(
 
 unsigned int
 BerkminHeuristic::estimatePropagation(
-    Literal literal,
-    Solver& solver )
+    Literal literal )
 {
     assert( literal.isUndefined() );
     solver.incrementCurrentDecisionLevel();
