@@ -39,14 +39,16 @@ class SequenceBasedRestartsStrategy : public RestartsStrategy
         
     protected:
         virtual void computeNextRestartValue();
-
-    private:
         unsigned int computeRestartNumber( unsigned int i );
+
+        unsigned int nextRestartValue;
+        unsigned int conflictsCount;        
+        unsigned int threshold;
         unsigned int numberOfRestarts;
 };
 
 SequenceBasedRestartsStrategy::SequenceBasedRestartsStrategy( 
-    unsigned int threshold ) : RestartsStrategy( threshold ), numberOfRestarts( 1 )
+    unsigned int t ) : conflictsCount( 0 ), threshold( t ), numberOfRestarts( 1 )
 {
     assert( threshold >= 32 );
     nextRestartValue = computeRestartNumber( numberOfRestarts ) * threshold;

@@ -31,17 +31,10 @@
 class NoRestartsStrategy : public RestartsStrategy
 {
     public:
-        inline NoRestartsStrategy();
-        virtual bool onLearningClause();
-        virtual void onLearningUnaryClause();
-        
-    protected:
-        virtual void computeNextRestartValue();
+        inline NoRestartsStrategy() {}
+        virtual bool onLearningClause() { return false; }
+        virtual void onLearningUnaryClause() {}
 };
-
-NoRestartsStrategy::NoRestartsStrategy() : RestartsStrategy()
-{
-}
 
 #endif	/* NORESTARTSSTRATEGY_H */
 

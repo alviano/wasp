@@ -34,19 +34,19 @@ using namespace std;
 class GeometricRestartsStrategy : public RestartsStrategy
 {
     public:
-        inline GeometricRestartsStrategy( unsigned int threshold = 100 );
+        inline GeometricRestartsStrategy( unsigned int nextRestartValue = 100 );
         virtual bool onLearningClause();
         virtual void onLearningUnaryClause();
         
-    protected:
-        virtual void computeNextRestartValue();
+    private:
+        unsigned int conflictsCount;        
+        unsigned int nextRestartValue;        
 };
 
 GeometricRestartsStrategy::GeometricRestartsStrategy(
-    unsigned int threshold ) : RestartsStrategy( threshold )
+    unsigned int n ) : conflictsCount( 0 ), nextRestartValue( n )
 {
-    assert( threshold > 100 );
-    nextRestartValue = threshold;   
+    assert( n > 100 );
 }
 
 

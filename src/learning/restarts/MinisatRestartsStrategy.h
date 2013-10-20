@@ -43,17 +43,16 @@ class MinisatRestartsStrategy : public SequenceBasedRestartsStrategy
         inline double luby( double, int );
         inline void computeRestartBase();
 
-        unsigned int numberOfRestarts;
-        unsigned int numberOfConflicts;
         double restartBase;
         double restartIncrement;
         bool lubyRestarts;
 };
 
 MinisatRestartsStrategy::MinisatRestartsStrategy( 
-    unsigned int threshold, bool luby ) : SequenceBasedRestartsStrategy( threshold ), numberOfRestarts( 0 ), numberOfConflicts( 0 ), restartBase( 0.0 ), restartIncrement( 2.0 ), lubyRestarts( luby )
+    unsigned int threshold, bool luby ) : SequenceBasedRestartsStrategy( threshold ), restartBase( 0.0 ), restartIncrement( 2.0 ), lubyRestarts( luby )
 {
     assert( threshold >= 100 );
+    numberOfRestarts = 0;
     computeNextRestartValue();
 }
 

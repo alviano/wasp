@@ -23,7 +23,7 @@ GeometricRestartsStrategy::onLearningClause()
 {
     if( ++conflictsCount == nextRestartValue )
     {
-        computeNextRestartValue();
+        nextRestartValue *= 1.5;
         return true;
     }
 
@@ -34,10 +34,4 @@ void
 GeometricRestartsStrategy::onLearningUnaryClause()
 {
     conflictsCount = 0;
-}
-
-void
-GeometricRestartsStrategy::computeNextRestartValue()
-{
-    nextRestartValue *= 1.5;
 }
