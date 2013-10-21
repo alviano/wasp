@@ -19,7 +19,7 @@
 #include "GeometricRestartStrategy.h"
 
 bool
-GeometricRestartStrategy::onLearningClause()
+GeometricRestartStrategy::hasToRestart()
 {
     if( ++conflictsCount == nextRestartValue )
     {
@@ -31,7 +31,7 @@ GeometricRestartStrategy::onLearningClause()
 }
 
 void
-GeometricRestartStrategy::onLearningUnaryClause()
+GeometricRestartStrategy::onRestart()
 {
     conflictsCount = 0;
 }

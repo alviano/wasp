@@ -32,8 +32,8 @@ class NoRestartStrategy : public RestartStrategy
 {
     public:
         inline NoRestartStrategy() {}
-        virtual bool onLearningClause() { return false; }
-        virtual void onLearningUnaryClause() {}
+        virtual bool hasToRestart() { return false; }
+        virtual void onRestart() {}
 };
 
 #endif	/* NORESTARTSSTRATEGY_H */

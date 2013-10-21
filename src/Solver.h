@@ -43,7 +43,7 @@ using namespace std;
 #include "Learning.h"
 #include "heuristics/DecisionHeuristic.h"
 #include "outputBuilders/OutputBuilder.h"
-#include "restarts/RestartStrategy.h"
+#include "restart/RestartStrategy.h"
 #include "deletion/DeletionStrategy.h"
 
 class Solver
@@ -82,14 +82,14 @@ class Solver
         inline unsigned int getCurrentDecisionLevel();
         inline void incrementCurrentDecisionLevel();
         
-        inline void onLiteralAssigned( Literal literal, Clause* implicant );
+        inline void assignLiteral( Literal literal, Clause* implicant );
         
         inline bool propagateLiteralAsDeterministicConsequence( Literal literal );
         
         void decreaseLearnedClausesActivity();
         inline void onLearningClause( Literal literalToPropagate, LearnedClause* learnedClause, unsigned int backjumpingLevel );
         inline void onLearningUnaryClause( Literal literalToPropagate, LearnedClause* learnedClause );        
-        inline void onRestart();        
+        inline void doRestart();        
         
         inline unsigned int numberOfClauses();
         inline unsigned int numberOfLearnedClauses();        
@@ -268,7 +268,7 @@ Solver::init()
 }
 
 void 
-Solver::onLiteralAssigned(
+Solver::assignLiteral(
     Literal literal,
     Clause* implicant )
 {
@@ -349,11 +349,15 @@ Solver::unrollOne()
 }
 
 void
-Solver::onRestart()
+Solver::doRestart()
 {
+    assert( "The strategy for deletion must be initialized." && deletionStrategy != NULL );
+    assert( "The strategy for heuristic must be initialized." && decisionHeuristic != NULL );
+    assert( "The strategy for restarts must be initialized." && restartStrategy != NULL );
     trace( solving, 1, "Performing restart.\n" );
     deletionStrategy->onRestart();
     decisionHeuristic->onRestart();
+    restartStrategy->onRestart();
     unroll( 0 );
 }
 
@@ -421,12 +425,9 @@ Solver::analyzeConflict()
     
     if( learnedClause->size() == 1 )
     {
-        onRestart();
-        onLiteralAssigned( learnedClause->getAt( 0 ), NULL );
+        doRestart();
+        assignLiteral( learnedClause->getAt( 0 ), NULL );
         delete learnedClause;
-        
-        assert( "The strategy for restarts must be initialized." && restartStrategy != NULL );
-        restartStrategy->onLearningUnaryClause();
     }
     else
     {
@@ -437,9 +438,9 @@ Solver::analyzeConflict()
         addLearnedClause( learnedClause );
 
         assert( "The strategy for restarts must be initialized." && restartStrategy != NULL );
-        if( restartStrategy->onLearningClause() )
+        if( restartStrategy->hasToRestart() )
         {
-            onRestart();
+            doRestart();
         }
         else
         {
@@ -450,7 +451,7 @@ Solver::analyzeConflict()
             
             assert( "Each learned clause has to be an asserting clause." && learnedClause->getAt( 0 ) != NULL );
             
-            onLiteralAssigned( learnedClause->getAt( 0 ), learnedClause );
+            assignLiteral( learnedClause->getAt( 0 ), learnedClause );
             
             deletionStrategy->onLearning( learnedClause );
         }
@@ -486,7 +487,7 @@ Solver::setAChoice(
     assert( choice != NULL );
     incrementCurrentDecisionLevel();
     assert( choice.isUndefined() );
-    onLiteralAssigned( choice, NULL );
+    assignLiteral( choice, NULL );
 }
 
 Literal
@@ -511,7 +512,7 @@ bool
 Solver::propagateLiteralAsDeterministicConsequence(
     Literal literal )
 {
-    onLiteralAssigned( literal, NULL );
+    assignLiteral( literal, NULL );
     if( conflictDetected() )
     {
         return false;

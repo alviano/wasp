@@ -27,11 +27,10 @@ SequenceBasedRestartStrategy::computeNextRestartValue()
 }
 
 bool
-SequenceBasedRestartStrategy::onLearningClause()
+SequenceBasedRestartStrategy::hasToRestart()
 {
     if( ++conflictsCount == nextRestartValue )
     {
-        conflictsCount = 0;
         numberOfRestarts++;
         computeNextRestartValue();
         return true;
@@ -41,7 +40,7 @@ SequenceBasedRestartStrategy::onLearningClause()
 }
 
 void
-SequenceBasedRestartStrategy::onLearningUnaryClause()
+SequenceBasedRestartStrategy::onRestart()
 {
     conflictsCount = 0;
 }

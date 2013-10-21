@@ -92,7 +92,7 @@ void
 Clause::notifyImplication(
     Solver& solver )
 {
-    solver.onLiteralAssigned( literals[ 0 ], this );
+    solver.assignLiteral( literals[ 0 ], this );
 }
 
 bool

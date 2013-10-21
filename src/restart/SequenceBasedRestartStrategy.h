@@ -34,8 +34,8 @@ class SequenceBasedRestartStrategy : public RestartStrategy
 {
     public:
         inline SequenceBasedRestartStrategy( unsigned int threshold = 32 );
-        virtual bool onLearningClause();
-        virtual void onLearningUnaryClause();
+        virtual bool hasToRestart();
+        virtual void onRestart();
         
     protected:
         virtual void computeNextRestartValue();

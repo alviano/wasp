@@ -24,10 +24,8 @@ class RestartStrategy
     public:
         virtual ~RestartStrategy() {}
         
-//        virtual bool hasToRestart() = 0;
-        
-        virtual bool onLearningClause() = 0;
-        virtual void onLearningUnaryClause() = 0;
+        virtual bool hasToRestart() = 0;
+        virtual void onRestart() = 0;
 };
 
 #endif

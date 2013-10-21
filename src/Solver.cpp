@@ -122,7 +122,7 @@ Solver::addClauseFromModelAndRestart()
         return false;
     }
     
-    this->onRestart();
+    this->doRestart();
     if( clause->size() > 1 )
     {
         clause->attachClause();

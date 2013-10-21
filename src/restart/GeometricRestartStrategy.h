@@ -35,8 +35,8 @@ class GeometricRestartStrategy : public RestartStrategy
 {
     public:
         inline GeometricRestartStrategy( unsigned int nextRestartValue = 100 );
-        virtual bool onLearningClause();
-        virtual void onLearningUnaryClause();
+        virtual bool hasToRestart();
+        virtual void onRestart();
         
     private:
         unsigned int conflictsCount;        
