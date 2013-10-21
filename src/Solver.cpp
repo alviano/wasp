@@ -202,3 +202,24 @@ Solver::solve()
     
     return true;
 }
+
+void
+Solver::propagate(
+    Variable* variable )
+{
+    trace( solving, 1, "Propagating: %s.\n", variable->variableToCharStar() );
+    
+    Literal complement = Literal::createOppositeFromAssignedVariable( variable );
+    
+    variable->unitPropagationStart();
+    assert( !conflictDetected() );
+    while( variable->unitPropagationHasNext() && !conflictDetected() )
+    {
+        Clause* clause = variable->unitPropagationNext();
+        trace( solving, 3, "Considering clause %s.\n", clause->clauseToCharStar() );
+        if( clause->onLiteralFalse( complement ) )
+            assignLiteral( clause );
+        else
+            assert( !conflictDetected() );
+    }
+}
