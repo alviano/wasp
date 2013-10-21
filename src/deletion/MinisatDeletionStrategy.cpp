@@ -16,13 +16,11 @@
  *
  */
 
-#include "RestartsBasedDeletionStrategy.h"
-#include "../../Solver.h"
-
-#include <cmath>
+#include "MinisatDeletionStrategy.h"
+#include "../Solver.h"
 
 void
-RestartsBasedDeletionStrategy::onLearning( 
+MinisatDeletionStrategy::onLearning( 
     LearnedClause* learnedClause )
 {
     updateActivity( learnedClause );
@@ -34,19 +32,18 @@ RestartsBasedDeletionStrategy::onLearning(
 }
 
 bool
-RestartsBasedDeletionStrategy::hasToDelete()
+MinisatDeletionStrategy::hasToDelete()
 {
-    unsigned int programSize = solver.numberOfClauses();
-    unsigned int value1 = ( programSize / 3.0 ) * pow( 1.1, countRestarts );
-    unsigned int value2 = programSize * 3;
+    if( maxLearned == 0.0 )
+    {
+        maxLearned = solver.numberOfClauses() * learnedSizeFactor;
+    }
     
-    unsigned int min = value1 > value2 ? value1 : value2;    
-    
-    return( solver.numberOfLearnedClauses() > min );    
+    return ( ( int ) ( solver.numberOfLearnedClauses() - solver.numberOfAssignedLiterals() ) >= maxLearned );
 }
 
 void
-RestartsBasedDeletionStrategy::onRestart()    
+MinisatDeletionStrategy::onRestart()
 {
-    countRestarts++;
+    maxLearned *= learnedSizeIncrement;
 }

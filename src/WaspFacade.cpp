@@ -18,14 +18,14 @@
 
 #include "WaspFacade.h"
 
-#include "learning/restarts/NoRestartsStrategy.h"
-#include "learning/restarts/MinisatRestartsStrategy.h"
-#include "learning/restarts/GeometricRestartsStrategy.h"
-#include "learning/restarts/SequenceBasedRestartsStrategy.h"
+#include "restarts/NoRestartsStrategy.h"
+#include "restarts/MinisatRestartsStrategy.h"
+#include "restarts/GeometricRestartsStrategy.h"
+#include "restarts/SequenceBasedRestartsStrategy.h"
 
-#include "learning/deletion/AggressiveDeletionStrategy.h"
-#include "learning/deletion/RestartsBasedDeletionStrategy.h"
-#include "learning/deletion/MinisatDeletionStrategy.h"
+#include "deletion/AggressiveDeletionStrategy.h"
+#include "deletion/RestartsBasedDeletionStrategy.h"
+#include "deletion/MinisatDeletionStrategy.h"
 
 #include "outputBuilders/WaspOutputBuilder.h"
 #include "outputBuilders/SilentOutputBuilder.h"

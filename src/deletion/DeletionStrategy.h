@@ -26,7 +26,7 @@
 #ifndef DELETIONSTRATEGY_H
 #define	DELETIONSTRATEGY_H
 
-#include "../../Constants.h"
+#include "../Constants.h"
 
 class Solver;
 class LearnedClause;

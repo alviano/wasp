@@ -16,11 +16,11 @@
  *
  */
 
-#include "MinisatDeletionStrategy.h"
-#include "../../Solver.h"
+#include "AggressiveDeletionStrategy.h"
+#include "../Solver.h"
 
 void
-MinisatDeletionStrategy::onLearning( 
+AggressiveDeletionStrategy::onLearning( 
     LearnedClause* learnedClause )
 {
     updateActivity( learnedClause );
@@ -32,18 +32,7 @@ MinisatDeletionStrategy::onLearning(
 }
 
 bool
-MinisatDeletionStrategy::hasToDelete()
-{
-    if( maxLearned == 0.0 )
-    {
-        maxLearned = solver.numberOfClauses() * learnedSizeFactor;
-    }
-    
-    return ( ( int ) ( solver.numberOfLearnedClauses() - solver.numberOfAssignedLiterals() ) >= maxLearned );
-}
-
-void
-MinisatDeletionStrategy::onRestart()
-{
-    maxLearned *= learnedSizeIncrement;
+AggressiveDeletionStrategy::hasToDelete()    
+{    
+    return ( solver.numberOfLearnedClauses() > solver.numberOfClauses() / 3 );
 }

@@ -16,11 +16,13 @@
  *
  */
 
-#include "AggressiveDeletionStrategy.h"
-#include "../../Solver.h"
+#include "RestartsBasedDeletionStrategy.h"
+#include "../Solver.h"
+
+#include <cmath>
 
 void
-AggressiveDeletionStrategy::onLearning( 
+RestartsBasedDeletionStrategy::onLearning( 
     LearnedClause* learnedClause )
 {
     updateActivity( learnedClause );
@@ -32,7 +34,19 @@ AggressiveDeletionStrategy::onLearning(
 }
 
 bool
-AggressiveDeletionStrategy::hasToDelete()    
-{    
-    return ( solver.numberOfLearnedClauses() > solver.numberOfClauses() / 3 );
+RestartsBasedDeletionStrategy::hasToDelete()
+{
+    unsigned int programSize = solver.numberOfClauses();
+    unsigned int value1 = ( programSize / 3.0 ) * pow( 1.1, countRestarts );
+    unsigned int value2 = programSize * 3;
+    
+    unsigned int min = value1 > value2 ? value1 : value2;    
+    
+    return( solver.numberOfLearnedClauses() > min );    
+}
+
+void
+RestartsBasedDeletionStrategy::onRestart()    
+{
+    countRestarts++;
 }

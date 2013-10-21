@@ -40,10 +40,10 @@ using namespace std;
 #include "WaspRule.h"
 #include "stl/List.h"
 #include "stl/UnorderedSet.h"
-#include "learning/Learning.h"
+#include "Learning.h"
 #include "heuristics/DecisionHeuristic.h"
 #include "outputBuilders/OutputBuilder.h"
-#include "learning/deletion/DeletionStrategy.h"
+#include "deletion/DeletionStrategy.h"
 
 class Solver
 {

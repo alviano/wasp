@@ -17,9 +17,9 @@
  */
 
 #include "Learning.h"
-#include "../Clause.h"
-#include "../Literal.h"
-#include "../Solver.h"
+#include "Clause.h"
+#include "Literal.h"
+#include "Solver.h"
 
 #include <cassert>
 

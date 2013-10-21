@@ -17,8 +17,8 @@
  */
 
 #include "ActivityBasedDeletionStrategy.h"
-#include "../../LearnedClause.h"
-#include "../../Solver.h"
+#include "../LearnedClause.h"
+#include "../Solver.h"
 
 bool
 ActivityBasedDeletionStrategy::hasToDeleteClauseThreshold(

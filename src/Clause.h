@@ -31,7 +31,7 @@
 #include <vector>
 
 #include "Literal.h"
-#include "learning/Learning.h"
+#include "Learning.h"
 #include "heuristics/UndefinedCollector.h"
 
 using namespace std;
