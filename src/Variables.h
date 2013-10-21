@@ -65,7 +65,8 @@ class Variables
         
         inline void printAnswerSet( OutputBuilder* outputBuilder ) const;
         
-        inline bool assign( Literal literal, int level, Clause* implicant );
+        inline bool assign( int level, Literal literal );
+        inline bool assign( int level, Clause* implicant );
 
         inline Variable* operator[]( unsigned idx ) { return variables[ idx ]; }
         
@@ -83,6 +84,7 @@ class Variables
         vector< Variable* > variables;
         
         inline bool checkNoUndefinedBefore( unsigned idx ) const;
+        inline bool assign( int level, Literal literal, Clause* implicant );
 };
 
 Variables::Variables()
@@ -254,8 +256,8 @@ Variables::printAnswerSet(
 
 bool
 Variables::assign( 
-    Literal literal, 
     int level, 
+    Literal literal,
     Clause* implicant )
 {
     Variable* variable = literal.getVariable();
@@ -269,6 +271,23 @@ Variables::assign(
         return true;
     }
     return false;
+}
+
+bool
+Variables::assign( 
+    int level, 
+    Literal literal )
+{
+    return assign( level, literal, NULL );
+}
+
+bool
+Variables::assign( 
+    int level, 
+    Clause* implicant )
+{
+    assert( implicant != NULL );
+    return assign( level, implicant->getAt( 0 ), implicant );
 }
 
 bool

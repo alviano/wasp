@@ -59,18 +59,21 @@ Variable::onLearning(
 
 void
 Variable::unitPropagation(
-    Solver& solver,
-    Literal literal,
-    unsigned int sign )
+    Solver& solver )
 {
     assert( "Variable to propagate is Undefined." && !this->isUndefined() );
-    assert( "A literal must be true or false." && sign <= 1 );
+    assert( FALSE == 1 && TRUE == 2 );
+
+    unsigned int sign = ( truthValue >> 1 );
+    assert( sign <= 1 );
+    assert( truthValue == TRUE ? sign == NEGATIVE : sign == POSITIVE );
     
     watchedLists[ sign ].startIteration();
     while( watchedLists[ sign ].hasNext() && !solver.conflictDetected() )
     {
         Clause* clause = watchedLists[ sign ].next();
         trace( solving, 3, "Considering clause %s.\n", clause->clauseToCharStar() );
-        clause->onLiteralFalse( literal, solver );
+        if( clause->onLiteralFalse( Literal::createOppositeFromAssignedVariable( this ) ) )
+            solver.assignLiteral( clause );
     }
 }

@@ -69,7 +69,7 @@ class Clause
         inline void detachClause();
 
         inline void onLearning( Learning* strategy );
-        inline void onLiteralFalse( Literal literal, Solver& solver );
+        inline bool onLiteralFalse( Literal literal );
 
         inline unsigned int size() const;
         inline bool checkUnsatisfiedAndOptimize( UndefinedCollector* collector );
@@ -105,7 +105,7 @@ class Clause
         inline void attachSecondWatch();        
         inline void detachSecondWatch();
         
-        inline void updateWatch( Solver& solver );
+        inline bool updateWatch();
         void notifyImplication( Solver& solver );
 
         inline void swapLiterals( unsigned int pos1, unsigned int pos2 );
@@ -283,9 +283,8 @@ Clause::swapLiterals(
 }
 
 
-void
-Clause::updateWatch(
-    Solver& solver )
+bool
+Clause::updateWatch()
 {
     assert( "Unary clauses must be removed." && literals.size() > 1 );
     
@@ -302,7 +301,7 @@ Clause::updateWatch(
 
             //Attach the watch in the new position
             attachSecondWatch();            
-            return;
+            return true;
         }
     }
     
@@ -319,20 +318,20 @@ Clause::updateWatch(
 
             //Attach the watch in the new position
             attachSecondWatch();            
-            return;
+            return true;
         }
     }
 
     assert( "The other watched literal cannot be true." && !literals[ 0 ].isTrue() );
     
     //Propagate literals[ 0 ];
-    notifyImplication( solver );
+    return false;
+//    notifyImplication( solver );
 }
 
-void
+bool
 Clause::onLiteralFalse(
-    Literal literal,
-    Solver& solver )
+    Literal literal )
 {
     assert( "The literal must be false." && literal.isFalse() );    
     assert( "Unary clauses must be removed." && literals.size() > 1 );
@@ -346,11 +345,11 @@ Clause::onLiteralFalse(
 
     assert( "Literal is not watched." && literal == literals[ 1 ] );
     //if the clause is already satisfied do nothing.
-    if( !literals[ 0 ].isTrue() )
-    {
-        //update watch
-        updateWatch( solver );
-    }
+    if( literals[ 0 ].isTrue() )
+        return false;
+        
+    //update watch
+    return !updateWatch();
 }
 
 #endif	/* CLAUSE_H */

@@ -82,7 +82,8 @@ class Solver
         inline unsigned int getCurrentDecisionLevel();
         inline void incrementCurrentDecisionLevel();
         
-        inline void assignLiteral( Literal literal, Clause* implicant );
+        inline void assignLiteral( Literal literal );
+        inline void assignLiteral( Clause* implicant );
         
         inline bool propagateLiteralAsDeterministicConsequence( Literal literal );
         
@@ -267,14 +268,25 @@ Solver::init()
     cout << COMMENT_DIMACS << " " << WASP_STRING << endl;
 }
 
-void 
+void
 Solver::assignLiteral(
-    Literal literal,
-    Clause* implicant )
+    Literal literal )
 {
-    if( !variables.assign( literal, currentDecisionLevel, implicant ) )
+    if( !variables.assign( currentDecisionLevel, literal ) )
     {
         conflictLiteral = literal;
+        conflictClause = NULL; 
+    }
+}
+
+void
+Solver::assignLiteral(
+    Clause* implicant )
+{
+    assert( implicant != NULL );
+    if( !variables.assign(  currentDecisionLevel, implicant ) )
+    {
+        conflictLiteral = implicant->getAt( 0 );
         conflictClause = implicant;        
     }
 }
@@ -426,7 +438,7 @@ Solver::analyzeConflict()
     if( learnedClause->size() == 1 )
     {
         doRestart();
-        assignLiteral( learnedClause->getAt( 0 ), NULL );
+        assignLiteral( learnedClause->getAt( 0 ) );
         delete learnedClause;
     }
     else
@@ -451,7 +463,7 @@ Solver::analyzeConflict()
             
             assert( "Each learned clause has to be an asserting clause." && learnedClause->getAt( 0 ) != NULL );
             
-            assignLiteral( learnedClause->getAt( 0 ), learnedClause );
+            assignLiteral( learnedClause );
             
             deletionStrategy->onLearning( learnedClause );
         }
@@ -487,7 +499,7 @@ Solver::setAChoice(
     assert( choice != NULL );
     incrementCurrentDecisionLevel();
     assert( choice.isUndefined() );
-    assignLiteral( choice, NULL );
+    assignLiteral( choice );
 }
 
 Literal
@@ -512,7 +524,7 @@ bool
 Solver::propagateLiteralAsDeterministicConsequence(
     Literal literal )
 {
-    assignLiteral( literal, NULL );
+    assignLiteral( literal );
     if( conflictDetected() )
     {
         return false;

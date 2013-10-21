@@ -88,13 +88,6 @@ Clause::getMaxDecisionLevel(
 //    solver.onLiteralAssigned( literals[ 1 ], TRUE, this );    
 //}
 
-void
-Clause::notifyImplication(
-    Solver& solver )
-{
-    solver.assignLiteral( literals[ 0 ], this );
-}
-
 bool
 Clause::isUnsatisfied() const
 {

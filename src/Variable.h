@@ -97,7 +97,7 @@ class Variable
         inline unsigned int numberOfPositiveWatchedClauses() const;
         inline unsigned int numberOfWatchedClauses( unsigned int sign ) const;
         
-        void unitPropagation( Solver& solver, Literal literal, unsigned int sign );
+        void unitPropagation( Solver& solver );
         
         #ifdef TRACE_ON
         inline const char* variableToCharStar() const
@@ -138,8 +138,8 @@ class Variable
         Clause* implicant;
         
         /**
-         * Position 0 of this vector contains the watchedList of the positive literal associated with this variable.
-         * Position 1 of this vector contains the watchedList of the negative literal associated with this variable.
+         * Position POSITIVE of this vector contains the watchedList of the positive literal associated with this variable.
+         * Position NEGATIVE of this vector contains the watchedList of the negative literal associated with this variable.
          */
         WatchedList< Clause* > watchedLists[ 2 ];
 };

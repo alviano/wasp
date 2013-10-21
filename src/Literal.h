@@ -317,9 +317,10 @@ Literal::unitPropagation(
     Solver& solver )
 {
     assert( "Literal to propagate is Undefined." && !this->isUndefined() );
-    assert( this->isTrue() );
     assert( "Variable has not been set." && getVariable() != NULL );
-    getVariable()->unitPropagation( solver, getOppositeLiteral(), getOppositeSign() );
+    assert( this->isTrue() );
+    assert( getOppositeLiteral().isFalse() );
+    getVariable()->unitPropagation( solver );
 }
 
 #endif	/* LITERAL_H */
