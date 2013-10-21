@@ -43,7 +43,7 @@ using namespace std;
 #include "Learning.h"
 #include "heuristics/DecisionHeuristic.h"
 #include "outputBuilders/OutputBuilder.h"
-#include "restarts/RestartStrategy.h"
+#include "restart/RestartStrategy.h"
 #include "deletion/DeletionStrategy.h"
 
 class Solver

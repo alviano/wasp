@@ -18,10 +18,10 @@
 
 #include "WaspFacade.h"
 
-#include "restarts/NoRestartStrategy.h"
-#include "restarts/MinisatRestartStrategy.h"
-#include "restarts/GeometricRestartStrategy.h"
-#include "restarts/SequenceBasedRestartStrategy.h"
+#include "restart/NoRestartStrategy.h"
+#include "restart/MinisatRestartStrategy.h"
+#include "restart/GeometricRestartStrategy.h"
+#include "restart/SequenceBasedRestartStrategy.h"
 
 #include "deletion/AggressiveDeletionStrategy.h"
 #include "deletion/RestartsBasedDeletionStrategy.h"
