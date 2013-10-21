@@ -99,7 +99,7 @@ TESTS_SRC_sat_Intensive = $(sort $(shell find $(TESTS_DIR_sat_Intensive) -name '
 TESTS_OUT_sat_Intensive = $(patsubst %.test.py,%.test.py.text, $(TESTS_SRC_sat_Intensive))
 
 TESTS_DIR_sat_Intensive2 = $(TESTS_DIR)/sat/Intensive2
-TESTS_SRC_sat_Intensive2 = $(shell find $(TESTS_DIR_sat_Intensive2) -name '*.test.py')
+TESTS_SRC_sat_Intensive2 = $(sort $(shell find $(TESTS_DIR_sat_Intensive2) -name '*.test.py'))
 TESTS_OUT_sat_Intensive2 = $(patsubst %.test.py,%.test.py.text, $(TESTS_SRC_sat_Intensive2))
 
 tests: tests/wasp1 tests/sat
