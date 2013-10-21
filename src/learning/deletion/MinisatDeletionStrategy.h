@@ -26,24 +26,26 @@
 #ifndef MINISATDELETIONSTRATEGY_H
 #define	MINISATDELETIONSTRATEGY_H
 
-#include "DeletionStrategy.h"
+#include "ActivityBasedDeletionStrategy.h"
 
-class MinisatDeletionStrategy : public DeletionStrategy
+class MinisatDeletionStrategy : public ActivityBasedDeletionStrategy
 {
     public:
-        inline MinisatDeletionStrategy();
+        inline MinisatDeletionStrategy( Solver& solver );
+        
+        virtual void onLearning( LearnedClause* clause );
         virtual void onRestart();
         
-    protected:
-        virtual bool onLearningProtected( Solver& solver );        
-        
     private:
+        bool hasToDelete();
+        
         double learnedSizeFactor;
         double learnedSizeIncrement;
         double maxLearned;
 };
 
-MinisatDeletionStrategy::MinisatDeletionStrategy() : DeletionStrategy(), learnedSizeFactor( ( double ) 1 / ( double) 3 ), learnedSizeIncrement( 1.1 ), maxLearned( 0.0 )
+MinisatDeletionStrategy::MinisatDeletionStrategy(
+     Solver& solver ) : ActivityBasedDeletionStrategy( solver ), learnedSizeFactor( ( double ) 1 / ( double) 3 ), learnedSizeIncrement( 1.1 ), maxLearned( 0.0 )
 {    
 }
 

@@ -26,22 +26,24 @@
 #ifndef RESTARTSBASEDDELETIONSTRATEGY_H
 #define	RESTARTSBASEDDELETIONSTRATEGY_H
 
-#include "DeletionStrategy.h"
+#include "ActivityBasedDeletionStrategy.h"
 
-class RestartsBasedDeletionStrategy : public DeletionStrategy
+class RestartsBasedDeletionStrategy : public ActivityBasedDeletionStrategy
 {
     public:
-        inline RestartsBasedDeletionStrategy();
+        inline RestartsBasedDeletionStrategy( Solver& solver );
+        
+        virtual void onLearning( LearnedClause* clause );
         virtual void onRestart();
         
-    protected:
-        virtual bool onLearningProtected( Solver& solver );
-        
     private:
+        bool hasToDelete();
+    
         unsigned int countRestarts;
 };
 
-RestartsBasedDeletionStrategy::RestartsBasedDeletionStrategy() : DeletionStrategy(), countRestarts( 1 )
+RestartsBasedDeletionStrategy::RestartsBasedDeletionStrategy(
+     Solver& solver ) : ActivityBasedDeletionStrategy( solver ), countRestarts( 1 )
 {
 }
 

@@ -34,45 +34,11 @@ class LearnedClause;
 class DeletionStrategy
 {
     public:
-        inline DeletionStrategy();
         inline virtual ~DeletionStrategy() {}
-        inline bool continueIterationAvg();        
-        bool hasToDeleteClauseThreshold( LearnedClause* clause );
-        bool hasToDeleteClauseAvg( LearnedClause* clause );
-        void onLearning( Solver& solver, LearnedClause* clause );
-        virtual void onRestart(){}
-        
-    protected:
-        inline void decrementActivity();
-        virtual bool onLearningProtected( Solver& solver ) = 0;        
-        
-    private:
-        void startIteration( Solver& solver );
-        Activity increment;
-        Activity decrement;
-        
-        Activity activitySum;
-        unsigned int activityCount;
-        
-        unsigned threshold;
-        int toDelete;
+
+        virtual void onLearning( LearnedClause* clause ) = 0;
+        virtual void onRestart() = 0;
 };
-
-DeletionStrategy::DeletionStrategy() : increment( 1 ), decrement( 1/0.999 )
-{
-}
-
-bool
-DeletionStrategy::continueIterationAvg()
-{
-    return toDelete > 0;
-}
-
-void
-DeletionStrategy::decrementActivity()
-{
-    increment *= decrement;
-}
 
 #endif	/* DELETIONSTRATEGY_H */
 

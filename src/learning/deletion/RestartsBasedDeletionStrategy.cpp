@@ -21,9 +21,20 @@
 
 #include <cmath>
 
+void
+RestartsBasedDeletionStrategy::onLearning( 
+    LearnedClause* learnedClause )
+{
+    updateActivity( learnedClause );
+    
+    if( hasToDelete() )
+    {
+        deleteClauses();
+    }    
+}
+
 bool
-RestartsBasedDeletionStrategy::onLearningProtected(
-    Solver& solver )
+RestartsBasedDeletionStrategy::hasToDelete()
 {
     unsigned int programSize = solver.numberOfClauses();
     unsigned int value1 = ( programSize / 3.0 ) * pow( 1.1, countRestarts );

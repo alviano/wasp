@@ -16,12 +16,12 @@
  *
  */
 
-#include "DeletionStrategy.h"
+#include "ActivityBasedDeletionStrategy.h"
 #include "../../LearnedClause.h"
 #include "../../Solver.h"
 
 bool
-DeletionStrategy::hasToDeleteClauseThreshold(
+ActivityBasedDeletionStrategy::hasToDeleteClauseThreshold(
     LearnedClause* clause )
 {
     Activity activity = clause->getActivity();
@@ -42,7 +42,7 @@ DeletionStrategy::hasToDeleteClauseThreshold(
 }
 
 bool
-DeletionStrategy::hasToDeleteClauseAvg(
+ActivityBasedDeletionStrategy::hasToDeleteClauseAvg(
     LearnedClause* clause )
 {
     Activity activity = clause->getActivity();
@@ -61,8 +61,7 @@ DeletionStrategy::hasToDeleteClauseAvg(
 }
 
 void
-DeletionStrategy::onLearning( 
-    Solver& solver,
+ActivityBasedDeletionStrategy::updateActivity( 
     LearnedClause* learnedClause )
 {
     learnedClause->incrementActivity( increment );
@@ -72,23 +71,42 @@ DeletionStrategy::onLearning(
         solver.decreaseLearnedClausesActivity();
         increment *= 1e-20;
     }
-    
-    if( onLearningProtected( solver ) )
-    {
-        startIteration( solver );
-        solver.onDeletingLearnedClausesThresholdBased();
-        
-        if( activityCount > 0 && toDelete > 0 )
-        {
-            activitySum = activitySum / activityCount;
-            solver.onDeletingLearnedClausesAvgBased();
-        }
-    }    
 }
 
 void
-DeletionStrategy::startIteration(
-    Solver& solver )
+ActivityBasedDeletionStrategy::deleteClauses()
+{
+    startIteration();
+    
+    for( typename Solver::LearnedClausesIterator it = solver.learnedClauses_begin(); it != solver.learnedClauses_end(); )
+    {
+        typename Solver::LearnedClausesIterator tmp_it = it++;
+        LearnedClause* currentClause = *tmp_it;
+        if( hasToDeleteClauseThreshold( currentClause ) )
+        {
+            solver.deleteLearnedClause( currentClause, tmp_it );            
+        }
+    }
+    
+    if( activityCount > 0 && toDelete > 0 )
+    {
+        activitySum = activitySum / activityCount;
+        
+        for( typename Solver::LearnedClausesIterator it = solver.learnedClauses_begin(); it != solver.learnedClauses_end(); )
+        {
+            typename Solver::LearnedClausesIterator tmp_it = it++;
+            LearnedClause* currentClause = *tmp_it;
+            if( hasToDeleteClauseAvg( currentClause ) )
+            {
+                solver.deleteLearnedClause( currentClause, tmp_it );            
+            }
+        }
+    }
+    
+}
+
+void
+ActivityBasedDeletionStrategy::startIteration()
 {
     activitySum = 0;
     activityCount = 0;

@@ -26,18 +26,22 @@
 #ifndef AGGRESSIVEDELETIONSTRATEGY_H
 #define	AGGRESSIVEDELETIONSTRATEGY_H
 
-#include "DeletionStrategy.h"
+#include "ActivityBasedDeletionStrategy.h"
 
-class AggressiveDeletionStrategy : public DeletionStrategy
+class AggressiveDeletionStrategy : public ActivityBasedDeletionStrategy
 {
     public:
-        inline AggressiveDeletionStrategy();
+        inline AggressiveDeletionStrategy( Solver& solver );
+
+        virtual void onLearning( LearnedClause* clause );
+        virtual void onRestart() {}
         
-    protected:
-        virtual bool onLearningProtected( Solver& solver );
+    private:
+        bool hasToDelete();
 };
 
-AggressiveDeletionStrategy::AggressiveDeletionStrategy() : DeletionStrategy()
+AggressiveDeletionStrategy::AggressiveDeletionStrategy(
+     Solver& solver ) : ActivityBasedDeletionStrategy( solver )
 {
 }
 

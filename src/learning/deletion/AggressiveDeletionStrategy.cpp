@@ -19,9 +19,20 @@
 #include "AggressiveDeletionStrategy.h"
 #include "../../Solver.h"
 
+void
+AggressiveDeletionStrategy::onLearning( 
+    LearnedClause* learnedClause )
+{
+    updateActivity( learnedClause );
+    
+    if( hasToDelete() )
+    {
+        deleteClauses();
+    }    
+}
+
 bool
-AggressiveDeletionStrategy::onLearningProtected(
-    Solver& solver )    
+AggressiveDeletionStrategy::hasToDelete()    
 {    
     return ( solver.numberOfLearnedClauses() > solver.numberOfClauses() / 3 );
 }

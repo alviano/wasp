@@ -86,8 +86,6 @@ class Solver
         inline bool propagateLiteralAsDeterministicConsequence( Literal literal );
         
         void decreaseLearnedClausesActivity();
-        void onDeletingLearnedClausesThresholdBased();
-        void onDeletingLearnedClausesAvgBased();
         inline void onLearningClause( Literal literalToPropagate, LearnedClause* learnedClause, unsigned int backjumpingLevel );
         inline void onLearningUnaryClause( Literal literalToPropagate, LearnedClause* learnedClause );        
         inline void onRestart();        
@@ -123,9 +121,14 @@ class Solver
         inline void setRestartsStrategy( RestartsStrategy* value );
         inline void setDeletionStrategy( DeletionStrategy* value );
         
+        typedef List< LearnedClause* >::iterator LearnedClausesIterator;
         typedef List< LearnedClause* >::reverse_iterator LearnedClausesReverseIterator;
+        inline LearnedClausesIterator learnedClauses_begin() { return learnedClauses.begin(); }
+        inline LearnedClausesIterator learnedClauses_end() { return learnedClauses.end(); }
         inline LearnedClausesReverseIterator learnedClauses_rbegin() { return learnedClauses.rbegin(); }
         inline LearnedClausesReverseIterator learnedClauses_rend() { return learnedClauses.rend(); }
+
+        inline void deleteLearnedClause( LearnedClause* learnedClause, List< LearnedClause* >::iterator iterator );
         
         void printProgram()
         {
@@ -143,8 +146,6 @@ class Solver
             assert( "The copy constructor has been disabled." && 0 );
         }
                 
-        inline void deleteLearnedClause( LearnedClause* learnedClause, List< LearnedClause* >::iterator iterator );
-        
         vector< Literal > trueLiterals;
 
         unsigned int currentDecisionLevel;        
@@ -351,7 +352,7 @@ Solver::onLearningClause(
     Clause* clause = static_cast< Clause* >( learnedClause );    
     onLiteralAssigned( literalToPropagate, clause );
     
-    deletionStrategy->onLearning( *this, learnedClause );
+    deletionStrategy->onLearning( learnedClause );
 }
 
 void

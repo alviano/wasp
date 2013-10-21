@@ -74,34 +74,6 @@ Solver::unroll(
 }
 
 void
-Solver::onDeletingLearnedClausesThresholdBased()
-{
-    for( List< LearnedClause* >::iterator it = learnedClauses.begin(); it != learnedClauses.end(); )
-    {
-        List< LearnedClause* >::iterator tmp_it = it++;
-        LearnedClause* currentClause = *tmp_it;
-        if( deletionStrategy->hasToDeleteClauseThreshold( currentClause ) )
-        {
-            deleteLearnedClause( currentClause, tmp_it );            
-        }
-    }
-}
-
-void
-Solver::onDeletingLearnedClausesAvgBased()
-{
-    for( List< LearnedClause* >::iterator it = learnedClauses.begin(); it != learnedClauses.end() && deletionStrategy->continueIterationAvg(); )
-    {
-        List< LearnedClause* >::iterator tmp_it = it++;
-        LearnedClause* currentClause = *tmp_it;
-        if( deletionStrategy->hasToDeleteClauseAvg( currentClause ) )
-        {
-            deleteLearnedClause( currentClause, tmp_it );
-        }
-    }
-}
-
-void
 Solver::decreaseLearnedClausesActivity()
 {
     for( List< LearnedClause* >::iterator it = learnedClauses.begin(); it != learnedClauses.end(); ++it )

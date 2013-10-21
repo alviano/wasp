@@ -19,9 +19,20 @@
 #include "MinisatDeletionStrategy.h"
 #include "../../Solver.h"
 
+void
+MinisatDeletionStrategy::onLearning( 
+    LearnedClause* learnedClause )
+{
+    updateActivity( learnedClause );
+    
+    if( hasToDelete() )
+    {
+        deleteClauses();
+    }    
+}
+
 bool
-MinisatDeletionStrategy::onLearningProtected(
-    Solver& solver )
+MinisatDeletionStrategy::hasToDelete()
 {
     if( maxLearned == 0.0 )
     {
