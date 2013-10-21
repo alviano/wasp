@@ -20,46 +20,6 @@
 #include "../LearnedClause.h"
 #include "../Solver.h"
 
-bool
-ActivityBasedDeletionStrategy::hasToDeleteClauseThreshold(
-    LearnedClause* clause )
-{
-    Activity activity = clause->getActivity();
-    
-    bool hasToDelete = false;
-    if( !clause->isLocked() )
-    {
-        activitySum += activity;
-        ++activityCount;
-        if ( activity < threshold )
-        {
-            toDelete--;
-            hasToDelete = true;
-        }        
-    }
-        
-    return hasToDelete;
-}
-
-bool
-ActivityBasedDeletionStrategy::hasToDeleteClauseAvg(
-    LearnedClause* clause )
-{
-    Activity activity = clause->getActivity();
-    
-    bool hasToDelete = false;
-    if( !clause->isLocked() )
-    {
-        if ( activity < activitySum )
-        {
-            toDelete--;
-            hasToDelete = true;
-        }        
-    }
-        
-    return hasToDelete;
-}
-
 void
 ActivityBasedDeletionStrategy::updateActivity( 
     LearnedClause* learnedClause )
@@ -77,35 +37,49 @@ void
 ActivityBasedDeletionStrategy::deleteClauses()
 {
     startIteration();
-    
-    for( typename Solver::LearnedClausesIterator it = solver.learnedClauses_begin(); it != solver.learnedClauses_end(); )
+    typename Solver::LearnedClausesIterator it = solver.learnedClauses_begin();
+    assert( it != solver.learnedClauses_end() );
+    do
     {
         typename Solver::LearnedClausesIterator tmp_it = it++;
-        LearnedClause* currentClause = *tmp_it;
-        if( hasToDeleteClauseThreshold( currentClause ) )
+        LearnedClause* clause = *tmp_it;
+        
+        if( !clause->isLocked() )
         {
-            solver.deleteLearnedClause( currentClause, tmp_it );            
+            Activity activity = clause->getActivity();
+            activitySum += activity;
+            ++activityCount;
+            if ( activity < threshold )
+            {
+                toDelete--;
+                solver.deleteLearnedClause( clause, tmp_it );            
+            }        
         }
-    }
+    }while( it != solver.learnedClauses_end() );
+    
     
     if( activityCount > 0 && toDelete > 0 )
     {
         activitySum = activitySum / activityCount;
-        
-        for( typename Solver::LearnedClausesIterator it = solver.learnedClauses_begin(); it != solver.learnedClauses_end(); )
+        it = solver.learnedClauses_begin();
+        assert( it != solver.learnedClauses_end() );
+        do
         {
-            if( toDelete <= 0 )
-                break;
-            
             typename Solver::LearnedClausesIterator tmp_it = it++;
-            LearnedClause* currentClause = *tmp_it;
-            if( hasToDeleteClauseAvg( currentClause ) )
-            {
-                solver.deleteLearnedClause( currentClause, tmp_it );            
-            }
-        }
-    }
+            LearnedClause* clause = *tmp_it;
+
     
+            if( !clause->isLocked() )
+            {
+                Activity activity = clause->getActivity();
+                if ( activity < activitySum )
+                {
+                    toDelete--;
+                    solver.deleteLearnedClause( clause, tmp_it );            
+                }        
+            }
+        }while( it != solver.learnedClauses_end() && toDelete > 0 );
+    }
 }
 
 void

@@ -45,9 +45,6 @@ class ActivityBasedDeletionStrategy : public DeletionStrategy
     private:
         void startIteration();
 
-        bool hasToDeleteClauseThreshold( LearnedClause* clause );
-        bool hasToDeleteClauseAvg( LearnedClause* clause );
-        
         Activity increment;
         Activity decrement;
         
