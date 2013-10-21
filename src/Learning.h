@@ -26,8 +26,6 @@
 #ifndef LEARNING_H
 #define	LEARNING_H
 
-#include "restarts/RestartsStrategy.h"
-
 #include <cassert>
 #include <iostream>
 #include <vector>
@@ -47,9 +45,7 @@ class Learning
         inline ~Learning();
         
         void onNavigatingLiteral( Literal );
-        void onConflict( Literal conflictLiteral, Clause* conflictClause );
-        
-        inline void setRestartsStrategy( RestartsStrategy* value );
+        LearnedClause* onConflict( Literal conflictLiteral, Clause* conflictClause );
         
         inline void onNewVariable();
         
@@ -86,11 +82,6 @@ class Learning
         LearnedClause* learnedClause;
         
         /**
-         * The strategy used for restarts.
-         */
-        RestartsStrategy* restartsStrategy;             
-
-        /**
          * This method computes the next literal to navigate in the implication graph.
          * The most recent (in the order of derivation) literal should be processed before.          
          * 
@@ -111,7 +102,7 @@ class Learning
         unsigned int maxPosition;
 };
 
-Learning::Learning( Solver& s ) : solver( s ), decisionLevel( 0 ), learnedClause( NULL ), restartsStrategy( NULL ), pendingVisitedVariables( 0 ), numberOfCalls( 0 ), maxDecisionLevel( 0 )
+Learning::Learning( Solver& s ) : solver( s ), decisionLevel( 0 ), learnedClause( NULL ), pendingVisitedVariables( 0 ), numberOfCalls( 0 ), maxDecisionLevel( 0 )
 {
     // variable 0 is not used
     visitedVariables.push_back( 0 );
@@ -119,8 +110,6 @@ Learning::Learning( Solver& s ) : solver( s ), decisionLevel( 0 ), learnedClause
 
 Learning::~Learning()
 {
-    if( restartsStrategy != NULL )
-        delete restartsStrategy;
 }
 
 void
@@ -134,16 +123,6 @@ Learning::clearDataStructures()
         for( unsigned i = 1; i < visitedVariables.size(); ++i )
             visitedVariables[ i ] = 0;
     }
-}
-
-void
-Learning::setRestartsStrategy( 
-    RestartsStrategy* value )
-{
-    assert( value != NULL );
-    if( restartsStrategy != NULL )
-        delete restartsStrategy;
-    restartsStrategy = value;    
 }
 
 void

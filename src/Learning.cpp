@@ -32,7 +32,7 @@ Learning::isVisitedVariablesEmpty() const
     return true;
 }
 
-void
+LearnedClause*
 Learning::onConflict(
     Literal conflictLiteral,
     Clause* conflictClause )
@@ -76,34 +76,18 @@ Learning::onConflict(
     
     assert( learnedClause->size() > 0 );
     
+    if( learnedClause->size() >= 2 )
+    {
+        assert( learnedClause->getAt( learnedClause->size() - 1).getDecisionLevel() == solver.getCurrentDecisionLevel() );
+        learnedClause->swapLiterals( 0, learnedClause->size() - 1 );
+        learnedClause->swapLiterals( 1, maxPosition != 0 ? maxPosition : learnedClause->size() - 1 );
+        assert( learnedClause->getAt( 0 ).getDecisionLevel() == solver.getCurrentDecisionLevel() );
+    
+    }
+    
     trace( solving, 2, "Learned Clause: %s.\n", learnedClause->clauseToCharStar() );
     
-    if( learnedClause->size() == 1 )
-    {
-        solver.onLearningUnaryClause( firstUIP, learnedClause );
-        assert( "The strategy for restarts must be initialized." && restartsStrategy != NULL );
-        restartsStrategy->onLearningUnaryClause();
-    }
-    else
-    {
-        assert( maxPosition < ( learnedClause->size() - 1 ) );
-
-        //Be careful. UIP should be always in position 0.
-        learnedClause->attachClause( learnedClause->size() - 1, maxPosition );
-        solver.addLearnedClause( learnedClause );
-
-        assert( "The strategy for restarts must be initialized." && restartsStrategy != NULL );
-        bool restartRequired = restartsStrategy->onLearningClause();
-        if( restartRequired )
-        {
-            solver.onRestart();
-        }
-        else
-        {
-            assert( maxDecisionLevel != 0 );
-            solver.onLearningClause( firstUIP, learnedClause, maxDecisionLevel );
-        }
-    }
+    return learnedClause;
 }
 
 Literal

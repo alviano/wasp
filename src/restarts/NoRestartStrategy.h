@@ -17,7 +17,7 @@
  */
 
 /* 
- * File:   NoRestartsStrategy.h
+ * File:   NoRestartStrategy.h
  * Author: Carmine Dodaro
  *
  * Created on 7 August 2013, 9.33
@@ -26,12 +26,12 @@
 #ifndef NORESTARTSSTRATEGY_H
 #define	NORESTARTSSTRATEGY_H
 
-#include "RestartsStrategy.h"
+#include "RestartStrategy.h"
 
-class NoRestartsStrategy : public RestartsStrategy
+class NoRestartStrategy : public RestartStrategy
 {
     public:
-        inline NoRestartsStrategy() {}
+        inline NoRestartStrategy() {}
         virtual bool onLearningClause() { return false; }
         virtual void onLearningUnaryClause() {}
 };

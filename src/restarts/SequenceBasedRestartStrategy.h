@@ -17,38 +17,42 @@
  */
 
 /* 
- * File:   GeometricRestartsStrategy.h
+ * File:   SequenceBasedRestartStrategy.h
  * Author: Carmine Dodaro
  *
- * Created on 6 August 2013, 21.13
+ * Created on 6 August 2013, 21.15
  */
 
-#ifndef GEOMETRICRESTARTSSTRATEGY_H
-#define	GEOMETRICRESTARTSSTRATEGY_H
+#ifndef SEQUENCEBASEDRESTARTSSTRATEGY_H
+#define	SEQUENCEBASEDRESTARTSSTRATEGY_H
 
 #include <cassert>
-using namespace std;
 
-#include "RestartsStrategy.h"
+#include "RestartStrategy.h"
 
-class GeometricRestartsStrategy : public RestartsStrategy
+class SequenceBasedRestartStrategy : public RestartStrategy
 {
     public:
-        inline GeometricRestartsStrategy( unsigned int nextRestartValue = 100 );
+        inline SequenceBasedRestartStrategy( unsigned int threshold = 32 );
         virtual bool onLearningClause();
         virtual void onLearningUnaryClause();
         
-    private:
+    protected:
+        virtual void computeNextRestartValue();
+        unsigned int computeRestartNumber( unsigned int i );
+
+        unsigned int nextRestartValue;
         unsigned int conflictsCount;        
-        unsigned int nextRestartValue;        
+        unsigned int threshold;
+        unsigned int numberOfRestarts;
 };
 
-GeometricRestartsStrategy::GeometricRestartsStrategy(
-    unsigned int n ) : conflictsCount( 0 ), nextRestartValue( n )
+SequenceBasedRestartStrategy::SequenceBasedRestartStrategy( 
+    unsigned int t ) : conflictsCount( 0 ), threshold( t ), numberOfRestarts( 1 )
 {
-    assert( n > 100 );
+    assert( threshold >= 32 );
+    nextRestartValue = computeRestartNumber( numberOfRestarts ) * threshold;
 }
 
-
-#endif	/* GEOMETRICRESTARTSSTRATEGY_H */
+#endif	/* SEQUENCEBASEDRESTARTSSTRATEGY_H */
 

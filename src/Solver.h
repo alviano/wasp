@@ -43,6 +43,7 @@ using namespace std;
 #include "Learning.h"
 #include "heuristics/DecisionHeuristic.h"
 #include "outputBuilders/OutputBuilder.h"
+#include "restarts/RestartStrategy.h"
 #include "deletion/DeletionStrategy.h"
 
 class Solver
@@ -118,7 +119,7 @@ class Solver
         /* OPTIONS */
         inline void setHeuristic( DecisionHeuristic* value );
         inline void setOutputBuilder( OutputBuilder* value );
-        inline void setRestartsStrategy( RestartsStrategy* value );
+        inline void setRestartStrategy( RestartStrategy* value );
         inline void setDeletionStrategy( DeletionStrategy* value );
         
         typedef List< LearnedClause* >::iterator LearnedClausesIterator;
@@ -164,9 +165,18 @@ class Solver
         DecisionHeuristic* decisionHeuristic;        
         DeletionStrategy* deletionStrategy;
         OutputBuilder* outputBuilder;
+        RestartStrategy* restartStrategy;
 };
 
-Solver::Solver() : currentDecisionLevel( 0 ), conflictLiteral( NULL ), conflictClause( NULL ), learning( *this ), decisionHeuristic( NULL ), deletionStrategy( NULL ), outputBuilder( NULL )
+Solver::Solver() 
+: currentDecisionLevel( 0 ),
+  conflictLiteral( NULL ),
+  conflictClause( NULL ),
+  learning( *this ),
+  decisionHeuristic( NULL ),
+  deletionStrategy( NULL ),
+  outputBuilder( NULL ),
+  restartStrategy( NULL )
 {
 }
 
@@ -191,11 +201,13 @@ Solver::setOutputBuilder(
 }
 
 void
-Solver::setRestartsStrategy(
-    RestartsStrategy* value )
+Solver::setRestartStrategy(
+    RestartStrategy* value )
 {
     assert( value != NULL );
-    learning.setRestartsStrategy( value );
+    if( restartStrategy != NULL )
+        delete restartStrategy;
+    restartStrategy = value;
 }
 
 void
@@ -337,37 +349,6 @@ Solver::unrollOne()
 }
 
 void
-Solver::onLearningClause( 
-    Literal literalToPropagate, 
-    LearnedClause* learnedClause, 
-    unsigned int backjumpingLevel )
-{
-    assert( "Backjumping level is not valid." && backjumpingLevel < currentDecisionLevel );
-    trace( solving, 2, "Learned clause and backjumping to level %d.", backjumpingLevel );
-    unroll( backjumpingLevel );    
-    
-    assert( "Each learned clause has to be an asserting clause." && literalToPropagate != NULL );
-    assert( "Learned clause has not been calculated." && learnedClause != NULL );
-    
-    Clause* clause = static_cast< Clause* >( learnedClause );    
-    onLiteralAssigned( literalToPropagate, clause );
-    
-    deletionStrategy->onLearning( learnedClause );
-}
-
-void
-Solver::onLearningUnaryClause(
-    Literal literalToPropagate,
-    LearnedClause* learnedClause )
-{
-    onRestart();
-    onLiteralAssigned( literalToPropagate, NULL );
-
-    assert( "Learned clause has not been calculated." && learnedClause != NULL );    
-    delete learnedClause;
-}
-
-void
 Solver::onRestart()
 {
     trace( solving, 1, "Performing restart.\n" );
@@ -435,7 +416,46 @@ void
 Solver::analyzeConflict()
 {
     trace( solving, 1, "Analyzing conflict.\n" );
-    learning.onConflict( conflictLiteral, conflictClause );
+    LearnedClause* learnedClause = learning.onConflict( conflictLiteral, conflictClause );
+    assert( "Learned clause has not been calculated." && learnedClause != NULL );
+    
+    if( learnedClause->size() == 1 )
+    {
+        onRestart();
+        onLiteralAssigned( learnedClause->getAt( 0 ), NULL );
+        delete learnedClause;
+        
+        assert( "The strategy for restarts must be initialized." && restartStrategy != NULL );
+        restartStrategy->onLearningUnaryClause();
+    }
+    else
+    {
+        //Be careful. UIP should be always in position 0.
+        assert( learnedClause->getAt( 0 ).getDecisionLevel() == currentDecisionLevel );
+        assert( learnedClause->getAt( 1 ).getDecisionLevel() == learnedClause->getMaxDecisionLevel( 1, learnedClause->size() ) );
+        learnedClause->attachClause();
+        addLearnedClause( learnedClause );
+
+        assert( "The strategy for restarts must be initialized." && restartStrategy != NULL );
+        if( restartStrategy->onLearningClause() )
+        {
+            onRestart();
+        }
+        else
+        {
+            assert( learnedClause->getAt( 1 ).getDecisionLevel() != 0 );
+            assert( "Backjumping level is not valid." && learnedClause->getAt( 1 ).getDecisionLevel() < currentDecisionLevel );
+            trace( solving, 2, "Learned clause and backjumping to level %d.", learnedClause->getAt( 1 ).getDecisionLevel() );
+            unroll( learnedClause->getAt( 1 ).getDecisionLevel() );    
+            
+            assert( "Each learned clause has to be an asserting clause." && learnedClause->getAt( 0 ) != NULL );
+            
+            onLiteralAssigned( learnedClause->getAt( 0 ), learnedClause );
+            
+            deletionStrategy->onLearning( learnedClause );
+        }
+    }
+    
     decisionHeuristic->onLearning();
     clearConflictStatus();
 }

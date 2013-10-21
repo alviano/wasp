@@ -19,10 +19,12 @@
 #ifndef RESTARTSSTRATEGY_H
 #define RESTARTSSTRATEGY_H
 
-class RestartsStrategy
+class RestartStrategy
 {
     public:
-        virtual ~RestartsStrategy() {}
+        virtual ~RestartStrategy() {}
+        
+//        virtual bool hasToRestart() = 0;
         
         virtual bool onLearningClause() = 0;
         virtual void onLearningUnaryClause() = 0;

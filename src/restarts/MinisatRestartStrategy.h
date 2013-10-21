@@ -17,7 +17,7 @@
  */
 
 /* 
- * File:   MinisatRestartsStrategy.h
+ * File:   MinisatRestartStrategy.h
  * Author: Carmine Dodaro
  *
  * Created on 17 October 2013, 14.08
@@ -29,12 +29,12 @@
 #include <cassert>
 #include <cmath>
 
-#include "SequenceBasedRestartsStrategy.h"
+#include "SequenceBasedRestartStrategy.h"
 
-class MinisatRestartsStrategy : public SequenceBasedRestartsStrategy
+class MinisatRestartStrategy : public SequenceBasedRestartStrategy
 {
     public:
-        inline MinisatRestartsStrategy( unsigned int threshold = 100, bool lubyRestars = true );        
+        inline MinisatRestartStrategy( unsigned int threshold = 100, bool lubyRestars = true );        
         
     protected:
         virtual void computeNextRestartValue();
@@ -48,8 +48,8 @@ class MinisatRestartsStrategy : public SequenceBasedRestartsStrategy
         bool lubyRestarts;
 };
 
-MinisatRestartsStrategy::MinisatRestartsStrategy( 
-    unsigned int threshold, bool luby ) : SequenceBasedRestartsStrategy( threshold ), restartBase( 0.0 ), restartIncrement( 2.0 ), lubyRestarts( luby )
+MinisatRestartStrategy::MinisatRestartStrategy( 
+    unsigned int threshold, bool luby ) : SequenceBasedRestartStrategy( threshold ), restartBase( 0.0 ), restartIncrement( 2.0 ), lubyRestarts( luby )
 {
     assert( threshold >= 100 );
     numberOfRestarts = 0;
@@ -57,13 +57,13 @@ MinisatRestartsStrategy::MinisatRestartsStrategy(
 }
 
 void
-MinisatRestartsStrategy::computeRestartBase()
+MinisatRestartStrategy::computeRestartBase()
 {
     restartBase = lubyRestarts ? luby( restartIncrement, numberOfRestarts ) : pow( restartIncrement, numberOfRestarts );
 }
 
 double
-MinisatRestartsStrategy::luby(
+MinisatRestartStrategy::luby(
     double y,
     int x )
 {

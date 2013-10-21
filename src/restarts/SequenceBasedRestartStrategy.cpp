@@ -16,18 +16,18 @@
  *
  */
 
-#include "SequenceBasedRestartsStrategy.h"
+#include "SequenceBasedRestartStrategy.h"
 
 #include <cmath>
 
 void
-SequenceBasedRestartsStrategy::computeNextRestartValue()
+SequenceBasedRestartStrategy::computeNextRestartValue()
 {
     nextRestartValue = computeRestartNumber( numberOfRestarts ) * threshold;
 }
 
 bool
-SequenceBasedRestartsStrategy::onLearningClause()
+SequenceBasedRestartStrategy::onLearningClause()
 {
     if( ++conflictsCount == nextRestartValue )
     {
@@ -41,13 +41,13 @@ SequenceBasedRestartsStrategy::onLearningClause()
 }
 
 void
-SequenceBasedRestartsStrategy::onLearningUnaryClause()
+SequenceBasedRestartStrategy::onLearningUnaryClause()
 {
     conflictsCount = 0;
 }
 
 unsigned int
-SequenceBasedRestartsStrategy::computeRestartNumber( 
+SequenceBasedRestartStrategy::computeRestartNumber( 
     unsigned int i )
 {
     assert( i != 0 );

@@ -47,6 +47,21 @@ Clause::print(
     return out;
 }
 
+unsigned
+Clause::getMaxDecisionLevel(
+    unsigned from,
+    unsigned to ) const
+{
+    assert( from < literals.size() );
+    assert( to <= literals.size() );
+    assert( from < to );
+    unsigned max = literals[ from ].getDecisionLevel();
+    for( unsigned i = from + 1; i < to; ++i )
+        if( literals[ i ].getDecisionLevel() > max )
+            max = literals[ i ].getDecisionLevel();
+    return max;
+}
+
 //void
 //Clause::updateFirstWatch(
 //    Solver& solver )

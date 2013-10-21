@@ -47,6 +47,7 @@ class Solver;
 class Clause
 {
     friend ostream &operator<<( ostream & out, const Clause & clause );
+    friend LearnedClause* Learning::onConflict( Literal conflictLiteral, Clause* conflictClause );
 
     public:
         inline Clause();
@@ -60,6 +61,7 @@ class Clause
          */
         inline Clause( unsigned int size );
 
+        inline Literal getAt( unsigned idx ) const { assert( idx < literals.size() ); return literals[ idx ]; }
         inline void addLiteral( Literal literal );
 
         inline void attachClause();
@@ -72,6 +74,8 @@ class Clause
         inline unsigned int size() const;
         inline bool checkUnsatisfiedAndOptimize( UndefinedCollector* collector );
         bool isUnsatisfied() const;
+        
+        unsigned getMaxDecisionLevel( unsigned from, unsigned to) const;
 
         #ifdef TRACE_ON
         inline const char* clauseToCharStar()

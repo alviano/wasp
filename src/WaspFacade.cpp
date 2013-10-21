@@ -18,10 +18,10 @@
 
 #include "WaspFacade.h"
 
-#include "restarts/NoRestartsStrategy.h"
-#include "restarts/MinisatRestartsStrategy.h"
-#include "restarts/GeometricRestartsStrategy.h"
-#include "restarts/SequenceBasedRestartsStrategy.h"
+#include "restarts/NoRestartStrategy.h"
+#include "restarts/MinisatRestartStrategy.h"
+#include "restarts/GeometricRestartStrategy.h"
+#include "restarts/SequenceBasedRestartStrategy.h"
 
 #include "deletion/AggressiveDeletionStrategy.h"
 #include "deletion/RestartsBasedDeletionStrategy.h"
@@ -160,23 +160,23 @@ WaspFacade::setRestartsPolicy(
     switch( restartsPolicy )
     {
         case SEQUENCE_BASED_RESTARTS_POLICY:
-            solver.setRestartsStrategy( new SequenceBasedRestartsStrategy( threshold ) );
+            solver.setRestartStrategy( new SequenceBasedRestartStrategy( threshold ) );
             break;
             
         case GEOMETRIC_RESTARTS_POLICY:
-            solver.setRestartsStrategy( new GeometricRestartsStrategy( threshold ) );
+            solver.setRestartStrategy( new GeometricRestartStrategy( threshold ) );
             break;
             
         case MINISAT_RESTARTS_POLICY:
-            solver.setRestartsStrategy( new MinisatRestartsStrategy( threshold ) );
+            solver.setRestartStrategy( new MinisatRestartStrategy( threshold ) );
             break;
             
         case NO_RESTARTS_POLICY:
-            solver.setRestartsStrategy( new NoRestartsStrategy() );
+            solver.setRestartStrategy( new NoRestartStrategy() );
             break;
             
         default:
-            solver.setRestartsStrategy( new SequenceBasedRestartsStrategy( threshold ) );
+            solver.setRestartStrategy( new SequenceBasedRestartStrategy( threshold ) );
             break;
     }
 }

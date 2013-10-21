@@ -16,22 +16,14 @@
  *
  */
 
-#include "GeometricRestartsStrategy.h"
+#include "SequenceBasedRestartStrategy.h"
+#include "MinisatRestartStrategy.h"
 
-bool
-GeometricRestartsStrategy::onLearningClause()
-{
-    if( ++conflictsCount == nextRestartValue )
-    {
-        nextRestartValue *= 1.5;
-        return true;
-    }
-
-    return false;
-}
+#include <cmath>
 
 void
-GeometricRestartsStrategy::onLearningUnaryClause()
+MinisatRestartStrategy::computeNextRestartValue()
 {
-    conflictsCount = 0;
+    computeRestartBase();
+    nextRestartValue =  restartBase * threshold;
 }
