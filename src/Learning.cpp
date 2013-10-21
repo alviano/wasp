@@ -39,7 +39,7 @@ Learning::onConflict(
 {
     ++numberOfCalls;
     clearDataStructures();
-    assert( "No conflict literal is set." && conflictLiteral != NULL );
+    assert( "No conflict literal is set." && conflictLiteral != Literal::null );
     assert( "Learned clause has to be NULL in the beginning." && learnedClause == NULL );
     assert( "The counter must be equal to 0." && pendingVisitedVariables == 0 );
     assert( isVisitedVariablesEmpty() );
@@ -144,7 +144,7 @@ void
 Learning::onNavigatingLiteral( 
     Literal literal )
 {
-    assert( literal != NULL );
+    assert( literal != Literal::null );
     unsigned int literalDecisionLevel = literal.getDecisionLevel();
     
     if( literalDecisionLevel == decisionLevel )

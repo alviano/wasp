@@ -195,10 +195,10 @@ BerkminHeuristic::estimatePropagation(
     solver.incrementCurrentDecisionLevel();
     solver.setAChoice( literal );
     
-    while( solver.hasNextLiteralToPropagate() )
+    while( solver.hasNextVariableToPropagate() )
     {
-        Literal literalToPropagate = solver.getNextLiteralToPropagate();
-        solver.propagate( literalToPropagate );        
+        Variable* variableToPropagate = solver.getNextVariableToPropagate();
+        solver.propagate( variableToPropagate );        
         if( solver.conflictDetected() )
         {
             solver.unrollOne();

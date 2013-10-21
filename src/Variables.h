@@ -44,15 +44,15 @@ class Variables
     
         inline void push_back( Variable* v );
         
-        inline bool hasNextLiteralToPropagate() const { return static_cast< unsigned >( nextLiteralToPropagate ) < assignedVariablesSize; }
-        inline Literal getNextLiteralToPropagate();
+        inline bool hasNextVariableToPropagate() const { return nextVariableToPropagate < assignedVariablesSize; }
+        inline Variable* getNextVariableToPropagate();
         
         inline Literal getOppositeLiteralFromLastAssignedVariable();        
         inline bool hasNextAssignedVariable() const;
         inline void startIterationOnAssignedVariable();
         
         inline void unrollLastVariable();
-        inline void resetLiteralsToPropagate() { nextLiteralToPropagate = assignedVariablesSize; }
+        inline void resetLiteralsToPropagate() { nextVariableToPropagate = assignedVariablesSize; }
         
         inline unsigned numberOfAssignedLiterals() const { return assignedVariablesSize; }
         inline unsigned numberOfVariables() const { assert( variables[ 0 ] == NULL ); return variables.size() - 1; }
@@ -77,7 +77,7 @@ class Variables
         unsigned assignedVariablesSize;
         int iteratorOnAssignedVariables;
 //        unsigned iteratorOnUndefinedVariables;
-        int nextLiteralToPropagate;
+        unsigned nextVariableToPropagate;
         unsigned noUndefinedBefore;
         
         /* Data structures */
@@ -91,7 +91,7 @@ Variables::Variables()
 : assignedVariables ( NULL ),
   assignedVariablesSize( 0 ),
 //  iteratorOnUndefinedVariables( 0 ),
-  nextLiteralToPropagate( 0 ),
+  nextVariableToPropagate( 0 ),
   noUndefinedBefore( 1 )
 {
     //Add a fake position.
@@ -130,11 +130,11 @@ Variables::push_back(
     variables.push_back( v );
 }
 
-Literal
-Variables::getNextLiteralToPropagate()
+Variable*
+Variables::getNextVariableToPropagate()
 { 
-    assert( hasNextLiteralToPropagate() );
-    return Literal::createFromAssignedVariable( assignedVariables[ nextLiteralToPropagate++ ] );
+    assert( hasNextVariableToPropagate() );
+    return assignedVariables[ nextVariableToPropagate++ ];
 }
 
 void

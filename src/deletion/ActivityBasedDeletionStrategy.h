@@ -44,7 +44,6 @@ class ActivityBasedDeletionStrategy : public DeletionStrategy
     
     private:
         void startIteration();
-        inline bool continueIterationAvg();        
 
         bool hasToDeleteClauseThreshold( LearnedClause* clause );
         bool hasToDeleteClauseAvg( LearnedClause* clause );
@@ -62,12 +61,6 @@ class ActivityBasedDeletionStrategy : public DeletionStrategy
 ActivityBasedDeletionStrategy::ActivityBasedDeletionStrategy(
     Solver& s ) : solver( s ), increment( 1 ), decrement( 1/0.999 )
 {
-}
-
-bool
-ActivityBasedDeletionStrategy::continueIterationAvg()
-{
-    return toDelete > 0;
 }
 
 void

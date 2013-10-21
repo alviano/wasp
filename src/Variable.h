@@ -38,7 +38,6 @@ class HeuristicCounterForLiteral;
 class HeuristicCounterFactoryForLiteral;
 class Learning;
 class Literal;
-class Solver;
 
 /**
  * This class stores all information about a Variable.
@@ -97,7 +96,9 @@ class Variable
         inline unsigned int numberOfPositiveWatchedClauses() const;
         inline unsigned int numberOfWatchedClauses( unsigned int sign ) const;
         
-        void unitPropagation( Solver& solver );
+        inline void unitPropagationStart();
+        inline bool unitPropagationHasNext();
+        inline Clause* unitPropagationNext();
         
         #ifdef TRACE_ON
         inline const char* variableToCharStar() const
@@ -349,6 +350,51 @@ Variable::onAging(
     unsigned int sign )
 {
     //getHeuristicCounterInternal( sign )->onAging( value );
+}
+
+void
+Variable::unitPropagationStart()
+{
+    assert( "Variable to propagate is Undefined." && !this->isUndefined() );
+    assert( FALSE == 1 && TRUE == 2 );
+
+    #ifndef NDEBUG
+    unsigned int sign = ( truthValue >> 1 );
+    assert( sign <= 1 );
+    assert( truthValue == TRUE ? sign == NEGATIVE : sign == POSITIVE );
+    #endif
+    
+    watchedLists[ ( truthValue >> 1 ) ].startIteration();
+}
+
+bool
+Variable::unitPropagationHasNext()
+{
+    assert( "Variable to propagate is Undefined." && !this->isUndefined() );
+    assert( FALSE == 1 && TRUE == 2 );
+
+    #ifndef NDEBUG
+    unsigned int sign = ( truthValue >> 1 );
+    assert( sign <= 1 );
+    assert( truthValue == TRUE ? sign == NEGATIVE : sign == POSITIVE );
+    #endif
+    
+    return watchedLists[ ( truthValue >> 1 ) ].hasNext();
+}
+
+Clause*
+Variable::unitPropagationNext()
+{
+    assert( "Variable to propagate is Undefined." && !this->isUndefined() );
+    assert( FALSE == 1 && TRUE == 2 );
+
+    #ifndef NDEBUG
+    unsigned int sign = ( truthValue >> 1 );
+    assert( sign <= 1 );
+    assert( truthValue == TRUE ? sign == NEGATIVE : sign == POSITIVE );
+    #endif
+    
+    return watchedLists[ ( truthValue >> 1 ) ].next();
 }
 
 #endif /* VARIABLE_H */

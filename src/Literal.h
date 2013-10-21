@@ -37,19 +37,19 @@ using namespace std;
 #include "Variable.h"
 
 class Clause;
-class Solver;
 
 class Literal
 {
     friend ostream &operator<<( ostream &, const Literal & );
 
-	public:
+    public:
+        static const Literal null;
 
         static inline Literal createFromAssignedVariable( Variable* );
         static inline Literal createOppositeFromAssignedVariable( Variable* );
 
 		// Instantiate a positive literal
-		inline Literal( Variable* = NULL );
+		inline explicit Literal( Variable* = NULL );
 
 		// Instantiate a negative literal. The boolean value is ignored.
 		inline Literal( Variable*, bool );
@@ -78,8 +78,6 @@ class Literal
 
         inline void onAging( unsigned int );
 
-        inline void unitPropagation( Solver& solver );
-        
         inline unsigned int numberOfWatchedClauses() const;
         inline Variable* getVariable();
         inline const Variable* getVariable() const;
@@ -102,6 +100,9 @@ class Literal
          */
         inline unsigned int getSign() const;
         
+        inline Literal getOppositeLiteral();
+
+        
 	private:
         
         inline Literal( unsigned int sign, Variable* variable );
@@ -113,8 +114,6 @@ class Literal
         
         inline bool isPositive() const;
         
-        inline Literal getOppositeLiteral();
-
         uintptr_t signedVariable;
 };
 
@@ -277,8 +276,7 @@ Literal::onAging(
 Literal
 Literal::getOppositeLiteral()
 {
-    Literal lit( getOppositeSign(), getVariable() );
-    return lit;    
+    return Literal( getOppositeSign(), getVariable() );    
 }
 
 unsigned int
@@ -310,17 +308,6 @@ Literal::findAndEraseWatchedClause(
 {
     assert( "Variable has not been set." && getVariable() != NULL );
     getVariable()->findAndEraseWatchedClause( clause, getSign() );
-}
-
-void
-Literal::unitPropagation(
-    Solver& solver )
-{
-    assert( "Literal to propagate is Undefined." && !this->isUndefined() );
-    assert( "Variable has not been set." && getVariable() != NULL );
-    assert( this->isTrue() );
-    assert( getOppositeLiteral().isFalse() );
-    getVariable()->unitPropagation( solver );
 }
 
 #endif	/* LITERAL_H */

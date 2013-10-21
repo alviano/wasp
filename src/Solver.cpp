@@ -180,10 +180,10 @@ Solver::solve()
         assert( !conflictDetected() );
         chooseLiteral();
         
-        while( hasNextLiteralToPropagate() )
+        while( hasNextVariableToPropagate() )
         {
-            Literal literalToPropagate = getNextLiteralToPropagate();            
-            propagate( literalToPropagate );
+            Variable* variableToPropagate = getNextVariableToPropagate();            
+            propagate( variableToPropagate );
 
             if( conflictDetected() )
             {
@@ -195,7 +195,7 @@ Solver::solve()
                 }
 
                 analyzeConflict();
-                assert( hasNextLiteralToPropagate() || getCurrentDecisionLevel() == 0 );
+                assert( hasNextVariableToPropagate() || getCurrentDecisionLevel() == 0 );
             }
         }
     }

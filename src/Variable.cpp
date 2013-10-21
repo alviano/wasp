@@ -19,7 +19,6 @@
 #include "Variable.h"
 #include "Clause.h"
 #include "Literal.h"
-#include "Solver.h"
 
 ostream& operator<<( 
     ostream& out,
@@ -54,26 +53,5 @@ Variable::onLearning(
     if( implicant != NULL )
     {
         implicant->onLearning( strategy );
-    }
-}
-
-void
-Variable::unitPropagation(
-    Solver& solver )
-{
-    assert( "Variable to propagate is Undefined." && !this->isUndefined() );
-    assert( FALSE == 1 && TRUE == 2 );
-
-    unsigned int sign = ( truthValue >> 1 );
-    assert( sign <= 1 );
-    assert( truthValue == TRUE ? sign == NEGATIVE : sign == POSITIVE );
-    
-    watchedLists[ sign ].startIteration();
-    while( watchedLists[ sign ].hasNext() && !solver.conflictDetected() )
-    {
-        Clause* clause = watchedLists[ sign ].next();
-        trace( solving, 3, "Considering clause %s.\n", clause->clauseToCharStar() );
-        if( clause->onLiteralFalse( Literal::createOppositeFromAssignedVariable( this ) ) )
-            solver.assignLiteral( clause );
     }
 }

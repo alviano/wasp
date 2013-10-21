@@ -145,7 +145,7 @@ Clause::attachSecondWatch()
 void
 Clause::detachSecondWatch()
 {
-    assert( "The watchToDetach points to a NULL literal." && literals[ 1 ] != NULL );
+    assert( "The watchToDetach points to a NULL literal." && literals[ 1 ].getVariable() != NULL );
     literals[ 1 ].eraseWatchedClause( this );
 }
 
@@ -229,7 +229,6 @@ Clause::onLearning(
     for( unsigned int i = 0; i < literals.size(); i++ )
     {
         Literal literal = literals[ i ];
-        assert( literal != NULL );
         strategy->onNavigatingLiteral( literal );
     }
 }

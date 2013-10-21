@@ -19,9 +19,10 @@
 #include "Literal.h"
 #include "Clause.h"
 #include "WaspRule.h"
-#include "Solver.h"
 
 #include <cassert>
+
+const Literal Literal::null( NULL );
 
 ostream&
 operator<<( 

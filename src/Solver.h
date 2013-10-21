@@ -55,7 +55,7 @@ class Solver
         inline void init();
         bool preprocessing();
         bool solve();
-        inline void propagate( Literal literalToPropagate );
+        inline void propagate( Variable* variable );
         
         inline void addVariable( const string& name );
         inline void addVariable();
@@ -71,8 +71,8 @@ class Solver
         inline Literal getLiteral( int lit );
         inline void addTrueLiteral( Literal lit );
         
-        inline Literal getNextLiteralToPropagate();
-        inline bool hasNextLiteralToPropagate() const;        
+        inline Variable* getNextVariableToPropagate();
+        inline bool hasNextVariableToPropagate() const;        
         
 //        inline const Variable* getNextAssignedVariable();
         inline Literal getOppositeLiteralFromLastAssignedVariable();
@@ -292,14 +292,6 @@ Solver::assignLiteral(
 }
 
 void
-Solver::propagate(
-    Literal literalToPropagate )
-{
-    trace( solving, 1, "Propagating: %s.\n", literalToPropagate.literalToCharStar() );
-    literalToPropagate.unitPropagation( *this );
-}
-
-void
 Solver::addClause(
     Clause* clause )
 {
@@ -320,17 +312,17 @@ Solver::addTrueLiteral(
     trueLiterals.push_back( lit );
 }
 
-Literal
-Solver::getNextLiteralToPropagate()
+Variable*
+Solver::getNextVariableToPropagate()
 {
-    assert( variables.hasNextLiteralToPropagate() );
-    return variables.getNextLiteralToPropagate();
+    assert( variables.hasNextVariableToPropagate() );
+    return variables.getNextVariableToPropagate();
 }
         
 bool
-Solver::hasNextLiteralToPropagate() const
+Solver::hasNextVariableToPropagate() const
 {
-    return variables.hasNextLiteralToPropagate();
+    return variables.hasNextVariableToPropagate();
 }
 
 unsigned int
@@ -399,7 +391,7 @@ Solver::numberOfLearnedClauses()
 bool
 Solver::conflictDetected()
 {
-    return conflictLiteral != NULL;
+    return conflictLiteral != Literal::null;
 }
 
 bool
@@ -461,7 +453,7 @@ Solver::analyzeConflict()
             trace( solving, 2, "Learned clause and backjumping to level %d.", learnedClause->getAt( 1 ).getDecisionLevel() );
             unroll( learnedClause->getAt( 1 ).getDecisionLevel() );    
             
-            assert( "Each learned clause has to be an asserting clause." && learnedClause->getAt( 0 ) != NULL );
+            assert( "Each learned clause has to be an asserting clause." && learnedClause->getAt( 0 ) != Literal::null );
             
             assignLiteral( learnedClause );
             
@@ -476,7 +468,7 @@ Solver::analyzeConflict()
 void
 Solver::clearConflictStatus()
 {
-    conflictLiteral = NULL;
+    conflictLiteral = Literal::null;
     conflictClause = NULL;
 }
 
@@ -496,7 +488,7 @@ void
 Solver::setAChoice(
     Literal choice )
 {
-    assert( choice != NULL );
+    assert( choice != Literal::null );
     incrementCurrentDecisionLevel();
     assert( choice.isUndefined() );
     assignLiteral( choice );
@@ -530,10 +522,10 @@ Solver::propagateLiteralAsDeterministicConsequence(
         return false;
     }
 
-    while( hasNextLiteralToPropagate() )
+    while( hasNextVariableToPropagate() )
     {
-        Literal literalToPropagate = getNextLiteralToPropagate();
-        propagate( literalToPropagate );
+        Variable* variableToPropagate = getNextVariableToPropagate();
+        propagate( variableToPropagate );
 
         if( conflictDetected() )
         {
@@ -543,6 +535,27 @@ Solver::propagateLiteralAsDeterministicConsequence(
     assert( !conflictDetected() );
 
     return true;
+}
+
+void
+Solver::propagate(
+    Variable* variable )
+{
+    trace( solving, 1, "Propagating: %s.\n", variable->variableToCharStar() );
+    
+    Literal complement = Literal::createOppositeFromAssignedVariable( variable );
+    
+    variable->unitPropagationStart();
+    assert( !conflictDetected() );
+    while( variable->unitPropagationHasNext() && !conflictDetected() )
+    {
+        Clause* clause = variable->unitPropagationNext();
+        trace( solving, 3, "Considering clause %s.\n", clause->clauseToCharStar() );
+        if( clause->onLiteralFalse( complement ) )
+            assignLiteral( clause );
+        else
+            assert( !conflictDetected() );
+    }
 }
 
 //bool
