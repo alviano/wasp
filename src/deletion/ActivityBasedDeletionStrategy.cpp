@@ -94,6 +94,8 @@ ActivityBasedDeletionStrategy::deleteClauses()
         
         for( typename Solver::LearnedClausesIterator it = solver.learnedClauses_begin(); it != solver.learnedClauses_end(); )
         {
+            if( toDelete <= 0 ) break;
+            
             typename Solver::LearnedClausesIterator tmp_it = it++;
             LearnedClause* currentClause = *tmp_it;
             if( hasToDeleteClauseAvg( currentClause ) )
