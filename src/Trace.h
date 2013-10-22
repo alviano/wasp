@@ -34,9 +34,12 @@ using std::stringstream;
  * The tracing structures are defined only if TRACE_OFF is not defined.
  */
 #ifndef TRACE_ON
+    #define trace_tag( stream, type, level )
     #define trace( type, level, msg, ... )
     #define traceIf( type, level, condition, msg, ... )
     #define setTraceLevel( type, level )
+    #define trace_msg( type, level, msg )
+    #define trace_action( type, level, action )
 #else
     #define trace_tag( stream, type, level ) \
         stream << "[" << wasp::Options::traceLevels.types[ wasp::Options::traceLevels.type() ].first.substr( 0, 10 ) << "]"; \
