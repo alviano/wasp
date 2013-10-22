@@ -18,51 +18,82 @@
 
 #ifndef TRACE_H
 #define TRACE_H
+
 #include <cstdio>
+#include <string>
+#include <vector>
+#include <sstream>
+
+using std::pair;
+using std::string;
+using std::vector;
+using std::stringstream;
+
 /*
  * The tracing macros are expanded only if TRACE_OFF is not defined.
  * The tracing structures are defined only if TRACE_OFF is not defined.
  */
 #ifndef TRACE_ON
-    #   define trace( type, level, msg, ... )
-    #   define traceIf( type, level, condition, msg, ... )
-    #   define setTraceLevel( type, level )
+    #define trace( type, level, msg, ... )
+    #define traceIf( type, level, condition, msg, ... )
+    #define setTraceLevel( type, level )
 #else
-    #   define trace( type, level, msg, ... ) \
-        if( wasp::Options::traceLevels.type >= level ) \
+    #define trace( type, level, msg, ... ) \
+        if( wasp::Options::traceLevels.types[ wasp::Options::traceLevels.type() ].second >= level ) \
         { \
-            for( unsigned __indent_Level__ = 0; __indent_Level__ < level; ++__indent_Level__ ) \
+            fprintf( stderr, "[%s]", wasp::Options::traceLevels.types[ wasp::Options::traceLevels.type() ].first.substr( 0, 10 ).c_str() ); \
+            for( unsigned __indent_Level__ = 0; __indent_Level__ < 11 - wasp::Options::traceLevels.types[ wasp::Options::traceLevels.type() ].first.substr( 0, 10 ).length(); ++__indent_Level__ ) \
                 fprintf( stderr, " " ); \
+            for( unsigned __indent_Level__ = 1; __indent_Level__ < level; ++__indent_Level__ ) \
+                fprintf( stderr, "    " ); \
             fprintf( stderr, msg, ##__VA_ARGS__ ); \
         }
-    #   define traceIf( type, level, condition, msg, ... ) \
+    #define traceIf( type, level, condition, msg, ... ) \
         if( condition ) \
             trace( type, level, msg, ##__VA_ARGS__ )
-    #   define setTraceLevel( type, level ) \
-            wasp::Options::traceLevels.type = level
-
+    #define setTraceLevel( type, level ) \
+        wasp::Options::traceLevels.types[ wasp::Options::traceLevels.type() ].second = level
+    #define trace_msg( type, level, msg ) \
+        stringstream __trace_stream__; \
+        __trace_stream__ << msg << std::endl; \
+        trace( type, level, __trace_stream__.str().c_str() )
 namespace wasp
 {
-    /**
-    * This class contains an unsigned integer for each kind of trace present in
-    * wasp.
-    */
-    class TraceLevels
-    {
-        friend class Options;
 
-        public:
-            unsigned parser;
-            unsigned solving;
-            unsigned learning;
-            unsigned modelchecker;
-            unsigned unfoundedset;
-            unsigned heuristic;
+/**
+* This class contains an unsigned integer for each kind of trace present in
+* wasp.
+*/
+class TraceLevels
+{
+    friend class Options;
 
-        private:
-            TraceLevels() : parser( 0 ){}
-    };
+    public:
+        vector< pair< string, unsigned > > types;
+        
+        unsigned parser() { return 0; }
+        unsigned solving() { return 1; }
+        unsigned learning() { return 2; }
+        unsigned modelchecker() { return 3; }
+        unsigned unfoundedset() { return 4; }
+        unsigned heuristic() { return 5; }
+
+    private:
+        inline TraceLevels();
 };
+
+TraceLevels::TraceLevels() 
+{
+    types.push_back( pair< string, unsigned >( "parser", 0 ) );
+    types.push_back( pair< string, unsigned >( "solving", 0 ) );
+    types.push_back( pair< string, unsigned >( "learning", 0 ) );
+    types.push_back( pair< string, unsigned >( "modelchecker", 0 ) );
+    types.push_back( pair< string, unsigned >( "unfoundedset", 0 ) );
+    types.push_back( pair< string, unsigned >( "heuristic", 0 ) );
+}
+
+};
+
 #endif
 
 #endif

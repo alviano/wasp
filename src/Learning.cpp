@@ -47,7 +47,7 @@ Learning::onConflict(
     learnedClause = new LearnedClause();
     decisionLevel = solver.getCurrentDecisionLevel();
 
-    trace( learning, 2, "Starting First UIP Learning Strategy. Current Level: %d.\n", decisionLevel );
+    trace_msg( learning, 2, "Starting First UIP Learning Strategy. Current Level: " << decisionLevel );
     
     //Compute implicants of the conflicting literal.
     conflictClause->onLearning( this );
