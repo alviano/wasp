@@ -98,14 +98,7 @@ class Variable
         
         inline void unitPropagationStart();
         inline bool unitPropagationHasNext();
-        inline Clause* unitPropagationNext();
-        
-        #ifdef TRACE_ON
-        inline const char* variableToCharStar() const
-        {
-            return name.c_str();
-        }        
-        #endif
+        inline Clause* unitPropagationNext();        
         
     private:
 

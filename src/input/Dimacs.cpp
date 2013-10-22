@@ -234,7 +234,7 @@ Dimacs::readClause(
     //if the clause is not trivial add it in the formula
     if( !trivial )
     {
-        trace( parser, 1, "Adding clause %s.\n", clause->clauseToCharStar() );
+        trace( parser, 1, "Adding clause %s.\n", toString( *clause ).c_str() );
         solver.addClause( clause );
         clause->attachClause();
     }

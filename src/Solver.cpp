@@ -207,7 +207,8 @@ void
 Solver::propagate(
     Variable* variable )
 {
-    trace( solving, 1, "Propagating: %s.\n", variable->variableToCharStar() );
+    assert( "Variable to propagate has not been set." && variable != NULL );
+    trace( solving, 2, "Propagating: %s.\n", toString( *variable ).c_str() );
     
     Literal complement = Literal::createOppositeFromAssignedVariable( variable );
     
@@ -216,7 +217,8 @@ Solver::propagate(
     while( variable->unitPropagationHasNext() && !conflictDetected() )
     {
         Clause* clause = variable->unitPropagationNext();
-        trace( solving, 3, "Considering clause %s.\n", clause->clauseToCharStar() );
+        assert( "Next clause to propagate is null." && clause != NULL );
+        trace( solving, 5, "Considering clause %s.\n", toString( *clause ).c_str() );
         if( clause->onLiteralFalse( complement ) )
             assignLiteral( clause );
         else

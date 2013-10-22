@@ -122,7 +122,7 @@ BerkminHeuristic::pickLiteralFromTopMostUnsatisfiedLearnedClause()
         resetCounters();
         assert( *it != NULL );
         LearnedClause& learnedClause = **it;
-        trace( heuristic, 1, "Learned clause %d: %s.\n", count, learnedClause.clauseToCharStar() );
+        trace( heuristic, 1, "Learned clause %d: %s.\n", count, toString( learnedClause ).c_str() );
         if( learnedClause.checkUnsatisfiedAndOptimize( this ) )
         {
             assert( chosenVariable != NULL );
@@ -172,7 +172,7 @@ BerkminHeuristic::choosePolarityHigherGlobalCounter()
 
     Literal positiveLiteral( chosenVariable );    
     unsigned int value1 = estimatePropagation( positiveLiteral );
-    trace( heuristic, 2, "Estimated propagation of positive literal %s, value: %d.\n", positiveLiteral.literalToCharStar(), value1 );
+    trace( heuristic, 2, "Estimated propagation of positive literal %s, value: %d.\n", toString( positiveLiteral ).c_str(), value1 );
     if( value1 == UINT_MAX )
     {
         trace( heuristic, 3, "Conflict detected by look-ahead!\n" );
@@ -182,7 +182,7 @@ BerkminHeuristic::choosePolarityHigherGlobalCounter()
     
     Literal negativeLiteral( chosenVariable, false );
     unsigned int value2 = estimatePropagation( negativeLiteral );
-    trace( heuristic, 2, "Estimated propagation of negative literal %s, value: %d.\n", negativeLiteral.literalToCharStar(), value2 );
+    trace( heuristic, 2, "Estimated propagation of negative literal %s, value: %d.\n", toString( negativeLiteral ).c_str(), value2 );
     
     chosenPolarity = value1 > value2;
 }

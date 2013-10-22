@@ -54,11 +54,11 @@ class MinisatHeuristic : public DecisionHeuristic
         struct VariableCounters
         {
             public:
-                VariableCounters() : variableActivity( 0 ){}
+                inline VariableCounters() : variableActivity( 0 ){}
 
-                Activity getActivity() const { return variableActivity; }
-                void rescaleActivity(){ variableActivity *= 1e-100; }
-                bool bumpActivity( Activity increment ){ return ( ( variableActivity += increment ) > 1e100 ); }
+                inline Activity getActivity() const { return variableActivity; }
+                inline void rescaleActivity(){ variableActivity *= 1e-100; }
+                inline bool bumpActivity( Activity increment ){ return ( ( variableActivity += increment ) > 1e100 ); }
 
             private:
                 Activity variableActivity;
@@ -89,7 +89,7 @@ void
 MinisatHeuristic::variableBumpActivity(
     const Variable* variable )
 {
-    trace( heuristic, 1, "Bumping activity for variable %s.\n", variable->variableToCharStar() );
+    trace( heuristic, 1, "Bumping activity for variable %s.\n", toString( *variable ).c_str() );
 	if( variableCounters[ variable->getId() ].bumpActivity( variableIncrement ) )
 		rescaleActivity();	
 }
