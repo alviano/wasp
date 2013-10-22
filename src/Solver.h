@@ -370,7 +370,7 @@ Solver::deleteLearnedClause(
     LearnedClause* learnedClause,
     List< LearnedClause* >::iterator iterator )
 {
-    trace( solving, 4, "Deleting learned clause %s.", learnedClause->clauseToCharStar() );
+    trace( solving, 4, "Deleting learned clause %s.", toString( *learnedClause ).c_str() );
     learnedClause->detachClause();
     delete learnedClause;    
     learnedClauses.erase( iterator );
@@ -416,7 +416,7 @@ void
 Solver::chooseLiteral()
 {
     Literal choice = decisionHeuristic->makeAChoice();
-    trace( solving, 1, "Choice: %s.\n", choice.literalToCharStar() );
+    trace( solving, 1, "Choice: %s.\n", toString( choice ).c_str() );
     setAChoice( choice );    
 }
 

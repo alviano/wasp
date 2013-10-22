@@ -80,20 +80,7 @@ class Literal
 
         inline unsigned int numberOfWatchedClauses() const;
         inline Variable* getVariable();
-        inline const Variable* getVariable() const;
-        
-        #ifdef TRACE_ON
-        inline const char* literalToCharStar()
-        {
-            stringstream s;
-            if( !this->isPositive() )
-                s << "not ";
-
-            s << *( this->getVariable() );
-
-            return s.str().c_str();
-        }        
-        #endif
+        inline const Variable* getVariable() const;        
         
         /**
          * This function returns 0 if the literal is positive, 1 otherwise.

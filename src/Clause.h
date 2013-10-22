@@ -75,16 +75,7 @@ class Clause
         inline bool checkUnsatisfiedAndOptimize( UndefinedCollector* collector );
         bool isUnsatisfied() const;
         
-        unsigned getMaxDecisionLevel( unsigned from, unsigned to) const;
-
-        #ifdef TRACE_ON
-        inline const char* clauseToCharStar()
-        {
-            stringstream s;
-            this->print( s );
-            return s.str().c_str();
-        }
-        #endif
+        unsigned getMaxDecisionLevel( unsigned from, unsigned to) const;       
 
     protected:
         inline bool isImplicantOfALiteral() const;

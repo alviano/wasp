@@ -54,7 +54,7 @@ Learning::onConflict(
     assert( conflictLiteral.getVariable()->getImplicant() != NULL ); // FIXME: I added this assert. Is it right?
     conflictLiteral.getVariable()->getImplicant()->onLearning( this );    
 
-    trace( solving, 2, "Conflict literal: %s.\n", conflictLiteral.literalToCharStar() );
+    trace( solving, 2, "Conflict literal: %s.\n", toString( conflictLiteral ).c_str() );
     assert( conflictLiteral.getVariable()->getId() < visitedVariables.size() && visitedVariables[ conflictLiteral.getVariable()->getId() ] == numberOfCalls );
     solver.startIterationOnAssignedVariable();
     
@@ -63,14 +63,14 @@ Learning::onConflict(
 	{
         //Get next literal.
 		Literal currentLiteral = getNextLiteralToNavigate();
-        trace( solving, 3, "Navigating %s for calculating UIP.\n", currentLiteral.literalToCharStar() );
+        trace( solving, 3, "Navigating %s for calculating UIP.\n", toString( currentLiteral ).c_str() );
         //Compute implicants of the literal.
         if( conflictLiteral.getVariable()->getImplicant() != NULL )
             currentLiteral.getVariable()->getImplicant()->onLearning( this );
 	}
 
     Literal firstUIP = getNextLiteralToNavigate();
-    trace( solving, 2, "First UIP: %s.\n", firstUIP.literalToCharStar() );
+    trace( solving, 2, "First UIP: %s.\n", toString( firstUIP ).c_str() );
     
 	learnedClause->addLiteral( firstUIP );    
     
@@ -85,7 +85,7 @@ Learning::onConflict(
     
     }
     
-    trace( solving, 2, "Learned Clause: %s.\n", learnedClause->clauseToCharStar() );
+    trace( solving, 2, "Learned Clause: %s.\n", toString( *learnedClause ).c_str() );
     
     return learnedClause;
 }
