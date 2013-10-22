@@ -47,14 +47,14 @@ Learning::onConflict(
     learnedClause = new LearnedClause();
     decisionLevel = solver.getCurrentDecisionLevel();
 
-    trace( solving, 2, "Starting First UIP Learning Strategy. Current Level: %d.\n", decisionLevel );
+    trace( learning, 2, "Starting First UIP Learning Strategy. Current Level: %d.\n", decisionLevel );
     
     //Compute implicants of the conflicting literal.
     conflictClause->onLearning( this );
     assert( conflictLiteral.getVariable()->getImplicant() != NULL ); // FIXME: I added this assert. Is it right?
     conflictLiteral.getVariable()->getImplicant()->onLearning( this );    
 
-    trace( solving, 2, "Conflict literal: %s.\n", toString( conflictLiteral ).c_str() );
+    trace( learning, 2, "Conflict literal: %s.\n", toString( conflictLiteral ).c_str() );
     assert( conflictLiteral.getVariable()->getId() < visitedVariables.size() && visitedVariables[ conflictLiteral.getVariable()->getId() ] == numberOfCalls );
     solver.startIterationOnAssignedVariable();
     
@@ -63,14 +63,14 @@ Learning::onConflict(
 	{
         //Get next literal.
 		Literal currentLiteral = getNextLiteralToNavigate();
-        trace( solving, 3, "Navigating %s for calculating UIP.\n", toString( currentLiteral ).c_str() );
+        trace( learning, 3, "Navigating %s for calculating UIP.\n", toString( currentLiteral ).c_str() );
         //Compute implicants of the literal.
         if( conflictLiteral.getVariable()->getImplicant() != NULL )
             currentLiteral.getVariable()->getImplicant()->onLearning( this );
 	}
 
     Literal firstUIP = getNextLiteralToNavigate();
-    trace( solving, 2, "First UIP: %s.\n", toString( firstUIP ).c_str() );
+    trace( learning, 2, "First UIP: %s.\n", toString( firstUIP ).c_str() );
     
 	learnedClause->addLiteral( firstUIP );    
     
@@ -82,10 +82,9 @@ Learning::onConflict(
         learnedClause->swapLiterals( 0, learnedClause->size() - 1 );
         learnedClause->swapLiterals( 1, maxPosition != 0 ? maxPosition : learnedClause->size() - 1 );
         assert( learnedClause->getAt( 0 ).getDecisionLevel() == solver.getCurrentDecisionLevel() );
-    
     }
     
-    trace( solving, 2, "Learned Clause: %s.\n", toString( *learnedClause ).c_str() );
+    trace( learning, 1, "Learned Clause: %s.\n", toString( *learnedClause ).c_str() );
     
     return learnedClause;
 }

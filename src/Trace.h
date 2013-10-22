@@ -61,6 +61,7 @@ namespace wasp
         public:
             unsigned parser;
             unsigned solving;
+            unsigned learning;
             unsigned modelchecker;
             unsigned unfoundedset;
             unsigned heuristic;

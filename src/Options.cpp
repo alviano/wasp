@@ -49,7 +49,8 @@ namespace wasp
 #define OPTIONID_trace_checker ( 'z' + 3 )
 #define OPTIONID_trace_solving ( 'z' + 4 )
 #define OPTIONID_trace_us ( 'z' + 5 )
-
+#define OPTIONID_trace_learning ( 'z' + 6 )    
+    
 /* OUTPUT OPTIONS */
 #define OPTIONID_silent ( 'z' + 20 )
 #define OPTIONID_competition_output ( 'z' + 21 )
@@ -133,6 +134,7 @@ Options::parse(
                 { "trace-mc", required_argument, NULL, OPTIONID_trace_checker },
                 { "trace-us", required_argument, NULL, OPTIONID_trace_us },
                 { "trace-heuristic", required_argument, NULL, OPTIONID_trace_heuristic },
+                { "trace-learning", required_argument, NULL, OPTIONID_trace_learning },
                 
                 /* OUTPUT OPTIONS */
                 { "competition-output", no_argument, NULL, OPTIONID_competition_output },
@@ -207,6 +209,10 @@ Options::parse(
 
             case OPTIONID_trace_us:
                 setTraceLevel( unfoundedset, atoi( optarg ) );
+                break;
+                
+            case OPTIONID_trace_learning:
+                setTraceLevel( learning, atoi( optarg ) );
                 break;
 
             case OPTIONID_competition_output:

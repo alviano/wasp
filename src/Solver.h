@@ -358,7 +358,7 @@ Solver::doRestart()
     assert( "The strategy for deletion must be initialized." && deletionStrategy != NULL );
     assert( "The strategy for heuristic must be initialized." && decisionHeuristic != NULL );
     assert( "The strategy for restarts must be initialized." && restartStrategy != NULL );
-    trace( solving, 1, "Performing restart.\n" );
+    trace( solving, 2, "Performing restart.\n" );
     deletionStrategy->onRestart();
     decisionHeuristic->onRestart();
     restartStrategy->onRestart();
@@ -370,7 +370,7 @@ Solver::deleteLearnedClause(
     LearnedClause* learnedClause,
     List< LearnedClause* >::iterator iterator )
 {
-    trace( solving, 4, "Deleting learned clause %s.", toString( *learnedClause ).c_str() );
+    trace( solving, 4, "Deleting learned clause %s.\n", toString( *learnedClause ).c_str() );
     learnedClause->detachClause();
     delete learnedClause;    
     learnedClauses.erase( iterator );
@@ -423,7 +423,6 @@ Solver::chooseLiteral()
 void
 Solver::analyzeConflict()
 {
-    trace( solving, 1, "Analyzing conflict.\n" );
     LearnedClause* learnedClause = learning.onConflict( conflictLiteral, conflictClause );
     assert( "Learned clause has not been calculated." && learnedClause != NULL );
     
@@ -450,7 +449,7 @@ Solver::analyzeConflict()
         {
             assert( learnedClause->getAt( 1 ).getDecisionLevel() != 0 );
             assert( "Backjumping level is not valid." && learnedClause->getAt( 1 ).getDecisionLevel() < currentDecisionLevel );
-            trace( solving, 2, "Learned clause and backjumping to level %d.", learnedClause->getAt( 1 ).getDecisionLevel() );
+            trace( solving, 2, "Learned clause and backjumping to level %d.\n", learnedClause->getAt( 1 ).getDecisionLevel() );
             unroll( learnedClause->getAt( 1 ).getDecisionLevel() );    
             
             assert( "Each learned clause has to be an asserting clause." && learnedClause->getAt( 0 ) != Literal::null );

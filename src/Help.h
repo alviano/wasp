@@ -45,6 +45,7 @@ class Help
             cout << "Trace options                          " << endl << endl;
             cout << "--trace-parser=<verbosity>             - Trace parser." << endl;
             cout << "--trace-solving=<verbosity>            - Trace solver." << endl;
+            cout << "--trace-learning=<verbosity>           - Trace learning." << endl;
             cout << "--trace-heuristic=<verbosity>          - Trace heuristic." << endl;
             cout << "--trace-mc=<verbosity>                 - Trace model checker." << endl;
             cout << "--trace-us=<verbosity>                 - Trace unfounded set function." << endl;
