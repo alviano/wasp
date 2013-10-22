@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   Trace.h
- * Author: Mario Alviano
- *
- * Created on 15 October 2013, 08.35
- */
-
 #ifndef TRACE_H
 #define TRACE_H
 #include <cstdio>
