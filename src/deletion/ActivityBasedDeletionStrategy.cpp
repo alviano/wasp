@@ -37,12 +37,11 @@ void
 ActivityBasedDeletionStrategy::deleteClauses()
 {
     startIteration();
-    typename Solver::LearnedClausesIterator it = solver.learnedClauses_begin();
+    Solver::LearnedClausesIterator it = solver.learnedClauses_begin();
     assert( it != solver.learnedClauses_end() );
     do
     {
-        typename Solver::LearnedClausesIterator tmp_it = it++;
-        LearnedClause* clause = *tmp_it;
+        LearnedClause* clause = *it;
         
         if( !clause->isLocked() )
         {
@@ -52,9 +51,13 @@ ActivityBasedDeletionStrategy::deleteClauses()
             if ( activity < threshold )
             {
                 toDelete--;
-                solver.deleteLearnedClause( clause, tmp_it );            
-            }        
+                solver.deleteLearnedClause( it++ );            
+            }
+            else
+                ++it;
         }
+        else
+            ++it;
     }while( it != solver.learnedClauses_end() );
     
     
@@ -65,19 +68,16 @@ ActivityBasedDeletionStrategy::deleteClauses()
         assert( it != solver.learnedClauses_end() );
         do
         {
-            typename Solver::LearnedClausesIterator tmp_it = it++;
-            LearnedClause* clause = *tmp_it;
+            LearnedClause* clause = *it;
 
     
-            if( !clause->isLocked() )
+            if( !clause->isLocked() && clause->getActivity() < activitySum )
             {
-                Activity activity = clause->getActivity();
-                if ( activity < activitySum )
-                {
-                    toDelete--;
-                    solver.deleteLearnedClause( clause, tmp_it );            
-                }        
+                toDelete--;
+                solver.deleteLearnedClause( it++ );            
             }
+            else
+                ++it;
         }while( it != solver.learnedClauses_end() && toDelete > 0 );
     }
 }

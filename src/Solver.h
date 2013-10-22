@@ -130,7 +130,7 @@ class Solver
         inline LearnedClausesReverseIterator learnedClauses_rbegin() { return learnedClauses.rbegin(); }
         inline LearnedClausesReverseIterator learnedClauses_rend() { return learnedClauses.rend(); }
 
-        inline void deleteLearnedClause( LearnedClause* learnedClause, List< LearnedClause* >::iterator iterator );
+        inline void deleteLearnedClause( List< LearnedClause* >::iterator iterator );
         
         void printProgram()
         {
@@ -367,9 +367,9 @@ Solver::doRestart()
 
 void
 Solver::deleteLearnedClause( 
-    LearnedClause* learnedClause,
     List< LearnedClause* >::iterator iterator )
 {
+    LearnedClause* learnedClause = *iterator;
     trace( solving, 4, "Deleting learned clause %s.", learnedClause->clauseToCharStar() );
     learnedClause->detachClause();
     delete learnedClause;    
