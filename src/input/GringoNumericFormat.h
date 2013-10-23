@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   GringoNumericFormat.h
- * Author: Carmine Dodaro
- *
- * Created on 9 September 2013, 11.36
- */
-
 
 #ifndef _GRINGONUMERICFORMAT_H
 #define	_GRINGONUMERICFORMAT_H

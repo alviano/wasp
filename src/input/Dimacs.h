@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   Dimacs.h
- * Author: Carmine Dodaro
- *
- * Created on 23 July 2013, 13.33
- */
-
 #ifndef DIMACS_H
 #define	DIMACS_H
 

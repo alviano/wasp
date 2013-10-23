@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   DeletionStrategy.h
- * Author: Carmine Dodaro
- *
- * Created on 8 August 2013, 15.25
- */
-
 #ifndef DELETIONSTRATEGY_H
 #define	DELETIONSTRATEGY_H
 

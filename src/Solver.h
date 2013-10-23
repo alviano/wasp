@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   Solver.h
- * Author: Carmine Dodaro
- *
- * Created on 21 July 2013, 17.36
- */
-
 #ifndef SOLVER_H
 #define	SOLVER_H
 

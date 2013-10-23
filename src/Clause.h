@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   Clause.h
- * Author: Carmine Dodaro
- *
- * Created on 21 July 2013, 16.47
- */
-
 #ifndef CLAUSE_H
 #define	CLAUSE_H
 

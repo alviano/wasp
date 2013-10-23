@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   DimacsOutputBuilder.h
- * Author: Carmine Dodaro
- *
- * Created on 04 September 2013, 13.00
- */
-
 #ifndef DIMACSOUTPUTBUILDER_H
 #define DIMACSOUTPUTBUILDER_H
 

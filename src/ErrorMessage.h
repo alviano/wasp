@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   ErrorMessage.h
- * Author: Carmine Dodaro
- *
- * Created on 05 September 2013, 10.26
- */
-
 #ifndef ERRORMESSAGE_H
 #define	ERRORMESSAGE_H
 

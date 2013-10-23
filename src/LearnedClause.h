@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   LearnedClause.h
- * Author: Carmine Dodaro
- *
- * Created on 8 August 2013, 15.43
- */
-
 #ifndef LEARNEDCLAUSE_H
 #define	LEARNEDCLAUSE_H
 

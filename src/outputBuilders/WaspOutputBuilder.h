@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   WaspOutputBuilder.h
- * Author: Carmine Dodaro
- *
- * Created on 04 September 2013, 12.44
- */
-
 #ifndef WASPOUTPUTBUILDER_H
 #define WASPOUTPUTBUILDER_H
 

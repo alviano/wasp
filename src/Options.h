@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   Options.h
- * Author: Mario Alviano
- *
- * Created on 15 October 2013, 08.52
- */
-
 #ifndef OPTIONS_H
 #define OPTIONS_H
 

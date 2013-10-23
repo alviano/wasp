@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   Learning.h
- * Author: Carmine Dodaro
- *
- * Created on 27 July 2013, 9.51
- */
-
 #ifndef LEARNING_H
 #define	LEARNING_H
 

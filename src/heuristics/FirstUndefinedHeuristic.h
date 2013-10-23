@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   FirstUndefinedHeuristic.h
- * Author: Carmine Dodaro
- *
- * Created on 05 September 2013, 12.39
- */
-
 #ifndef FIRSTUNDEFINEDHEURISTIC_H
 #define	FIRSTUNDEFINEDHEURISTIC_H
 

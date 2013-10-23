@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   BerkminHeuristic.h
- * Author: Carmine Dodaro
- *
- * Created on 02 September 2013, 16.36
- */
-
 #ifndef BERKMINHEURISTIC_H
 #define	BERKMINHEURISTIC_H
 

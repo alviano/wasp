@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   ThirdCompetitionOutputBuilder.h
- * Author: Carmine Dodaro
- *
- * Created on 04 September 2013, 12.47
- */
-
 #ifndef THIRDCOMPETITIONOUTPUTBUILDER_H
 #define THIRDCOMPETITIONOUTPUTBUILDER_H
 

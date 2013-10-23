@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   NoRestartStrategy.h
- * Author: Carmine Dodaro
- *
- * Created on 7 August 2013, 9.33
- */
-
 #ifndef NORESTARTSSTRATEGY_H
 #define	NORESTARTSSTRATEGY_H
 

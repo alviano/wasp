@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   Help.h
- * Author: Carmine Dodaro
- *
- * Created on 17 October 2013, 10.55
- */
-
 #ifndef HELP_H
 #define HELP_H
 

@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   SequenceBasedRestartStrategy.h
- * Author: Carmine Dodaro
- *
- * Created on 6 August 2013, 21.15
- */
-
 #ifndef SEQUENCEBASEDRESTARTSSTRATEGY_H
 #define	SEQUENCEBASEDRESTARTSSTRATEGY_H
 

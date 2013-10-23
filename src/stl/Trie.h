@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   Trie.h
- * Author: Carmine Dodaro
- *
- * Created on 9 September 2013, 17.36
- */
-
 #ifndef _TRIE_H
 #define	_TRIE_H
 

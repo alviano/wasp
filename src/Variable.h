@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   Variable.h
- * Author: Carmine Dodaro
- *
- * Created on 10 October 2013, 16.10
- */
-
 #ifndef VARIABLE_H
 #define	VARIABLE_H
 

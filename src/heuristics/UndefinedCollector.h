@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   UndefinedCollector.h
- * Author: Carmine Dodaro
- *
- * Created on 03 September 2013, 16.50
- */
-
 #ifndef UNDEFINEDCOLLECTOR_H
 #define	UNDEFINEDCOLLECTOR_H
 

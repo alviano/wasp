@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   Constants.h
- * Author: Carmine Dodaro
- *
- * Created on 21 July 2013, 17.29
- */
-
 #ifndef CONSTANTS_H
 #define	CONSTANTS_H
 

@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   RestartsBasedDeletionStrategy.h
- * Author: carmine
- *
- * Created on 8 agosto 2013, 17.02
- */
-
 #ifndef RESTARTSBASEDDELETIONSTRATEGY_H
 #define	RESTARTSBASEDDELETIONSTRATEGY_H
 

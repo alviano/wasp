@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   DecisionHeuristic.h
- * Author: Carmine Dodaro
- *
- * Created on 02 September 2013, 12.42
- */
-
 #ifndef DECISIONHEURISTIC_H
 #define	DECISIONHEURISTIC_H
 

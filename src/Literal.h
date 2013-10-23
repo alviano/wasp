@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   Literal.h
- * Author: Carmine Dodaro
- *
- * Created on 21 July 2013, 16.50
- */
-
 
 #ifndef LITERAL_H
 #define	LITERAL_H

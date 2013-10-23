@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   MinisatRestartStrategy.h
- * Author: Carmine Dodaro
- *
- * Created on 17 October 2013, 14.08
- */
-
 #ifndef MINISATRESTARTSSTRATEGY_H
 #define	MINISATRESTARTSSTRATEGY_H
 

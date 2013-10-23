@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   WaspFacade.h
- * Author: Carmine Dodaro
- *
- * Created on 21 July 2013, 17.00
- */
-
 #ifndef WASPFACADE_H
 #define	WASPFACADE_H
 

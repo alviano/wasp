@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   OutputBuilder.h
- * Author: Carmine Dodaro
- *
- * Created on 04 September 2013, 12.00
- */
-
 #ifndef OUTPUTBUILDER_H
 #define OUTPUTBUILDER_H
 

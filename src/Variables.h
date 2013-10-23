@@ -15,13 +15,6 @@
  *  limitations under the License.
  *
  */
-
-/* 
- * File:   Variables.h
- * Author: Mario Alviano
- *
- * Created on 14 July 2013, 18.25
- */
  
 #ifndef VARIABLES_H
 #define VARIABLES_H

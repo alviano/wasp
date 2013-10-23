@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   SilentOutputBuilder.h
- * Author: Carmine Dodaro
- *
- * Created on 04 September 2013, 12.52
- */
-
 #ifndef SILENTOUTPUTBUILDER_H
 #define SILENTOUTPUTBUILDER_H
 

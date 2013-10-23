@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   WatchedList.h
- * Author: Carmine Dodaro
- *
- * Created on 24 July 2013, 17.25
- */
-
 #ifndef WATCHEDLIST_H
 #define	WATCHEDLIST_H
 

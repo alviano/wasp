@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   MinisatHeuristic.h
- * Author: Carmine Dodaro
- *
- * Created on 20 October 2013, 12.46
- */
-
 #ifndef MINISATHEURISTIC_H
 #define	MINISATHEURISTIC_H
 

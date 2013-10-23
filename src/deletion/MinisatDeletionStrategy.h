@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   MinisatDeletionStrategy.h
- * Author: Carmine Dodaro
- *
- * Created on 8 August 2013, 15.27
- */
-
 #ifndef MINISATDELETIONSTRATEGY_H
 #define	MINISATDELETIONSTRATEGY_H
 

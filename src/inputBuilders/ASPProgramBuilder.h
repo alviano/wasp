@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   ASPProgramBuilder.h
- * Author: Carmine Dodaro
- *
- * Created on 10 September 2013, 14.58
- */
-
 #ifndef ASPPROGRAMBUILDER_H
 #define	ASPPROGRAMBUILDER_H
 

@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   AggressiveDeletionStrategy.h
- * Author: Carmine Dodaro
- *
- * Created on 8 August 2013, 15.27
- */
-
 #ifndef AGGRESSIVEDELETIONSTRATEGY_H
 #define	AGGRESSIVEDELETIONSTRATEGY_H
 

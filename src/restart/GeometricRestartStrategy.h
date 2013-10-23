@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   GeometricRestartStrategy.h
- * Author: Carmine Dodaro
- *
- * Created on 6 August 2013, 21.13
- */
-
 #ifndef GEOMETRICRESTARTSSTRATEGY_H
 #define	GEOMETRICRESTARTSSTRATEGY_H
 

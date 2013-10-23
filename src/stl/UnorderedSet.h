@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   UnorderedSet.h
- * Author: Mario Alviano
- *
- * Created on 27 July 2013, 9.27
- */
-
 #ifndef UNORDEREDSET_H
 #define	UNORDEREDSET_H
 

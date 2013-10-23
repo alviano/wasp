@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   WaspRule.h
- * Author: Carmine Dodaro
- *
- * Created on 09 September 2013, 18.02
- */
-
 #ifndef WASPRULE_H
 #define	WASPRULE_H
 

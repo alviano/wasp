@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   CompetitionOutputBuilder.h
- * Author: Carmine Dodaro
- *
- * Created on 04 September 2013, 12.55
- */
-
 #ifndef COMPETITIONOUTPUTBUILDER_H
 #define COMPETITIONOUTPUTBUILDER_H
 

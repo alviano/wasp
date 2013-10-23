@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   List.h
- * Author: Mario Alviano
- *
- * Created on 24 July 2013, 17.27
- */
-
 #ifndef LIST_H
 #define	LIST_H
 

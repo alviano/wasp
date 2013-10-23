@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   Vector.h
- * Author: Carmine Dodaro
- *
- * Created on 14 October 2013, 12.34
- */
-
 #ifndef VECTOR_H
 #define	VECTOR_H
 

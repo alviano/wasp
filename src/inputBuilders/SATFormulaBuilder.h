@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   SATFormulaBuilder.h
- * Author: Carmine Dodaro
- *
- * Created on 23 July 2013, 13.39
- */
-
 // TODO: useless. Remove!
 
 //#ifndef SATFORMULABUILDER_H
