@@ -2,7 +2,7 @@
 # use 
 #   $ make BUILD=release 
 # to compile different binaries
-BUILD = debug
+BUILD = release
 cxxflags.debug = \
  -Wall -std=c++11
 linkflags.debug = \
