@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2013 Mario Alviano, Carmine Dodaro, Wolfgang Faber, Nicola Leone, Francesco Ricca, and Marco Sirianni.
+ *  Copyright 2013 Mario Alviano, Carmine Dodaro, and Francesco Ricca.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
