@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2013 Mario Alviano, Carmine Dodaro and Francesco Ricca.
+ *  Copyright 2013 Mario Alviano, Carmine Dodaro, and Francesco Ricca.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -14,13 +14,6 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  *
- */
-
-/* 
- * File:   MinisatDeletionStrategy.h
- * Author: Carmine Dodaro
- *
- * Created on 8 August 2013, 15.27
  */
 
 #ifndef MINISATDELETIONSTRATEGY_H
