@@ -97,7 +97,7 @@ WaspFacade::setDeletionPolicy(
 }
 
 void
-WaspFacade::setHeuristicPolicy(
+WaspFacade::setDecisionPolicy(
     HEURISTIC_POLICY heuristicPolicy,
     unsigned int heuristicLimit )
 {

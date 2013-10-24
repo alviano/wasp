@@ -38,7 +38,7 @@ class WaspFacade
         void solve();
         
         void setDeletionPolicy( DELETION_POLICY );
-        void setHeuristicPolicy( HEURISTIC_POLICY, unsigned int heuristicLimit );
+        void setDecisionPolicy( HEURISTIC_POLICY, unsigned int heuristicLimit );
         void setOutputPolicy( OUTPUT_POLICY );
         void setRestartsPolicy( RESTARTS_POLICY, unsigned int threshold );
 
