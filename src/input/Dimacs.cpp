@@ -20,10 +20,10 @@
 
 #include "../Solver.h"
 #include "../Clause.h"
-#include "../Constants.h"
-#include "../ErrorMessage.h"
-#include "../Trace.h"
-#include "../Options.h"
+#include "../util/Constants.h"
+#include "../util/ErrorMessage.h"
+#include "../util/Trace.h"
+#include "../util/Options.h"
 
 #include <cassert>
 #include <sstream>

@@ -17,8 +17,8 @@
  */
 
 #include "GringoNumericFormat.h"
-#include "../Constants.h"
-#include "../ErrorMessage.h"
+#include "../util/Constants.h"
+#include "../util/ErrorMessage.h"
 #include "../Clause.h"
 
 #include <cassert>

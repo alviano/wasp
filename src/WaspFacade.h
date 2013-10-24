@@ -22,7 +22,7 @@
 #include <cassert>
 using namespace std;
 
-#include "Constants.h"
+#include "util/Constants.h"
 #include "Solver.h"
 #include "input/Dimacs.h"
 #include "inputBuilders/SATFormulaBuilder.h"

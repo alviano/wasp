@@ -22,7 +22,7 @@
 #include "DecisionHeuristic.h"
 #include "UndefinedCollector.h"
 
-#include "../Trace.h"
+#include "../util/Trace.h"
 #include "../Variable.h"
 
 #include <cassert>

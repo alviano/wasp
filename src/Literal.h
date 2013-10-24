@@ -26,7 +26,7 @@
 #include <string>
 using namespace std;
 
-#include "Constants.h"
+#include "util/Constants.h"
 #include "Variable.h"
 
 class Clause;

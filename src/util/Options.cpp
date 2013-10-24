@@ -20,7 +20,7 @@
 
 #include "ErrorMessage.h"
 #include "Help.h"
-#include "WaspFacade.h"
+#include "../WaspFacade.h"
 
 #include <getopt.h>
 #include <cstdlib>

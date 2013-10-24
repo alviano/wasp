@@ -22,8 +22,8 @@
 #include "DecisionHeuristic.h"
 #include "UndefinedCollector.h"
 
-#include "../Options.h"
-#include "../Trace.h"
+#include "../util/Options.h"
+#include "../util/Trace.h"
 #include "../Variable.h"
 
 #include <cassert>

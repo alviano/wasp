@@ -26,7 +26,7 @@
 #include <cstdlib>
 
 #include "WaspFacade.h"
-#include "Options.h"
+#include "util/Options.h"
 using namespace std;
 
 int EXIT_CODE = 0;

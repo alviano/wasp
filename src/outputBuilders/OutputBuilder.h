@@ -19,7 +19,7 @@
 #ifndef OUTPUTBUILDER_H
 #define OUTPUTBUILDER_H
 
-#include "../Constants.h"
+#include "../util/Constants.h"
 
 #include <iostream>
 #include <list>

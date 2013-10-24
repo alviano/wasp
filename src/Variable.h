@@ -21,7 +21,7 @@
 
 #include <cassert>
 #include <iostream>
-#include "Constants.h"
+#include "util/Constants.h"
 #include "WatchedList.h"
 
 using namespace std;

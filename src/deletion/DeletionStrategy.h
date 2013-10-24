@@ -19,7 +19,7 @@
 #ifndef DELETIONSTRATEGY_H
 #define	DELETIONSTRATEGY_H
 
-#include "../Constants.h"
+#include "../util/Constants.h"
 
 class Solver;
 class Clause;
