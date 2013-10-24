@@ -36,6 +36,7 @@ class LearnedClause : public Clause
         
         inline bool isGlue() const;
         inline void setLbdValue( unsigned int );
+        inline unsigned int getLbdValue() const;
         inline bool isLearned() const { return true; }
     private:
         
@@ -87,6 +88,12 @@ bool
 LearnedClause::isGlue() const
 {
     return lbdValue == 2;    
+}
+
+unsigned int
+LearnedClause::getLbdValue() const
+{
+    return lbdValue;
 }
 
 void

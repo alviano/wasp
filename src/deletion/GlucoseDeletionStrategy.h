@@ -26,7 +26,7 @@ using namespace std;
 class GlucoseDeletionStrategy : public DeletionStrategy
 {
     public:
-        inline GlucoseDeletionStrategy( Solver& solver );
+        inline GlucoseDeletionStrategy( Solver& solver, unsigned int thresholdGlueClauses );
 
         virtual void onLearning( LearnedClause* clause );
         virtual void onRestart() {}
@@ -41,10 +41,12 @@ class GlucoseDeletionStrategy : public DeletionStrategy
         unsigned int countOfDeletion;
         vector< unsigned int > levelsVector;
         unsigned int numberOfUnitPropagations;
+        unsigned int thresholdGlueClauses;
 };
 
 GlucoseDeletionStrategy::GlucoseDeletionStrategy(
-    Solver& s ) : solver( s ), countOfDeletion( 0 ), numberOfUnitPropagations( 1 )
+    Solver& s,
+    unsigned int threshold ) : solver( s ), countOfDeletion( 0 ), numberOfUnitPropagations( 1 ), thresholdGlueClauses( threshold )
 {
 }
 

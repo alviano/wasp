@@ -338,7 +338,7 @@ void
 Options::setOptions(
     WaspFacade& waspFacade )
 {
-    waspFacade.setDeletionPolicy( deletionPolicy );
+    waspFacade.setDeletionPolicy( deletionPolicy, deletionBound );
     waspFacade.setHeuristicPolicy( heuristicPolicy, maxBerkminNumber );
     waspFacade.setOutputPolicy( outputPolicy );
     waspFacade.setRestartsPolicy( restartsPolicy, restartsThreshold );

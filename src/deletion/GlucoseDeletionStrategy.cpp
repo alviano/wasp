@@ -88,7 +88,7 @@ GlucoseDeletionStrategy::deleteClauses()
     {
         LearnedClause* clause = *it;
         
-        if( !clause->isLocked() && !clause->isGlue() )
+        if( !clause->isLocked() && clause->getLbdValue() > thresholdGlueClauses )
         {
             toDelete--;
             solver.deleteLearnedClause( it++ );          
