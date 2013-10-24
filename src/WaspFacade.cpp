@@ -33,9 +33,9 @@
 #include "outputBuilders/CompetitionOutputBuilder.h"
 #include "outputBuilders/DimacsOutputBuilder.h"
 
-#include "heuristics/BerkminHeuristic.h"
-#include "heuristics/FirstUndefinedHeuristic.h"
-#include "heuristics/MinisatHeuristic.h"
+#include "decision/BerkminHeuristic.h"
+#include "decision/FirstUndefinedHeuristic.h"
+#include "decision/MinisatHeuristic.h"
 
 void
 WaspFacade::readInput()

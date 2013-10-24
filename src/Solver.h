@@ -33,7 +33,7 @@ using namespace std;
 #include "stl/List.h"
 #include "stl/UnorderedSet.h"
 #include "Learning.h"
-#include "heuristics/DecisionHeuristic.h"
+#include "decision/DecisionHeuristic.h"
 #include "outputBuilders/OutputBuilder.h"
 #include "restart/RestartStrategy.h"
 #include "deletion/DeletionStrategy.h"

@@ -33,7 +33,7 @@
 #include "Clause.h"
 #include "Literal.h"
 #include "Learning.h"
-#include "heuristics/UndefinedCollector.h"
+#include "decision/UndefinedCollector.h"
 
 using namespace std;
 
