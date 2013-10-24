@@ -219,3 +219,12 @@ Solver::propagate(
             assert( !conflictDetected() );
     }
 }
+
+void
+Solver::printProgram() const
+{
+    for( List< Clause* >::const_iterator it = clauses.begin(); it != clauses.end(); ++it )
+    {
+        cout << *( *it ) << endl;
+    }
+}

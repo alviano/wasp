@@ -97,9 +97,6 @@ class Solver
         inline bool conflictDetected();
         inline void foundIncoherence();
         inline bool hasUndefinedLiterals();
-//        inline void startIterationOnUndefinedVariables() { variables.startIterationOnUndefinedVariables(); }
-//        inline bool hasNextUndefinedVariable() { return variables.hasNextUndefinedVariable(); }
-//        inline Variable* getNextUndefinedVariable() { return variables.getNextUndefinedVariable(); }
         inline Variable* getFirstUndefined() { return variables.getFirstUndefined(); }
         inline Variable* getNextUndefined( Variable* v ) { return variables.getNextUndefined( v ); }
         inline void printAnswerSet();        
@@ -123,15 +120,9 @@ class Solver
         inline ClauseReverseIterator learnedClauses_rbegin() { return learnedClauses.rbegin(); }
         inline ClauseReverseIterator learnedClauses_rend() { return learnedClauses.rend(); }
 
-        inline void deleteLearnedClause( List< Clause* >::iterator iterator );
+        inline void deleteLearnedClause( ClauseIterator iterator );
         
-        void printProgram()
-        {
-            for( List< Clause* >::const_iterator it = clauses.begin(); it != clauses.end(); ++it )
-            {
-                cout << *( *it ) << endl;
-            }
-        }
+        void printProgram() const;
         
         inline void onLiteralInvolvedInConflict( Literal l ) { heuristic->onLiteralInvolvedInConflict( l ); }
         
@@ -216,6 +207,7 @@ Literal
 Solver::getLiteral(
     int lit )
 {
+    // FIXME: add reasonable constructor to literal
     assert( "Lit is out of range." && static_cast< unsigned >( abs( lit ) ) <= variables.numberOfVariables() && abs( lit ) > 0);
     return lit > 0 ? Literal( variables[ lit ] ) : Literal( variables[ -lit ], false );
 //    if( lit > 0 )
@@ -332,12 +324,12 @@ Solver::doRestart()
 
 void
 Solver::deleteLearnedClause( 
-    List< Clause* >::iterator iterator )
+    ClauseIterator iterator )
 {
     Clause* learnedClause = *iterator;
-    trace( solving, 4, "Deleting learned clause %s.\n", toString( *learnedClause ).c_str() );
+    trace_msg( solving, 4, "Deleting learned clause " << *learnedClause );
     learnedClause->detachClause();
-    delete learnedClause;    
+    delete learnedClause;
     learnedClauses.erase( iterator );
 }
 

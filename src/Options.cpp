@@ -325,7 +325,7 @@ Options::setOptions(
     WaspFacade& waspFacade )
 {
     waspFacade.setDeletionPolicy( deletionPolicy );
-    waspFacade.setHeuristicPolicy( heuristicPolicy, maxBerkminNumber );
+    waspFacade.setDecisionPolicy( heuristicPolicy, maxBerkminNumber );
     waspFacade.setOutputPolicy( outputPolicy );
     waspFacade.setRestartsPolicy( restartsPolicy, restartsThreshold );
     waspFacade.setMaxModels( maxModels );

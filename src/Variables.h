@@ -50,9 +50,6 @@ class Variables
         inline unsigned numberOfAssignedLiterals() const { return assignedVariablesSize; }
         inline unsigned numberOfVariables() const { assert( variables[ 0 ] == NULL ); return variables.size() - 1; }
         
-//        inline Variable* getNextUndefinedVariable();
-//        inline bool hasNextUndefinedVariable();
-//        inline void startIterationOnUndefinedVariables();
         inline Variable* getFirstUndefined();
         inline Variable* getNextUndefined( Variable* v );
         
@@ -163,15 +160,6 @@ Variables::startIterationOnAssignedVariable()
     iteratorOnAssignedVariables = assignedVariablesSize - 1;
 }
 
-//Variable*
-//Variables::getNextUndefinedVariable()
-//{
-//    assert( variables[ 0 ] == NULL );
-//    assert( iteratorOnUndefinedVariables >= 1 && iteratorOnUndefinedVariables < variables.size() );
-//    assert( variables[ iteratorOnUndefinedVariables ]->isUndefined() );
-//    return variables[ iteratorOnUndefinedVariables ];
-//}
-
 Variable* 
 Variables::getFirstUndefined()
 {
@@ -200,38 +188,6 @@ Variables::getNextUndefined(
             return variables[ i ];
     return NULL;
 }
-
-//void
-//Variables::startIterationOnUndefinedVariables()
-//{
-//    assert( variables[ 0 ] == NULL );
-//    assert( noUndefinedBefore >= 1 );
-//    assert( checkNoUndefinedBefore( noUndefinedBefore ) );
-//    while( noUndefinedBefore < variables.size() )
-//    {
-//        if( variables[ noUndefinedBefore ]->isUndefined() )
-//        {
-//            iteratorOnUndefinedVariables = noUndefinedBefore;
-//            return;
-//        }
-//        ++noUndefinedBefore;
-//    }
-//    assert( 0 );
-//}
-// 
-//bool
-//Variables::hasNextUndefinedVariable()
-//{
-//    assert( variables[ 0 ] == NULL );
-//    assert( 0 <= iteratorOnUndefinedVariables && iteratorOnUndefinedVariables < variables.size() );
-//    while( ++iteratorOnUndefinedVariables < variables.size() )
-//    {
-//        assert( variables[ iteratorOnUndefinedVariables ] != NULL );
-//        if( variables[ iteratorOnUndefinedVariables ]->isUndefined() )
-//            return true;
-//    }
-//    return false;
-//}
 
 void
 Variables::printAnswerSet(
