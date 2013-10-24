@@ -200,11 +200,8 @@ Solver::solve()
         }
     }
     
-    cout << "Number of undefined " << getNumberOfUndefined() << endl;
-    if( !allClausesSatisfied() )
-    {
-        cout << "Cluses are not satisfied" << endl;
-    }
+    assert( getNumberOfUndefined() > 0 );
+    assert( allClausesSatisfied() );    
     
     return true;
 }
