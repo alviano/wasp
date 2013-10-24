@@ -1,10 +1,6 @@
 /*
  *
-<<<<<<< HEAD
- *  Copyright 2013 Mario Alviano, Carmine Dodaro and Francesco Ricca.
-=======
  *  Copyright 2013 Mario Alviano, Carmine Dodaro, and Francesco Ricca.
->>>>>>> 5fc82930c51bc47fa41e640f5f2e1612ac22a801
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
