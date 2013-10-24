@@ -28,8 +28,6 @@ class MinisatDeletionStrategy : public ActivityBasedDeletionStrategy
         
         virtual void onLearning( LearnedClause* clause );
         virtual void onRestart();
-        virtual void onUnitPropagation( Clause* clause ){}
-        virtual void onNewVariable( Variable& variable ){}
         
     private:
         bool hasToDelete();

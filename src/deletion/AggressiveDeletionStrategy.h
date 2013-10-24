@@ -28,8 +28,6 @@ class AggressiveDeletionStrategy : public ActivityBasedDeletionStrategy
 
         virtual void onLearning( LearnedClause* clause );
         virtual void onRestart() {}
-        virtual void onUnitPropagation( Clause* ) {}
-        virtual void onNewVariable( Variable& ){}
         
     private:
         bool hasToDelete();

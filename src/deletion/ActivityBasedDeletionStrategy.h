@@ -33,8 +33,6 @@ class ActivityBasedDeletionStrategy : public DeletionStrategy
         
         virtual void onLearning( LearnedClause* clause ) = 0;
         virtual void onRestart() = 0;
-        virtual void onUnitPropagation( Clause* clause ) = 0;
-        virtual void onNewVariable( Variable& variable ) = 0;
         
     protected:
         inline void decrementActivity();

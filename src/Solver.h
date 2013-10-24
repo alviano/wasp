@@ -106,11 +106,6 @@ class Solver
         inline Variable* getNextUndefined( Variable* v ) { return variables.getNextUndefined( v ); }
         inline void printAnswerSet();        
         
-        #ifndef NDEBUG
-        unsigned int getNumberOfUndefined();
-        bool allClausesSatisfied();
-        #endif
-        
         void unroll( unsigned int level );
         inline void unrollOne();
         inline void unrollLastVariable();
@@ -145,9 +140,7 @@ class Solver
         {
             assert( "The copy constructor has been disabled." && 0 );
         }
-        
-        inline void addVariableInternal( Variable* variable );
-        
+                
         vector< Literal > trueLiterals;
 
         unsigned int currentDecisionLevel;        
@@ -225,27 +218,22 @@ void
 Solver::addVariable( 
     const string& name )
 {    
-    Variable* variable = new Variable( variables.numberOfVariables() + 1, name );
-    addVariableInternal( variable );
-}
-
-void
-Solver::addVariable()
-{
-    Variable* variable = new Variable( variables.numberOfVariables() + 1 );
-    addVariableInternal( variable );
-}
-
-void
-Solver::addVariableInternal(
-    Variable* variable )
-{
+    Variable* variable = new Variable( variables.numberOfVariables()+1, name );
     variables.push_back( variable );
     assert( variables.numberOfVariables() == variable->getId() );
     assert( decisionHeuristic != NULL );
     decisionHeuristic->onNewVariable( *variable );
     learning.onNewVariable();
-    deletionStrategy->onNewVariable( *variable );
+}
+
+void
+Solver::addVariable()
+{
+    Variable* variable = new Variable( variables.numberOfVariables()+1 );
+    variables.push_back( variable );
+    assert( variables.numberOfVariables() == variable->getId() );
+    assert( decisionHeuristic != NULL );
+    decisionHeuristic->onNewVariable( *variable );
 }
 
 Literal
@@ -289,7 +277,7 @@ Solver::assignLiteral(
     Clause* implicant )
 {
     assert( implicant != NULL );
-    if( !variables.assign( currentDecisionLevel, implicant ) )
+    if( !variables.assign(  currentDecisionLevel, implicant ) )
     {
         conflictLiteral = implicant->getAt( 0 );
         conflictClause = implicant;        

@@ -16,6 +16,13 @@
  *
  */
 
+/* 
+ * File:   main.cpp
+ * Author: Carmine Dodaro
+ *
+ * Created on 23 July 2013, 17.50
+ */
+
 #include <cstdlib>
 
 #include "WaspFacade.h"

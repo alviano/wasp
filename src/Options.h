@@ -48,8 +48,6 @@ namespace wasp
             static DELETION_POLICY deletionPolicy;
 
             static HEURISTIC_POLICY heuristicPolicy;
-            
-            static unsigned int deletionBound;
 
             static vector< const char* > inputFiles;
 

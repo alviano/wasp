@@ -21,10 +21,8 @@
 
 #include "../Constants.h"
 
-class Clause;
 class Solver;
 class LearnedClause;
-class Variable;
 
 class DeletionStrategy
 {
@@ -33,8 +31,6 @@ class DeletionStrategy
 
         virtual void onLearning( LearnedClause* clause ) = 0;
         virtual void onRestart() = 0;
-        virtual void onUnitPropagation( Clause* clause ) = 0;
-        virtual void onNewVariable( Variable& variable ) = 0;
 };
 
 #endif	/* DELETIONSTRATEGY_H */

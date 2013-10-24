@@ -26,7 +26,6 @@
 #include "deletion/AggressiveDeletionStrategy.h"
 #include "deletion/RestartsBasedDeletionStrategy.h"
 #include "deletion/MinisatDeletionStrategy.h"
-#include "deletion/GlucoseDeletionStrategy.h"
 
 #include "outputBuilders/WaspOutputBuilder.h"
 #include "outputBuilders/SilentOutputBuilder.h"
@@ -80,19 +79,14 @@ void
 WaspFacade::setDeletionPolicy(
     DELETION_POLICY deletionPolicy )
 {
-    //TODO: add trace( );
     switch( deletionPolicy )
     {
         case RESTARTS_BASED_DELETION_POLICY:
             solver.setDeletionStrategy( new RestartsBasedDeletionStrategy( solver ) );
             break;
-
+            
         case MINISAT_DELETION_POLICY:
             solver.setDeletionStrategy( new MinisatDeletionStrategy( solver ) );
-            break;
-
-        case GLUCOSE_DELETION_POLICY:
-            solver.setDeletionStrategy( new GlucoseDeletionStrategy( solver ) );
             break;
 
         case AGGRESSIVE_DELETION_POLICY:

@@ -16,6 +16,13 @@
  *
  */
 
+/* 
+ * File:   Clause.h
+ * Author: Carmine Dodaro
+ *
+ * Created on 21 July 2013, 16.47
+ */
+
 #ifndef CLAUSE_H
 #define	CLAUSE_H
 
@@ -68,14 +75,7 @@ class Clause
         inline bool checkUnsatisfiedAndOptimize( UndefinedCollector* collector );
         bool isUnsatisfied() const;
         
-        unsigned getMaxDecisionLevel( unsigned from, unsigned to) const;
-        
-        virtual bool isGlue() const;
-        virtual bool isLearned() const;
-        
-        typedef vector< Literal >::iterator ClauseIterator;
-        inline ClauseIterator clause_begin() { return literals.begin(); }
-        inline ClauseIterator clause_end() { return literals.end(); }        
+        unsigned getMaxDecisionLevel( unsigned from, unsigned to) const;       
 
     protected:
         inline bool isImplicantOfALiteral() const;
