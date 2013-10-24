@@ -52,7 +52,7 @@ MinisatHeuristic::makeAChoice()
     assert( "The chosen variable has not been set." && chosenVariable != NULL );
     assert( "The literal must be undefined." && chosenVariable->isUndefined() );
     trace( heuristic, 1, "Ending Minisat Heuristic.\n" );
-    return Literal( chosenVariable, false );
+    return Literal( chosenVariable, NEGATIVE );
 }
 
 void

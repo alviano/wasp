@@ -16,9 +16,8 @@
  *
  */
 
-
 #ifndef LITERAL_H
-#define	LITERAL_H
+#define LITERAL_H
 
 #include <cstdint>
 #include <cassert>
@@ -41,25 +40,21 @@ class Literal
         static inline Literal createFromAssignedVariable( Variable* );
         static inline Literal createOppositeFromAssignedVariable( Variable* );
 
-		// Instantiate a positive literal
-		inline explicit Literal( Variable* = NULL );
+        inline explicit Literal( Variable* variable = NULL, unsigned int sign = POSITIVE );
+        
+        inline Literal( const Literal& );
+        inline ~Literal();
 
-		// Instantiate a negative literal. The boolean value is ignored.
-		inline Literal( Variable*, bool );
-
-		inline Literal( const Literal& );
-		inline ~Literal();
-
-		inline bool isTrue() const;
-		inline bool isFalse() const;
-		inline bool isUndefined() const;
+        inline bool isTrue() const;
+        inline bool isFalse() const;
+        inline bool isUndefined() const;
 
         inline bool setTrue();
 
-		inline bool operator==( const Literal& ) const;
+		 inline bool operator==( const Literal& ) const;
         inline bool operator!=( const Literal& ) const;
 
-		inline void addWatchedClause( Clause* clause );
+		 inline void addWatchedClause( Clause* clause );
         inline void eraseWatchedClause( Clause* clause );
         inline void findAndEraseWatchedClause( Clause* clauses );
 
@@ -85,8 +80,6 @@ class Literal
         
 	private:
         
-        inline Literal( unsigned int sign, Variable* variable );
-        
         /**
          * This function returns 1 if the literal is positive, 0 otherwise.
          */
@@ -102,7 +95,7 @@ Literal::createFromAssignedVariable(
     Variable* v )
 {
     assert( TRUE == 2 && FALSE == 1 );
-    return Literal( v->getTruthValue() & 1, v );
+    return Literal( v, v->getTruthValue() & 1 );
 }
 
 Literal
@@ -110,34 +103,19 @@ Literal::createOppositeFromAssignedVariable(
     Variable* v )
 {
     assert( TRUE == 2 && FALSE == 1 );
-    return Literal( ~( v->getTruthValue() ) & 1, v );
+    return Literal( v, ~( v->getTruthValue() ) & 1 );
 }
 
 Literal::Literal(
-    const Literal& l )
+    const Literal& l ) : signedVariable( l.signedVariable )
 {
-    this->signedVariable = l.signedVariable; 
-}
-
-Literal::Literal(
-    Variable* v ) : signedVariable( reinterpret_cast< uintptr_t >( v ) )
-{
-    assert( isPositive() );
-    assert( getVariable() == v );
 }
 
 Literal::Literal(
     Variable* v,
-    bool ) : signedVariable( reinterpret_cast< uintptr_t >( v ) | 1 )
+    unsigned int sign ) : signedVariable( reinterpret_cast< uintptr_t >( v ) | sign )
 {
-    assert( !isPositive() );
-    assert( getVariable() == v );
-}
-
-Literal::Literal(
-    unsigned int sign,
-    Variable* v ) : signedVariable( reinterpret_cast< uintptr_t >( v ) | sign )
-{
+    assert( POSITIVE == 0 && NEGATIVE == 1 );
     assert( sign == 0 || sign == 1 );
     assert( ( sign == 0 && isPositive() ) || ( sign == 1 && !isPositive() ) );
     assert( getVariable() == v );
@@ -256,7 +234,7 @@ Literal::onAging(
 Literal
 Literal::getOppositeLiteral()
 {
-    return Literal( getOppositeSign(), getVariable() );    
+    return Literal( getVariable(), getOppositeSign() );
 }
 
 unsigned int

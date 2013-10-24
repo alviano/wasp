@@ -97,7 +97,7 @@ Solver::addClauseFromModelAndRestart()
         {
             if( v->isTrue() )
             {
-                Literal lit( v, false );
+                Literal lit( v, NEGATIVE );
                 lastInsertedLiteral = lit;
                 clause->addLiteral( lit );
             }

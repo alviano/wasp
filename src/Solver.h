@@ -207,9 +207,8 @@ Literal
 Solver::getLiteral(
     int lit )
 {
-    // FIXME: add reasonable constructor to literal
     assert( "Lit is out of range." && static_cast< unsigned >( abs( lit ) ) <= variables.numberOfVariables() && abs( lit ) > 0);
-    return lit > 0 ? Literal( variables[ lit ] ) : Literal( variables[ -lit ], false );
+    return lit > 0 ? Literal( variables[ lit ], POSITIVE ) : Literal( variables[ -lit ], NEGATIVE );
 //    if( lit > 0 )
 //    {
 //        Literal literal( variables[ lit ] );

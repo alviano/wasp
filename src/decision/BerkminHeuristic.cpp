@@ -147,8 +147,8 @@ BerkminHeuristic::makeAChoice()
     assert( chosenVariable != NULL );
     assert( Literal( chosenVariable ).isUndefined() );
     
-    // FIXME: use a different constructor
-    return chosenPolarity ? Literal( chosenVariable ) : Literal( chosenVariable, false );
+    // FIXME: chosenPolarity has to be revised
+    return chosenPolarity ? Literal( chosenVariable, POSITIVE ) : Literal( chosenVariable, NEGATIVE );
 }
 
 void
@@ -179,7 +179,7 @@ BerkminHeuristic::choosePolarityHigherGlobalCounter()
         return;
     }
     
-    Literal negativeLiteral( chosenVariable, false );
+    Literal negativeLiteral( chosenVariable, NEGATIVE );
     unsigned int value2 = estimatePropagation( negativeLiteral );
     trace( heuristic, 2, "Estimated propagation of negative literal %s, value: %d.\n", toString( negativeLiteral ).c_str(), value2 );
     
