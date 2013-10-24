@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2013 Mario Alviano, Carmine Dodaro, Wolfgang Faber, Nicola Leone, Francesco Ricca, and Marco Sirianni.
+ *  Copyright 2013 Mario Alviano, Carmine Dodaro and Francesco Ricca.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -38,6 +38,7 @@
 #define AGGRESSIVE_DELETION_POLICY 0
 #define RESTARTS_BASED_DELETION_POLICY 1
 #define MINISAT_DELETION_POLICY 2
+#define GLUCOSE_DELETION_POLICY 3
 
 #define HEURISTIC_BERKMIN 0
 #define HEURISTIC_FIRST_UNDEFINED 1

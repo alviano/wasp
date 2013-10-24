@@ -65,26 +65,50 @@ class Variables
         
         inline void printAnswerSet( OutputBuilder* outputBuilder ) const;
         
-        inline bool assign( int level, Literal literal );
-        inline bool assign( int level, Clause* implicant );
+        inline bool assign( unsigned int level, Literal literal );
+        inline bool assign( unsigned int level, Clause* implicant );
 
         inline Variable* operator[]( unsigned idx ) { return variables[ idx ]; }
         
         inline void onUnroll();
         
     private:
+        /**
+         * A vector containing the current assigned variables.
+         * 
+         */
         Variable** assignedVariables;
+        
+        /**
+         * The size of assigned variables vector.
+         */
         unsigned assignedVariablesSize;
+        
         int iteratorOnAssignedVariables;
+
 //        unsigned iteratorOnUndefinedVariables;
+        /**
+         * The position of next variable to Propagate.
+         */
         unsigned nextVariableToPropagate;
         unsigned noUndefinedBefore;
         
-        /* Data structures */
+        /**
+         * A vector containing all the variables of the program.
+         */
         vector< Variable* > variables;
         
         inline bool checkNoUndefinedBefore( unsigned idx ) const;
-        inline bool assign( int level, Literal literal, Clause* implicant );
+        
+        /**
+         * Assign a literal with the truth value TRUE.
+         * 
+         * @param level the level of the inference.
+         * @param literal the literal which is true.
+         * @param implicant the clause which is the reason of the literal assignment.
+         * @return true if no conflict occurs, false otherwise. 
+         */
+        inline bool assign( unsigned int level, Literal literal, Clause* implicant );
 };
 
 Variables::Variables()
@@ -205,6 +229,7 @@ Variables::getNextUndefined(
     for( unsigned i = v->getId() + 1; i < variables.size(); ++i )
         if( variables[ i ]->isUndefined() )
             return variables[ i ];
+    
     return NULL;
 }
 
@@ -256,7 +281,7 @@ Variables::printAnswerSet(
 
 bool
 Variables::assign( 
-    int level, 
+    unsigned int level, 
     Literal literal,
     Clause* implicant )
 {
@@ -275,7 +300,7 @@ Variables::assign(
 
 bool
 Variables::assign( 
-    int level, 
+    unsigned int level, 
     Literal literal )
 {
     return assign( level, literal, NULL );
@@ -283,7 +308,7 @@ Variables::assign(
 
 bool
 Variables::assign( 
-    int level, 
+    unsigned int level, 
     Clause* implicant )
 {
     assert( implicant != NULL );

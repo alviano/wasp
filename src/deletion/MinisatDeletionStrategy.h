@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2013 Mario Alviano, Carmine Dodaro, Wolfgang Faber, Nicola Leone, Francesco Ricca, and Marco Sirianni.
+ *  Copyright 2013 Mario Alviano, Carmine Dodaro and Francesco Ricca.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -35,6 +35,8 @@ class MinisatDeletionStrategy : public ActivityBasedDeletionStrategy
         
         virtual void onLearning( LearnedClause* clause );
         virtual void onRestart();
+        virtual void onUnitPropagation( Clause* clause ){}
+        virtual void onNewVariable( Variable& variable ){}
         
     private:
         bool hasToDelete();

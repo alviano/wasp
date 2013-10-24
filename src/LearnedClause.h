@@ -39,8 +39,11 @@ class LearnedClause : public Clause
         inline Activity getActivity() const;
         inline void incrementActivity( Activity increment );
         
-        inline bool isLocked() const;        
-
+        inline bool isLocked() const;
+        
+        inline bool isGlue() const;
+        inline void setLbdValue( unsigned int );
+        inline bool isLearned() const { return true; }
     private:
         
         /**
@@ -49,15 +52,16 @@ class LearnedClause : public Clause
         * This number computes how often this clause is used in the unit propagation.
         */
         Activity activity;
-            
+        
+        unsigned int lbdValue;
 };
 
-LearnedClause::LearnedClause() : Clause(), activity( 0 )
+LearnedClause::LearnedClause() : Clause(), activity( 0 ), lbdValue( 0 )
 {
 }
 
 LearnedClause::LearnedClause(
-    unsigned int size ) : Clause( size ), activity( 0 )
+    unsigned int size ) : Clause( size ), activity( 0 ), lbdValue( 0 )
 {
 }
 
@@ -84,6 +88,19 @@ LearnedClause::incrementActivity(
     Activity increment )
 {
     activity += increment;
+}
+
+bool
+LearnedClause::isGlue() const
+{
+    return lbdValue == 2;    
+}
+
+void
+LearnedClause::setLbdValue(
+    unsigned int lbd )
+{
+    lbdValue = lbd;
 }
 
 #endif	/* LEARNEDCLAUSE_H */

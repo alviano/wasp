@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2013 Mario Alviano, Carmine Dodaro, Wolfgang Faber, Nicola Leone, Francesco Ricca, and Marco Sirianni.
+ *  Copyright 2013 Mario Alviano, Carmine Dodaro and Francesco Ricca.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -14,13 +14,6 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  *
- */
-
-/* 
- * File:   Options.cpp
- * Author: Mario Alviano
- *
- * Created on 15 October 2013, 08.43
  */
 
 #include "Options.h"
@@ -72,6 +65,7 @@ namespace wasp
 #define OPTIONID_aggressive_deletion ( 'z' + 70 )
 #define OPTIONID_restarts_based_deletion ( 'z' + 71 )
 #define OPTIONID_minisat_deletion ( 'z' + 72 )
+#define OPTIONID_glucose_deletion ( 'z' + 73 )
 
 /* INPUT OPTIONS */
 #define OPTIONID_dimacs ( 'z' + 90 )
@@ -107,6 +101,8 @@ unsigned int Options::restartsThreshold = 100000;
 unsigned int Options::timeLimit = 0;
 
 unsigned int Options::maxModels = 1;
+
+unsigned int Options::deletionBound = 8;
     
 void
 Options::parse(
@@ -157,6 +153,7 @@ Options::parse(
                 { "aggressive-deletion", no_argument, NULL, OPTIONID_aggressive_deletion },
                 { "restarts-based-deletion", no_argument, NULL, OPTIONID_restarts_based_deletion },
                 { "minisat-deletion", no_argument, NULL, OPTIONID_minisat_deletion },
+                { "glucose-deletion", optional_argument, NULL, OPTIONID_glucose_deletion },
                 
                 /* INPUT OPTIONS */
                 { "dimacs", no_argument, NULL, OPTIONID_dimacs },                
@@ -293,6 +290,16 @@ Options::parse(
                 
             case OPTIONID_minisat_deletion:
                 deletionPolicy = MINISAT_DELETION_POLICY;
+                break;
+                
+            case OPTIONID_glucose_deletion:
+                deletionPolicy = GLUCOSE_DELETION_POLICY;
+                if( optarg )
+                {
+                    deletionBound = atoi( optarg );
+                    if( deletionBound < 2 )
+                        deletionBound = 2;
+                }
                 break;
 
             case OPTIONID_dimacs:

@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2013 Mario Alviano, Carmine Dodaro, Wolfgang Faber, Nicola Leone, Francesco Ricca, and Marco Sirianni.
+ *  Copyright 2013 Mario Alviano, Carmine Dodaro and Francesco Ricca.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -14,13 +14,6 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  *
- */
-
-/* 
- * File:   Clause.h
- * Author: Carmine Dodaro
- *
- * Created on 21 July 2013, 16.47
  */
 
 #ifndef CLAUSE_H
@@ -75,7 +68,14 @@ class Clause
         inline bool checkUnsatisfiedAndOptimize( UndefinedCollector* collector );
         bool isUnsatisfied() const;
         
-        unsigned getMaxDecisionLevel( unsigned from, unsigned to) const;       
+        unsigned getMaxDecisionLevel( unsigned from, unsigned to) const;
+        
+        virtual bool isGlue() const;
+        virtual bool isLearned() const;
+        
+        typedef vector< Literal >::iterator ClauseIterator;
+        inline ClauseIterator clause_begin() { return literals.begin(); }
+        inline ClauseIterator clause_end() { return literals.end(); }        
 
     protected:
         inline bool isImplicantOfALiteral() const;

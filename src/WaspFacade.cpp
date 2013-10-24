@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2013 Mario Alviano, Carmine Dodaro, Wolfgang Faber, Nicola Leone, Francesco Ricca, and Marco Sirianni.
+ *  Copyright 2013 Mario Alviano, Carmine Dodaro and Francesco Ricca.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@
 #include "deletion/AggressiveDeletionStrategy.h"
 #include "deletion/RestartsBasedDeletionStrategy.h"
 #include "deletion/MinisatDeletionStrategy.h"
+#include "deletion/GlucoseDeletionStrategy.h"
 
 #include "outputBuilders/WaspOutputBuilder.h"
 #include "outputBuilders/SilentOutputBuilder.h"
@@ -79,14 +80,19 @@ void
 WaspFacade::setDeletionPolicy(
     DELETION_POLICY deletionPolicy )
 {
+    //TODO: add trace( );
     switch( deletionPolicy )
     {
         case RESTARTS_BASED_DELETION_POLICY:
             solver.setDeletionStrategy( new RestartsBasedDeletionStrategy( solver ) );
             break;
-            
+
         case MINISAT_DELETION_POLICY:
             solver.setDeletionStrategy( new MinisatDeletionStrategy( solver ) );
+            break;
+
+        case GLUCOSE_DELETION_POLICY:
+            solver.setDeletionStrategy( new GlucoseDeletionStrategy( solver ) );
             break;
 
         case AGGRESSIVE_DELETION_POLICY:

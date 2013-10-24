@@ -96,3 +96,15 @@ Clause::isUnsatisfied() const
             return false;
     return true;
 }
+
+bool
+Clause::isGlue() const
+{
+    return false;
+}
+
+bool
+Clause::isLearned() const
+{
+    return false;
+}
