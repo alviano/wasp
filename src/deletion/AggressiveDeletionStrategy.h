@@ -26,7 +26,7 @@ class AggressiveDeletionStrategy : public ActivityBasedDeletionStrategy
     public:
         inline AggressiveDeletionStrategy( Solver& solver );
 
-        virtual void onLearning( LearnedClause* clause );
+        virtual void onLearning( Clause* clause );
         virtual void onRestart() {}
         
     private:

@@ -21,7 +21,7 @@
 
 void
 AggressiveDeletionStrategy::onLearning( 
-    LearnedClause* learnedClause )
+    Clause* learnedClause )
 {
     updateActivity( learnedClause );
     

@@ -22,14 +22,14 @@
 #include "../Constants.h"
 
 class Solver;
-class LearnedClause;
+class Clause;
 
 class DeletionStrategy
 {
     public:
         inline virtual ~DeletionStrategy() {}
 
-        virtual void onLearning( LearnedClause* clause ) = 0;
+        virtual void onLearning( Clause* clause ) = 0;
         virtual void onRestart() = 0;
 };
 

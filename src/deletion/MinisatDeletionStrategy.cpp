@@ -21,7 +21,7 @@
 
 void
 MinisatDeletionStrategy::onLearning( 
-    LearnedClause* learnedClause )
+    Clause* learnedClause )
 {
     updateActivity( learnedClause );
     

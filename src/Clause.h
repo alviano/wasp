@@ -30,6 +30,7 @@
 #include <iostream>
 #include <vector>
 
+#include "Clause.h"
 #include "Literal.h"
 #include "Learning.h"
 #include "heuristics/UndefinedCollector.h"
@@ -47,19 +48,11 @@ class Solver;
 class Clause
 {
     friend ostream &operator<<( ostream & out, const Clause & clause );
-    friend LearnedClause* Learning::onConflict( Literal conflictLiteral, Clause* conflictClause );
+    friend Clause* Learning::onConflict( Literal conflictLiteral, Clause* conflictClause );
 
     public:
         inline Clause();
         virtual ~Clause() {}
-
-        /**
-         * Constructor of Clause which takes in input the number of literals in the clause.
-         * Note that the watches are random generated.
-         * 
-         * @param size the numbers of literals.
-         */
-        inline Clause( unsigned int size );
 
         inline Literal getAt( unsigned idx ) const { assert( idx < literals.size() ); return literals[ idx ]; }
         inline void addLiteral( Literal literal );
@@ -77,10 +70,22 @@ class Clause
         
         unsigned getMaxDecisionLevel( unsigned from, unsigned to) const;       
 
+        inline void decreaseActivity();
+        inline Activity getActivity() const;
+        inline void incrementActivity( Activity increment );
+        
+        inline bool isImplicantOfALiteral() const;        
+
     protected:
-        inline bool isImplicantOfALiteral() const;
         vector< Literal > literals;
         unsigned lastSwapIndex;
+
+        /**
+        * The activity of this learned clause.
+        
+        * This number computes how often this clause is used in the unit propagation.
+        */
+        Activity activity;
 
         virtual ostream& print( ostream& out ) const;
 
@@ -102,15 +107,15 @@ class Clause
         inline void swapLiterals( unsigned int pos1, unsigned int pos2 );
 };
 
-Clause::Clause() : lastSwapIndex( 1 )
+Clause::Clause() : lastSwapIndex( 1 ), activity( 0 )
 {
 }
 
-Clause::Clause(
-    unsigned int size ) : lastSwapIndex( 1 )
-{
-    literals.reserve( size );
-}
+//Clause::Clause(
+//    unsigned int size ) : lastSwapIndex( 1 ), activity( 0 )
+//{
+//    literals.reserve( size );
+//}
 
 void
 Clause::addLiteral(
@@ -340,6 +345,25 @@ Clause::onLiteralFalse(
         
     //update watch
     return !updateWatch();
+}
+
+void
+Clause::decreaseActivity()
+{
+    activity *= 1e-20;
+}
+
+Activity
+Clause::getActivity() const
+{
+    return activity;
+}
+
+void
+Clause::incrementActivity( 
+    Activity increment )
+{
+    activity += increment;
 }
 
 #endif	/* CLAUSE_H */

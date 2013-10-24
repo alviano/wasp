@@ -17,12 +17,11 @@
  */
 
 #include "ActivityBasedDeletionStrategy.h"
-#include "../LearnedClause.h"
 #include "../Solver.h"
 
 void
 ActivityBasedDeletionStrategy::updateActivity( 
-    LearnedClause* learnedClause )
+    Clause* learnedClause )
 {
     learnedClause->incrementActivity( increment );
     decrementActivity();
@@ -37,13 +36,13 @@ void
 ActivityBasedDeletionStrategy::deleteClauses()
 {
     startIteration();
-    Solver::LearnedClausesIterator it = solver.learnedClauses_begin();
+    Solver::ClauseIterator it = solver.learnedClauses_begin();
     assert( it != solver.learnedClauses_end() );
     do
     {
-        LearnedClause* clause = *it;
+        Clause* clause = *it;
         
-        if( !clause->isLocked() )
+        if( !clause->isImplicantOfALiteral() )
         {
             Activity activity = clause->getActivity();
             activitySum += activity;
@@ -68,10 +67,10 @@ ActivityBasedDeletionStrategy::deleteClauses()
         assert( it != solver.learnedClauses_end() );
         do
         {
-            LearnedClause* clause = *it;
+            Clause* clause = *it;
 
     
-            if( !clause->isLocked() && clause->getActivity() < activitySum )
+            if( !clause->isImplicantOfALiteral() && clause->getActivity() < activitySum )
             {
                 toDelete--;
                 solver.deleteLearnedClause( it++ );            

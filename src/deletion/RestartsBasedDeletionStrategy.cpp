@@ -23,7 +23,7 @@
 
 void
 RestartsBasedDeletionStrategy::onLearning( 
-    LearnedClause* learnedClause )
+    Clause* learnedClause )
 {
     updateActivity( learnedClause );
     

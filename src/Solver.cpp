@@ -79,9 +79,9 @@ Solver::unroll(
 void
 Solver::decreaseLearnedClausesActivity()
 {
-    for( List< LearnedClause* >::iterator it = learnedClauses.begin(); it != learnedClauses.end(); ++it )
+    for( List< Clause* >::iterator it = learnedClauses.begin(); it != learnedClauses.end(); ++it )
     {
-        LearnedClause* currentClause = *it;
+        Clause* currentClause = *it;
         currentClause->decreaseActivity();
     }
 }

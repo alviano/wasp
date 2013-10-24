@@ -26,7 +26,6 @@
 using namespace std;
 
 class Clause;
-class LearnedClause;
 class Literal;
 class Solver;
 class Variable;
@@ -38,7 +37,7 @@ class Learning
         inline ~Learning();
         
         void onNavigatingLiteral( Literal );
-        LearnedClause* onConflict( Literal conflictLiteral, Clause* conflictClause );
+        Clause* onConflict( Literal conflictLiteral, Clause* conflictClause );
         
         inline void onNewVariable();
         
@@ -72,7 +71,7 @@ class Learning
         /**
          * The new learned clause.
          */
-        LearnedClause* learnedClause;
+        Clause* learnedClause;
         
         /**
          * This method computes the next literal to navigate in the implication graph.

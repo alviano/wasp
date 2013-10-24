@@ -20,7 +20,6 @@
 
 #include <cassert>
 #include "../Variable.h"
-#include "../LearnedClause.h"
 #include "../Literal.h"
 #include "../Solver.h"
 
@@ -114,14 +113,14 @@ BerkminHeuristic::pickLiteralFromTopMostUnsatisfiedLearnedClause()
     trace( heuristic, 1, "Considering %d learned clauses.\n", numberOfLearnedClausesToConsider );
 
     unsigned int count = 0;
-    for( Solver::LearnedClausesReverseIterator it = solver.learnedClauses_rbegin(); it != solver.learnedClauses_rend(); ++it )
+    for( Solver::ClauseReverseIterator it = solver.learnedClauses_rbegin(); it != solver.learnedClauses_rend(); ++it )
     {        
         if( ++count > numberOfLearnedClausesToConsider )
             break;
 
         resetCounters();
         assert( *it != NULL );
-        LearnedClause& learnedClause = **it;
+        Clause& learnedClause = **it;
         trace( heuristic, 1, "Learned clause %d: %s.\n", count, toString( learnedClause ).c_str() );
         if( learnedClause.checkUnsatisfiedAndOptimize( this ) )
         {

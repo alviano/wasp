@@ -23,7 +23,6 @@
 #include "DeletionStrategy.h"
 
 class Solver;
-class LearnedClause;
 
 class ActivityBasedDeletionStrategy : public DeletionStrategy
 {
@@ -31,13 +30,13 @@ class ActivityBasedDeletionStrategy : public DeletionStrategy
         inline ActivityBasedDeletionStrategy( Solver& solver );
         inline virtual ~ActivityBasedDeletionStrategy() {}
         
-        virtual void onLearning( LearnedClause* clause ) = 0;
+        virtual void onLearning( Clause* clause ) = 0;
         virtual void onRestart() = 0;
         
     protected:
         inline void decrementActivity();
         
-        void updateActivity( LearnedClause* learnedClause );
+        void updateActivity( Clause* learnedClause );
         void deleteClauses();
 
         Solver& solver;

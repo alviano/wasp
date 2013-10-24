@@ -24,7 +24,6 @@
 using namespace std;
 
 #include "Clause.h"
-#include "LearnedClause.h"
 #include "Variable.h"
 #include "Variables.h"
 #include "Literal.h"
@@ -58,7 +57,7 @@ class Solver
 //        inline AuxLiteral* getAuxLiteral( unsigned int id );
         
         inline void addClause( Clause* clause );
-        inline void addLearnedClause( LearnedClause* learnedClause );
+        inline void addLearnedClause( Clause* learnedClause );
         bool addClauseFromModelAndRestart();
         
         inline Literal getLiteral( int lit );
@@ -81,8 +80,8 @@ class Solver
         inline bool propagateLiteralAsDeterministicConsequence( Literal literal );
         
         void decreaseLearnedClausesActivity();
-        inline void onLearningClause( Literal literalToPropagate, LearnedClause* learnedClause, unsigned int backjumpingLevel );
-        inline void onLearningUnaryClause( Literal literalToPropagate, LearnedClause* learnedClause );        
+        inline void onLearningClause( Literal literalToPropagate, Clause* learnedClause, unsigned int backjumpingLevel );
+        inline void onLearningUnaryClause( Literal literalToPropagate, Clause* learnedClause );        
         inline void doRestart();        
         
         inline unsigned int numberOfClauses();
@@ -116,14 +115,18 @@ class Solver
         inline void setRestartStrategy( RestartStrategy* value );
         inline void setDeletionStrategy( DeletionStrategy* value );
         
-        typedef List< LearnedClause* >::iterator LearnedClausesIterator;
-        typedef List< LearnedClause* >::reverse_iterator LearnedClausesReverseIterator;
-        inline LearnedClausesIterator learnedClauses_begin() { return learnedClauses.begin(); }
-        inline LearnedClausesIterator learnedClauses_end() { return learnedClauses.end(); }
-        inline LearnedClausesReverseIterator learnedClauses_rbegin() { return learnedClauses.rbegin(); }
-        inline LearnedClausesReverseIterator learnedClauses_rend() { return learnedClauses.rend(); }
+        typedef List< Clause* >::iterator ClauseIterator;
+        typedef List< Clause* >::reverse_iterator ClauseReverseIterator;
+        inline ClauseIterator clauses_begin() { return clauses.begin(); }
+        inline ClauseIterator clauses_end() { return clauses.end(); }
+        inline ClauseReverseIterator clauses_rbegin() { return clauses.rbegin(); }
+        inline ClauseReverseIterator clauses_rend() { return clauses.rend(); }
+        inline ClauseIterator learnedClauses_begin() { return learnedClauses.begin(); }
+        inline ClauseIterator learnedClauses_end() { return learnedClauses.end(); }
+        inline ClauseReverseIterator learnedClauses_rbegin() { return learnedClauses.rbegin(); }
+        inline ClauseReverseIterator learnedClauses_rend() { return learnedClauses.rend(); }
 
-        inline void deleteLearnedClause( List< LearnedClause* >::iterator iterator );
+        inline void deleteLearnedClause( List< Clause* >::iterator iterator );
         
         void printProgram()
         {
@@ -148,7 +151,7 @@ class Solver
         Variables variables;
         
         List< Clause* > clauses;
-        List< LearnedClause* > learnedClauses;
+        List< Clause* > learnedClauses;
         
         vector< unsigned int > unrollVector;
         
@@ -293,7 +296,7 @@ Solver::addClause(
 
 void
 Solver::addLearnedClause( 
-    LearnedClause* learnedClause )
+    Clause* learnedClause )
 {    
     learnedClauses.push_back( learnedClause );
 }
@@ -360,9 +363,9 @@ Solver::doRestart()
 
 void
 Solver::deleteLearnedClause( 
-    List< LearnedClause* >::iterator iterator )
+    List< Clause* >::iterator iterator )
 {
-    LearnedClause* learnedClause = *iterator;
+    Clause* learnedClause = *iterator;
     trace( solving, 4, "Deleting learned clause %s.\n", toString( *learnedClause ).c_str() );
     learnedClause->detachClause();
     delete learnedClause;    
@@ -416,7 +419,7 @@ Solver::chooseLiteral()
 void
 Solver::analyzeConflict()
 {
-    LearnedClause* learnedClause = learning.onConflict( conflictLiteral, conflictClause );
+    Clause* learnedClause = learning.onConflict( conflictLiteral, conflictClause );
     assert( "Learned clause has not been calculated." && learnedClause != NULL );
     
     if( learnedClause->size() == 1 )

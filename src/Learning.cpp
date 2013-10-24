@@ -32,7 +32,7 @@ Learning::isVisitedVariablesEmpty() const
     return true;
 }
 
-LearnedClause*
+Clause*
 Learning::onConflict(
     Literal conflictLiteral,
     Clause* conflictClause )
@@ -44,7 +44,7 @@ Learning::onConflict(
     assert( "The counter must be equal to 0." && pendingVisitedVariables == 0 );
     assert( isVisitedVariablesEmpty() );
     
-    learnedClause = new LearnedClause();
+    learnedClause = new Clause();
     decisionLevel = solver.getCurrentDecisionLevel();
 
     trace_msg( learning, 2, "Starting First UIP Learning Strategy. Current Level: " << decisionLevel );

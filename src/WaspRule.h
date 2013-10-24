@@ -66,10 +66,12 @@ class WaspRule : public Clause
 
 WaspRule::WaspRule(
     unsigned int size ) :
-        Clause( size ),
+//        Clause( size ),
         auxLiteral( NULL ),
         firstTrueLiteral( NULL )
 {
+    // FIXME
+    assert( 0 );
 }
 
 #endif	/* WASPRULE_H */

@@ -33,7 +33,7 @@ class RestartsBasedDeletionStrategy : public ActivityBasedDeletionStrategy
     public:
         inline RestartsBasedDeletionStrategy( Solver& solver );
         
-        virtual void onLearning( LearnedClause* clause );
+        virtual void onLearning( Clause* clause );
         virtual void onRestart();
         
     private:
