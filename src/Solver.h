@@ -36,7 +36,8 @@ using namespace std;
 #include "decision/DecisionHeuristic.h"
 #include "outputBuilders/OutputBuilder.h"
 #include "restart/RestartStrategy.h"
-#include "deletion/DeletionStrategy.h"
+#include "Heuristic.h"
+#include "util/Assert.h"
 
 class Solver
 {
@@ -113,7 +114,7 @@ class Solver
         inline void setHeuristic( DecisionHeuristic* value );
         inline void setOutputBuilder( OutputBuilder* value );
         inline void setRestartStrategy( RestartStrategy* value );
-        inline void setDeletionStrategy( DeletionStrategy* value );
+        inline void setHeuristic( Heuristic* value );
         
         typedef List< Clause* >::iterator ClauseIterator;
         typedef List< Clause* >::reverse_iterator ClauseReverseIterator;
@@ -160,9 +161,9 @@ class Solver
         
         Learning learning;
         DecisionHeuristic* decisionHeuristic;        
-        DeletionStrategy* deletionStrategy;
         OutputBuilder* outputBuilder;
         RestartStrategy* restartStrategy;
+        Heuristic* heuristic;
 };
 
 Solver::Solver() 
@@ -171,9 +172,9 @@ Solver::Solver()
   conflictClause( NULL ),
   learning( *this ),
   decisionHeuristic( NULL ),
-  deletionStrategy( NULL ),
   outputBuilder( NULL ),
-  restartStrategy( NULL )
+  restartStrategy( NULL ),
+  heuristic( NULL )
 {
 }
 
@@ -208,13 +209,13 @@ Solver::setRestartStrategy(
 }
 
 void
-Solver::setDeletionStrategy(
-    DeletionStrategy* value )
+Solver::setHeuristic(
+    Heuristic* value )
 {
     assert( value != NULL );
-    if( deletionStrategy != NULL )
-        delete deletionStrategy;
-    deletionStrategy = value;
+    if( heuristic != NULL )
+        delete heuristic;
+    heuristic = value;
 }
 
 void
@@ -351,13 +352,13 @@ Solver::unrollOne()
 void
 Solver::doRestart()
 {
-    assert( "The strategy for deletion must be initialized." && deletionStrategy != NULL );
+    assert_msg( heuristic != NULL, "Heuristic unset" );
     assert( "The strategy for heuristic must be initialized." && decisionHeuristic != NULL );
     assert( "The strategy for restarts must be initialized." && restartStrategy != NULL );
     trace( solving, 2, "Performing restart.\n" );
-    deletionStrategy->onRestart();
-    decisionHeuristic->onRestart();
-    restartStrategy->onRestart();
+    heuristic->onRestart();
+    decisionHeuristic->onRestart();  // FIXME: remove
+    restartStrategy->onRestart();  // FIXME: remove
     unroll( 0 );
 }
 
@@ -452,7 +453,7 @@ Solver::analyzeConflict()
             
             assignLiteral( learnedClause );
             
-            deletionStrategy->onLearning( learnedClause );
+            heuristic->onLearning( learnedClause );  // FIXME: this should be moved outside
         }
     }
     

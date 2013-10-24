@@ -37,9 +37,6 @@ Solver::~Solver()
         learnedClauses.pop_back();
     }
         
-    if( deletionStrategy != NULL )
-        delete deletionStrategy;
-    
     if( decisionHeuristic != NULL )
         delete decisionHeuristic;
     
@@ -48,6 +45,9 @@ Solver::~Solver()
         
     if( restartStrategy != NULL )
         delete restartStrategy;
+        
+    if( heuristic != NULL )
+        delete heuristic;
 }
 
 void

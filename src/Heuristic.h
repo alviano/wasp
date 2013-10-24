@@ -19,13 +19,18 @@
 #ifndef HEURISTIC_H
 #define HEURISTIC_H
 
+#include "util/Assert.h"
+#include "Literal.h"
+
 class Heuristic
 {
 public:
-    typedef double Data;
+    typedef double VariableData;
+    typedef double ClauseData;
     
     virtual ~Heuristic() {}
-    virtual Data createData() { return 0.0; };
+    virtual VariableData createVariableData() { return 0.0; }
+    virtual ClauseData createClauseData() { return 0.0; }
 
     virtual Literal makeAChoice() = 0;
     

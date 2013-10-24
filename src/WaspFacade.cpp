@@ -82,16 +82,16 @@ WaspFacade::setDeletionPolicy(
     switch( deletionPolicy )
     {
         case RESTARTS_BASED_DELETION_POLICY:
-            solver.setDeletionStrategy( new RestartsBasedDeletionStrategy( solver ) );
+            heuristic->setDeletionStrategy( new RestartsBasedDeletionStrategy( solver ) );
             break;
             
         case MINISAT_DELETION_POLICY:
-            solver.setDeletionStrategy( new MinisatDeletionStrategy( solver ) );
+            heuristic->setDeletionStrategy( new MinisatDeletionStrategy( solver ) );
             break;
 
         case AGGRESSIVE_DELETION_POLICY:
         default:
-            solver.setDeletionStrategy( new AggressiveDeletionStrategy( solver ) );
+            heuristic->setDeletionStrategy( new AggressiveDeletionStrategy( solver ) );
             break;
     }
 }
