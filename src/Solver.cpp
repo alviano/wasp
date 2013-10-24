@@ -201,7 +201,7 @@ Solver::solve()
     }
     
     assert( getNumberOfUndefined() > 0 );
-    assert( allClausesSatisfied() );    
+    assert( allClausesSatisfied() );
     
     return true;
 }
@@ -231,3 +231,49 @@ Solver::propagate(
             assert( !conflictDetected() );
     }
 }
+
+#ifndef NDEBUG
+
+unsigned int
+Solver::getNumberOfUndefined()
+{
+    unsigned countUndef = 0;
+    for( unsigned int i = 1; i < variables.numberOfVariables(); i++ )
+    {
+        Variable* var = variables[ i ];
+        if( var->isUndefined() )
+        {
+            countUndef++;
+        }
+    }
+    
+    return countUndef;
+}
+
+bool
+Solver::allClausesSatisfied()
+{
+    for( List< Clause* >::iterator it = clauses.begin(); it != clauses.end(); ++it )
+    {
+        Clause& clause = *( *it );
+        
+        bool found = false;
+        for( Clause::ClauseIterator it2 = clause.clause_begin(); it2 != clause.clause_end(); ++it2 )
+        {
+            if( it2->isTrue() )
+            {
+                found = true;
+                break;
+            }
+        }
+        
+        if( !found )
+        {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+#endif

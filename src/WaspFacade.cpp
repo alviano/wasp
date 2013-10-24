@@ -78,8 +78,7 @@ WaspFacade::solve()
 
 void
 WaspFacade::setDeletionPolicy(
-    DELETION_POLICY deletionPolicy,
-    unsigned int limit )
+    DELETION_POLICY deletionPolicy )
 {
     //TODO: add trace( );
     switch( deletionPolicy )
@@ -93,7 +92,7 @@ WaspFacade::setDeletionPolicy(
             break;
 
         case GLUCOSE_DELETION_POLICY:
-            solver.setDeletionStrategy( new GlucoseDeletionStrategy( solver, limit ) );
+            solver.setDeletionStrategy( new GlucoseDeletionStrategy( solver ) );
             break;
 
         case AGGRESSIVE_DELETION_POLICY:
