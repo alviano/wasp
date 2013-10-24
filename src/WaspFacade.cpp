@@ -159,24 +159,21 @@ WaspFacade::setRestartsPolicy(
     assert( threshold > 0 );
     switch( restartsPolicy )
     {
-        case SEQUENCE_BASED_RESTARTS_POLICY:
-            solver.setRestartStrategy( new SequenceBasedRestartStrategy( threshold ) );
-            break;
-            
         case GEOMETRIC_RESTARTS_POLICY:
-            solver.setRestartStrategy( new GeometricRestartStrategy( threshold ) );
+            heuristic->setRestartStrategy( new GeometricRestartStrategy( threshold ) );
             break;
             
         case MINISAT_RESTARTS_POLICY:
-            solver.setRestartStrategy( new MinisatRestartStrategy( threshold ) );
+            heuristic->setRestartStrategy( new MinisatRestartStrategy( threshold ) );
             break;
             
         case NO_RESTARTS_POLICY:
-            solver.setRestartStrategy( new NoRestartStrategy() );
+            heuristic->setRestartStrategy( new NoRestartStrategy() );
             break;
             
+        case SEQUENCE_BASED_RESTARTS_POLICY:
         default:
-            solver.setRestartStrategy( new SequenceBasedRestartStrategy( threshold ) );
+            heuristic->setRestartStrategy( new SequenceBasedRestartStrategy( threshold ) );
             break;
     }
 }

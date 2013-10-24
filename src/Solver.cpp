@@ -43,9 +43,6 @@ Solver::~Solver()
     if( outputBuilder != NULL )
         delete outputBuilder;
         
-    if( restartStrategy != NULL )
-        delete restartStrategy;
-        
     if( heuristic != NULL )
         delete heuristic;
 }

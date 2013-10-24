@@ -35,7 +35,6 @@ using namespace std;
 #include "Learning.h"
 #include "decision/DecisionHeuristic.h"
 #include "outputBuilders/OutputBuilder.h"
-#include "restart/RestartStrategy.h"
 #include "Heuristic.h"
 #include "util/Assert.h"
 
@@ -113,7 +112,6 @@ class Solver
         /* OPTIONS */
         inline void setHeuristic( DecisionHeuristic* value );
         inline void setOutputBuilder( OutputBuilder* value );
-        inline void setRestartStrategy( RestartStrategy* value );
         inline void setHeuristic( Heuristic* value );
         
         typedef List< Clause* >::iterator ClauseIterator;
@@ -162,7 +160,6 @@ class Solver
         Learning learning;
         DecisionHeuristic* decisionHeuristic;        
         OutputBuilder* outputBuilder;
-        RestartStrategy* restartStrategy;
         Heuristic* heuristic;
 };
 
@@ -173,7 +170,6 @@ Solver::Solver()
   learning( *this ),
   decisionHeuristic( NULL ),
   outputBuilder( NULL ),
-  restartStrategy( NULL ),
   heuristic( NULL )
 {
 }
@@ -196,16 +192,6 @@ Solver::setOutputBuilder(
     if( outputBuilder != NULL )
         delete outputBuilder;
     outputBuilder = value;
-}
-
-void
-Solver::setRestartStrategy(
-    RestartStrategy* value )
-{
-    assert( value != NULL );
-    if( restartStrategy != NULL )
-        delete restartStrategy;
-    restartStrategy = value;
 }
 
 void
@@ -354,11 +340,9 @@ Solver::doRestart()
 {
     assert_msg( heuristic != NULL, "Heuristic unset" );
     assert( "The strategy for heuristic must be initialized." && decisionHeuristic != NULL );
-    assert( "The strategy for restarts must be initialized." && restartStrategy != NULL );
     trace( solving, 2, "Performing restart.\n" );
     heuristic->onRestart();
     decisionHeuristic->onRestart();  // FIXME: remove
-    restartStrategy->onRestart();  // FIXME: remove
     unroll( 0 );
 }
 
@@ -437,8 +421,7 @@ Solver::analyzeConflict()
         learnedClause->attachClause();
         addLearnedClause( learnedClause );
 
-        assert( "The strategy for restarts must be initialized." && restartStrategy != NULL );
-        if( restartStrategy->hasToRestart() )
+        if( heuristic->hasToRestart() )
         {
             doRestart();
         }

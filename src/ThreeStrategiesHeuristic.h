@@ -38,7 +38,7 @@ public:
     virtual Literal makeAChoice() { return decisionStrategy->makeAChoice(); }
     
     virtual void onNewVariable( Variable& variable ) {}
-    virtual void onRestart() { deletionStrategy->onRestart(); }
+    virtual void onRestart() { deletionStrategy->onRestart(); restartStrategy->onRestart(); }
     virtual void onConflict() {}
     virtual void onLearning( Clause* clause ) { deletionStrategy->onLearning( clause ); }
     virtual void onLiteralInvolvedInConflict( Literal literal ) {}
