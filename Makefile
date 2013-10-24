@@ -78,8 +78,8 @@ TESTS_DIR = tests
 
 TESTS_TESTER = $(TESTS_DIR)/pyregtest.py
 
-TESTS_COMMAND_AllAnswerSets = "gringo | $(BINARY)"
-TESTS_COMMAND_SatModel = "$(BINARY)"
+TESTS_COMMAND_AllAnswerSets = gringo | $(BINARY)
+TESTS_COMMAND_SatModel = $(BINARY)
 
 TESTS_CHECKER_AllAnswerSets = $(TESTS_DIR)/allAnswerSets.checker.py
 TESTS_CHECKER_SatModels = $(TESTS_DIR)/satModels.checker.py
@@ -113,29 +113,29 @@ tests/wasp1: tests/wasp1/AllAnswerSets
 tests/wasp1/AllAnswerSets: $(TESTS_OUT_wasp1_AllAnswerSets)
 
 $(TESTS_OUT_wasp1_AllAnswerSets):
-	@$(TESTS_TESTER) $(TESTS_COMMAND_AllAnswerSets) $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_AllAnswerSets) $(TESTS_REPORT_text)
+	@$(TESTS_TESTER) "$(TESTS_COMMAND_AllAnswerSets)" $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_AllAnswerSets) $(TESTS_REPORT_text)
 
 tests/sat: tests/sat/Models tests/sat/Intensive tests/sat/Intensive2 tests/sat/Intensive3
 
 tests/sat/Models: $(TESTS_OUT_sat_Models)
 
 $(TESTS_OUT_sat_Models):
-	@$(TESTS_TESTER) $(TESTS_COMMAND_SatModel) $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_SatModels) $(TESTS_REPORT_text)
+	@$(TESTS_TESTER) "$(TESTS_COMMAND_SatModel)" $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_SatModels) $(TESTS_REPORT_text)
 
 tests/sat/Intensive: $(TESTS_OUT_sat_Intensive)
 
 $(TESTS_OUT_sat_Intensive):
-	@$(TESTS_TESTER) $(TESTS_COMMAND_SatModel) $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_SatModels) $(TESTS_REPORT_text)
+	@$(TESTS_TESTER) "$(TESTS_COMMAND_SatModel)" $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_SatModels) $(TESTS_REPORT_text)
 
 tests/sat/Intensive2: $(TESTS_OUT_sat_Intensive2)
 
 $(TESTS_OUT_sat_Intensive2):
-	@$(TESTS_TESTER) $(TESTS_COMMAND_SatModel) $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_SatModels) $(TESTS_REPORT_text)
+	@$(TESTS_TESTER) "$(TESTS_COMMAND_SatModel)" $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_SatModels) $(TESTS_REPORT_text)
 	
 tests/sat/Intensive3: $(TESTS_OUT_sat_Intensive3)
 
 $(TESTS_OUT_sat_Intensive3):
-	@$(TESTS_TESTER) $(TESTS_COMMAND_SatModel) $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_SatModels) $(TESTS_REPORT_text)
+	@$(TESTS_TESTER) "$(TESTS_COMMAND_SatModel)" $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_SatModels) $(TESTS_REPORT_text)
 
 ########## Clean
 
