@@ -105,19 +105,19 @@ WaspFacade::setHeuristicPolicy(
     {
         case HEURISTIC_BERKMIN:
             assert( heuristicLimit > 0 );
-            solver.setHeuristic( new BerkminHeuristic( solver, heuristicLimit ) );
+            heuristic->setDecisionStrategy( new BerkminHeuristic( solver, heuristicLimit ) );
             break;
         
         case HEURISTIC_FIRST_UNDEFINED:
-            solver.setHeuristic( new FirstUndefinedHeuristic( solver ) );
+            heuristic->setDecisionStrategy( new FirstUndefinedHeuristic( solver ) );
             break;
             
         case HEURISTIC_MINISAT:
-            solver.setHeuristic( new MinisatHeuristic( solver ) );
+            heuristic->setDecisionStrategy( new MinisatHeuristic( solver ) );
             break;
     
         default:
-            solver.setHeuristic( new BerkminHeuristic( solver, 512 ) );
+            heuristic->setDecisionStrategy( new BerkminHeuristic( solver, 512 ) );
             break;
     }
 }

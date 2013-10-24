@@ -37,9 +37,6 @@ Solver::~Solver()
         learnedClauses.pop_back();
     }
         
-    if( decisionHeuristic != NULL )
-        delete decisionHeuristic;
-    
     if( outputBuilder != NULL )
         delete outputBuilder;
         

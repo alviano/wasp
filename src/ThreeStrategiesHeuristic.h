@@ -37,11 +37,11 @@ public:
 
     virtual Literal makeAChoice() { return decisionStrategy->makeAChoice(); }
     
-    virtual void onNewVariable( Variable& variable ) {}
-    virtual void onRestart() { deletionStrategy->onRestart(); restartStrategy->onRestart(); }
-    virtual void onConflict() {}
+    virtual void onNewVariable( Variable& variable ) { decisionStrategy->onNewVariable( variable ); }
+    virtual void onRestart() { deletionStrategy->onRestart(); restartStrategy->onRestart(); decisionStrategy->onRestart(); }
+    virtual void onConflict() { return decisionStrategy->onLearning(); }
     virtual void onLearning( Clause* clause ) { deletionStrategy->onLearning( clause ); }
-    virtual void onLiteralInvolvedInConflict( Literal literal ) {}
+    virtual void onLiteralInvolvedInConflict( Literal literal ) { decisionStrategy->onLiteralInvolvedInConflict( literal ); }
     virtual void deleteClauses() {  }
     virtual bool hasToRestart() { return restartStrategy->hasToRestart(); }
     

@@ -33,7 +33,6 @@ using namespace std;
 #include "stl/List.h"
 #include "stl/UnorderedSet.h"
 #include "Learning.h"
-#include "decision/DecisionHeuristic.h"
 #include "outputBuilders/OutputBuilder.h"
 #include "Heuristic.h"
 #include "util/Assert.h"
@@ -110,7 +109,6 @@ class Solver
         inline void unrollLastVariable();
         
         /* OPTIONS */
-        inline void setHeuristic( DecisionHeuristic* value );
         inline void setOutputBuilder( OutputBuilder* value );
         inline void setHeuristic( Heuristic* value );
         
@@ -135,7 +133,7 @@ class Solver
             }
         }
         
-        inline void onLiteralInvolvedInConflict( Literal l ) { decisionHeuristic->onLiteralInvolvedInConflict( l ); }
+        inline void onLiteralInvolvedInConflict( Literal l ) { heuristic->onLiteralInvolvedInConflict( l ); }
         
     private:
         Solver( const Solver& ) : learning( *this )
@@ -158,7 +156,6 @@ class Solver
         Clause* conflictClause;
         
         Learning learning;
-        DecisionHeuristic* decisionHeuristic;        
         OutputBuilder* outputBuilder;
         Heuristic* heuristic;
 };
@@ -168,20 +165,9 @@ Solver::Solver()
   conflictLiteral( NULL ),
   conflictClause( NULL ),
   learning( *this ),
-  decisionHeuristic( NULL ),
   outputBuilder( NULL ),
   heuristic( NULL )
 {
-}
-
-void
-Solver::setHeuristic(
-    DecisionHeuristic* value )
-{
-    assert( value != NULL );
-    if( decisionHeuristic != NULL )
-        delete decisionHeuristic;
-    decisionHeuristic = value;
 }
 
 void
@@ -211,8 +197,8 @@ Solver::addVariable(
     Variable* variable = new Variable( variables.numberOfVariables()+1, name );
     variables.push_back( variable );
     assert( variables.numberOfVariables() == variable->getId() );
-    assert( decisionHeuristic != NULL );
-    decisionHeuristic->onNewVariable( *variable );
+    assert( heuristic!= NULL );
+    heuristic->onNewVariable( *variable );
     learning.onNewVariable();
 }
 
@@ -222,8 +208,8 @@ Solver::addVariable()
     Variable* variable = new Variable( variables.numberOfVariables()+1 );
     variables.push_back( variable );
     assert( variables.numberOfVariables() == variable->getId() );
-    assert( decisionHeuristic != NULL );
-    decisionHeuristic->onNewVariable( *variable );
+    assert( heuristic != NULL );
+    heuristic->onNewVariable( *variable );
 }
 
 Literal
@@ -339,10 +325,8 @@ void
 Solver::doRestart()
 {
     assert_msg( heuristic != NULL, "Heuristic unset" );
-    assert( "The strategy for heuristic must be initialized." && decisionHeuristic != NULL );
     trace( solving, 2, "Performing restart.\n" );
     heuristic->onRestart();
-    decisionHeuristic->onRestart();  // FIXME: remove
     unroll( 0 );
 }
 
@@ -396,7 +380,7 @@ Solver::foundIncoherence()
 void
 Solver::chooseLiteral()
 {
-    Literal choice = decisionHeuristic->makeAChoice();
+    Literal choice = heuristic->makeAChoice();
     trace( solving, 1, "Choice: %s.\n", toString( choice ).c_str() );
     setAChoice( choice );    
 }
@@ -440,7 +424,7 @@ Solver::analyzeConflict()
         }
     }
     
-    decisionHeuristic->onLearning();
+    heuristic->onConflict();
     clearConflictStatus();
 }
 
