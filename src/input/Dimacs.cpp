@@ -144,7 +144,7 @@ Dimacs::readAllClauses(
 {
 //    if( !weighted )
 //    {
-    trace( parser, 1, "Starting reading %d clauses.\n", numberOfClauses );
+    trace_msg( parser, 1, "Starting iteration on " << numberOfClauses << " clauses.");
     for( unsigned int i = 0; i < numberOfClauses; i++ )
     {
         readClause( input );
@@ -228,18 +228,29 @@ Dimacs::readClause(
     {
         assert( firstLiteral != 0 );
         trivial = true;
-        solver.addTrueLiteral( solver.getLiteral( firstLiteral ) );
+        if( addedLiterals.insert( firstLiteral ).second )
+        {
+            trace_msg( parser, 2, "Unary clause with literal " << firstLiteral << ". Adding literal to the solver." );
+            solver.addTrueLiteral( solver.getLiteral( firstLiteral ) );
+        }
+        else
+        {
+            trace_msg( parser, 2, "Found duplicated unary clause with literal " << firstLiteral << ". Skipping this clause." );
+        }
     }
     
     //if the clause is not trivial add it in the formula
     if( !trivial )
     {
-        trace( parser, 1, "Adding clause %s.\n", toString( *clause ).c_str() );
+        trace_msg( parser, 1, "Adding clause " << *clause << " in solver.");
         solver.addClause( clause );
         clause->attachClause();
     }
     else
+    {
+        trace_msg( parser, 1, "Deleting clause " << *clause << " because is trivial." );
         delete clause;
+    }
 }
 //
 //void
@@ -358,7 +369,7 @@ void
 Dimacs::insertVariables(
     unsigned int numberOfVariables )
 {
-    trace( parser, 1, "Adding %d variables.\n", numberOfVariables );
+    trace_msg( parser, 1, "Adding " << numberOfVariables << " variables." );
     for( unsigned int i = 1; i <= numberOfVariables; i++ )
     {
         stringstream ss;

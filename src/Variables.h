@@ -24,6 +24,7 @@
 #include "Variable.h"
 #include "Literal.h"
 #include "outputBuilders/OutputBuilder.h"
+#include "util/Assert.h"
 
 using namespace std;
 
@@ -59,6 +60,7 @@ class Variables
         inline bool assign( int level, Clause* implicant );
 
         inline Variable* operator[]( unsigned idx ) { return variables[ idx ]; }
+        inline Variable const* operator[]( unsigned idx ) const { return variables[ idx ]; }
         
         inline void onUnroll();
         
@@ -74,7 +76,18 @@ class Variables
         vector< Variable* > variables;
         
         inline bool checkNoUndefinedBefore( unsigned idx ) const;
+
+        /**
+         * Assign a literal with the truth value TRUE.
+         * 
+         * @param level the level of the inference.
+         * @param literal the literal which is true.
+         * @param implicant the clause which is the reason of the literal assignment.
+         * @return true if no conflict occurs, false otherwise. 
+         */
         inline bool assign( int level, Literal literal, Clause* implicant );
+        
+        inline bool checkVariableHasBeenAssigned( Variable* var );
 };
 
 Variables::Variables()
@@ -214,7 +227,8 @@ Variables::assign(
     assert( assignedVariablesSize < variables.size() );
     if( literal.setTrue() )
     {
-        assignedVariables[ assignedVariablesSize++ ] = variable;
+        assert_msg( !checkVariableHasBeenAssigned( variable ), "The variable " << *variable << " has been already assigned." );
+        assignedVariables[ assignedVariablesSize++ ] = variable;        
         variable->setDecisionLevel( level );
         variable->setImplicant( implicant );
         return true;
@@ -261,5 +275,18 @@ Variables::onUnroll()
 //        assert( noUndefinedBefore < variables.size() );
 //    }
 }
+
+bool
+Variables::checkVariableHasBeenAssigned( 
+    Variable* var )
+{
+    for( unsigned int i = 0; i < assignedVariablesSize; i++ )
+    {
+        if( assignedVariables[ i ] == var )
+            return true;
+    }
+    return false;
+}
+
 
 #endif

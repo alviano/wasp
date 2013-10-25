@@ -85,25 +85,30 @@ Solver::addClauseFromModelAndRestart()
 {
     assert( variables.numberOfAssignedLiterals() > 0 );
     
+    trace_msg( enumeration, 2, "Creating the clause representing the model." );
     Clause* clause = new Clause();
     
     Literal lastInsertedLiteral;
     
-    for( unsigned int i = 1; i < variables.numberOfVariables(); i++ )
+    for( unsigned int i = 1; i <= variables.numberOfVariables(); i++ )
     {
         Variable* v = variables[ i ];
         assert( !v->isUndefined() );
+        
+        trace_msg( enumeration, 3, "Checking literal " << *v << " with decision level " << v->getDecisionLevel() << " and its implicant is " << ( v->hasImplicant() ? "null" : "not null" ) );
         if( !v->hasImplicant() && v->getDecisionLevel() != 0 )
         {
             if( v->isTrue() )
             {
                 Literal lit( v, NEGATIVE );
+                trace_msg( enumeration, 2, "Adding literal " << lit << " in clause." );
                 lastInsertedLiteral = lit;
                 clause->addLiteral( lit );
             }
             else
             {
                 Literal lit( v );
+                trace_msg( enumeration, 2, "Adding literal " << lit << " in clause." );
                 lastInsertedLiteral = lit;
                 clause->addLiteral( lit );
             }
@@ -112,6 +117,7 @@ Solver::addClauseFromModelAndRestart()
     
     if( clause->size() == 0 )
     {
+        trace_msg( enumeration, 2, "Clause is empty: all models have been found." );
         delete clause;
         return false;
     }
@@ -119,15 +125,19 @@ Solver::addClauseFromModelAndRestart()
     this->doRestart();
     if( clause->size() > 1 )
     {
+        trace_msg( enumeration, 2, "Adding clause in solver." );
         clause->attachClause();
         addClause( clause );
     }
     else
     {        
-        delete clause;        
+        delete clause;
+        trace_msg( enumeration, 2, "Clause is unary. Adding " << lastInsertedLiteral << " as true." );
         if( !propagateLiteralAsDeterministicConsequence( lastInsertedLiteral ) )
+        {
+            trace_msg( enumeration, 2, "Conflict found while propagating " << lastInsertedLiteral << ": all models have been found." );
             return false;
-        
+        }
     }
     
     return true;
@@ -194,6 +204,9 @@ Solver::solve()
         }
     }
     
+    assert_msg( getNumberOfUndefined() == 0, "Found a model with " << getNumberOfUndefined() << " undefined variables." );
+    assert_msg( allClausesSatisfied(), "The model found is not correct." );
+    
     return true;
 }
 
@@ -227,4 +240,34 @@ Solver::printProgram() const
     {
         cout << *( *it ) << endl;
     }
+}
+
+unsigned int
+Solver::getNumberOfUndefined() const
+{
+    unsigned countUndef = 0;
+    for( unsigned int i = 1; i <= variables.numberOfVariables(); i++ )
+    {
+        Variable const* var = variables[ i ];
+        if( var->isUndefined() )
+        {
+            countUndef++;
+        }
+    }
+
+    return countUndef;
+}
+
+bool
+Solver::allClausesSatisfied() const
+{
+    for( List< Clause* >::const_iterator it = clauses.begin(); it != clauses.end(); ++it )
+    {
+        Clause& clause = *( *it );
+
+        if( clause.isUnsatisfied() )
+            return false;
+    }
+
+    return true;
 }

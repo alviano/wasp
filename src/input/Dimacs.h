@@ -20,6 +20,7 @@
 #define	DIMACS_H
 
 #include <iostream>
+#include <unordered_set>
 using namespace std;
 
 class Solver;
@@ -66,6 +67,8 @@ private:
     unsigned int numberOfClauses;
     
     unsigned int numberOfVariables;
+    
+    unordered_set< int > addedLiterals;
     
 //    unsigned int maxWeight;
 //    

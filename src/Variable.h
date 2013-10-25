@@ -23,6 +23,7 @@
 #include <iostream>
 #include "util/Constants.h"
 #include "WatchedList.h"
+#include "util/Assert.h"
 
 using namespace std;
 
@@ -199,7 +200,7 @@ bool
 Variable::setTruthValue(
     TruthValue truth )
 {
-    assert( "Truth Value parameter is neither true nor false." && ( truth == TRUE || truth == FALSE ) );
+    assert_msg( ( truth == TRUE || truth == FALSE ), "Truth Value parameter is neither true nor false. It is " << truth << "." );
     if( truthValue == UNDEFINED )
     {
         truthValue = truth;
@@ -208,12 +209,10 @@ Variable::setTruthValue(
     
     /*  
      * If truthValue is not undefined we assume that there is a conflict.
-     * The solver should check if the variable is already assigned.
-     * In case you don't want to perform this check in the solver, you can
-     * simply return truthValue == truth;
+     * The solver should check if the variable has been already assigned.
      */
-    //assert( "A variable is assigned twice with the same truthValue." && truthValue != truth );
-    return truthValue == truth;
+    assert_msg( truthValue != truth, "A variable is assigned twice with the same truthValue."  );
+    return false;
 }
 
 bool
@@ -225,7 +224,7 @@ Variable::isUndefined() const
 void
 Variable::setUndefined()
 {
-    assert( "This assert is not strictly necessary. By the way, this assignment is useless." && truthValue != UNDEFINED );
+    assert_msg( truthValue != UNDEFINED, "This assert is not strictly necessary. By the way, this assignment is useless." );
     truthValue = UNDEFINED;
 }
 
@@ -288,7 +287,7 @@ Variable::addWatchedClause(
     Clause* clause,
     unsigned int sign )
 {
-    assert( "A literal must be true or false." && sign <= 1 );    
+    assert_msg( sign <= 1, "The sign must be 0 or 1. Found value " << sign );
     watchedLists[ sign ].add( clause );
 }
 
@@ -297,7 +296,7 @@ Variable::eraseWatchedClause(
     Clause* clause,
     unsigned int sign )
 {
-    assert( "A literal must be true or false." && sign <= 1 );
+    assert_msg( sign <= 1, "The sign must be 0 or 1. Found value " << sign );
     watchedLists[ sign ].remove( clause );
 }
 
@@ -306,7 +305,7 @@ Variable::findAndEraseWatchedClause(
     Clause* clause,
     unsigned int sign )
 {
-    assert( "A literal must be positive or negative." && sign <= 1 );
+    assert_msg( sign <= 1, "The sign must be 0 or 1. Found value " << sign );
     watchedLists[ sign ].findAndRemove( clause );
 }
 
@@ -326,7 +325,7 @@ unsigned int
 Variable::numberOfWatchedClauses(
     unsigned int sign ) const
 {
-    assert( "A literal must be true or false." && sign <= 1 );
+    assert_msg( sign <= 1, "The sign must be 0 or 1. Found value " << sign );
     return watchedLists[ sign ].size();
 }
 
@@ -341,7 +340,7 @@ Variable::onAging(
 void
 Variable::unitPropagationStart()
 {
-    assert( "Variable to propagate is Undefined." && !this->isUndefined() );
+    assert_msg( !this->isUndefined(), "Propagating variable " << *this << ", the truth value is Undefined." );
     assert( FALSE == 1 && TRUE == 2 );
 
     #ifndef NDEBUG
@@ -356,7 +355,7 @@ Variable::unitPropagationStart()
 bool
 Variable::unitPropagationHasNext()
 {
-    assert( "Variable to propagate is Undefined." && !this->isUndefined() );
+    assert_msg( !this->isUndefined(), "Propagating variable " << *this << ", the truth value is Undefined." );
     assert( FALSE == 1 && TRUE == 2 );
 
     #ifndef NDEBUG
@@ -371,7 +370,7 @@ Variable::unitPropagationHasNext()
 Clause*
 Variable::unitPropagationNext()
 {
-    assert( "Variable to propagate is Undefined." && !this->isUndefined() );
+    assert_msg( !this->isUndefined(), "Propagating variable " << *this << ", the truth value is Undefined." );
     assert( FALSE == 1 && TRUE == 2 );
 
     #ifndef NDEBUG

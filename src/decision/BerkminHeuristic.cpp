@@ -76,14 +76,20 @@ BerkminHeuristic::pickLiteralUsingActivity()
     //solver.startIterationOnUndefinedVariables();
 
     Variable* firstUndefined = solver.getFirstUndefined();
+    trace_msg( heuristic, 2, "First Undefined Variable is " << *firstUndefined );
+    
     Variable* variable = firstUndefined;
     do
     {
+        trace_msg( heuristic, 2, "Current Variable is " << *variable );
         assert( "Variable has not been set." && variable != NULL );
         assert( "The literal must be undefined." && variable->isUndefined() );
         updateMaxCounter( variable );
         updateMaxOccurrences( variable );
-    }while( ( variable = solver.getNextUndefined( variable ) ) != NULL );
+        
+        
+    } while( ( variable = solver.getNextUndefined( variable ) ) != NULL );
+    
     if( chosenVariable != NULL )
     {
         assert( Literal( chosenVariable ).isUndefined() );

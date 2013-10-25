@@ -59,8 +59,11 @@ using std::stringstream;
     #define setTraceLevel( type, level ) \
         wasp::Options::traceLevels.types[ wasp::Options::traceLevels.type() ].second = level
     #define trace_msg( type, level, msg ) {\
+        if( wasp::Options::traceLevels.types[ wasp::Options::traceLevels.type() ].second >= level ) \
+        { \
         trace_tag( cerr, type, level ); \
         cerr << msg << std::endl; \
+        } \
     }
     #define trace_action( type, level, action ) \
         if( wasp::Options::traceLevels.types[ wasp::Options::traceLevels.type() ].second >= level ) \
@@ -86,6 +89,7 @@ class TraceLevels
         unsigned modelchecker() { return 3; }
         unsigned unfoundedset() { return 4; }
         unsigned heuristic() { return 5; }
+        unsigned enumeration() { return 6; }
 
     private:
         inline TraceLevels();
@@ -99,6 +103,7 @@ TraceLevels::TraceLevels()
     types.push_back( pair< string, unsigned >( "modelchecker", 0 ) );
     types.push_back( pair< string, unsigned >( "unfoundedset", 0 ) );
     types.push_back( pair< string, unsigned >( "heuristic", 0 ) );
+    types.push_back( pair< string, unsigned >( "enumeration", 0 ) );
 }
 
 };

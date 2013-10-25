@@ -63,14 +63,22 @@ WaspFacade::solve()
     while( solver.solve() )
     {
         solver.printAnswerSet();
+        trace_msg( enumeration, 1, "Model number: " << numberOfModels + 1 );
         if( ++numberOfModels >= maxModels )
+        {
+            trace_msg( enumeration, 1, "Enumerated " << maxModels << "." );
             break;
+        }
         else if( !solver.addClauseFromModelAndRestart() )
+        {
+            trace_msg( enumeration, 1, "All models have been found." );
             break;
+        }
     }
     
     if( numberOfModels == 0 )
     {
+        trace_msg( enumeration, 1, "No model found." );
         solver.foundIncoherence();
     }
 }

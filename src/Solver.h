@@ -111,6 +111,8 @@ class Solver
         
         typedef List< Clause* >::iterator ClauseIterator;
         typedef List< Clause* >::reverse_iterator ClauseReverseIterator;
+        typedef List< Clause* >::const_iterator ConstClauseIterator;
+        typedef List< Clause* >::const_reverse_iterator ConstClauseReverseIterator;
         inline ClauseIterator clauses_begin() { return clauses.begin(); }
         inline ClauseIterator clauses_end() { return clauses.end(); }
         inline ClauseReverseIterator clauses_rbegin() { return clauses.rbegin(); }
@@ -119,6 +121,14 @@ class Solver
         inline ClauseIterator learnedClauses_end() { return learnedClauses.end(); }
         inline ClauseReverseIterator learnedClauses_rbegin() { return learnedClauses.rbegin(); }
         inline ClauseReverseIterator learnedClauses_rend() { return learnedClauses.rend(); }
+        inline ConstClauseIterator clauses_begin() const { return clauses.begin(); }
+        inline ConstClauseIterator clauses_end() const { return clauses.end(); }
+        inline ConstClauseReverseIterator clauses_rbegin() const { return clauses.rbegin(); }
+        inline ConstClauseReverseIterator clauses_rend() const { return clauses.rend(); }
+        inline ConstClauseIterator learnedClauses_begin() const { return learnedClauses.begin(); }
+        inline ConstClauseIterator learnedClauses_end() const { return learnedClauses.end(); }
+        inline ConstClauseReverseIterator learnedClauses_rbegin() const { return learnedClauses.rbegin(); }
+        inline ConstClauseReverseIterator learnedClauses_rend() const { return learnedClauses.rend(); }
 
         inline void deleteLearnedClause( ClauseIterator iterator );
         
@@ -149,6 +159,9 @@ class Solver
         Learning learning;
         OutputBuilder* outputBuilder;
         Heuristic* heuristic;
+        
+        unsigned int getNumberOfUndefined() const;
+        bool allClausesSatisfied() const;
 };
 
 Solver::Solver() 
