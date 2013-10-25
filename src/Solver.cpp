@@ -70,16 +70,6 @@ Solver::unroll(
     variables.onUnroll();
 }
 
-void
-Solver::decreaseLearnedClausesActivity()
-{
-    for( List< Clause* >::iterator it = learnedClauses.begin(); it != learnedClauses.end(); ++it )
-    {
-        Clause* currentClause = *it;
-        currentClause->decreaseActivity();
-    }
-}
-
 bool
 Solver::addClauseFromModelAndRestart()
 {

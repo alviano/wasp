@@ -78,7 +78,6 @@ class Solver
         
         inline bool propagateLiteralAsDeterministicConsequence( Literal literal );
         
-        void decreaseLearnedClausesActivity();
         inline void onLearningClause( Literal literalToPropagate, Clause* learnedClause, unsigned int backjumpingLevel );
         inline void onLearningUnaryClause( Literal literalToPropagate, Clause* learnedClause );        
         inline void doRestart();        
@@ -134,7 +133,7 @@ class Solver
         
         void printProgram() const;
         
-        inline void onLiteralInvolvedInConflict( Literal l ) { heuristic->onLiteralInvolvedInConflict( l ); }
+        inline Heuristic* getHeuristic() { return heuristic; }
         
     private:
         Solver( const Solver& ) : learning( *this )

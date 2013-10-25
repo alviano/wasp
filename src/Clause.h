@@ -16,15 +16,8 @@
  *
  */
 
-/* 
- * File:   Clause.h
- * Author: Carmine Dodaro
- *
- * Created on 21 July 2013, 16.47
- */
-
 #ifndef CLAUSE_H
-#define	CLAUSE_H
+#define CLAUSE_H
 
 #include <cassert>
 #include <iostream>
@@ -54,6 +47,8 @@ class Clause
         inline Clause();
         virtual ~Clause() {}
 
+        inline void init( const Heuristic::ClauseData& clauseData );
+        
         inline Literal getAt( unsigned idx ) const { assert( idx < literals.size() ); return literals[ idx ]; }
         inline void addLiteral( Literal literal );
 
@@ -70,25 +65,19 @@ class Clause
         
         unsigned getMaxDecisionLevel( unsigned from, unsigned to) const;       
 
-        inline void decreaseActivity();
-        inline Activity getActivity() const;
-        inline void incrementActivity( Activity increment );
-        
         inline bool isImplicantOfALiteral() const;        
 
         inline void swapUnwatchedLiterals( unsigned int pos1, unsigned int pos2 );
         inline void swapWatchedLiterals();
+        
+        inline Heuristic::ClauseData& getHeuristicData() { return heuristicData; }
+        inline const Heuristic::ClauseData& getHeuristicData() const { return heuristicData; }
 
     protected:
         vector< Literal > literals;
         unsigned lastSwapIndex;
 
-        /**
-        * The activity of this learned clause.
-        
-        * This number computes how often this clause is used in the unit propagation.
-        */
-        Activity activity;
+        Heuristic::ClauseData heuristicData;
 
         virtual ostream& print( ostream& out ) const;
   
@@ -110,7 +99,7 @@ class Clause
         inline void swapLiterals( unsigned int pos1, unsigned int pos2 );
 };
 
-Clause::Clause() : lastSwapIndex( 1 ), activity( 0 )
+Clause::Clause() : lastSwapIndex( 1 )
 {
 }
 
@@ -119,6 +108,13 @@ Clause::Clause() : lastSwapIndex( 1 ), activity( 0 )
 //{
 //    literals.reserve( size );
 //}
+
+void
+Clause::init( 
+    const Heuristic::ClauseData& clauseData )
+{
+    heuristicData = clauseData;
+}
 
 void
 Clause::addLiteral(
@@ -365,25 +361,6 @@ Clause::onLiteralFalse(
         
     //update watch
     return !updateWatch();
-}
-
-void
-Clause::decreaseActivity()
-{
-    activity *= 1e-20;
-}
-
-Activity
-Clause::getActivity() const
-{
-    return activity;
-}
-
-void
-Clause::incrementActivity( 
-    Activity increment )
-{
-    activity += increment;
 }
 
 #endif	/* CLAUSE_H */

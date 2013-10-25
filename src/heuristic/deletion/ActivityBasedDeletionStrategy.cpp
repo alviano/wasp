@@ -23,11 +23,16 @@ void
 ActivityBasedDeletionStrategy::updateActivity( 
     Clause* learnedClause )
 {
-    learnedClause->incrementActivity( increment );
+    learnedClause->getHeuristicData().Double( 0 ) += increment;
     decrementActivity();
-    if( learnedClause->getActivity() > 1e20 )
+    if( learnedClause->getHeuristicData().Double( 0 ) > 1e20 )
     {
-        solver.decreaseLearnedClausesActivity();
+        for( Solver::ClauseIterator it = solver.learnedClauses_begin(); it != solver.learnedClauses_end(); ++it )
+        {
+            Clause* currentClause = *it;
+            currentClause->getHeuristicData().Double( 0 ) *= 1e-20;
+        }
+
         increment *= 1e-20;
     }
 }
@@ -44,7 +49,7 @@ ActivityBasedDeletionStrategy::deleteClauses()
         
         if( !clause->isImplicantOfALiteral() )
         {
-            Activity activity = clause->getActivity();
+            Activity activity = clause->getHeuristicData().Double( 0 );
             activitySum += activity;
             ++activityCount;
             if ( activity < threshold )
@@ -70,7 +75,7 @@ ActivityBasedDeletionStrategy::deleteClauses()
             Clause* clause = *it;
 
     
-            if( !clause->isImplicantOfALiteral() && clause->getActivity() < activitySum )
+            if( !clause->isImplicantOfALiteral() && clause->getHeuristicData().Double( 0 ) < activitySum )
             {
                 toDelete--;
                 solver.deleteLearnedClause( it++ );            

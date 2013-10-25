@@ -25,12 +25,25 @@
 class Heuristic
 {
 public:
-    typedef double VariableData;
-    typedef double ClauseData;
+    struct ClauseData
+    {
+    public:
+        inline ClauseData() { data[ 0 ] = 0.0; }
+        inline ClauseData( const ClauseData& init ) { data[ 0 ] = init.data[ 0 ]; }
+        ClauseData& operator=( const ClauseData& right ) { data[ 0 ] = right.data[ 0 ]; return *this; }
+        
+        inline double& Double( unsigned idx ) { return data[ idx ]; }
+        inline const double& Double( unsigned idx ) const { return data[ idx ]; }
+        
+        inline unsigned Unsigned( unsigned idx ) { return static_cast< unsigned >( data[ idx ] ); }
+        inline const unsigned Unsigned( unsigned idx ) const { return static_cast< unsigned >( data[ idx ] ); }
+    
+    private:
+        double data[ 1 ];
+    };
     
     virtual ~Heuristic() {}
-    virtual VariableData createVariableData() { return 0.0; }
-    virtual ClauseData createClauseData() { return 0.0; }
+    virtual ClauseData createClauseData() { return ClauseData(); }
 
     virtual Literal makeAChoice() = 0;
     
