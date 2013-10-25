@@ -59,13 +59,6 @@ BerkminHeuristic::updateMaxOccurrences(
 }
 
 void
-BerkminHeuristic::collectUndefined(
-    Variable* variable )
-{
-    updateMaxCounter( variable );
-}
-
-void
 BerkminHeuristic::pickLiteralUsingActivity()
 {
     trace( heuristic, 1, "Starting pickLiteralUsingActivity.\n" );
@@ -128,7 +121,7 @@ BerkminHeuristic::pickLiteralFromTopMostUnsatisfiedLearnedClause()
         assert( *it != NULL );
         Clause& learnedClause = **it;
         trace( heuristic, 1, "Learned clause %d: %s.\n", count, toString( learnedClause ).c_str() );
-        if( learnedClause.checkUnsatisfiedAndOptimize( this ) )
+        if( checkUnsatisfiedAndOptimize( learnedClause ) )
         {
             assert( chosenVariable != NULL );
             assert( Literal( chosenVariable ).isUndefined() );
@@ -137,6 +130,45 @@ BerkminHeuristic::pickLiteralFromTopMostUnsatisfiedLearnedClause()
             break;
         }
     }
+}
+
+
+bool
+BerkminHeuristic::checkUnsatisfiedAndOptimize( 
+    Clause& clause )
+{
+    assert( "Unary clauses must be removed." && clause.size() > 1 );
+    
+    if( clause.getAt( clause.size() - 1 ).isTrue() ) //literals.back().isTrue() )
+        return false;
+    Variable* variable = clause.getAt( clause.size() - 1 ).getVariable();
+    if( variable->isUndefined() )
+        updateMaxCounter( variable );
+    
+    if( clause.getAt( 0 ).isTrue() )
+        return false;
+    variable = clause.getAt( 0 ).getVariable();
+    if( variable->isUndefined() )
+        updateMaxCounter( variable );
+    
+    unsigned size = clause.size() - 1;
+    for( unsigned int i = 1; i < size; ++i )
+    {
+        if( clause.getAt( i ).isTrue() )
+        {
+            if( i == 1 )
+                clause.swapWatchedLiterals();
+            else
+                clause.swapUnwatchedLiterals( i, size );
+            
+            return false;
+        }
+        variable = clause.getAt( i ).getVariable();
+        if( variable->isUndefined() )
+            updateMaxCounter( variable );
+    }
+    
+    return true;
 }
 
 Literal

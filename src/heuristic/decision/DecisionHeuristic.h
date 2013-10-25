@@ -17,7 +17,7 @@
  */
 
 #ifndef DECISIONHEURISTIC_H
-#define	DECISIONHEURISTIC_H
+#define DECISIONHEURISTIC_H
 
 #include <cassert>
 
@@ -25,11 +25,12 @@ class Literal;
 class Solver;
 class Variable;
 
-class DecisionHeuristic
+class DecisionStrategy
 {
     public:
-        virtual ~DecisionHeuristic() {}
+        virtual ~DecisionStrategy() {}
         virtual Literal makeAChoice() = 0;
+        
         virtual void onLearning() = 0;
         virtual void onRestart() = 0;
         

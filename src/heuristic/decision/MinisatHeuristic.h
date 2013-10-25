@@ -20,7 +20,6 @@
 #define	MINISATHEURISTIC_H
 
 #include "DecisionHeuristic.h"
-#include "UndefinedCollector.h"
 
 #include "../../util/Options.h"
 #include "../../util/Trace.h"
@@ -29,7 +28,7 @@
 #include <cassert>
 using namespace std;
 
-class MinisatHeuristic : public DecisionHeuristic
+class MinisatHeuristic : public DecisionStrategy
 {
     public:
         inline MinisatHeuristic( Solver& solver );

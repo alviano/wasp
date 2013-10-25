@@ -23,7 +23,7 @@
 
 #include "../../Literal.h"
 
-class FirstUndefinedHeuristic : public DecisionHeuristic
+class FirstUndefinedHeuristic : public DecisionStrategy
 {
     public:
         inline FirstUndefinedHeuristic( Solver& solver );

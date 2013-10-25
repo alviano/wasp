@@ -31,7 +31,7 @@ public:
     inline ThreeStrategiesHeuristic();
     virtual ~ThreeStrategiesHeuristic();
 
-    inline void setDecisionStrategy( DecisionHeuristic* value );
+    inline void setDecisionStrategy( DecisionStrategy* value );
     inline void setRestartStrategy( RestartStrategy* value );
     inline void setDeletionStrategy( DeletionStrategy* value );
 
@@ -46,7 +46,7 @@ public:
     virtual bool hasToRestart() { return restartStrategy->hasToRestart(); }
     
 private:
-    DecisionHeuristic* decisionStrategy;
+    DecisionStrategy* decisionStrategy;
     RestartStrategy* restartStrategy;
     DeletionStrategy* deletionStrategy;
 };
@@ -58,7 +58,7 @@ ThreeStrategiesHeuristic::ThreeStrategiesHeuristic()
 
 void
 ThreeStrategiesHeuristic::setDecisionStrategy(
-    DecisionHeuristic* value )
+    DecisionStrategy* value )
 {
     assert( value != NULL );
     if( decisionStrategy != NULL )

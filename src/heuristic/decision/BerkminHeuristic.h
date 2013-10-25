@@ -20,7 +20,6 @@
 #define	BERKMINHEURISTIC_H
 
 #include "DecisionHeuristic.h"
-#include "UndefinedCollector.h"
 
 #include "../../util/Trace.h"
 #include "../../Variable.h"
@@ -28,7 +27,7 @@
 #include <cassert>
 using namespace std;
 
-class BerkminHeuristic : public DecisionHeuristic, public UndefinedCollector
+class BerkminHeuristic : public DecisionStrategy
 {
     public:
         inline BerkminHeuristic( Solver& solver, unsigned int numberOfLearnedClausesToConsider = static_cast< unsigned >( -1 ) );
@@ -39,8 +38,6 @@ class BerkminHeuristic : public DecisionHeuristic, public UndefinedCollector
         virtual void onRestart();
         
         virtual void onNewVariable( Variable& variable );
-        
-        virtual void collectUndefined( Variable* );
         
         virtual void onLiteralInvolvedInConflict( Literal literal );
 
@@ -88,6 +85,7 @@ class BerkminHeuristic : public DecisionHeuristic, public UndefinedCollector
 
         inline void updateMaxCounter( Variable* );
         inline void updateMaxOccurrences( Variable* );
+        inline bool checkUnsatisfiedAndOptimize( Clause& clause );
 };
 
 BerkminHeuristic::BerkminHeuristic(

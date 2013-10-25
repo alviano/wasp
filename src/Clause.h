@@ -33,7 +33,7 @@
 #include "Clause.h"
 #include "Literal.h"
 #include "Learning.h"
-#include "heuristic/decision/UndefinedCollector.h"
+#include "Heuristic.h"
 
 using namespace std;
 
@@ -65,7 +65,7 @@ class Clause
         inline bool onLiteralFalse( Literal literal );
 
         inline unsigned int size() const;
-        inline bool checkUnsatisfiedAndOptimize( UndefinedCollector* collector );
+//        inline bool checkUnsatisfiedAndOptimize( Heuristic* collector );
         bool isUnsatisfied() const;
         
         unsigned getMaxDecisionLevel( unsigned from, unsigned to) const;       
@@ -75,6 +75,9 @@ class Clause
         inline void incrementActivity( Activity increment );
         
         inline bool isImplicantOfALiteral() const;        
+
+        inline void swapUnwatchedLiterals( unsigned int pos1, unsigned int pos2 );
+        inline void swapWatchedLiterals();
 
     protected:
         vector< Literal > literals;
@@ -88,7 +91,7 @@ class Clause
         Activity activity;
 
         virtual ostream& print( ostream& out ) const;
-
+  
     private:
         Clause( const Clause& )
         {
@@ -229,43 +232,43 @@ Clause::onLearning(
     }
 }
 
-bool
-Clause::checkUnsatisfiedAndOptimize( 
-    UndefinedCollector* collector )
-{
-    assert( "Unary clauses must be removed." && literals.size() > 1 );
-    
-    if( literals.back().isTrue() )
-        return false;
-    Variable* variable = literals.back().getVariable();
-    if( variable->isUndefined() )
-        collector->collectUndefined( variable );
-    
-    if( literals[ 0 ].isTrue() )
-        return false;
-    variable = literals[ 0 ].getVariable();
-    if( variable->isUndefined() )
-        collector->collectUndefined( variable );
-    
-    unsigned size = literals.size() - 1;
-    for( unsigned int i = 1; i < size; ++i )
-    {
-        if( literals[ i ].isTrue() )
-        {
-            if( i == 1 )
-                swapLiterals( 0, 1 );
-            else
-                swapLiterals( i, size );
-            
-            return false;
-        }
-        variable = literals[ i ].getVariable();
-        if( variable->isUndefined() )
-            collector->collectUndefined( variable );
-    }
-    
-    return true;
-}
+//bool
+//Clause::checkUnsatisfiedAndOptimize( 
+//    Heuristic* collector )
+//{
+//    assert( "Unary clauses must be removed." && literals.size() > 1 );
+//    
+//    if( literals.back().isTrue() )
+//        return false;
+//    Variable* variable = literals.back().getVariable();
+//    if( variable->isUndefined() )
+//        collector->collectUndefined( variable );
+//    
+//    if( literals[ 0 ].isTrue() )
+//        return false;
+//    variable = literals[ 0 ].getVariable();
+//    if( variable->isUndefined() )
+//        collector->collectUndefined( variable );
+//    
+//    unsigned size = literals.size() - 1;
+//    for( unsigned int i = 1; i < size; ++i )
+//    {
+//        if( literals[ i ].isTrue() )
+//        {
+//            if( i == 1 )
+//                swapLiterals( 0, 1 );
+//            else
+//                swapLiterals( i, size );
+//            
+//            return false;
+//        }
+//        variable = literals[ i ].getVariable();
+//        if( variable->isUndefined() )
+//            collector->collectUndefined( variable );
+//    }
+//    
+//    return true;
+//}
 
 void
 Clause::swapLiterals( 
@@ -273,10 +276,27 @@ Clause::swapLiterals(
     unsigned int pos2 )
 {
     assert( "First position is out of range." && pos1 < literals.size() );
-    assert( "Second position is out of range." && pos2 < literals.size() ); 
+    assert( "Second position is out of range." && pos2 < literals.size() );
     std::swap( literals[ pos1 ], literals[ pos2 ] );
 }
 
+void
+Clause::swapWatchedLiterals()
+{
+    swapLiterals( 0, 1 );
+}
+
+void
+Clause::swapUnwatchedLiterals( 
+    unsigned int pos1, 
+    unsigned int pos2 )
+{
+    assert( "First position is out of range." && pos1 < literals.size() );
+    assert( "Second position is out of range." && pos2 < literals.size() );
+    assert( pos1 >= 2 );
+    assert( pos2 >= 2 );
+    swapLiterals( pos1, pos2 );
+}
 
 bool
 Clause::updateWatch()
