@@ -17,7 +17,7 @@
  */
 
 #include "AggressiveDeletionStrategy.h"
-#include "../Solver.h"
+#include "../../Solver.h"
 
 void
 AggressiveDeletionStrategy::onLearning( 

@@ -19,9 +19,9 @@
 #include "MinisatHeuristic.h"
 
 #include <cassert>
-#include "../Literal.h"
-#include "../Variable.h"
-#include "../Solver.h"
+#include "../../Literal.h"
+#include "../../Variable.h"
+#include "../../Solver.h"
 
 
 MinisatHeuristic::~MinisatHeuristic()

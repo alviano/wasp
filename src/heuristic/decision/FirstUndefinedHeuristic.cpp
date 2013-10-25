@@ -16,34 +16,25 @@
  *
  */
 
-#include "MinisatDeletionStrategy.h"
-#include "../Solver.h"
+#include "FirstUndefinedHeuristic.h"
 
-void
-MinisatDeletionStrategy::onLearning( 
-    Clause* learnedClause )
-{
-    updateActivity( learnedClause );
-    
-    if( hasToDelete() )
-    {
-        deleteClauses();
-    }    
-}
+#include "../../Literal.h"
+#include "../../Solver.h"
 
-bool
-MinisatDeletionStrategy::hasToDelete()
+Literal
+FirstUndefinedHeuristic::makeAChoice()
 {
-    if( maxLearned == 0.0 )
-    {
-        maxLearned = solver.numberOfClauses() * learnedSizeFactor;
-    }
-    
-    return ( ( int ) ( solver.numberOfLearnedClauses() - solver.numberOfAssignedLiterals() ) >= maxLearned );
+    Variable* variable = solver.getFirstUndefined();
+    assert( "The literal must be undefined." && variable->isUndefined() );
+    return Literal( variable, NEGATIVE );
 }
 
 void
-MinisatDeletionStrategy::onRestart()
+FirstUndefinedHeuristic::onLearning()
 {
-    maxLearned *= learnedSizeIncrement;
+}
+        
+void
+FirstUndefinedHeuristic::onRestart()
+{
 }

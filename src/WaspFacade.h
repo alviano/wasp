@@ -26,7 +26,7 @@ using namespace std;
 #include "Solver.h"
 #include "input/Dimacs.h"
 #include "inputBuilders/SATFormulaBuilder.h"
-#include "ThreeStrategiesHeuristic.h"
+#include "heuristic/ThreeStrategiesHeuristic.h"
 
 class WaspFacade
 {

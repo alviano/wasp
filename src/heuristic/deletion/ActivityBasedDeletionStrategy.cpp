@@ -17,7 +17,7 @@
  */
 
 #include "ActivityBasedDeletionStrategy.h"
-#include "../Solver.h"
+#include "../../Solver.h"
 
 void
 ActivityBasedDeletionStrategy::updateActivity( 

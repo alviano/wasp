@@ -16,25 +16,33 @@
  *
  */
 
-#include "FirstUndefinedHeuristic.h"
+#ifndef FIRSTUNDEFINEDHEURISTIC_H
+#define	FIRSTUNDEFINEDHEURISTIC_H
 
-#include "../Literal.h"
-#include "../Solver.h"
+#include "DecisionHeuristic.h"
 
-Literal
-FirstUndefinedHeuristic::makeAChoice()
+#include "../../Literal.h"
+
+class FirstUndefinedHeuristic : public DecisionHeuristic
 {
-    Variable* variable = solver.getFirstUndefined();
-    assert( "The literal must be undefined." && variable->isUndefined() );
-    return Literal( variable, NEGATIVE );
-}
+    public:
+        inline FirstUndefinedHeuristic( Solver& solver );
 
-void
-FirstUndefinedHeuristic::onLearning()
-{
-}
+        virtual Literal makeAChoice();
+        virtual void onLearning();
+        virtual void onRestart();
         
-void
-FirstUndefinedHeuristic::onRestart()
+        virtual void onNewVariable( Variable& variable ) {}
+        
+        virtual void onLiteralInvolvedInConflict( Literal literal ) {}
+    
+    private:
+        Solver& solver;
+};
+
+FirstUndefinedHeuristic::FirstUndefinedHeuristic( Solver& s ) : solver( s )
 {
 }
+
+#endif	/* FIRSTUNDEFINEDHEURISTIC_H */
+

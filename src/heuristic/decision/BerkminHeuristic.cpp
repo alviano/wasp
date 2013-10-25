@@ -19,9 +19,9 @@
 #include "BerkminHeuristic.h"
 
 #include <cassert>
-#include "../Variable.h"
-#include "../Literal.h"
-#include "../Solver.h"
+#include "../../Variable.h"
+#include "../../Literal.h"
+#include "../../Solver.h"
 
 BerkminHeuristic::~BerkminHeuristic()
 {

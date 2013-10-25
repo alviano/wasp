@@ -19,7 +19,7 @@
 #ifndef ACTIVITYBASEDDELETIONSTRATEGY_H
 #define ACTIVITYBASEDDELETIONSTRATEGY_H
 
-#include "../util/Constants.h"
+#include "../../util/Constants.h"
 #include "DeletionStrategy.h"
 
 class Solver;

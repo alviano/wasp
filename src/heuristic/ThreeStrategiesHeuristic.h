@@ -19,7 +19,7 @@
 #ifndef THREESTRATEGIESHEURISTIC_H
 #define THREESTRATEGIESHEURISTIC_H
 
-#include "Heuristic.h"
+#include "../Heuristic.h"
 
 #include "decision/DecisionHeuristic.h"
 #include "deletion/DeletionStrategy.h"

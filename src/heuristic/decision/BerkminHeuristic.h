@@ -22,8 +22,8 @@
 #include "DecisionHeuristic.h"
 #include "UndefinedCollector.h"
 
-#include "../util/Trace.h"
-#include "../Variable.h"
+#include "../../util/Trace.h"
+#include "../../Variable.h"
 
 #include <cassert>
 using namespace std;

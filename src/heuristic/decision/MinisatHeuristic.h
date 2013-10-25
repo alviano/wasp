@@ -22,9 +22,9 @@
 #include "DecisionHeuristic.h"
 #include "UndefinedCollector.h"
 
-#include "../util/Options.h"
-#include "../util/Trace.h"
-#include "../Variable.h"
+#include "../../util/Options.h"
+#include "../../util/Trace.h"
+#include "../../Variable.h"
 
 #include <cassert>
 using namespace std;

@@ -18,14 +18,14 @@
 
 #include "WaspFacade.h"
 
-#include "restart/NoRestartStrategy.h"
-#include "restart/MinisatRestartStrategy.h"
-#include "restart/GeometricRestartStrategy.h"
-#include "restart/SequenceBasedRestartStrategy.h"
+#include "heuristic/restart/NoRestartStrategy.h"
+#include "heuristic/restart/MinisatRestartStrategy.h"
+#include "heuristic/restart/GeometricRestartStrategy.h"
+#include "heuristic/restart/SequenceBasedRestartStrategy.h"
 
-#include "deletion/AggressiveDeletionStrategy.h"
-#include "deletion/RestartsBasedDeletionStrategy.h"
-#include "deletion/MinisatDeletionStrategy.h"
+#include "heuristic/deletion/AggressiveDeletionStrategy.h"
+#include "heuristic/deletion/RestartsBasedDeletionStrategy.h"
+#include "heuristic/deletion/MinisatDeletionStrategy.h"
 
 #include "outputBuilders/WaspOutputBuilder.h"
 #include "outputBuilders/SilentOutputBuilder.h"
@@ -33,9 +33,9 @@
 #include "outputBuilders/CompetitionOutputBuilder.h"
 #include "outputBuilders/DimacsOutputBuilder.h"
 
-#include "decision/BerkminHeuristic.h"
-#include "decision/FirstUndefinedHeuristic.h"
-#include "decision/MinisatHeuristic.h"
+#include "heuristic/decision/BerkminHeuristic.h"
+#include "heuristic/decision/FirstUndefinedHeuristic.h"
+#include "heuristic/decision/MinisatHeuristic.h"
 
 void
 WaspFacade::readInput()
