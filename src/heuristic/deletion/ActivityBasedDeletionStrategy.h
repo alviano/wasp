@@ -22,11 +22,11 @@
 #include "../../util/Constants.h"
 #include "DeletionStrategy.h"
 #include "../ActivityBasedHeuristic.h"
-#include "../../Clause.h"
+#include "../UseClauseData.h"
 
 class Solver;
 
-class ActivityBasedDeletionStrategy : public DeletionStrategy, public ActivityBased
+class ActivityBasedDeletionStrategy : public DeletionStrategy, public UseClauseData< ActivityBasedHeuristic >
 {
     public:
         inline ActivityBasedDeletionStrategy( Solver& solver );

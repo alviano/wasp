@@ -36,14 +36,15 @@ public:
     virtual void initClauseData( Clause* clause ) = 0;
 
     virtual Literal makeAChoice() = 0;
+    virtual bool hasToRestart() = 0;
+    virtual void deleteClauses() = 0;
     
     virtual void onNewVariable( Variable& variable ) = 0;
     virtual void onRestart() = 0;
     virtual void onConflict() = 0;
     virtual void onLearning( Clause* clause ) = 0;
     virtual void onLiteralInvolvedInConflict( Literal literal ) = 0;
-    virtual void deleteClauses() = 0;
-    virtual bool hasToRestart() = 0;
+    virtual void onUnitPropagation( Clause* clause ) = 0;
 };
 
 #endif

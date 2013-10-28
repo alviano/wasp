@@ -217,7 +217,10 @@ Solver::propagate(
         assert( "Next clause to propagate is null." && clause != NULL );
         trace( solving, 5, "Considering clause %s.\n", toString( *clause ).c_str() );
         if( clause->onLiteralFalse( complement ) )
+        {
             assignLiteral( clause );
+            heuristic->onUnitPropagation( clause );
+        }
         else
             assert( !conflictDetected() );
     }

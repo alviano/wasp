@@ -63,7 +63,7 @@ class Clause
         
         unsigned getMaxDecisionLevel( unsigned from, unsigned to) const;       
 
-        inline bool isImplicantOfALiteral() const;        
+        inline bool isLocked() const;        
 
         inline void swapUnwatchedLiterals( unsigned int pos1, unsigned int pos2 );
         inline void swapWatchedLiterals();
@@ -185,7 +185,7 @@ Clause::detachClause()
 }
 
 bool
-Clause::isImplicantOfALiteral() const
+Clause::isLocked() const
 {
     assert( "Unary clauses must be removed." && literals.size() > 1 );
 

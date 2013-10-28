@@ -16,14 +16,17 @@
  *
  */
 
-#include "ThreeStrategiesHeuristic.h"
+#ifndef USECLAUSEDATA_H
+#define USECLAUSEDATA_H
+ 
+#include "../Clause.h"
 
-ThreeStrategiesHeuristic::~ThreeStrategiesHeuristic()
+template< class H >
+class UseClauseData
 {
-    if( decisionStrategy != NULL )
-        delete decisionStrategy;
-    if( restartStrategy != NULL )
-        delete restartStrategy;
-    if( deletionStrategy != NULL )
-        delete deletionStrategy;
-}
+public:
+    inline typename H::ClauseData* getHeuristicData( Clause& clause ) { return static_cast< typename H::ClauseData* >( clause.getHeuristicData() ); }
+    inline const typename H::ClauseData* getHeuristicData( const Clause& clause ) { return static_cast< const typename H::ClauseData* >( clause.getHeuristicData() ); }
+};
+
+#endif

@@ -47,7 +47,7 @@ ActivityBasedDeletionStrategy::deleteClauses()
     {
         Clause& clause = **it;
         
-        if( !clause.isImplicantOfALiteral() )
+        if( !clause.isLocked() )
         {
             ActivityBasedHeuristic::ClauseData& data = *getHeuristicData( clause );
             activitySum += data.activity;
@@ -75,7 +75,7 @@ ActivityBasedDeletionStrategy::deleteClauses()
             Clause& clause = **it;
 
     
-            if( !clause.isImplicantOfALiteral() && getHeuristicData( clause )->activity < activitySum )
+            if( !clause.isLocked() && getHeuristicData( clause )->activity < activitySum )
             {
                 toDelete--;
                 solver.deleteLearnedClause( it++ );            

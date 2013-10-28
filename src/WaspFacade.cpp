@@ -26,6 +26,7 @@
 #include "heuristic/deletion/AggressiveDeletionStrategy.h"
 #include "heuristic/deletion/RestartsBasedDeletionStrategy.h"
 #include "heuristic/deletion/MinisatDeletionStrategy.h"
+#include "heuristic/deletion/GlueBasedDeletionStrategy.h"
 
 #include "outputBuilders/WaspOutputBuilder.h"
 #include "outputBuilders/SilentOutputBuilder.h"
@@ -91,6 +92,7 @@ WaspFacade::setDeletionPolicy(
     {
         case RESTARTS_BASED_DELETION_POLICY:
             heuristic->setDeletionStrategy( new RestartsBasedDeletionStrategy( solver ) );
+//            heuristic->setDeletionStrategy( new GlueBasedDeletionStrategy( solver, 8 ) );
             break;
             
         case MINISAT_DELETION_POLICY:

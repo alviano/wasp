@@ -16,21 +16,38 @@
  *
  */
 
-#ifndef THREESTRATEGIESHEURISTIC_H
-#define THREESTRATEGIESHEURISTIC_H
+#ifndef GLUEBASEDHEURISTIC_H
+#define GLUEBASEDHEURISTIC_H
 
 #include "../Heuristic.h"
-
 #include "decision/DecisionStrategy.h"
 #include "deletion/DeletionStrategy.h"
 #include "restart/RestartStrategy.h"
 #include "../Clause.h"
 
-class ThreeStrategiesHeuristic : public Heuristic
+class GlueBasedHeuristic : public Heuristic
 {
 public:
-    inline ThreeStrategiesHeuristic();
-    virtual ~ThreeStrategiesHeuristic();
+    struct ClauseData : public Heuristic::ClauseData
+    {
+        inline ClauseData() { lbd = 0; }
+        inline ClauseData( const ClauseData& init ) : lbd( init.lbd ) {}
+        unsigned lbd;
+        
+    private:
+        ClauseData& operator=( const ClauseData& right ) { assert( 0 ); lbd = right.lbd; return *this; }
+    };
+
+    inline ClauseData* getHeuristicData( Clause& clause ) { return static_cast< ClauseData* >( clause.getHeuristicData() ); }
+    inline const ClauseData* getHeuristicData( const Clause& clause ) { return static_cast< const ClauseData* >( clause.getHeuristicData() ); }
+    
+    inline GlueBasedHeuristic();
+    virtual ~GlueBasedHeuristic();
+
+    virtual void initClauseData( Clause* clause ) { clause->setHeuristicData( new ClauseData() ); }
+    
+    virtual void onNewVariable( Variable& variable ) { decisionStrategy->onNewVariable( variable ); levelsVector.push_back( 0 ); }
+    virtual void onUnitPropagation( Clause* clause );
 
     inline void setDecisionStrategy( DecisionStrategy* value );
     inline void setRestartStrategy( RestartStrategy* value );
@@ -38,7 +55,6 @@ public:
 
     virtual Literal makeAChoice() { return decisionStrategy->makeAChoice(); }
     
-    virtual void onNewVariable( Variable& variable ) { decisionStrategy->onNewVariable( variable ); }
     virtual void onRestart() { deletionStrategy->onRestart(); restartStrategy->onRestart(); decisionStrategy->onRestart(); }
     virtual void onConflict() { return decisionStrategy->onLearning(); }
     virtual void onLearning( Clause* clause ) { deletionStrategy->onLearning( clause ); }
@@ -50,15 +66,18 @@ private:
     DecisionStrategy* decisionStrategy;
     RestartStrategy* restartStrategy;
     DeletionStrategy* deletionStrategy;
+    
+    unsigned numberOfUnitPropagations;
+    vector< unsigned int > levelsVector;
 };
 
-ThreeStrategiesHeuristic::ThreeStrategiesHeuristic()
-: decisionStrategy( NULL ), restartStrategy( NULL ), deletionStrategy( NULL )
+GlueBasedHeuristic::GlueBasedHeuristic()
+: decisionStrategy( NULL ), restartStrategy( NULL ), deletionStrategy( NULL ), numberOfUnitPropagations( 0 )
 {
 }
 
 void
-ThreeStrategiesHeuristic::setDecisionStrategy(
+GlueBasedHeuristic::setDecisionStrategy(
     DecisionStrategy* value )
 {
     assert( value != NULL );
@@ -68,7 +87,7 @@ ThreeStrategiesHeuristic::setDecisionStrategy(
 }
 
 void
-ThreeStrategiesHeuristic::setRestartStrategy(
+GlueBasedHeuristic::setRestartStrategy(
     RestartStrategy* value )
 {
     assert( value != NULL );
@@ -78,7 +97,7 @@ ThreeStrategiesHeuristic::setRestartStrategy(
 }
 
 void
-ThreeStrategiesHeuristic::setDeletionStrategy(
+GlueBasedHeuristic::setDeletionStrategy(
     DeletionStrategy* value )
 {
     assert( value != NULL );

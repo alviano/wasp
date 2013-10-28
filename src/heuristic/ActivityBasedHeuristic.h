@@ -19,9 +19,13 @@
 #ifndef ACTIVITYBASEDHEURISTIC_H
 #define ACTIVITYBASEDHEURISTIC_H
 
-#include "ThreeStrategiesHeuristic.h"
+#include "../Heuristic.h"
+#include "decision/DecisionStrategy.h"
+#include "deletion/DeletionStrategy.h"
+#include "restart/RestartStrategy.h"
+#include "../Clause.h"
 
-class ActivityBasedHeuristic : public ThreeStrategiesHeuristic
+class ActivityBasedHeuristic : public Heuristic
 {
 public:
     struct ClauseData : public Heuristic::ClauseData
@@ -34,18 +38,76 @@ public:
         ClauseData& operator=( const ClauseData& right ) { assert( 0 ); activity = right.activity; return *this; }
     };
 
-    inline ActivityBasedHeuristic() {}
-    virtual ~ActivityBasedHeuristic() {}
+    virtual void onUnitPropagation( Clause* ) {}
+    
+    inline ActivityBasedHeuristic();
+    virtual inline ~ActivityBasedHeuristic();
 
     virtual void initClauseData( Clause* clause ) { clause->setHeuristicData( new ClauseData() ); }
+
+    inline void setDecisionStrategy( DecisionStrategy* value );
+    inline void setRestartStrategy( RestartStrategy* value );
+    inline void setDeletionStrategy( DeletionStrategy* value );
+
+    virtual Literal makeAChoice() { return decisionStrategy->makeAChoice(); }
+    
+    virtual void onNewVariable( Variable& variable ) { decisionStrategy->onNewVariable( variable ); }
+    virtual void onRestart() { deletionStrategy->onRestart(); restartStrategy->onRestart(); decisionStrategy->onRestart(); }
+    virtual void onConflict() { return decisionStrategy->onLearning(); }
+    virtual void onLearning( Clause* clause ) { deletionStrategy->onLearning( clause ); }
+    virtual void onLiteralInvolvedInConflict( Literal literal ) { decisionStrategy->onLiteralInvolvedInConflict( literal ); }
+    virtual void deleteClauses() {  }
+    virtual bool hasToRestart() { return restartStrategy->hasToRestart(); }
+    
+private:
+    DecisionStrategy* decisionStrategy;
+    RestartStrategy* restartStrategy;
+    DeletionStrategy* deletionStrategy;
 };
 
-class ActivityBased
+ActivityBasedHeuristic::ActivityBasedHeuristic()
+: decisionStrategy( NULL ), restartStrategy( NULL ), deletionStrategy( NULL )
 {
-public:
-    inline ActivityBasedHeuristic::ClauseData* getHeuristicData( Clause& clause ) { return static_cast< ActivityBasedHeuristic::ClauseData* >( clause.getHeuristicData() ); }
-    inline const ActivityBasedHeuristic::ClauseData* getHeuristicData( const Clause& clause ) { return static_cast< const ActivityBasedHeuristic::ClauseData* >( clause.getHeuristicData() ); }
-};
+}
 
+ActivityBasedHeuristic::~ActivityBasedHeuristic()
+{
+    if( decisionStrategy != NULL )
+        delete decisionStrategy;
+    if( restartStrategy != NULL )
+        delete restartStrategy;
+    if( deletionStrategy != NULL )
+        delete deletionStrategy;
+}
+
+void
+ActivityBasedHeuristic::setDecisionStrategy(
+    DecisionStrategy* value )
+{
+    assert( value != NULL );
+    if( decisionStrategy != NULL )
+        delete decisionStrategy;
+    decisionStrategy = value;
+}
+
+void
+ActivityBasedHeuristic::setRestartStrategy(
+    RestartStrategy* value )
+{
+    assert( value != NULL );
+    if( restartStrategy != NULL )
+        delete restartStrategy;
+    restartStrategy = value;
+}
+
+void
+ActivityBasedHeuristic::setDeletionStrategy(
+    DeletionStrategy* value )
+{
+    assert( value != NULL );
+    if( deletionStrategy != NULL )
+        delete deletionStrategy;
+    deletionStrategy = value;
+}
 
 #endif
