@@ -45,7 +45,7 @@ Learning::onConflict(
     assert( isVisitedVariablesEmpty() );
     
     learnedClause = new Clause();
-    learnedClause->init( solver.getHeuristic()->createClauseData() );
+    solver.initClauseData( learnedClause );
     decisionLevel = solver.getCurrentDecisionLevel();
 
     trace_msg( learning, 2, "Starting First UIP Learning Strategy. Current Level: " << decisionLevel );
@@ -150,13 +150,13 @@ Learning::onNavigatingLiteral(
     if( literalDecisionLevel == decisionLevel )
     {
         // FIXME: Do we need to distinguish between the two cases? onNavigatingImplicationGraph();
-        solver.getHeuristic()->onLiteralInvolvedInConflict( literal );
+        solver.onLiteralInvolvedInConflict( literal );
         addLiteralToNavigate( literal );
     }
     else if( literalDecisionLevel > 0 )
     {
         // FIXME: Do we need to distinguish between the two cases? literal.onNavigatingLearnedClause();
-        solver.getHeuristic()->onLiteralInvolvedInConflict( literal );
+        solver.onLiteralInvolvedInConflict( literal );
         addLiteralInLearnedClause( literal );
     }
 }

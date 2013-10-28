@@ -27,23 +27,13 @@ class Heuristic
 public:
     struct ClauseData
     {
-    public:
-        inline ClauseData() { data[ 0 ] = 0.0; }
-        inline ClauseData( const ClauseData& init ) { data[ 0 ] = init.data[ 0 ]; }
-        ClauseData& operator=( const ClauseData& right ) { data[ 0 ] = right.data[ 0 ]; return *this; }
-        
-        inline double& Double( unsigned idx ) { return data[ idx ]; }
-        inline const double& Double( unsigned idx ) const { return data[ idx ]; }
-        
-        inline unsigned Unsigned( unsigned idx ) { return static_cast< unsigned >( data[ idx ] ); }
-        inline const unsigned Unsigned( unsigned idx ) const { return static_cast< unsigned >( data[ idx ] ); }
-    
-    private:
-        double data[ 1 ];
+        virtual ~ClauseData() {}
     };
     
     virtual ~Heuristic() {}
-    virtual ClauseData createClauseData() { return ClauseData(); }
+    
+    // this should be merged with onLearning( Clause* clause )
+    virtual void initClauseData( Clause* clause ) = 0;
 
     virtual Literal makeAChoice() = 0;
     

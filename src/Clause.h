@@ -45,10 +45,8 @@ class Clause
 
     public:
         inline Clause();
-        virtual ~Clause() {}
+        virtual ~Clause();
 
-        inline void init( const Heuristic::ClauseData& clauseData );
-        
         inline Literal getAt( unsigned idx ) const { assert( idx < literals.size() ); return literals[ idx ]; }
         inline void addLiteral( Literal literal );
 
@@ -70,14 +68,15 @@ class Clause
         inline void swapUnwatchedLiterals( unsigned int pos1, unsigned int pos2 );
         inline void swapWatchedLiterals();
         
-        inline Heuristic::ClauseData& getHeuristicData() { return heuristicData; }
-        inline const Heuristic::ClauseData& getHeuristicData() const { return heuristicData; }
-
+        inline Heuristic::ClauseData* getHeuristicData() { assert( heuristicData != NULL ); return heuristicData; }
+        inline const Heuristic::ClauseData* getHeuristicData() const { assert( heuristicData != NULL ); return heuristicData; }
+        inline void setHeuristicData( Heuristic::ClauseData* clauseData );
+        
     protected:
         vector< Literal > literals;
         unsigned lastSwapIndex;
 
-        Heuristic::ClauseData heuristicData;
+        Heuristic::ClauseData* heuristicData;
 
         virtual ostream& print( ostream& out ) const;
   
@@ -99,7 +98,7 @@ class Clause
         inline void swapLiterals( unsigned int pos1, unsigned int pos2 );
 };
 
-Clause::Clause() : lastSwapIndex( 1 )
+Clause::Clause() : lastSwapIndex( 1 ), heuristicData( NULL )
 {
 }
 
@@ -110,9 +109,11 @@ Clause::Clause() : lastSwapIndex( 1 )
 //}
 
 void
-Clause::init( 
-    const Heuristic::ClauseData& clauseData )
+Clause::setHeuristicData( 
+    Heuristic::ClauseData* clauseData )
 {
+    assert( heuristicData == NULL );
+    assert( clauseData != NULL );
     heuristicData = clauseData;
 }
 

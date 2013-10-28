@@ -19,7 +19,7 @@
 #ifndef MINISATHEURISTIC_H
 #define	MINISATHEURISTIC_H
 
-#include "DecisionHeuristic.h"
+#include "DecisionStrategy.h"
 
 #include "../../util/Options.h"
 #include "../../util/Trace.h"

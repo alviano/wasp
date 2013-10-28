@@ -23,14 +23,14 @@ void
 ActivityBasedDeletionStrategy::updateActivity( 
     Clause* learnedClause )
 {
-    learnedClause->getHeuristicData().Double( 0 ) += increment;
+    ThreeStrategiesHeuristic::ClauseData& data = *getHeuristicData( *learnedClause );
+    data.activity += increment;
     decrementActivity();
-    if( learnedClause->getHeuristicData().Double( 0 ) > 1e20 )
+    if( data.activity > 1e20 )
     {
         for( Solver::ClauseIterator it = solver.learnedClauses_begin(); it != solver.learnedClauses_end(); ++it )
         {
-            Clause* currentClause = *it;
-            currentClause->getHeuristicData().Double( 0 ) *= 1e-20;
+            getHeuristicData( **it )->activity *= 1e-20;
         }
 
         increment *= 1e-20;
@@ -45,14 +45,14 @@ ActivityBasedDeletionStrategy::deleteClauses()
     assert( it != solver.learnedClauses_end() );
     do
     {
-        Clause* clause = *it;
+        Clause& clause = **it;
         
-        if( !clause->isImplicantOfALiteral() )
+        if( !clause.isImplicantOfALiteral() )
         {
-            Activity activity = clause->getHeuristicData().Double( 0 );
-            activitySum += activity;
+            ThreeStrategiesHeuristic::ClauseData& data = *getHeuristicData( clause );
+            activitySum += data.activity;
             ++activityCount;
-            if ( activity < threshold )
+            if ( data.activity < threshold )
             {
                 toDelete--;
                 solver.deleteLearnedClause( it++ );            
@@ -72,10 +72,10 @@ ActivityBasedDeletionStrategy::deleteClauses()
         assert( it != solver.learnedClauses_end() );
         do
         {
-            Clause* clause = *it;
+            Clause& clause = **it;
 
     
-            if( !clause->isImplicantOfALiteral() && clause->getHeuristicData().Double( 0 ) < activitySum )
+            if( !clause.isImplicantOfALiteral() && getHeuristicData( clause )->activity < activitySum )
             {
                 toDelete--;
                 solver.deleteLearnedClause( it++ );            

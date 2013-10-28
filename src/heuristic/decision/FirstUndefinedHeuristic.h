@@ -19,7 +19,7 @@
 #ifndef FIRSTUNDEFINEDHEURISTIC_H
 #define	FIRSTUNDEFINEDHEURISTIC_H
 
-#include "DecisionHeuristic.h"
+#include "DecisionStrategy.h"
 
 #include "../../Literal.h"
 

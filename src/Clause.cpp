@@ -31,6 +31,12 @@ operator<<(
     return clause.print( out );
 }
 
+Clause::~Clause()
+{ 
+    if( heuristicData != NULL )
+        delete heuristicData;
+}
+
 ostream&
 Clause::print(
     ostream& out ) const

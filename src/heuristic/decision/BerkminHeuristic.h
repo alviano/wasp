@@ -19,7 +19,7 @@
 #ifndef BERKMINHEURISTIC_H
 #define	BERKMINHEURISTIC_H
 
-#include "DecisionHeuristic.h"
+#include "DecisionStrategy.h"
 
 #include "../../util/Trace.h"
 #include "../../Variable.h"

@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef DECISIONHEURISTIC_H
-#define DECISIONHEURISTIC_H
+#ifndef DECISIONSTRATEGY_H
+#define DECISIONSTRATEGY_H
 
 #include <cassert>
 
@@ -39,5 +39,5 @@ class DecisionStrategy
         virtual void onLiteralInvolvedInConflict( Literal literal ) = 0;
 };
 
-#endif	/* DECISIONHEURISTIC_H */
+#endif	/* DECISIONSTRATEGY_H */
 

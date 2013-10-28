@@ -21,6 +21,8 @@
 
 #include "../../util/Constants.h"
 #include "DeletionStrategy.h"
+#include "../ThreeStrategiesHeuristic.h"
+#include "../../Clause.h"
 
 class Solver;
 
@@ -43,6 +45,8 @@ class ActivityBasedDeletionStrategy : public DeletionStrategy
     
     private:
         void startIteration();
+        inline ThreeStrategiesHeuristic::ClauseData* getHeuristicData( Clause& clause ) { return static_cast< ThreeStrategiesHeuristic::ClauseData* >( clause.getHeuristicData() ); }
+        inline const ThreeStrategiesHeuristic::ClauseData* getHeuristicData( const Clause& clause ) { return static_cast< const ThreeStrategiesHeuristic::ClauseData* >( clause.getHeuristicData() ); }
 
         Activity increment;
         Activity decrement;
