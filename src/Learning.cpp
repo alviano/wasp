@@ -63,7 +63,7 @@ Learning::onConflict(
     while( pendingVisitedVariables > 1 )
 	{
         //Get next literal.
-		Literal currentLiteral = getNextLiteralToNavigate();
+        Literal currentLiteral = getNextLiteralToNavigate();
         trace( learning, 3, "Navigating %s for calculating UIP.\n", toString( currentLiteral ).c_str() );
         //Compute implicants of the literal.
         if( conflictLiteral.getVariable()->getImplicant() != NULL )

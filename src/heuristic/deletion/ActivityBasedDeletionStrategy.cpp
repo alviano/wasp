@@ -23,7 +23,7 @@ void
 ActivityBasedDeletionStrategy::updateActivity( 
     Clause* learnedClause )
 {
-    ThreeStrategiesHeuristic::ClauseData& data = *getHeuristicData( *learnedClause );
+    ActivityBasedHeuristic::ClauseData& data = *getHeuristicData( *learnedClause );
     data.activity += increment;
     decrementActivity();
     if( data.activity > 1e20 )
@@ -49,7 +49,7 @@ ActivityBasedDeletionStrategy::deleteClauses()
         
         if( !clause.isImplicantOfALiteral() )
         {
-            ThreeStrategiesHeuristic::ClauseData& data = *getHeuristicData( clause );
+            ActivityBasedHeuristic::ClauseData& data = *getHeuristicData( clause );
             activitySum += data.activity;
             ++activityCount;
             if ( data.activity < threshold )

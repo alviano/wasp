@@ -29,21 +29,9 @@
 class ThreeStrategiesHeuristic : public Heuristic
 {
 public:
-    struct ClauseData : public Heuristic::ClauseData
-    {
-        inline ClauseData() { activity = 0.0; }
-        inline ClauseData( const ClauseData& init ) : activity( init.activity ) {}
-        double activity;
-        
-    private:
-        ClauseData& operator=( const ClauseData& right ) { assert( 0 ); activity = right.activity; return *this; }
-    };
-
     inline ThreeStrategiesHeuristic();
     virtual ~ThreeStrategiesHeuristic();
 
-    virtual void initClauseData( Clause* clause ) { clause->setHeuristicData( new ClauseData() ); }
-    
     inline void setDecisionStrategy( DecisionStrategy* value );
     inline void setRestartStrategy( RestartStrategy* value );
     inline void setDeletionStrategy( DeletionStrategy* value );
