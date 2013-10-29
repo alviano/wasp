@@ -31,6 +31,7 @@
 #define AGGRESSIVE_DELETION_POLICY 0
 #define RESTARTS_BASED_DELETION_POLICY 1
 #define MINISAT_DELETION_POLICY 2
+#define GLUCOSE_DELETION_POLICY 3
 
 #define HEURISTIC_BERKMIN 0
 #define HEURISTIC_FIRST_UNDEFINED 1
@@ -97,7 +98,7 @@
 typedef double Activity;
 typedef unsigned int TruthValue;
 typedef unsigned int DELETION_POLICY;
-typedef unsigned int HEURISTIC_POLICY;
+typedef unsigned int DECISION_POLICY;
 typedef unsigned int OUTPUT_POLICY;
 typedef unsigned int RESTARTS_POLICY;
 

@@ -38,8 +38,8 @@ class WaspFacade
         void readInput();
         void solve();
         
-        void setDeletionPolicy( DELETION_POLICY );
-        void setDecisionPolicy( HEURISTIC_POLICY, unsigned int heuristicLimit );
+        void setDeletionPolicy( DELETION_POLICY, unsigned int deletionThreshold );
+        void setDecisionPolicy( DECISION_POLICY, unsigned int heuristicLimit );
         void setOutputPolicy( OUTPUT_POLICY );
         void setRestartsPolicy( RESTARTS_POLICY, unsigned int threshold );
 

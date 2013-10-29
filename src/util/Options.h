@@ -47,11 +47,13 @@ namespace wasp
 
             static DELETION_POLICY deletionPolicy;
 
-            static HEURISTIC_POLICY heuristicPolicy;
+            static unsigned int deletionThreshold;
+            
+            static DECISION_POLICY decisionPolicy;
 
             static vector< const char* > inputFiles;
 
-            static unsigned int maxBerkminNumber;
+            static unsigned int decisionThreshold;
             
             static unsigned int maxModels;
 
@@ -63,7 +65,7 @@ namespace wasp
             
             static unsigned int restartsThreshold;            
 
-            static unsigned int timeLimit;
+            static unsigned int timeLimit;            
     };
 };
 
