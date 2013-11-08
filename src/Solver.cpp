@@ -140,6 +140,11 @@ Solver::preprocessing()
     for( unsigned int i = 0; i < size; ++i )
     {
         Literal literal = trueLiterals[ i ];
+		if( literal.isTrue() )
+		{
+			continue;
+		}
+
         if( !propagateLiteralAsDeterministicConsequence( literal ) )
             return false;
     }
