@@ -66,11 +66,13 @@ Dimacs::parse(
         case FORMULA_INFO_DIMACS:
             readFormulaInfo( input );            
             insertVariables( numberOfVariables );
-            readAllClauses( input );
+            //readAllClauses( input );
             break;
             
         default:
-            ErrorMessage::errorDuringParsing( "Unexpected symbol.");
+			input.putback( type );
+			readClause( input );
+            //ErrorMessage::errorDuringParsing( "Unexpected symbol.");
         }
     }
     if( !input.good() && !input.eof() )
