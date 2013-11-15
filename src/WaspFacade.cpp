@@ -35,6 +35,7 @@
 #include "outputBuilders/DimacsOutputBuilder.h"
 
 #include "heuristic/decision/BerkminHeuristic.h"
+#include "heuristic/decision/BerkminHeuristicWithCache.h"
 #include "heuristic/decision/FirstUndefinedHeuristic.h"
 #include "heuristic/decision/MinisatHeuristic.h"
 

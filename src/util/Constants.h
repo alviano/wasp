@@ -24,6 +24,9 @@
 #define UNDEFINED 0
 #define FALSE 1
 #define TRUE 2
+#define CACHE_FALSE 8
+#define CACHE_TRUE 16
+#define UNROLL_MASK 3
 
 #define POSITIVE 0
 #define NEGATIVE 1
