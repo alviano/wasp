@@ -211,7 +211,7 @@ bool
 Literal::setTrue()
 {
     assert( "Variable has not been set." && getVariable() != NULL );
-    TruthValue truth = TRUE >> getSign();    
+    TruthValue truth = ( TRUE | CACHE_TRUE ) >> getSign();    
     return getVariable()->setTruthValue( truth );    
 }
 

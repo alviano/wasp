@@ -73,6 +73,7 @@ class Variable
 //        inline void setOrderInThePropagation( unsigned int order );
 
         inline TruthValue getTruthValue() const;
+        inline TruthValue getCachedTruthValue() const;
 
         void onLearning( Learning* strategy );
         
@@ -184,7 +185,7 @@ Variable::setName(
 bool
 Variable::isTrue() const
 {
-    return truthValue == TRUE;
+    return getTruthValue() == TRUE;
 }
 
 //bool
@@ -200,8 +201,8 @@ bool
 Variable::setTruthValue(
     TruthValue truth )
 {
-    assert_msg( ( truth == TRUE || truth == FALSE ), "Truth Value parameter is neither true nor false. It is " << truth << "." );
-    if( truthValue == UNDEFINED )
+//    assert_msg( ( truth == TRUE || truth == FALSE ), "Truth Value parameter is neither true nor false. It is " << truth << "." );
+    if( getTruthValue() == UNDEFINED )
     {
         truthValue = truth;
         return true;
@@ -211,21 +212,23 @@ Variable::setTruthValue(
      * If truthValue is not undefined we assume that there is a conflict.
      * The solver should check if the variable has been already assigned.
      */
-    assert_msg( truthValue != truth, "A variable is assigned twice with the same truthValue."  );
+//    assert_msg( truthValue != truth, "A variable is assigned twice with the same truthValue."  );
     return false;
 }
 
 bool
 Variable::isUndefined() const
 {
-    return truthValue == UNDEFINED;
+    return getTruthValue() == UNDEFINED;
 }
 
 void
 Variable::setUndefined()
 {
     assert_msg( truthValue != UNDEFINED, "This assert is not strictly necessary. By the way, this assignment is useless." );
-    truthValue = UNDEFINED;
+    assert( ( ( truthValue & ~UNROLL_MASK ) & UNROLL_MASK ) == UNDEFINED );
+    assert( getTruthValue() == TRUE ? ( truthValue & ~UNROLL_MASK ) == CACHE_TRUE : ( truthValue & ~UNROLL_MASK ) == CACHE_FALSE );
+    truthValue &= ~UNROLL_MASK;
 }
 
 bool
@@ -279,7 +282,13 @@ Variable::setDecisionLevel(
 TruthValue
 Variable::getTruthValue() const
 {
-    return truthValue;
+    return truthValue & UNROLL_MASK;
+}
+
+TruthValue
+Variable::getCachedTruthValue() const
+{
+    return truthValue >> UNROLL_MASK;
 }
 
 void
@@ -344,12 +353,12 @@ Variable::unitPropagationStart()
     assert( FALSE == 1 && TRUE == 2 );
 
     #ifndef NDEBUG
-    unsigned int sign = ( truthValue >> 1 );
+    unsigned int sign = ( getTruthValue() >> 1 );
     assert( sign <= 1 );
-    assert( truthValue == TRUE ? sign == NEGATIVE : sign == POSITIVE );
+    assert( getTruthValue() == TRUE ? sign == NEGATIVE : sign == POSITIVE );
     #endif
     
-    watchedLists[ ( truthValue >> 1 ) ].startIteration();
+    watchedLists[ ( getTruthValue() >> 1 ) ].startIteration();
 }
 
 bool
@@ -359,12 +368,12 @@ Variable::unitPropagationHasNext()
     assert( FALSE == 1 && TRUE == 2 );
 
     #ifndef NDEBUG
-    unsigned int sign = ( truthValue >> 1 );
+    unsigned int sign = ( getTruthValue() >> 1 );
     assert( sign <= 1 );
-    assert( truthValue == TRUE ? sign == NEGATIVE : sign == POSITIVE );
+    assert( getTruthValue() == TRUE ? sign == NEGATIVE : sign == POSITIVE );
     #endif
     
-    return watchedLists[ ( truthValue >> 1 ) ].hasNext();
+    return watchedLists[ ( getTruthValue() >> 1 ) ].hasNext();
 }
 
 Clause*
@@ -374,12 +383,12 @@ Variable::unitPropagationNext()
     assert( FALSE == 1 && TRUE == 2 );
 
     #ifndef NDEBUG
-    unsigned int sign = ( truthValue >> 1 );
+    unsigned int sign = ( getTruthValue() >> 1 );
     assert( sign <= 1 );
-    assert( truthValue == TRUE ? sign == NEGATIVE : sign == POSITIVE );
+    assert( getTruthValue() == TRUE ? sign == NEGATIVE : sign == POSITIVE );
     #endif
     
-    return watchedLists[ ( truthValue >> 1 ) ].next();
+    return watchedLists[ ( getTruthValue() >> 1 ) ].next();
 }
 
 #endif /* VARIABLE_H */
