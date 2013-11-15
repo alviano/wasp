@@ -65,7 +65,8 @@ class Variables
         inline void onUnroll();
         
     private:
-        Variable** assignedVariables;
+        //Variable** assignedVariables;
+		vector< Variable* > assignedVariables;
         unsigned assignedVariablesSize;
         int iteratorOnAssignedVariables;
 //        unsigned iteratorOnUndefinedVariables;
@@ -91,7 +92,7 @@ class Variables
 };
 
 Variables::Variables()
-: assignedVariables ( NULL ),
+: //assignedVariables ( NULL ),
   assignedVariablesSize( 0 ),
 //  iteratorOnUndefinedVariables( 0 ),
   nextVariableToPropagate( 0 ),
@@ -108,15 +109,15 @@ Variables::~Variables()
     {
         delete variables[ i ];
     }
-    if( assignedVariables != NULL )
-        delete[] assignedVariables;
+    //if( assignedVariables != NULL )
+    //    delete[] assignedVariables;
 }
 
 void
 Variables::init()
 {
-    assert( assignedVariables == NULL );
-    assignedVariables = new Variable*[ variables.size() * 120 / 100 ];
+    //assert( assignedVariables == NULL );
+	//assignedVariables = new Variable*[ variables.size() * 120 / 100 ];
     assignedVariablesSize = 0;
     
     assert( noUndefinedBefore == 1 );
@@ -129,8 +130,9 @@ Variables::push_back(
     Variable* v )
 {
     assert( v != NULL );
-    assert( assignedVariables == NULL );
+//    assert( assignedVariables == NULL );
     variables.push_back( v );
+	assignedVariables.push_back( NULL );	
 }
 
 Variable*
@@ -143,7 +145,7 @@ Variables::getNextVariableToPropagate()
 void
 Variables::unrollLastVariable()
 {
-    assert( assignedVariables > 0 );
+    assert( assignedVariablesSize > 0 && assignedVariablesSize <= assignedVariables.size() );
     Variable* variable = assignedVariables[ --assignedVariablesSize ];
     variable->setUndefined();
 //    if( variable->getId() < noUndefinedBefore )
