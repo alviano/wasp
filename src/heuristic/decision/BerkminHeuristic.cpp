@@ -112,16 +112,16 @@ BerkminHeuristic::pickLiteralFromTopMostUnsatisfiedLearnedClause()
     trace( heuristic, 1, "Considering %d learned clauses.\n", numberOfLearnedClausesToConsider );
 
     unsigned int count = 0;
-    for( Solver::ClauseReverseIterator it = solver.learnedClauses_rbegin(); it != solver.learnedClauses_rend(); ++it )
+    while( topMostUnsatisfiedIt != solver.learnedClauses_rend() )
     {        
         if( ++count > numberOfLearnedClausesToConsider )
             break;
 
         resetCounters();
-        assert( *it != NULL );
-        Clause& learnedClause = **it;
+        assert( *topMostUnsatisfiedIt != NULL );
+        Clause& learnedClause = **topMostUnsatisfiedIt++;
         trace( heuristic, 1, "Learned clause %d: %s.\n", count, toString( learnedClause ).c_str() );
-        if( checkUnsatisfiedAndOptimize( learnedClause ) )
+        if( checkUnsatisfied( learnedClause ) )
         {
             assert( chosenVariable != NULL );
             assert( Literal( chosenVariable ).isUndefined() );
@@ -132,44 +132,61 @@ BerkminHeuristic::pickLiteralFromTopMostUnsatisfiedLearnedClause()
     }
 }
 
-
 bool
-BerkminHeuristic::checkUnsatisfiedAndOptimize( 
+BerkminHeuristic::checkUnsatisfied( 
     Clause& clause )
 {
     assert( "Unary clauses must be removed." && clause.size() > 1 );
     
-    if( clause.getAt( clause.size() - 1 ).isTrue() ) //literals.back().isTrue() )
-        return false;
-    Variable* variable = clause.getAt( clause.size() - 1 ).getVariable();
-    if( variable->isUndefined() )
-        updateMaxCounter( variable );
-    
-    if( clause.getAt( 0 ).isTrue() )
-        return false;
-    variable = clause.getAt( 0 ).getVariable();
-    if( variable->isUndefined() )
-        updateMaxCounter( variable );
-    
-    unsigned size = clause.size() - 1;
-    for( unsigned int i = 1; i < size; ++i )
+    for( unsigned int i = 0; i < clause.size(); ++i )
     {
-        if( clause.getAt( i ).isTrue() )
-        {
-            if( i == 1 )
-                clause.swapWatchedLiterals();
-            else
-                clause.swapUnwatchedLiterals( i, size );
-            
+        Literal literal = clause.getAt( i );
+        if( literal.isTrue() )
             return false;
-        }
-        variable = clause.getAt( i ).getVariable();
-        if( variable->isUndefined() )
-            updateMaxCounter( variable );
+        if( literal.isUndefined() )
+            updateMaxCounter( literal.getVariable() );
     }
     
     return true;
 }
+
+//bool
+//BerkminHeuristic::checkUnsatisfiedAndOptimize( 
+//    Clause& clause )
+//{
+//    assert( "Unary clauses must be removed." && clause.size() > 1 );
+//    
+//    Literal literal = clause.getAt( clause.size() - 1 );
+//    if( literal.isTrue() ) //literals.back().isTrue() )
+//        return false;
+//    if( literal.isUndefined() )
+//        updateMaxCounter( literal.getVariable() );
+//    
+//    literal = clause.getAt( 0 );
+//    if( literal.isTrue() )
+//        return false;
+//    if( literal.isUndefined() )
+//        updateMaxCounter( literal.getVariable() );
+//    
+//    unsigned size = clause.size() - 1;
+//    for( unsigned int i = 1; i < size; ++i )
+//    {
+//        literal = clause.getAt( i );
+//        if( literal.isTrue() )
+//        {
+//            if( i == 1 )
+//                clause.swapWatchedLiterals();
+//            else
+//                clause.swapUnwatchedLiterals( i, size );
+//            
+//            return false;
+//        }
+//        if( literal.isUndefined() )
+//            updateMaxCounter( literal.getVariable() );
+//    }
+//    
+//    return true;
+//}
 
 Literal
 BerkminHeuristic::makeAChoice()
@@ -192,6 +209,7 @@ BerkminHeuristic::makeAChoice()
 void
 BerkminHeuristic::onLearning()
 {
+    topMostUnsatisfiedIt = solver.learnedClauses_rbegin();
     numberOfConflicts++;
     //TODO: Implement aging.
 }
