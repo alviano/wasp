@@ -87,17 +87,21 @@ WaspFacade::solve()
 
 void
 WaspFacade::setDeletionPolicy(
-    DELETION_POLICY deletionPolicy )
+    DELETION_POLICY deletionPolicy,
+    unsigned int deletionThreshold )
 {
     switch( deletionPolicy )
     {
         case RESTARTS_BASED_DELETION_POLICY:
             heuristic->setDeletionStrategy( new RestartsBasedDeletionStrategy( solver ) );
-//            heuristic->setDeletionStrategy( new GlueBasedDeletionStrategy( solver, 8 ) );
             break;
             
         case MINISAT_DELETION_POLICY:
             heuristic->setDeletionStrategy( new MinisatDeletionStrategy( solver ) );
+            break;
+            
+        case GLUCOSE_DELETION_POLICY:
+            heuristic->setDeletionStrategy( new GlueBasedDeletionStrategy( solver, deletionThreshold ) );
             break;
 
         case AGGRESSIVE_DELETION_POLICY:
@@ -109,14 +113,14 @@ WaspFacade::setDeletionPolicy(
 
 void
 WaspFacade::setDecisionPolicy(
-    HEURISTIC_POLICY heuristicPolicy,
-    unsigned int heuristicLimit )
+    DECISION_POLICY decisionPolicy,
+    unsigned int threshold )
 {
-    switch( heuristicPolicy )
+    switch( decisionPolicy )
     {
         case HEURISTIC_BERKMIN:
-            assert( heuristicLimit > 0 );
-            heuristic->setDecisionStrategy( new BerkminHeuristic( solver, heuristicLimit ) );
+            assert( threshold > 0 );
+            heuristic->setDecisionStrategy( new BerkminHeuristic( solver, threshold ) );
             break;
         
         case HEURISTIC_FIRST_UNDEFINED:

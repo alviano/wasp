@@ -57,6 +57,7 @@ class Help
             cout << "--aggressive-deletion                  - Aggressive variant of minisat deletion policy." << endl;
             cout << "--restarts-based-deletion              - Restarts-based deletion policy." << endl;
             cout << "--minisat-deletion                     - Minisat deletion policy." << endl;
+            cout << "--glucose-deletion=<N>                 - Glucose deletion policy. Keep all the clauses with a LBD less or equal than N." << endl;
             cout << separator << endl;
 
             cout << "Output options                         " << endl << endl;

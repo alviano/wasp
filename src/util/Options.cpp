@@ -66,6 +66,7 @@ namespace wasp
 #define OPTIONID_aggressive_deletion ( 'z' + 70 )
 #define OPTIONID_restarts_based_deletion ( 'z' + 71 )
 #define OPTIONID_minisat_deletion ( 'z' + 72 )
+#define OPTIONID_glucose_deletion ( 'z' + 73 )
 
 /* INPUT OPTIONS */
 #define OPTIONID_dimacs ( 'z' + 90 )
@@ -81,12 +82,12 @@ TraceLevels Options::traceLevels;
 //DELETION_POLICY Options::deletionPolicy = AGGRESSIVE_DELETION_POLICY;
 DELETION_POLICY Options::deletionPolicy = RESTARTS_BASED_DELETION_POLICY;
 
-HEURISTIC_POLICY Options::heuristicPolicy = HEURISTIC_BERKMIN;
+DECISION_POLICY Options::decisionPolicy = HEURISTIC_BERKMIN;
 
 vector< const char* > Options::inputFiles;
 
-//unsigned int Options::maxBerkminNumber = UINT_MAX;
-unsigned int Options::maxBerkminNumber = 512;
+//unsigned int Options::decisionThreshold = UINT_MAX;
+unsigned int Options::decisionThreshold = 512;
 
 //OUTPUT_POLICY Options::outputPolicy = WASP_OUTPUT;
 OUTPUT_POLICY Options::outputPolicy = DIMACS_OUTPUT;
@@ -101,6 +102,8 @@ unsigned int Options::restartsThreshold = 100000;
 unsigned int Options::timeLimit = 0;
 
 unsigned int Options::maxModels = 1;
+
+unsigned int Options::deletionThreshold = 8;
     
 void
 Options::parse(
@@ -152,6 +155,7 @@ Options::parse(
                 { "aggressive-deletion", no_argument, NULL, OPTIONID_aggressive_deletion },
                 { "restarts-based-deletion", no_argument, NULL, OPTIONID_restarts_based_deletion },
                 { "minisat-deletion", no_argument, NULL, OPTIONID_minisat_deletion },
+                { "glucose-deletion", optional_argument, NULL, OPTIONID_glucose_deletion },
                 
                 /* INPUT OPTIONS */
                 { "dimacs", no_argument, NULL, OPTIONID_dimacs },                
@@ -233,19 +237,19 @@ Options::parse(
             case OPTIONID_berkminheuristic:
                 if( optarg )
                 {
-                    maxBerkminNumber = atoi( optarg );
-                    if( maxBerkminNumber == 0 )
-                        maxBerkminNumber = UINT_MAX;
+                    decisionThreshold = atoi( optarg );
+                    if( decisionThreshold == 0 )
+                        decisionThreshold = UINT_MAX;
                 }
-                heuristicPolicy = HEURISTIC_BERKMIN;
+                decisionPolicy = HEURISTIC_BERKMIN;
                 break;
             
             case OPTIONID_fuheuristic:
-                heuristicPolicy = HEURISTIC_FIRST_UNDEFINED;
+                decisionPolicy = HEURISTIC_FIRST_UNDEFINED;
                 break;
             
             case OPTIONID_minisatheuristic:
-                heuristicPolicy = HEURISTIC_MINISAT;
+                decisionPolicy = HEURISTIC_MINISAT;
                 break;                
                 
             case OPTIONID_sequence_based_restarts:
@@ -293,6 +297,16 @@ Options::parse(
             case OPTIONID_minisat_deletion:
                 deletionPolicy = MINISAT_DELETION_POLICY;
                 break;
+                
+            case OPTIONID_glucose_deletion:
+                deletionPolicy = GLUCOSE_DELETION_POLICY;
+                if( optarg )
+                {
+                    deletionThreshold = atoi( optarg );
+                    if( deletionThreshold < 2 )
+                        deletionThreshold = 2;
+                }
+                break;
 
             case OPTIONID_dimacs:
                 outputPolicy = DIMACS_OUTPUT;
@@ -330,8 +344,8 @@ void
 Options::setOptions(
     WaspFacade& waspFacade )
 {
-    waspFacade.setDeletionPolicy( deletionPolicy );
-    waspFacade.setDecisionPolicy( heuristicPolicy, maxBerkminNumber );
+    waspFacade.setDeletionPolicy( deletionPolicy, deletionThreshold );
+    waspFacade.setDecisionPolicy( decisionPolicy, decisionThreshold );
     waspFacade.setOutputPolicy( outputPolicy );
     waspFacade.setRestartsPolicy( restartsPolicy, restartsThreshold );
     waspFacade.setMaxModels( maxModels );
