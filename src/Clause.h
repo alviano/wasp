@@ -272,8 +272,8 @@ Clause::swapLiterals(
     unsigned int pos1, 
     unsigned int pos2 )
 {
-    assert( "First position is out of range." && pos1 < literals.size() );
-    assert( "Second position is out of range." && pos2 < literals.size() );
+    assert_msg( pos1 < literals.size(), "First position is out of range: " << pos1 << " of " << literals.size() );
+    assert_msg( pos2 < literals.size(), "Second position is out of range: " << pos2 << " of " << literals.size() );
     std::swap( literals[ pos1 ], literals[ pos2 ] );
 }
 
