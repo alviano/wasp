@@ -16,6 +16,7 @@
  *
  */
 #include "ThirdCompetitionOutputBuilder.h"
+#include "../util/VariableNames.h"
 
 #include "../Variable.h"
 
@@ -29,6 +30,8 @@ void
 ThirdCompetitionOutputBuilder::printVariable(
     const Variable* variable )
 {
+    if( VariableNames::isHidden( variable ) )
+        return;
     if( variable->isTrue() )
     {
         cout << *variable << ". ";

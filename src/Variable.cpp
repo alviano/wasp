@@ -19,12 +19,13 @@
 #include "Variable.h"
 #include "Clause.h"
 #include "Literal.h"
+#include "util/VariableNames.h"
 
 ostream& operator<<( 
     ostream& out,
     const Variable& var )
 {
-    out << var.name;
+    out << VariableNames::getName( &var );
     return out;
 }
 
