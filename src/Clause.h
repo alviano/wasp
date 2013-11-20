@@ -68,6 +68,7 @@ class Clause
         inline void swapUnwatchedLiterals( unsigned int pos1, unsigned int pos2 );
         inline void swapWatchedLiterals();
         
+        inline bool hasHeuristicData(){ return heuristicData != NULL; }
         inline Heuristic::ClauseData* getHeuristicData() { assert( heuristicData != NULL ); return heuristicData; }
         inline const Heuristic::ClauseData* getHeuristicData() const { assert( heuristicData != NULL ); return heuristicData; }
         inline void setHeuristicData( Heuristic::ClauseData* clauseData );

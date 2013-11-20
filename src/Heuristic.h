@@ -45,6 +45,7 @@ public:
     virtual void onLearning( Clause* clause ) = 0;
     virtual void onLiteralInvolvedInConflict( Literal literal ) = 0;
     virtual void onUnitPropagation( Clause* clause ) = 0;
+    virtual void onClauseInvolvedInConflict( Clause* clause ) = 0;
 };
 
 #endif

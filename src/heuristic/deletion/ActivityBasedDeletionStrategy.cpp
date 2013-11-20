@@ -24,9 +24,7 @@ ActivityBasedDeletionStrategy::updateActivity(
     Clause* learnedClause )
 {
     ActivityBasedHeuristic::ClauseData& data = *getHeuristicData( *learnedClause );
-    data.activity += increment;
-    decrementActivity();
-    if( data.activity > 1e20 )
+    if( ( data.activity += increment ) > 1e20 )
     {
         for( Solver::ClauseIterator it = solver.learnedClauses_begin(); it != solver.learnedClauses_end(); ++it )
         {

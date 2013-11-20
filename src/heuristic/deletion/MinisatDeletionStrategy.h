@@ -28,6 +28,7 @@ class MinisatDeletionStrategy : public ActivityBasedDeletionStrategy
         
         virtual void onLearning( Clause* clause );
         virtual void onRestart();
+        virtual void onClauseInvolvedInConflict( Clause* learnedClause );
         
     private:
         bool hasToDelete();

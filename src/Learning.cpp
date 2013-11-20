@@ -51,9 +51,11 @@ Learning::onConflict(
     trace_msg( learning, 2, "Starting First UIP Learning Strategy. Current Level: " << decisionLevel );
     
     //Compute implicants of the conflicting literal.
+    if( conflictClause->hasHeuristicData() )
+        solver.onClauseInvolvedInConflict( conflictClause );
     conflictClause->onLearning( this );
     assert( conflictLiteral.getVariable()->getImplicant() != NULL ); // FIXME: I added this assert. Is it right?
-    conflictLiteral.getVariable()->getImplicant()->onLearning( this );    
+    conflictLiteral.getVariable()->getImplicant()->onLearning( this );
 
     trace( learning, 2, "Conflict literal: %s.\n", toString( conflictLiteral ).c_str() );
     assert( conflictLiteral.getVariable()->getId() < visitedVariables.size() && visitedVariables[ conflictLiteral.getVariable()->getId() ] == numberOfCalls );
@@ -65,9 +67,15 @@ Learning::onConflict(
         //Get next literal.
         Literal currentLiteral = getNextLiteralToNavigate();
         trace( learning, 3, "Navigating %s for calculating UIP.\n", toString( currentLiteral ).c_str() );
+        
+        Clause* implicant = currentLiteral.getVariable()->getImplicant();
         //Compute implicants of the literal.
-        if( currentLiteral.getVariable()->getImplicant() != NULL )
-            currentLiteral.getVariable()->getImplicant()->onLearning( this );
+        if( implicant != NULL )
+        {
+            if( implicant->hasHeuristicData() )
+                solver.onClauseInvolvedInConflict( implicant );
+            implicant->onLearning( this );
+        }
 	}
 
     Literal firstUIP = getNextLiteralToNavigate();

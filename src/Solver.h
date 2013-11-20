@@ -136,6 +136,7 @@ class Solver
         inline void initClauseData( Clause* clause ) { assert( heuristic != NULL ); heuristic->initClauseData( clause ); }
 //        inline Heuristic* getHeuristic() { return heuristic; }
         inline void onLiteralInvolvedInConflict( Literal l ) { assert( heuristic != NULL ); heuristic->onLiteralInvolvedInConflict( l ); }
+        inline void onClauseInvolvedInConflict( Clause* learnedClause ){ assert( heuristic != NULL ); heuristic->onClauseInvolvedInConflict( learnedClause ); }
         
     private:
         Solver( const Solver& ) : learning( *this )

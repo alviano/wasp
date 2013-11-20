@@ -20,19 +20,26 @@
 #include "../../Solver.h"
 
 void
-AggressiveDeletionStrategy::onLearning( 
+AggressiveDeletionStrategy::onLearning(
     Clause* learnedClause )
 {
     updateActivity( learnedClause );
-    
+    decrementActivity();
     if( hasToDelete() )
     {
         deleteClauses();
-    }    
+    }
 }
 
 bool
-AggressiveDeletionStrategy::hasToDelete()    
-{    
+AggressiveDeletionStrategy::hasToDelete()
+{
     return ( solver.numberOfLearnedClauses() > solver.numberOfClauses() / 3 );
+}
+
+void
+AggressiveDeletionStrategy::onClauseInvolvedInConflict(
+    Clause* learnedClause )
+{
+    updateActivity( learnedClause );
 }

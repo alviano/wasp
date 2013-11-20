@@ -31,6 +31,7 @@ class DeletionStrategy
 
         virtual void onLearning( Clause* clause ) = 0;
         virtual void onRestart() = 0;
+        virtual void onClauseInvolvedInConflict( Clause* clause ) = 0;
 };
 
 #endif	/* DELETIONSTRATEGY_H */
