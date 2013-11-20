@@ -53,7 +53,7 @@ class ActivityBasedDeletionStrategy : public DeletionStrategy, public UseClauseD
         Activity activitySum;
         unsigned int activityCount;
         
-        unsigned threshold;
+        Activity threshold;
         int toDelete;
 };
 
