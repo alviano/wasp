@@ -21,31 +21,46 @@
 void
 GlueBasedDeletionStrategy::deleteClauses()
 {
-    int toDelete = solver.numberOfLearnedClauses() / 2;
-    Solver::ClauseIterator it = solver.learnedClauses_begin();
-    assert( it != solver.learnedClauses_end() );
+    unsigned int halfSize = solver.numberOfLearnedClauses() / 2;
+    Solver::ClauseIterator i = solver.learnedClauses_begin();
+    Solver::ClauseIterator j = solver.learnedClauses_begin();
+    
+    unsigned int size = solver.numberOfLearnedClauses();
+    unsigned int numberOfDeletions = 0;
+    assert( i != solver.learnedClauses_end() );
     do
     {
-        Clause* clause = *it;
-        
-        if( !clause->isLocked() && getHeuristicData( *clause )->lbd > thresholdGlueClauses )
+        if( numberOfDeletions < halfSize )
         {
-            toDelete--;
-            solver.deleteLearnedClause( it++ );          
-        }        
+            Clause* clause = *i;
+
+            if( !clause->isLocked() && getHeuristicData( *clause )->lbd > thresholdGlueClauses )
+            {
+                numberOfDeletions++;
+                solver.deleteLearnedClause( i );          
+            }
+            else
+            {
+                *j = *i;
+                j++;
+            }
+        }
         else
-            ++it;
-        
-        if( toDelete == 0 )
-            break;
-    } while( it != solver.learnedClauses_end() );    
+        {
+            *j = *i;
+            j++;
+        }
+        ++i;        
+    } while( i != solver.learnedClauses_end() );
+    
+    solver.finalizeDeletion( size - numberOfDeletions );
 }
 
 void
 GlueBasedDeletionStrategy::onLearning( 
     Clause* )
 {
-    if(  solver.numberOfLearnedClauses() > ( 20000 + 500 * countOfDeletion ) )
+    if( solver.numberOfLearnedClauses() > ( 20000 + 500 * countOfDeletion ) )
     {
         ++countOfDeletion;
         deleteClauses();

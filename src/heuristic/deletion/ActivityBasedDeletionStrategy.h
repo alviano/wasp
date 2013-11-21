@@ -54,7 +54,7 @@ class ActivityBasedDeletionStrategy : public DeletionStrategy, public UseClauseD
         unsigned int activityCount;
         
         Activity threshold;
-        int toDelete;
+//        int toDelete;
 };
 
 ActivityBasedDeletionStrategy::ActivityBasedDeletionStrategy(

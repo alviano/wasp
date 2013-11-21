@@ -234,7 +234,7 @@ Solver::propagate(
 void
 Solver::printProgram() const
 {
-    for( List< Clause* >::const_iterator it = clauses.begin(); it != clauses.end(); ++it )
+    for( ConstClauseIterator it = clauses.begin(); it != clauses.end(); ++it )
     {
         cout << *( *it ) << endl;
     }
@@ -259,7 +259,7 @@ Solver::getNumberOfUndefined() const
 bool
 Solver::allClausesSatisfied() const
 {
-    for( List< Clause* >::const_iterator it = clauses.begin(); it != clauses.end(); ++it )
+    for( ConstClauseIterator it = clauses.begin(); it != clauses.end(); ++it )
     {
         Clause& clause = *( *it );
 
