@@ -25,6 +25,7 @@
 #include "Literal.h"
 #include "outputBuilders/OutputBuilder.h"
 #include "util/Assert.h"
+#include "util/VariableNames.h"
 
 using namespace std;
 
@@ -212,8 +213,7 @@ Variables::printAnswerSet(
     for( unsigned int i = 0; i < assignedVariablesSize; ++i )
     {
         const Variable* v = assignedVariables[ i ];
-        if( !v->isHidden() )
-            outputBuilder->printVariable( v );
+        outputBuilder->printVariable( v );
     }
     outputBuilder->endModel();
 }

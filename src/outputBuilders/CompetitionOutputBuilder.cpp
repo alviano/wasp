@@ -18,6 +18,7 @@
 
 #include "CompetitionOutputBuilder.h"
 #include "../Variable.h"
+#include "../util/VariableNames.h"
 
 extern int EXIT_CODE;
 
@@ -32,6 +33,8 @@ void
 CompetitionOutputBuilder::printVariable(
     const Variable* variable )
 {
+    if( VariableNames::isHidden( variable ) )
+        return;
     if( variable->isTrue() )
     {
         cout << *variable << ". ";

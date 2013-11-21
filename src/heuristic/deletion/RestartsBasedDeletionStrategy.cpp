@@ -26,11 +26,11 @@ RestartsBasedDeletionStrategy::onLearning(
     Clause* learnedClause )
 {
     updateActivity( learnedClause );
-    
+    decrementActivity();
     if( hasToDelete() )
     {
         deleteClauses();
-    }    
+    }
 }
 
 bool
@@ -46,7 +46,14 @@ RestartsBasedDeletionStrategy::hasToDelete()
 }
 
 void
-RestartsBasedDeletionStrategy::onRestart()    
+RestartsBasedDeletionStrategy::onRestart()
 {
     countRestarts++;
+}
+
+void
+RestartsBasedDeletionStrategy::onClauseInvolvedInConflict(
+    Clause* learnedClause )
+{
+    updateActivity( learnedClause );
 }

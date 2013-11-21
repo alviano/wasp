@@ -22,7 +22,7 @@
 #include <iostream>
 #include <unordered_set>
 using namespace std;
-
+#include "../util/Istream.h"
 class Solver;
 
 class Dimacs
@@ -44,23 +44,23 @@ public:
      *
      * @param input The istream input.
      */
-    void parse( istream& input );
+    void parse( Istream& input );
     
 private:
 
     void insertVariables( unsigned int numberOfVariables );
     
-    void readAllClauses( istream & input );
+    void readAllClauses( Istream & input );
     
-    void readComment( istream & input );
+    void readComment( Istream & input );
     
-    void readClause( istream & input );
+    void readClause( Istream & input );
     
 //    void readClauseWeighted( istream & input );
 //    
 //    void readClauseCnfWeighted( istream & input );
 //        
-    void readFormulaInfo( istream & input );        
+    void readFormulaInfo( Istream & input );        
     
     Solver& solver;
     
@@ -68,7 +68,7 @@ private:
     
     unsigned int numberOfVariables;
     
-    unordered_set< int > addedLiterals;
+    unordered_set< int > addedLiterals;    
     
 //    unsigned int maxWeight;
 //    

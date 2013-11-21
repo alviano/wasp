@@ -122,6 +122,11 @@ WaspFacade::setDecisionPolicy(
             assert( threshold > 0 );
             heuristic->setDecisionStrategy( new BerkminHeuristic( solver, threshold ) );
             break;
+            
+        case HEURISTIC_BERKMIN_CACHE:
+            assert( threshold > 0 );
+            heuristic->setDecisionStrategy( new BerkminHeuristicWithCache( solver, threshold ) );            
+            break;
         
         case HEURISTIC_FIRST_UNDEFINED:
             heuristic->setDecisionStrategy( new FirstUndefinedHeuristic( solver ) );

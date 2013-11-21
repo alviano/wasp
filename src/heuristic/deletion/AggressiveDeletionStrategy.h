@@ -28,6 +28,7 @@ class AggressiveDeletionStrategy : public ActivityBasedDeletionStrategy
 
         virtual void onLearning( Clause* clause );
         virtual void onRestart() {}
+        virtual void onClauseInvolvedInConflict( Clause* clause );
         
     private:
         bool hasToDelete();

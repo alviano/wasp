@@ -31,13 +31,14 @@ class ActivityBasedDeletionStrategy : public DeletionStrategy, public UseClauseD
     public:
         inline ActivityBasedDeletionStrategy( Solver& solver );
         inline virtual ~ActivityBasedDeletionStrategy() {}
-        
+
         virtual void onLearning( Clause* clause ) = 0;
         virtual void onRestart() = 0;
-        
+        virtual void onClauseInvolvedInConflict( Clause* clause ) = 0;
+
     protected:
         inline void decrementActivity();
-        
+
         void updateActivity( Clause* learnedClause );
         void deleteClauses();
 
@@ -52,7 +53,7 @@ class ActivityBasedDeletionStrategy : public DeletionStrategy, public UseClauseD
         Activity activitySum;
         unsigned int activityCount;
         
-        unsigned threshold;
+        Activity threshold;
         int toDelete;
 };
 

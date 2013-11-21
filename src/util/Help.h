@@ -69,6 +69,7 @@ class Help
 
             cout << "Heuristics options                     " << endl << endl;
             cout << "--heuristic-berkmin                    - Berkmin-like heuristic with look ahead for choosing polarity." << endl;
+            cout << "--heuristic-berkmin-cache              - Berkmin-like heuristic with cache for choosing polarity." << endl;
             cout << "--heuristic-firstundefined             - Choose always the first undefined literal." << endl;
             cout << "--heuristic-minisat                    - Enable minisat heuristic." << endl;
             cout << separator << endl;

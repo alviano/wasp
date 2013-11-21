@@ -136,6 +136,7 @@ class Solver
         inline void initClauseData( Clause* clause ) { assert( heuristic != NULL ); heuristic->initClauseData( clause ); }
 //        inline Heuristic* getHeuristic() { return heuristic; }
         inline void onLiteralInvolvedInConflict( Literal l ) { assert( heuristic != NULL ); heuristic->onLiteralInvolvedInConflict( l ); }
+        inline void onClauseInvolvedInConflict( Clause* learnedClause ){ assert( heuristic != NULL ); heuristic->onClauseInvolvedInConflict( learnedClause ); }
         
     private:
         Solver( const Solver& ) : learning( *this )
@@ -199,7 +200,8 @@ void
 Solver::addVariable( 
     const string& name )
 {    
-    Variable* variable = new Variable( variables.numberOfVariables()+1, name );
+    Variable* variable = new Variable( variables.numberOfVariables() + 1 );
+    VariableNames::setName( variable, name );
     variables.push_back( variable );
     assert( variables.numberOfVariables() == variable->getId() );
     assert( heuristic!= NULL );
@@ -215,6 +217,7 @@ Solver::addVariable()
     assert( variables.numberOfVariables() == variable->getId() );
     assert( heuristic != NULL );
     heuristic->onNewVariable( *variable );
+    learning.onNewVariable();
 }
 
 Literal

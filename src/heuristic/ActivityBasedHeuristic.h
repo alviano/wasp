@@ -58,6 +58,7 @@ public:
     virtual void onLiteralInvolvedInConflict( Literal literal ) { decisionStrategy->onLiteralInvolvedInConflict( literal ); }
     virtual void deleteClauses() {  }
     virtual bool hasToRestart() { return restartStrategy->hasToRestart(); }
+    virtual void onClauseInvolvedInConflict( Clause* clause ){ deletionStrategy->onClauseInvolvedInConflict( clause ); }
     
 private:
     DecisionStrategy* decisionStrategy;

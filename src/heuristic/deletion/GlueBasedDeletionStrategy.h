@@ -30,6 +30,7 @@ public:
     inline GlueBasedDeletionStrategy( Solver& solver, unsigned int thresholdGlueClauses );
     virtual void onLearning( Clause* clause );
     virtual void onRestart() {}
+    virtual void onClauseInvolvedInConflict( Clause* clause ) {}
     
 private:
     inline void deleteClauses();

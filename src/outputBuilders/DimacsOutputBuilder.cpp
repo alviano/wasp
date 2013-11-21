@@ -41,11 +41,11 @@ DimacsOutputBuilder::printVariable(
 {    
     if( variable->isTrue() )
     {
-        cout << " " << *variable;
+        cout << " " << variable->getId();
     }
     else
     {
-        cout << " -" << *variable;
+        cout << " -" << variable->getId();
     }
 }
 
