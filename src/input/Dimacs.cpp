@@ -382,5 +382,10 @@ Dimacs::insertVariables(
     for( unsigned int i = 1; i <= numberOfVariables; i++ )
     {
         solver.addVariable();
+        #ifdef TRACE_ON
+        stringstream s;
+        s << i;
+        VariableNames::setName( solver.getLiteral( i ).getVariable(), s.str() );
+        #endif
     }
 }
