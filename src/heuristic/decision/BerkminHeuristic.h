@@ -88,13 +88,15 @@ class BerkminHeuristic : public DecisionStrategy
 
         inline void updateMaxCounter( Variable* );
         inline void updateMaxOccurrences( Variable* );
-//        inline bool checkUnsatisfiedAndOptimize( Clause& clause );
+        inline bool checkUnsatisfiedAndOptimize( Clause& clause );
         inline bool checkUnsatisfied( Clause& clause );
+
+        unsigned int count;
 };
 
 BerkminHeuristic::BerkminHeuristic(
     Solver& s, 
-    unsigned int max ) : solver( s ), chosenVariableByOccurrences( NULL ), maxOccurrences( 0 ), maxCounter( 0 ), chosenVariable( NULL ), chosenPolarity( true ), numberOfLearnedClausesToConsider( max ), numberOfConflicts( 0 ), topMostUnsatisfiedIt( solver.learnedClauses_rbegin() )
+    unsigned int max ) : solver( s ), chosenVariableByOccurrences( NULL ), maxOccurrences( 0 ), maxCounter( 0 ), chosenVariable( NULL ), chosenPolarity( true ), numberOfLearnedClausesToConsider( max ), numberOfConflicts( 0 ), topMostUnsatisfiedIt( solver.learnedClauses_rbegin() ), count( 0 )
 {
     // variable 0 is not used
     variableCounters.push_back( VariableCounters() );
@@ -105,6 +107,7 @@ BerkminHeuristic::resetCounters()
 {
     maxCounter = maxOccurrences = 0;
     chosenVariableByOccurrences = NULL;
+    chosenVariable = NULL;
 }
 
 #endif	/* BERKMINHEURISTIC_H */
