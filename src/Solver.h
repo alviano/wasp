@@ -55,7 +55,7 @@ class Solver
 //        inline bool existsAuxLiteral( unsigned int id ) const;
 //        inline AuxLiteral* getAuxLiteral( unsigned int id );
         
-        inline void addClause( Clause* clause );
+        inline bool addClause( Clause* clause );
         inline void addLearnedClause( Clause* learnedClause );
         bool addClauseFromModelAndRestart();
         
@@ -265,17 +265,39 @@ Solver::assignLiteral(
     }
 }
 
-void
+bool
 Solver::addClause(
     Clause* clause )
 {
-    clauses.push_back( clause );
+    assert( clause != NULL );
+    if( clause->size() > 1 )
+    {
+        trace_msg( enumeration, 2, "Adding clause in solver." );
+        clause->attachClause();
+        clauses.push_back( clause );
+    }
+    else
+    {
+        Literal literal = clause->getAt( 0 );        
+        trace_msg( enumeration, 2, "Clause is unary. Adding " << literal << " as true." );
+        delete clause;
+        if( !propagateLiteralAsDeterministicConsequence( literal ) )
+        {
+            trace_msg( enumeration, 2, "Conflict found while propagating " << literal << ": all models have been found." );            
+            conflictLiteral = literal;
+            return false;
+        }        
+    }
+    
+    return true;
 }
 
 void
 Solver::addLearnedClause( 
     Clause* learnedClause )
-{    
+{
+    assert( learnedClause != NULL );
+    learnedClause->attachClause();
     learnedClauses.push_back( learnedClause );
 }
 
@@ -407,7 +429,6 @@ Solver::analyzeConflict()
         //Be careful. UIP should be always in position 0.
         assert( learnedClause->getAt( 0 ).getDecisionLevel() == currentDecisionLevel );
         assert( learnedClause->getAt( 1 ).getDecisionLevel() == learnedClause->getMaxDecisionLevel( 1, learnedClause->size() ) );
-        learnedClause->attachClause();
         addLearnedClause( learnedClause );
 
         if( heuristic->hasToRestart() )

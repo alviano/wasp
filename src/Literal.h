@@ -54,10 +54,14 @@ class Literal
 		 inline bool operator==( const Literal& ) const;
         inline bool operator!=( const Literal& ) const;
 
-		 inline void addWatchedClause( Clause* clause );
+		inline void addWatchedClause( Clause* clause );
         inline void eraseWatchedClause( Clause* clause );
         inline void findAndEraseWatchedClause( Clause* clauses );
 
+        inline void addClause( Clause* clause );
+        inline void eraseClause( Clause* clause );
+        inline void findAndEraseClause( Clause* clauses );        
+        
         inline unsigned int getDecisionLevel() const;
 
         inline bool isImplicant( const Clause* clause ) const;
@@ -266,6 +270,30 @@ Literal::findAndEraseWatchedClause(
 {
     assert( "Variable has not been set." && getVariable() != NULL );
     getVariable()->findAndEraseWatchedClause( clause, getSign() );
+}
+
+void
+Literal::addClause(
+    Clause* clause )
+{
+    assert( "Variable has not been set." && getVariable() != NULL );
+    getVariable()->addClause( clause, getSign() );
+}
+
+void
+Literal::eraseClause(
+    Clause* clause )
+{
+    assert( "Variable has not been set." && getVariable() != NULL );
+    getVariable()->eraseClause( clause, getSign() );
+}
+
+void
+Literal::findAndEraseClause(
+    Clause* clause )
+{
+    assert( "Variable has not been set." && getVariable() != NULL );
+    getVariable()->findAndEraseClause( clause, getSign() );
 }
 
 #endif	/* LITERAL_H */

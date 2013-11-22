@@ -81,6 +81,10 @@ class Variable
         inline void eraseWatchedClause( Clause* clause, unsigned int sign );
         inline void findAndEraseWatchedClause( Clause* clause, unsigned int sign );
         
+        inline void addClause( Clause* clause, unsigned int sign );
+        inline void eraseClause( Clause* clause, unsigned int sign );
+        inline void findAndEraseClause( Clause* clause, unsigned int sign );
+        
         void setHeuristicCounterForLiterals( HeuristicCounterFactoryForLiteral* heuristicCounterFactoryForLiteral );
         inline const HeuristicCounterForLiteral* getPositiveHeuristicCounter() const;
         inline const HeuristicCounterForLiteral* getNegativeHeuristicCounter() const;
@@ -95,6 +99,14 @@ class Variable
         inline bool unitPropagationHasNext();
         inline Clause* unitPropagationNext();        
         
+        inline void startIterationOverPositiveOccurrences();
+        inline bool hasNextPositiveOccurrence();
+        inline Clause* nextPositiveOccurence();
+        
+        inline void startIterationOverNegativeOccurrences();
+        inline bool hasNextNegativeOccurrence();
+        inline Clause* nextNegativeOccurence();
+
     private:
 
         inline Variable( const Variable& );
@@ -131,6 +143,12 @@ class Variable
          * Position NEGATIVE of this vector contains the watchedList of the negative literal associated with this variable.
          */
         WatchedList< Clause* > watchedLists[ 2 ];
+        
+        /**
+         * Position POSITIVE of this vector contains the occurrences of the positive literal associated with this variable.
+         * Position NEGATIVE of this vector contains the occurrences of the negative literal associated with this variable.
+         */        
+        WatchedList< Clause* > allOccurrences[ 2 ];
 };
 
 Variable::Variable(
@@ -318,6 +336,34 @@ Variable::findAndEraseWatchedClause(
     watchedLists[ sign ].findAndRemove( clause );
 }
 
+
+void
+Variable::addClause(
+    Clause* clause,
+    unsigned int sign )
+{
+    assert_msg( sign <= 1, "The sign must be 0 or 1. Found value " << sign );
+    allOccurrences[ sign ].add( clause );
+}
+
+void
+Variable::eraseClause( 
+    Clause* clause,
+    unsigned int sign )
+{
+    assert_msg( sign <= 1, "The sign must be 0 or 1. Found value " << sign );
+    allOccurrences[ sign ].remove( clause );
+}
+
+void
+Variable::findAndEraseClause( 
+    Clause* clause,
+    unsigned int sign )
+{
+    assert_msg( sign <= 1, "The sign must be 0 or 1. Found value " << sign );
+    allOccurrences[ sign ].findAndRemove( clause );
+}
+
 unsigned int
 Variable::numberOfNegativeWatchedClauses() const
 {
@@ -389,6 +435,42 @@ Variable::unitPropagationNext()
     #endif
     
     return watchedLists[ ( getTruthValue() >> 1 ) ].next();
+}
+
+void
+Variable::startIterationOverPositiveOccurrences()
+{
+    allOccurrences[ POSITIVE ].startIteration();
+}
+
+bool
+Variable::hasNextPositiveOccurrence()
+{
+    return allOccurrences[ POSITIVE ].hasNext();
+}
+
+Clause*
+Variable::nextPositiveOccurence()
+{
+    return allOccurrences[ POSITIVE ].next();
+}
+
+void
+Variable::startIterationOverNegativeOccurrences()
+{
+    allOccurrences[ NEGATIVE ].startIteration();
+}
+
+bool
+Variable::hasNextNegativeOccurrence()
+{
+    return allOccurrences[ NEGATIVE ].hasNext();
+}
+
+Clause*
+Variable::nextNegativeOccurence()
+{
+    return allOccurrences[ NEGATIVE ].next();
 }
 
 #endif /* VARIABLE_H */

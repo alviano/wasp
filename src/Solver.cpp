@@ -78,8 +78,6 @@ Solver::addClauseFromModelAndRestart()
     trace_msg( enumeration, 2, "Creating the clause representing the model." );
     Clause* clause = new Clause();
     
-    Literal lastInsertedLiteral;
-    
     for( unsigned int i = 1; i <= variables.numberOfVariables(); i++ )
     {
         Variable* v = variables[ i ];
@@ -92,14 +90,12 @@ Solver::addClauseFromModelAndRestart()
             {
                 Literal lit( v, NEGATIVE );
                 trace_msg( enumeration, 2, "Adding literal " << lit << " in clause." );
-                lastInsertedLiteral = lit;
                 clause->addLiteral( lit );
             }
             else
             {
                 Literal lit( v );
                 trace_msg( enumeration, 2, "Adding literal " << lit << " in clause." );
-                lastInsertedLiteral = lit;
                 clause->addLiteral( lit );
             }
         }
@@ -113,29 +109,15 @@ Solver::addClauseFromModelAndRestart()
     }
     
     this->doRestart();
-    if( clause->size() > 1 )
-    {
-        trace_msg( enumeration, 2, "Adding clause in solver." );
-        clause->attachClause();
-        addClause( clause );
-    }
-    else
-    {        
-        delete clause;
-        trace_msg( enumeration, 2, "Clause is unary. Adding " << lastInsertedLiteral << " as true." );
-        if( !propagateLiteralAsDeterministicConsequence( lastInsertedLiteral ) )
-        {
-            trace_msg( enumeration, 2, "Conflict found while propagating " << lastInsertedLiteral << ": all models have been found." );
-            return false;
-        }
-    }
-    
-    return true;
+    return addClause( clause );
 }
 
 bool
 Solver::preprocessing()
 {
+    if( conflictDetected() )
+        return false;
+
     unsigned size = trueLiterals.size();
     for( unsigned int i = 0; i < size; ++i )
     {
@@ -155,6 +137,7 @@ Solver::preprocessing()
 bool 
 Solver::solve()
 {
+    assert( !conflictDetected() );
     trace( solving, 1, "Starting solving.\n" );
     while( hasUndefinedLiterals() )
     {

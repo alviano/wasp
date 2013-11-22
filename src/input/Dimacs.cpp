@@ -204,40 +204,39 @@ Dimacs::readClause(
         ErrorMessage::errorDuringParsing( "Empty clause are not allowed.");
     }
 
-    //storing the first literal in case the clause is unary.
-    int firstLiteral = next;
-    do
-    {
-        assert( next != 0 );
+    //insert the first literal in the set
+    tempSet.insert( next );    
+    Literal literal = solver.getLiteral( next );
+    clause->addLiteral( literal );        
 
+    int firstLiteral = next;
+    input >> next;   
+    while( next != 0 )
+    {
         //insert the current literal in the set
         tempSet.insert( next );
         
         //if the opposite literal was already in the set the clause is a tautology
         if( tempSet.find( -next ) != tempSet.end() )
             trivial = true;
-        
-        //add the literal in the clause
-        clause->addLiteral( solver.getLiteral( next ) );
-        
-        //read the next literal
+
+        Literal literal = solver.getLiteral( next );
+        clause->addLiteral( literal );
+        literal.addClause( clause );
         input >> next;
-        
-      //do while next is not 0
-    } while( next != 0 );          
+    }    
     
     if( clause->size() == 1 )
     {
-        assert( firstLiteral != 0 );
         trivial = true;
         if( addedLiterals.insert( firstLiteral ).second )
         {
-            trace_msg( parser, 2, "Unary clause with literal " << firstLiteral << ". Adding literal to the solver." );
+            trace_msg( parser, 2, "Unary clause with literal " << solver.getLiteral( firstLiteral ) << ". Adding literal to the solver." );
             solver.addTrueLiteral( solver.getLiteral( firstLiteral ) );
         }
         else
         {
-            trace_msg( parser, 2, "Found duplicated unary clause with literal " << firstLiteral << ". Skipping this clause." );
+            trace_msg( parser, 2, "Found duplicated unary clause with literal " << solver.getLiteral( firstLiteral ) << ". Skipping this clause." );
         }
     }
     
@@ -246,7 +245,7 @@ Dimacs::readClause(
     {
         trace_msg( parser, 1, "Adding clause " << *clause << " in solver.");
         solver.addClause( clause );
-        clause->attachClause();
+        solver.getLiteral( firstLiteral ).addClause( clause );
     }
     else
     {
