@@ -24,9 +24,7 @@ ActivityBasedDeletionStrategy::updateActivity(
     Clause* learnedClause )
 {
     ActivityBasedHeuristic::ClauseData& data = *getHeuristicData( *learnedClause );
-    data.activity += increment;
-    decrementActivity();
-    if( data.activity > 1e20 )
+    if( ( data.activity += increment ) > 1e20 )
     {
         for( Solver::ClauseIterator it = solver.learnedClauses_begin(); it != solver.learnedClauses_end(); ++it )
         {
@@ -41,11 +39,19 @@ void
 ActivityBasedDeletionStrategy::deleteClauses()
 {
     startIteration();
-    Solver::ClauseIterator it = solver.learnedClauses_begin();
-    assert( it != solver.learnedClauses_end() );
+    Solver::ClauseIterator i = solver.learnedClauses_begin();
+    Solver::ClauseIterator j = solver.learnedClauses_begin();
+    
+    unsigned int size = solver.numberOfLearnedClauses();
+    unsigned int halfSize = size / 2;    
+    unsigned int numberOfDeletions = 0;
+
+    assert( i != solver.learnedClauses_end() );
+    
     do
     {
-        Clause& clause = **it;
+//        Clause& clause = **it;
+        Clause& clause = **i;
         
         if( !clause.isLocked() )
         {
@@ -54,36 +60,64 @@ ActivityBasedDeletionStrategy::deleteClauses()
             ++activityCount;
             if ( data.activity < threshold )
             {
-                toDelete--;
-                solver.deleteLearnedClause( it++ );            
+//                toDelete--;
+                solver.deleteLearnedClause( i );
+                numberOfDeletions++;
             }
             else
-                ++it;
+            {
+                *j = *i;
+                j++;
+            }
         }
         else
-            ++it;
-    }while( it != solver.learnedClauses_end() );
+        {
+            *j = *i;
+            j++;
+        }
+
+        ++i;
+    } while( i != solver.learnedClauses_end() );
     
+    solver.finalizeDeletion( size - numberOfDeletions );
     
-    if( activityCount > 0 && toDelete > 0 )
+    numberOfDeletions = 0;
+    size = solver.numberOfLearnedClauses();
+
+    if( activityCount > 0 && numberOfDeletions < halfSize )
     {
         activitySum = activitySum / activityCount;
-        it = solver.learnedClauses_begin();
-        assert( it != solver.learnedClauses_end() );
+        i = solver.learnedClauses_begin();
+        j = solver.learnedClauses_begin();
+        assert( i != solver.learnedClauses_end() );
         do
         {
-            Clause& clause = **it;
-
-    
-            if( !clause.isLocked() && getHeuristicData( clause )->activity < activitySum )
+            if( numberOfDeletions < halfSize )
             {
-                toDelete--;
-                solver.deleteLearnedClause( it++ );            
+                Clause& clause = **i;
+
+                if( !clause.isLocked() && getHeuristicData( clause )->activity < activitySum )
+                {
+    //                toDelete--;
+                    solver.deleteLearnedClause( i );                
+                    numberOfDeletions++;
+                }
+                else
+                {
+                    *j = *i;
+                    j++;
+                }
             }
             else
-                ++it;
-        }while( it != solver.learnedClauses_end() && toDelete > 0 );
+            {
+                *j = *i;
+                j++;
+            }
+            ++i;
+        } while( i != solver.learnedClauses_end() );//&& toDelete > 0 );
     }
+    
+    solver.finalizeDeletion( size - numberOfDeletions );
 }
 
 void
@@ -92,5 +126,5 @@ ActivityBasedDeletionStrategy::startIteration()
     activitySum = 0;
     activityCount = 0;
     threshold = increment / solver.numberOfLearnedClauses();        
-    toDelete = solver.numberOfLearnedClauses() / 2;
+    //toDelete = solver.numberOfLearnedClauses() / 2;
 }

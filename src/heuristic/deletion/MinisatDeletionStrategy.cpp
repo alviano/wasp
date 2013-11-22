@@ -24,11 +24,11 @@ MinisatDeletionStrategy::onLearning(
     Clause* learnedClause )
 {
     updateActivity( learnedClause );
-    
+    decrementActivity();
     if( hasToDelete() )
     {
         deleteClauses();
-    }    
+    }
 }
 
 bool
@@ -46,4 +46,11 @@ void
 MinisatDeletionStrategy::onRestart()
 {
     maxLearned *= learnedSizeIncrement;
+}
+
+void
+MinisatDeletionStrategy::onClauseInvolvedInConflict(
+    Clause* learnedClause )
+{
+    updateActivity( learnedClause );
 }

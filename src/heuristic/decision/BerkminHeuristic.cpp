@@ -111,27 +111,47 @@ BerkminHeuristic::pickLiteralFromTopMostUnsatisfiedLearnedClause()
     trace( heuristic, 1, "Starting TopMostUnsatisfiedLearnedClause.\n" );
     trace( heuristic, 1, "Considering %d learned clauses.\n", numberOfLearnedClausesToConsider );
 
-    unsigned int count = 0;
-    for( Solver::ClauseReverseIterator it = solver.learnedClauses_rbegin(); it != solver.learnedClauses_rend(); ++it )
+    while( topMostUnsatisfiedIt != solver.learnedClauses_rend() )
     {        
         if( ++count > numberOfLearnedClausesToConsider )
             break;
 
         resetCounters();
-        assert( *it != NULL );
-        Clause& learnedClause = **it;
+        assert( *topMostUnsatisfiedIt != NULL );
+        Clause& learnedClause = **topMostUnsatisfiedIt;
         trace( heuristic, 1, "Learned clause %d: %s.\n", count, toString( learnedClause ).c_str() );
-        if( checkUnsatisfiedAndOptimize( learnedClause ) )
+        if( checkUnsatisfiedAndOptimize( learnedClause ) )//checkUnsatisfiedAndOptimize( learnedClause ) )
         {
             assert( chosenVariable != NULL );
             assert( Literal( chosenVariable ).isUndefined() );
             assert( learnedClause.isUnsatisfied() );
             chosenPolarity = variableCounters[ chosenVariable->getId() ].getPositiveCounter() > variableCounters[ chosenVariable->getId() ].getNegativeCounter();
-            break;
+            --count;
+            return;
         }
+        ++topMostUnsatisfiedIt;        
     }
+
+    resetCounters();    
 }
 
+bool
+BerkminHeuristic::checkUnsatisfied( 
+    Clause& clause )
+{
+    assert( "Unary clauses must be removed." && clause.size() > 1 );
+    
+    for( unsigned int i = 0; i < clause.size(); ++i )
+    {
+        Literal literal = clause.getAt( i );
+        if( literal.isTrue() )
+            return false;
+        if( literal.isUndefined() )
+            updateMaxCounter( literal.getVariable() );
+    }
+    
+    return true;
+}
 
 bool
 BerkminHeuristic::checkUnsatisfiedAndOptimize( 
@@ -139,22 +159,23 @@ BerkminHeuristic::checkUnsatisfiedAndOptimize(
 {
     assert( "Unary clauses must be removed." && clause.size() > 1 );
     
-    if( clause.getAt( clause.size() - 1 ).isTrue() ) //literals.back().isTrue() )
+    Literal literal = clause.getAt( clause.size() - 1 );
+    if( literal.isTrue() ) //literals.back().isTrue() )
         return false;
-    Variable* variable = clause.getAt( clause.size() - 1 ).getVariable();
-    if( variable->isUndefined() )
-        updateMaxCounter( variable );
+    if( literal.isUndefined() )
+        updateMaxCounter( literal.getVariable() );
     
-    if( clause.getAt( 0 ).isTrue() )
+    literal = clause.getAt( 0 );
+    if( literal.isTrue() )
         return false;
-    variable = clause.getAt( 0 ).getVariable();
-    if( variable->isUndefined() )
-        updateMaxCounter( variable );
+    if( literal.isUndefined() )
+        updateMaxCounter( literal.getVariable() );
     
     unsigned size = clause.size() - 1;
     for( unsigned int i = 1; i < size; ++i )
     {
-        if( clause.getAt( i ).isTrue() )
+        literal = clause.getAt( i );
+        if( literal.isTrue() )
         {
             if( i == 1 )
                 clause.swapWatchedLiterals();
@@ -163,9 +184,8 @@ BerkminHeuristic::checkUnsatisfiedAndOptimize(
             
             return false;
         }
-        variable = clause.getAt( i ).getVariable();
-        if( variable->isUndefined() )
-            updateMaxCounter( variable );
+        if( literal.isUndefined() )
+            updateMaxCounter( literal.getVariable() );
     }
     
     return true;
@@ -177,8 +197,7 @@ BerkminHeuristic::makeAChoice()
     trace( heuristic, 1, "Starting Berkmin Heuristic.\n" );
 
     chosenVariable = NULL;
-    pickLiteralFromTopMostUnsatisfiedLearnedClause();
-    
+    pickLiteralFromTopMostUnsatisfiedLearnedClause();    
     if( chosenVariable == NULL )
         pickLiteralUsingActivity();
 
@@ -192,7 +211,9 @@ BerkminHeuristic::makeAChoice()
 void
 BerkminHeuristic::onLearning()
 {
+    topMostUnsatisfiedIt = solver.learnedClauses_rbegin();
     numberOfConflicts++;
+    count = 0;
     //TODO: Implement aging.
 }
 

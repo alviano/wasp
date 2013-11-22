@@ -108,10 +108,10 @@ class Solver
         inline void setOutputBuilder( OutputBuilder* value );
         inline void setHeuristic( Heuristic* value );
         
-        typedef List< Clause* >::iterator ClauseIterator;
-        typedef List< Clause* >::reverse_iterator ClauseReverseIterator;
-        typedef List< Clause* >::const_iterator ConstClauseIterator;
-        typedef List< Clause* >::const_reverse_iterator ConstClauseReverseIterator;
+        typedef vector< Clause* >::iterator ClauseIterator;
+        typedef vector< Clause* >::reverse_iterator ClauseReverseIterator;
+        typedef vector< Clause* >::const_iterator ConstClauseIterator;
+        typedef vector< Clause* >::const_reverse_iterator ConstClauseReverseIterator;
         inline ClauseIterator clauses_begin() { return clauses.begin(); }
         inline ClauseIterator clauses_end() { return clauses.end(); }
         inline ClauseReverseIterator clauses_rbegin() { return clauses.rbegin(); }
@@ -136,6 +136,8 @@ class Solver
         inline void initClauseData( Clause* clause ) { assert( heuristic != NULL ); heuristic->initClauseData( clause ); }
 //        inline Heuristic* getHeuristic() { return heuristic; }
         inline void onLiteralInvolvedInConflict( Literal l ) { assert( heuristic != NULL ); heuristic->onLiteralInvolvedInConflict( l ); }
+        inline void onClauseInvolvedInConflict( Clause* learnedClause ){ assert( heuristic != NULL ); heuristic->onClauseInvolvedInConflict( learnedClause ); }
+        inline void finalizeDeletion( unsigned int newVectorSize ){ learnedClauses.resize( newVectorSize ); }
         
     private:
         Solver( const Solver& ) : learning( *this )
@@ -149,8 +151,8 @@ class Solver
         
         Variables variables;
         
-        List< Clause* > clauses;
-        List< Clause* > learnedClauses;
+        vector< Clause* > clauses;
+        vector< Clause* > learnedClauses;
         
         vector< unsigned int > unrollVector;
         
@@ -199,7 +201,8 @@ void
 Solver::addVariable( 
     const string& name )
 {    
-    Variable* variable = new Variable( variables.numberOfVariables()+1, name );
+    Variable* variable = new Variable( variables.numberOfVariables() + 1 );
+    VariableNames::setName( variable, name );
     variables.push_back( variable );
     assert( variables.numberOfVariables() == variable->getId() );
     assert( heuristic!= NULL );
@@ -215,6 +218,7 @@ Solver::addVariable()
     assert( variables.numberOfVariables() == variable->getId() );
     assert( heuristic != NULL );
     heuristic->onNewVariable( *variable );
+    learning.onNewVariable();
 }
 
 Literal
@@ -365,7 +369,7 @@ Solver::deleteLearnedClause(
     trace_msg( solving, 4, "Deleting learned clause " << *learnedClause );
     learnedClause->detachClause();
     delete learnedClause;
-    learnedClauses.erase( iterator );
+//    learnedClauses.erase( iterator );
 }
 
 unsigned int

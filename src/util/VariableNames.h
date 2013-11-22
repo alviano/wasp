@@ -16,23 +16,26 @@
  *
  */
 
-#ifndef DELETIONSTRATEGY_H
-#define	DELETIONSTRATEGY_H
+#ifndef VARIABLENAMES_H
+#define VARIABLENAMES_H
 
-#include "../../util/Constants.h"
+#include <cassert>
+#include <iostream>
+#include <unordered_map>
+using namespace std;
 
-class Solver;
-class Clause;
+class Variable;
 
-class DeletionStrategy
+class VariableNames
 {
     public:
-        inline virtual ~DeletionStrategy() {}
 
-        virtual void onLearning( Clause* clause ) = 0;
-        virtual void onRestart() = 0;
-        virtual void onClauseInvolvedInConflict( Clause* clause ) = 0;
+        static bool isHidden( const Variable* variable );
+        static const string& getName( const Variable* variable );
+        static void setName( const Variable* variable, string name );
+        
+    private:        
+        static unordered_map< const Variable*, string > variables;
 };
 
-#endif	/* DELETIONSTRATEGY_H */
-
+#endif

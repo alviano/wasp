@@ -18,6 +18,7 @@
 
 #include "WaspOutputBuilder.h"
 
+#include "../util/VariableNames.h"
 #include "../Variable.h"
 #include <iostream>
 using namespace std;
@@ -33,6 +34,9 @@ void
 WaspOutputBuilder::printVariable( 
     const Variable* variable )
 {
+    if( VariableNames::isHidden( variable ) )
+        return;
+
     if( variable->isTrue() )
     {
         if( !first )

@@ -46,89 +46,94 @@ Dimacs::Dimacs(
 void
 Dimacs::parse()
 {
-    this->parse( cin );
+    Istream input( cin );
+    this->parse( input );
 }
 
 void
 Dimacs::parse(
-    istream& input )
+    Istream& input )
 {
-    char type;
-    
-    while( input >> type )
-    {
-        switch ( type )
-        {
-        case COMMENT_DIMACS:
-            readComment( input );
-            break;
-
-        case FORMULA_INFO_DIMACS:
-            readFormulaInfo( input );            
-            insertVariables( numberOfVariables );
-            //readAllClauses( input );
-            break;
-            
-        default:
-			input.putback( type );
-			readClause( input );
-            //ErrorMessage::errorDuringParsing( "Unexpected symbol.");
-        }
-    }
-    if( !input.good() && !input.eof() )
-    {
-        ErrorMessage::errorDuringParsing( "Unexpected symbol.");
-    }
+    if( !input.readInfoDimacs( numberOfVariables, numberOfClauses ) )
+        ErrorMessage::errorDuringParsing( "Unexpected symbol." ); 
+    insertVariables( numberOfVariables );
+    readAllClauses( input );
+//    char type;
+//    
+//    while( input >> type )
+//    {
+//        switch ( type )
+//        {
+//        case COMMENT_DIMACS:
+//            readComment( input );
+//            break;
+//
+//        case FORMULA_INFO_DIMACS:
+//            readFormulaInfo( input );            
+//            insertVariables( numberOfVariables );
+//            //readAllClauses( input );
+//            break;
+//            
+//        default:
+//			input.putback( type );
+//			readClause( input );
+//            //ErrorMessage::errorDuringParsing( "Unexpected symbol.");
+//        }
+//    }
+//    if( !input.good() && !input.eof() )
+//    {
+//        ErrorMessage::errorDuringParsing( "Unexpected symbol.");
+//    }
 }
 
 void
 Dimacs::readComment( 
-    istream & input )
+    Istream & input )
 {
-    char buf[ 10240 ];
-
-    input.getline( buf, 10240 );
-    if( input.gcount() > 10239 )
-        ErrorMessage::errorDuringParsing( "Comment too long.");
+//    char buf[ 10240 ];
+//
+//    input.getline( buf, 10240 );
+//    if( input.gcount() > 10239 )
+//        ErrorMessage::errorDuringParsing( "Comment too long.");
 }
 
 void
 Dimacs::readFormulaInfo(
-    istream& input )
+    Istream& input )
 {
-    char type;
-    input >> type;
-    
-//    if( type == 'w' )
+//    char type;
+//    input >> type;
+//    
+////    if( type == 'w' )
+////    {
+////        weighted = true;
+////        input >> type;
+////        if( type != 'c' )
+////        {
+////            cerr << ERRORPARSING << endl;
+////            exit( 0 );
+////        }
+////    }
+//    /*else*/ 
+//    if( type != 'c' )
 //    {
-//        weighted = true;
-//        input >> type;
-//        if( type != 'c' )
-//        {
-//            cerr << ERRORPARSING << endl;
-//            exit( 0 );
-//        }
+//        ErrorMessage::errorDuringParsing( "Expected a 'c'.");
 //    }
-    /*else*/ 
-    if( type != 'c' )
-    {
-        ErrorMessage::errorDuringParsing( "Expected a 'c'.");
-    }
-        
-    input >> type;
-    if( type != 'n' )
-    {
-        ErrorMessage::errorDuringParsing( "Expected a 'n'.");        
-    }
-    
-    input >> type;
-    if( type != 'f' )
-    {
-        ErrorMessage::errorDuringParsing( "Expected a 'f'.");
-    }
-    
-    input >> numberOfVariables;    
-    input >> numberOfClauses;
+//        
+//    input >> type;
+//    if( type != 'n' )
+//    {
+//        ErrorMessage::errorDuringParsing( "Expected a 'n'.");        
+//    }
+//    
+//    input >> type;
+//    if( type != 'f' )
+//    {
+//        ErrorMessage::errorDuringParsing( "Expected a 'f'.");
+//    }
+//    
+//    input >> numberOfVariables;    
+//    input >> numberOfClauses;
     
 //    if( weighted )
 //        input >> maxWeight;
@@ -142,7 +147,7 @@ Dimacs::readFormulaInfo(
 
 void
 Dimacs::readAllClauses(
-    istream& input )
+    Istream& input )
 {
 //    if( !weighted )
 //    {
@@ -185,7 +190,7 @@ Dimacs::readAllClauses(
 
 void
 Dimacs::readClause(
-    istream& input )
+    Istream& input )
 {   
     unordered_set< int > tempSet;
 
@@ -197,7 +202,8 @@ Dimacs::readClause(
     int next;
 
     //read the next literal
-    input >> next;
+    if( !input.read( next ) )
+        ErrorMessage::errorDuringParsing( "Unexpected symbol." );
 
     if( next == 0 )
     {
@@ -220,11 +226,13 @@ Dimacs::readClause(
         if( tempSet.find( -next ) != tempSet.end() )
             trivial = true;
 
-        Literal literal = solver.getLiteral( next );
-        clause->addLiteral( literal );
+        //add the literal in the clause
+        clause->addLiteral( solver.getLiteral( next ) );
         literal.addClause( clause );
-        input >> next;
-    }    
+        //read the next literal
+        if( !input.read( next ) )
+            ErrorMessage::errorDuringParsing( "Unexpected symbol." );        
+    }
     
     if( clause->size() == 1 )
     {
@@ -373,8 +381,11 @@ Dimacs::insertVariables(
     trace_msg( parser, 1, "Adding " << numberOfVariables << " variables." );
     for( unsigned int i = 1; i <= numberOfVariables; i++ )
     {
-        stringstream ss;
-        ss << i;
-        solver.addVariable( ss.str() );
+        solver.addVariable();
+        #ifdef TRACE_ON
+        stringstream s;
+        s << i;
+        VariableNames::setName( solver.getLiteral( i ).getVariable(), s.str() );
+        #endif
     }
 }

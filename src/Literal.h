@@ -178,28 +178,28 @@ Literal::operator!=(
 bool
 Literal::isTrue() const
 {
-    assert( "Variable has not been set." && getVariable() != NULL );
+    assert_msg( getVariable() != NULL, "Variable has not been set." );
     return ( getVariable()->getTruthValue() << getSign() ) & 2;
 }
 
 bool
 Literal::isFalse() const
 {
-    assert( "Variable has not been set." && getVariable() != NULL );
+    assert_msg( getVariable() != NULL, "Variable has not been set." );
     return ( getVariable()->getTruthValue() >> getSign() ) & 1;
 }
 
 bool
 Literal::isUndefined() const
 {    
-    assert( "Variable has not been set." && getVariable() != NULL );
+    assert_msg( getVariable() != NULL, "Variable has not been set." );
     return getVariable()->isUndefined();
 }
 
 unsigned int
 Literal::getDecisionLevel() const
 {
-    assert( "Variable has not been set." && getVariable() != NULL );
+    assert_msg( getVariable() != NULL, "Variable has not been set." );
     return getVariable()->getDecisionLevel();
 }
 
@@ -207,7 +207,7 @@ bool
 Literal::isImplicant(
     const Clause* clause ) const
 {
-    assert( "Variable has not been set." && getVariable() != NULL );
+    assert_msg( getVariable() != NULL, "Variable has not been set." );
     return getVariable()->isImplicant( clause );
 }
 

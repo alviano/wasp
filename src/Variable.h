@@ -43,13 +43,13 @@ class Variable
     public:
         
         inline Variable( unsigned id );
-        inline Variable( unsigned id, const string& name );
+//        inline Variable( unsigned id, const string& name );
         ~Variable();
 
         inline unsigned getId() const { return id; }
 
-        inline bool isHidden() const;
-        inline void setName( string& name );
+//        inline bool isHidden() const;
+//        inline void setName( string& name );
         
         inline bool isTrue() const;
         
@@ -121,7 +121,7 @@ class Variable
         /**
          * The name associated to the literal.
          */
-        string name;
+//        string name;
 
         /**
          * This variable represents the order in which the literal has been propagated.
@@ -155,40 +155,16 @@ Variable::Variable(
     unsigned id_ ) :
     id( id_ ),
     decisionLevel( 0 ),
-    name( "" ),
     truthValue( UNDEFINED ),
     implicant( NULL )    
 {
 }
 
-Variable::Variable(
-    unsigned id_, 
-    const string& n ) :
-    id( id_ ),
-    decisionLevel( 0 ),
-    name( n ),
-    truthValue( UNDEFINED ),
-    implicant( NULL )
-{
-}
 
 Variable::Variable(
     const Variable& )
 {
     assert( 0 );
-}
-
-bool
-Variable::isHidden() const
-{
-    return name == "";
-}
-
-void
-Variable::setName(
-    string& n )
-{
-    name = n;
 }
 
 //bool
