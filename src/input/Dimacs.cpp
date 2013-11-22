@@ -211,12 +211,12 @@ Dimacs::readClause(
     }
 
     //insert the first literal in the set
-    tempSet.insert( next );    
-    Literal literal = solver.getLiteral( next );
-    clause->addLiteral( literal );        
+    tempSet.insert( next );
+    clause->addLiteral( solver.getLiteral( next ) );        
 
     int firstLiteral = next;
-    input >> next;   
+    if( !input.read( next ) )
+        ErrorMessage::errorDuringParsing( "Unexpected symbol." );
     while( next != 0 )
     {
         //insert the current literal in the set
@@ -228,7 +228,8 @@ Dimacs::readClause(
 
         //add the literal in the clause
         clause->addLiteral( solver.getLiteral( next ) );
-        literal.addClause( clause );
+        solver.getLiteral( next ).addClause( clause );
+
         //read the next literal
         if( !input.read( next ) )
             ErrorMessage::errorDuringParsing( "Unexpected symbol." );        
