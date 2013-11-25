@@ -119,9 +119,7 @@ Variables::init()
 {
     //assert( assignedVariables == NULL );
 	//assignedVariables = new Variable*[ variables.size() * 120 / 100 ];
-    assignedVariablesSize = 0;
-    
-    assert( noUndefinedBefore == 1 );
+//    assert( noUndefinedBefore == 1 );
     assert( variables.size() >= 2 );
     assert( variables[ 1 ] != NULL );
 }

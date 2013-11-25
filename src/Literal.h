@@ -71,6 +71,8 @@ class Literal
         inline void onAging( unsigned int );
 
         inline unsigned int numberOfWatchedClauses() const;
+        inline unsigned int numberOfOccurrences() const;
+        
         inline Variable* getVariable();
         inline const Variable* getVariable() const;        
         
@@ -80,7 +82,10 @@ class Literal
         inline unsigned int getSign() const;
         
         inline Literal getOppositeLiteral();
-
+        
+        inline void startIterationOverOccurrences();
+        inline bool hasNextOccurrence();
+        inline Clause* nextOccurence();
         
 	private:
         
@@ -248,6 +253,13 @@ Literal::numberOfWatchedClauses() const
     return getVariable()->numberOfWatchedClauses( getSign() );
 }
 
+unsigned int
+Literal::numberOfOccurrences() const
+{
+    assert( "Variable has not been set." && getVariable() != NULL );
+    return getVariable()->numberOfOccurrences( getSign() );
+}
+
 void
 Literal::addWatchedClause(
     Clause* clause )
@@ -294,6 +306,24 @@ Literal::findAndEraseClause(
 {
     assert( "Variable has not been set." && getVariable() != NULL );
     getVariable()->findAndEraseClause( clause, getSign() );
+}
+
+void
+Literal::startIterationOverOccurrences()
+{
+    getVariable()->startIterationOverOccurrences( getSign() );
+}
+
+bool
+Literal::hasNextOccurrence()
+{
+    return getVariable()->hasNextOccurrence( getSign() );
+}
+
+Clause*
+Literal::nextOccurence()
+{
+    return getVariable()->nextOccurence( getSign() );
 }
 
 #endif	/* LITERAL_H */

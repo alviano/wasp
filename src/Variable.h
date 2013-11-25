@@ -94,18 +94,17 @@ class Variable
         inline unsigned int numberOfNegativeWatchedClauses() const;
         inline unsigned int numberOfPositiveWatchedClauses() const;
         inline unsigned int numberOfWatchedClauses( unsigned int sign ) const;
+        inline unsigned int numberOfOccurrences( unsigned int sign ) const;
         
         inline void unitPropagationStart();
         inline bool unitPropagationHasNext();
         inline Clause* unitPropagationNext();        
         
-        inline void startIterationOverPositiveOccurrences();
-        inline bool hasNextPositiveOccurrence();
-        inline Clause* nextPositiveOccurence();
+        inline void startIterationOverOccurrences( unsigned int sign );
+        inline bool hasNextOccurrence( unsigned int sign );
+        inline Clause* nextOccurence( unsigned int sign );
         
-        inline void startIterationOverNegativeOccurrences();
-        inline bool hasNextNegativeOccurrence();
-        inline Clause* nextNegativeOccurence();
+        inline long getSignature() const { return signature; }
 
     private:
 
@@ -149,6 +148,8 @@ class Variable
          * Position NEGATIVE of this vector contains the occurrences of the negative literal associated with this variable.
          */        
         WatchedList< Clause* > allOccurrences[ 2 ];
+        
+        long signature;
 };
 
 Variable::Variable(
@@ -158,6 +159,7 @@ Variable::Variable(
     truthValue( UNDEFINED ),
     implicant( NULL )    
 {
+    signature = ( long ) 1 << ( ( id - 1 ) & 63 );
 }
 
 
@@ -360,6 +362,14 @@ Variable::numberOfWatchedClauses(
     return watchedLists[ sign ].size();
 }
 
+unsigned int
+Variable::numberOfOccurrences(
+    unsigned int sign ) const
+{
+    assert_msg( sign <= 1, "The sign must be 0 or 1. Found value " << sign );
+    return allOccurrences[ sign ].size();
+}
+
 void
 Variable::onAging(
     unsigned int value,
@@ -414,39 +424,27 @@ Variable::unitPropagationNext()
 }
 
 void
-Variable::startIterationOverPositiveOccurrences()
+Variable::startIterationOverOccurrences(
+    unsigned int sign )
 {
-    allOccurrences[ POSITIVE ].startIteration();
+    assert_msg( sign <= 1, "The sign must be 0 or 1. Found value " << sign );
+    allOccurrences[ sign ].startIteration();
 }
 
 bool
-Variable::hasNextPositiveOccurrence()
+Variable::hasNextOccurrence(
+    unsigned int sign )
 {
-    return allOccurrences[ POSITIVE ].hasNext();
+    assert_msg( sign <= 1, "The sign must be 0 or 1. Found value " << sign );
+    return allOccurrences[ sign ].hasNext();
 }
 
 Clause*
-Variable::nextPositiveOccurence()
+Variable::nextOccurence(
+    unsigned int sign )
 {
-    return allOccurrences[ POSITIVE ].next();
-}
-
-void
-Variable::startIterationOverNegativeOccurrences()
-{
-    allOccurrences[ NEGATIVE ].startIteration();
-}
-
-bool
-Variable::hasNextNegativeOccurrence()
-{
-    return allOccurrences[ NEGATIVE ].hasNext();
-}
-
-Clause*
-Variable::nextNegativeOccurence()
-{
-    return allOccurrences[ NEGATIVE ].next();
+    assert_msg( sign <= 1, "The sign must be 0 or 1. Found value " << sign );
+    return allOccurrences[ sign ].next();
 }
 
 #endif /* VARIABLE_H */

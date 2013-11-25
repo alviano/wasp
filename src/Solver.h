@@ -44,28 +44,22 @@ class Solver
         ~Solver();
         
         inline void init();
-        bool preprocessing();
         bool solve();
         void propagate( Variable* variable );
+        void propagateAtLevelZero( Variable* variable );
         
         inline void addVariable( const string& name );
-        inline void addVariable();
-        
-//        AuxLiteral* addAuxVariable();
-//        inline bool existsAuxLiteral( unsigned int id ) const;
-//        inline AuxLiteral* getAuxLiteral( unsigned int id );
+        inline void addVariable();        
         
         inline bool addClause( Clause* clause );
         inline void addLearnedClause( Clause* learnedClause );
         bool addClauseFromModelAndRestart();
         
         inline Literal getLiteral( int lit );
-        inline void addTrueLiteral( Literal lit );
         
         inline Variable* getNextVariableToPropagate();
         inline bool hasNextVariableToPropagate() const;        
         
-//        inline const Variable* getNextAssignedVariable();
         inline Literal getOppositeLiteralFromLastAssignedVariable();
         inline bool hasNextAssignedVariable() const;
         inline void startIterationOnAssignedVariable();
@@ -112,6 +106,7 @@ class Solver
         typedef vector< Clause* >::reverse_iterator ClauseReverseIterator;
         typedef vector< Clause* >::const_iterator ConstClauseIterator;
         typedef vector< Clause* >::const_reverse_iterator ConstClauseReverseIterator;
+        
         inline ClauseIterator clauses_begin() { return clauses.begin(); }
         inline ClauseIterator clauses_end() { return clauses.end(); }
         inline ClauseReverseIterator clauses_rbegin() { return clauses.rbegin(); }
@@ -130,6 +125,7 @@ class Solver
         inline ConstClauseReverseIterator learnedClauses_rend() const { return learnedClauses.rend(); }
 
         inline void deleteLearnedClause( ClauseIterator iterator );
+        inline void deleteClause( Clause* clause );
         
         void printProgram() const;
         
@@ -144,11 +140,8 @@ class Solver
         {
             assert( "The copy constructor has been disabled." && 0 );
         }
-                
-        vector< Literal > trueLiterals;
 
-        unsigned int currentDecisionLevel;        
-        
+        unsigned int currentDecisionLevel;
         Variables variables;
         
         vector< Clause* > clauses;
@@ -163,6 +156,7 @@ class Solver
         OutputBuilder* outputBuilder;
         Heuristic* heuristic;
         
+        bool conflictAtLevelZero;
         unsigned int getNumberOfUndefined() const;
         bool allClausesSatisfied() const;
 };
@@ -173,7 +167,8 @@ Solver::Solver()
   conflictClause( NULL ),
   learning( *this ),
   outputBuilder( NULL ),
-  heuristic( NULL )
+  heuristic( NULL ),
+  conflictAtLevelZero( false )
 {
 }
 
@@ -243,6 +238,10 @@ void
 Solver::init()
 {
     variables.init();
+    for( ClauseIterator it = clauses.begin(); it != clauses.end(); it++ )
+    {
+        ( *it )->attachClause();
+    }
     cout << COMMENT_DIMACS << " " << WASP_STRING << endl;
 }
 
@@ -262,7 +261,7 @@ Solver::assignLiteral(
     Clause* implicant )
 {
     assert( implicant != NULL );
-    if( !variables.assign(  currentDecisionLevel, implicant ) )
+    if( !variables.assign( currentDecisionLevel, implicant ) )
     {
         conflictLiteral = implicant->getAt( 0 );
         conflictClause = implicant;        
@@ -274,26 +273,33 @@ Solver::addClause(
     Clause* clause )
 {
     assert( clause != NULL );
-    if( clause->size() > 1 )
+    unsigned int size = clause->size();
+    if( size > 1 )
     {
-        trace_msg( enumeration, 2, "Adding clause in solver." );
-        clause->attachClause();
+//        clause->attachClause();
+        clause->attachClauseToAllLiterals();
+        clause->setPositionInSolver( clauses.size() );
         clauses.push_back( clause );
+        return true;
     }
-    else
+
+    if( size == 1 )
     {
-        Literal literal = clause->getAt( 0 );        
-        trace_msg( enumeration, 2, "Clause is unary. Adding " << literal << " as true." );
-        delete clause;
-        if( !propagateLiteralAsDeterministicConsequence( literal ) )
+        Literal literal = clause->getAt( 0 );
+        if( !literal.isTrue() && !propagateLiteralAsDeterministicConsequence( literal ) )
         {
-            trace_msg( enumeration, 2, "Conflict found while propagating " << literal << ": all models have been found." );            
             conflictLiteral = literal;
-            return false;
-        }        
+        }
+        else
+        {
+            delete clause;
+            return true;
+        }
     }
-    
-    return true;
+
+    conflictAtLevelZero = true;
+    delete clause;
+    return false;
 }
 
 void
@@ -303,13 +309,6 @@ Solver::addLearnedClause(
     assert( learnedClause != NULL );
     learnedClause->attachClause();
     learnedClauses.push_back( learnedClause );
-}
-
-void
-Solver::addTrueLiteral(
-    Literal lit )
-{
-    trueLiterals.push_back( lit );
 }
 
 Variable*
@@ -370,6 +369,22 @@ Solver::deleteLearnedClause(
     learnedClause->detachClause();
     delete learnedClause;
 //    learnedClauses.erase( iterator );
+}
+
+void
+Solver::deleteClause( 
+    Clause* clause )
+{
+    unsigned int position = clause->getPositionInSolver();
+    assert_msg( position < clauses.size(), "Position " << position << " is greater than size of the clauses vector " << clauses.size() );
+    assert_msg( clause == clauses[ position ], "The clause to delete " << *clause << " is not equal to the clause " << clauses[ position ] << " in position " << position  );
+    trace_msg( solving, 4, "Deleting clause " << *clause );
+
+    clauses[ position ] = clauses.back();
+    trace_msg( solving, 6, "Swapping clause " << *clause << " and " << *clauses[ position ] );
+    clauses[ position ]->setPositionInSolver( position );
+    clauses.pop_back();
+    delete clause;
 }
 
 unsigned int
@@ -511,19 +526,15 @@ Solver::propagateLiteralAsDeterministicConsequence(
 {
     assignLiteral( literal );
     if( conflictDetected() )
-    {
         return false;
-    }
 
     while( hasNextVariableToPropagate() )
     {
         Variable* variableToPropagate = getNextVariableToPropagate();
-        propagate( variableToPropagate );
+        propagateAtLevelZero( variableToPropagate );
 
         if( conflictDetected() )
-        {
             return false;
-        }
     }    
     assert( !conflictDetected() );
 

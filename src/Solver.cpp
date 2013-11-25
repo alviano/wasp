@@ -101,44 +101,20 @@ Solver::addClauseFromModelAndRestart()
         }
     }
     
-    if( clause->size() == 0 )
-    {
-        trace_msg( enumeration, 2, "Clause is empty: all models have been found." );
-        delete clause;
-        return false;
-    }
-    
     this->doRestart();
     return addClause( clause );
-}
-
-bool
-Solver::preprocessing()
-{
-    if( conflictDetected() )
-        return false;
-
-    unsigned size = trueLiterals.size();
-    for( unsigned int i = 0; i < size; ++i )
-    {
-        Literal literal = trueLiterals[ i ];
-		if( literal.isTrue() )
-		{
-			continue;
-		}
-
-        if( !propagateLiteralAsDeterministicConsequence( literal ) )
-            return false;
-    }
-    assert( !conflictDetected() );
-    return true;
 }
 
 bool 
 Solver::solve()
 {
-    assert( !conflictDetected() );
     trace( solving, 1, "Starting solving.\n" );
+    if( conflictDetected() || conflictAtLevelZero )
+    {
+        trace( solving, 1, "Conflict at level 0.\n" );
+        return false;
+    }
+
     while( hasUndefinedLiterals() )
     {
         /*
@@ -208,6 +184,47 @@ Solver::propagate(
         {
             assignLiteral( clause );
             heuristic->onUnitPropagation( clause );
+        }
+        else
+            assert( !conflictDetected() );
+    }
+}
+
+void
+Solver::propagateAtLevelZero(
+    Variable* variable )
+{
+    assert( "Variable to propagate has not been set." && variable != NULL );    
+    Literal literal = Literal::createFromAssignedVariable( variable );
+    trace_msg( solving, 2, "Propagating " << literal << " as true at level 0" );
+    literal.startIterationOverOccurrences();
+
+    while( literal.hasNextOccurrence() )
+    {
+        Clause* clause = literal.nextOccurence();
+        trace_msg( solving, 5, "Considering clause " << *clause );
+        clause->detachClauseToAllLiterals( literal );
+        deleteClause( clause );
+    }
+
+    assert( !conflictDetected() );
+    Literal complement = Literal::createOppositeFromAssignedVariable( variable );
+    trace_msg( solving, 2, "Propagating " << complement << " as false at level 0" );
+    complement.startIterationOverOccurrences();
+
+    while( complement.hasNextOccurrence() && !conflictDetected() )
+    {
+        Clause* clause = complement.nextOccurence();
+        assert( "Next clause to propagate is null." && clause != NULL );
+        trace( solving, 5, "Considering clause %s.\n", toString( *clause ).c_str() );
+        
+        clause->removeLiteral( complement );
+        if( clause->size() == 1 )
+        {
+            if( !clause->getAt( 0 ).isTrue() )
+                assignLiteral( clause->getAt( 0 ) );
+            clause->detachClauseToAllLiterals( Literal::null );
+            deleteClause( clause );
         }
         else
             assert( !conflictDetected() );

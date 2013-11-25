@@ -19,68 +19,53 @@
 #ifndef DIMACS_H
 #define	DIMACS_H
 
-#include <iostream>
-#include <unordered_set>
-using namespace std;
+#include "../util/ErrorMessage.h"
 #include "../util/Istream.h"
 class Solver;
 
 class Dimacs
 {
+    public:
+        Dimacs( Solver& solver );
 
-public:
+        /**
+        * This function read instruction from standard input and
+        * build the program.
+        */
+        void parse();
 
-    Dimacs( Solver& solver );
-  
-    /**
-     * This function read instruction from standard input and
-     * build the program.
-     */
-    void parse();
+        /**
+        * This function read instruction from input and
+        * build the program.
+        *
+        * @param input The istream input.
+        */
+        void parse( Istream& input );
 
-    /**
-     * This function read instruction from input and
-     * build the program.
-     *
-     * @param input The istream input.
-     */
-    void parse( Istream& input );
-    
-private:
+    private:
 
-    void insertVariables( unsigned int numberOfVariables );
-    
-    void readAllClauses( Istream & input );
-    
-    void readComment( Istream & input );
-    
-    void readClause( Istream & input );
-    
-//    void readClauseWeighted( istream & input );
-//    
-//    void readClauseCnfWeighted( istream & input );
-//        
-    void readFormulaInfo( Istream & input );        
-    
-    Solver& solver;
-    
-    unsigned int numberOfClauses;
-    
-    unsigned int numberOfVariables;
-    
-    unordered_set< int > addedLiterals;    
-    
-//    unsigned int maxWeight;
-//    
-//    bool weighted;
-//    
-//    bool cnfWeighted;
-//    
-//    unordered_set< AtomId > variablesAppearingWithBothPolarity;
-//    
-//    unordered_set< int > readVariables;
+        void insertVariables( unsigned int numberOfVariables );
+
+        void readAllClauses( Istream& input );
+
+        bool readClause( Istream& input );
+
+        inline void readNextLiteral( Istream& input, int& next );
+
+        Solver& solver;
+        
+        unsigned int numberOfClauses;
+
+        unsigned int numberOfVariables;
 };
 
+void
+Dimacs::readNextLiteral(
+    Istream& input,
+    int& next )
+{
+    if( !input.read( next ) )
+        ErrorMessage::errorDuringParsing( "Unexpected symbol." );
+}
 
-#endif	/* DIMACS_H */
-
+#endif

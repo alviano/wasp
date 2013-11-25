@@ -56,12 +56,7 @@ WaspFacade::solve()
     }
     
     solver.init();
-    if( !solver.preprocessing() )
-    {
-        solver.foundIncoherence();
-        return;
-    }
-    
+
     while( solver.solve() )
     {
         solver.printAnswerSet();

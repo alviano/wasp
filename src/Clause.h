@@ -52,8 +52,11 @@ class Clause
 
         inline void attachClause();
         inline void attachClause( unsigned int firstWatch, unsigned int secondWatch );
+        inline void attachClauseToAllLiterals();
         inline void detachClause();
-
+        inline void detachClauseToAllLiterals( Literal literal );
+        inline void removeLiteral( Literal literal );
+        
         inline void onLearning( Learning* strategy );
         inline bool onLiteralFalse( Literal literal );
 
@@ -73,6 +76,12 @@ class Clause
         inline const Heuristic::ClauseData* getHeuristicData() const { assert( heuristicData != NULL ); return heuristicData; }
         inline void setHeuristicData( Heuristic::ClauseData* clauseData );
         
+        inline long getSignature() const { return signature; }
+        inline Literal getLiteralWithMinOccurrences() const;
+        
+        inline void setPositionInSolver( unsigned int pos ) { positionInSolver = pos; }
+        inline unsigned int getPositionInSolver(){ return positionInSolver; }
+
     protected:
         vector< Literal > literals;
         unsigned lastSwapIndex;
@@ -97,9 +106,12 @@ class Clause
         void notifyImplication( Solver& solver );
 
         inline void swapLiterals( unsigned int pos1, unsigned int pos2 );
+        
+        long signature;
+        unsigned int positionInSolver;
 };
 
-Clause::Clause() : lastSwapIndex( 1 ), heuristicData( NULL )
+Clause::Clause() : lastSwapIndex( 1 ), heuristicData( NULL ), signature( 0 )
 {
 }
 
@@ -123,6 +135,7 @@ Clause::addLiteral(
     Literal literal )
 {
     literals.push_back( literal );
+    signature |= literal.getVariable()->getSignature();
 }
 
 void
@@ -155,6 +168,16 @@ Clause::attachClause()
 }
 
 void
+Clause::attachClauseToAllLiterals()
+{
+    unsigned int size = literals.size();
+    for( unsigned int i = 0; i < size; i++ )
+    {
+        literals[ i ].addClause( this );
+    }
+}
+
+void
 Clause::attachClause( 
     unsigned int first,
     unsigned int second )
@@ -183,6 +206,38 @@ Clause::detachClause()
 {
     literals[ 0 ].findAndEraseWatchedClause( this );
     literals[ 1 ].findAndEraseWatchedClause( this );
+}
+
+void
+Clause::detachClauseToAllLiterals(
+    Literal literal )
+{
+    for( unsigned int i = 0; i < literals.size(); ++i )
+    {
+        if( literals[ i ] == literal )
+            literals[ i ].eraseClause( this );
+        else
+            literals[ i ].findAndEraseClause( this );
+    }    
+}
+
+void
+Clause::removeLiteral(
+    Literal literal )
+{
+    unsigned int size = literals.size() - 1;
+    unsigned int i = 0;
+    for( ; i < size; ++i )
+    {
+        if( literals[ i ] == literal )
+        {
+            literals[ i ] = literals.back();
+            break;
+        }
+    }
+
+    assert( literals.back() == literal || literals.back() == literals[ i ] );
+    literals.pop_back();
 }
 
 bool
@@ -363,6 +418,26 @@ Clause::onLiteralFalse(
         
     //update watch
     return !updateWatch();
+}
+
+Literal
+Clause::getLiteralWithMinOccurrences() const
+{
+    assert( literals.size() > 1 );
+    Literal minLiteral = literals[ 0 ];
+    assert( minLiteral.numberOfOccurrences() > 0 );
+
+    unsigned int i = 1;
+    do
+    {
+        assert( literals[ i ].numberOfOccurrences() > 0 );
+        if( literals[ i ].numberOfOccurrences() < minLiteral.numberOfOccurrences() )
+        {
+            minLiteral = literals[ i ];
+        }
+    } while( ++i < literals.size() );    
+        
+    return minLiteral;
 }
 
 #endif	/* CLAUSE_H */
