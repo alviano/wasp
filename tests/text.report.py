@@ -10,6 +10,8 @@ def reportStartTest(args, testcase):
     report_begin = time.time()
 
 def reportStreams(output, error):
+    if( not output ):
+    	    print("CHECK INSTANCE MANUALLY")
     pass
     
 def reportFailure(expected, actual):

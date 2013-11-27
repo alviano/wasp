@@ -41,7 +41,7 @@ ostream&
 Clause::print(
     ostream& out ) const
 {
-    if( literals.empty() )
+    if( literals.empty() || hasBeenDeleted() )
         return out;
 
     out << literals[ 0 ];

@@ -74,14 +74,14 @@ Dimacs::readClause(
     if( next == 0 )
         ErrorMessage::errorDuringParsing( "Empty clause are not allowed." );
 
-    unordered_set< int > tempSet;
+    unordered_set< int > tempSet;    
     bool trivial = false;
     Clause* clause = new Clause();
 
     do
     {
         //insert the current literal in the set
-        tempSet.insert( next );
+        bool inserted = !tempSet.insert( next ).second;
         trace_msg( parser, 2, "Reading " << next );
         Literal literal = solver.getLiteral( next );
 
@@ -89,7 +89,7 @@ Dimacs::readClause(
         //if a literal is true the clause is satisfied
         if( tempSet.find( -next ) != tempSet.end() || literal.isTrue() )
             trivial = true;
-        else if( literal.isUndefined() ) //skip false literals
+        else if( literal.isUndefined() && !inserted ) //skip false literals and already inserted literals
             clause->addLiteral( literal );
 
         //read the next literal

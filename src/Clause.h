@@ -48,6 +48,9 @@ class Clause
         virtual ~Clause();
 
         inline Literal getAt( unsigned idx ) const { assert( idx < literals.size() ); return literals[ idx ]; }
+        inline void flipLiteralAt( unsigned idx ) { assert( idx < literals.size() ); literals[ idx ] = literals[ idx ].getOppositeLiteral(); }
+        inline void markAsDeleted() { literals[ 0 ] = Literal::null; }
+        inline bool hasBeenDeleted() const { return literals[ 0 ] == Literal::null; }
         inline void addLiteral( Literal literal );
 
         inline void attachClause();
@@ -82,6 +85,12 @@ class Clause
         inline void setPositionInSolver( unsigned int pos ) { positionInSolver = pos; }
         inline unsigned int getPositionInSolver(){ return positionInSolver; }
 
+        /**
+         * This method returns true if the clause is a subset of another clause.
+         * Note that the check is expensive.
+         */
+        inline bool isSubsetOf( const Clause* clause ) const;
+        
     protected:
         vector< Literal > literals;
         unsigned lastSwapIndex;
@@ -236,6 +245,7 @@ Clause::removeLiteral(
         }
     }
 
+    literal.eraseClause( this );
     assert( literals.back() == literal || literals.back() == literals[ i ] );
     literals.pop_back();
 }
@@ -440,5 +450,19 @@ Clause::getLiteralWithMinOccurrences() const
     return minLiteral;
 }
 
-#endif	/* CLAUSE_H */
+bool
+Clause::isSubsetOf(
+    const Clause* clause ) const
+{
+    assert_msg( clause != NULL, "Clause cannot be null" );
+    for( unsigned int i = 0; i < literals.size(); i++ )
+    {
+        if( find( clause->literals.begin(), clause->literals.end(), literals[ i ] ) == clause->literals.end() )
+            return false;        
+    }
+    
+    return true;
+}
+
+#endif
 

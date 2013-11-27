@@ -90,6 +90,7 @@ class TraceLevels
         unsigned unfoundedset() { return 4; }
         unsigned heuristic() { return 5; }
         unsigned enumeration() { return 6; }
+        unsigned satelite() { return 7; }
 
     private:
         inline TraceLevels();
@@ -104,6 +105,7 @@ TraceLevels::TraceLevels()
     types.push_back( pair< string, unsigned >( "unfoundedset", 0 ) );
     types.push_back( pair< string, unsigned >( "heuristic", 0 ) );
     types.push_back( pair< string, unsigned >( "enumeration", 0 ) );
+    types.push_back( pair< string, unsigned >( "satelite", 0 ) );
 }
 
 };

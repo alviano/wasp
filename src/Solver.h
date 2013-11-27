@@ -36,6 +36,7 @@ using namespace std;
 #include "outputBuilders/OutputBuilder.h"
 #include "Heuristic.h"
 #include "util/Assert.h"
+#include "Satelite.h"
 
 class Solver
 {
@@ -47,6 +48,10 @@ class Solver
         bool solve();
         void propagate( Variable* variable );
         void propagateAtLevelZero( Variable* variable );
+        void propagateAtLevelZeroSatelite( Variable* variable );
+
+        inline bool preprocessing();
+        inline void attachWatches();
         
         inline void addVariable( const string& name );
         inline void addVariable();        
@@ -71,6 +76,7 @@ class Solver
         inline void assignLiteral( Clause* implicant );
         
         inline bool propagateLiteralAsDeterministicConsequence( Literal literal );
+        inline bool propagateLiteralAsDeterministicConsequenceSatelite( Literal literal );
         
         inline void onLearningClause( Literal literalToPropagate, Clause* learnedClause, unsigned int backjumpingLevel );
         inline void onLearningUnaryClause( Literal literalToPropagate, Clause* learnedClause );        
@@ -106,6 +112,9 @@ class Solver
         typedef vector< Clause* >::reverse_iterator ClauseReverseIterator;
         typedef vector< Clause* >::const_iterator ConstClauseIterator;
         typedef vector< Clause* >::const_reverse_iterator ConstClauseReverseIterator;
+        
+        inline unsigned int numberOfClauses() const { return clauses.size(); }
+        inline Clause* clauseAt( unsigned int i ) { assert( i < numberOfClauses() ); return clauses[ i ]; }
         
         inline ClauseIterator clauses_begin() { return clauses.begin(); }
         inline ClauseIterator clauses_end() { return clauses.end(); }
@@ -156,6 +165,8 @@ class Solver
         OutputBuilder* outputBuilder;
         Heuristic* heuristic;
         
+        Satelite* satelite;
+        
         bool conflictAtLevelZero;
         unsigned int getNumberOfUndefined() const;
         bool allClausesSatisfied() const;
@@ -170,6 +181,7 @@ Solver::Solver()
   heuristic( NULL ),
   conflictAtLevelZero( false )
 {
+    satelite = new Satelite( *this );
 }
 
 void
@@ -237,11 +249,7 @@ Solver::getLiteral(
 void
 Solver::init()
 {
-    variables.init();
-    for( ClauseIterator it = clauses.begin(); it != clauses.end(); it++ )
-    {
-        ( *it )->attachClause();
-    }
+    variables.init();    
     cout << COMMENT_DIMACS << " " << WASP_STRING << endl;
 }
 
@@ -539,6 +547,44 @@ Solver::propagateLiteralAsDeterministicConsequence(
     assert( !conflictDetected() );
 
     return true;
+}
+
+bool
+Solver::propagateLiteralAsDeterministicConsequenceSatelite(
+    Literal literal )
+{
+    assignLiteral( literal );
+    if( conflictDetected() )
+        return false;
+
+    while( hasNextVariableToPropagate() )
+    {
+        Variable* variableToPropagate = getNextVariableToPropagate();
+        propagateAtLevelZeroSatelite( variableToPropagate );
+
+        if( conflictDetected() )
+            return false;
+    }    
+    assert( !conflictDetected() );
+
+    return true;
+}
+
+void
+Solver::attachWatches()
+{
+    for( ClauseIterator it = clauses.begin(); it != clauses.end(); it++ )
+    {
+        assert( !( *it )->hasBeenDeleted() );
+        ( *it )->attachClause();
+    }
+}
+
+bool
+Solver::preprocessing()
+{
+    assert( satelite != NULL );
+    return satelite->simplify();
 }
 
 //bool

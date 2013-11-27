@@ -44,7 +44,8 @@ namespace wasp
 #define OPTIONID_trace_us ( 'z' + 5 )
 #define OPTIONID_trace_learning ( 'z' + 6 )
 #define OPTIONID_trace_enumeration ( 'z' + 7 )
-    
+#define OPTIONID_trace_satelite ( 'z' + 8 )
+
 /* OUTPUT OPTIONS */
 #define OPTIONID_silent ( 'z' + 20 )
 #define OPTIONID_competition_output ( 'z' + 21 )
@@ -134,7 +135,8 @@ Options::parse(
                 { "trace-heuristic", required_argument, NULL, OPTIONID_trace_heuristic },
                 { "trace-learning", required_argument, NULL, OPTIONID_trace_learning },
                 { "trace-enumeration", required_argument, NULL, OPTIONID_trace_enumeration },
-                
+                { "trace-satelite", required_argument, NULL, OPTIONID_trace_satelite },
+
                 /* OUTPUT OPTIONS */
                 { "competition-output", no_argument, NULL, OPTIONID_competition_output },
                 { "silent", no_argument, NULL, OPTIONID_silent },                
@@ -218,6 +220,10 @@ Options::parse(
                 
             case OPTIONID_trace_enumeration:
                 setTraceLevel( enumeration, atoi( optarg ) );
+                break;
+                
+            case OPTIONID_trace_satelite:
+                setTraceLevel( satelite, atoi( optarg ) );
                 break;
 
             case OPTIONID_competition_output:
