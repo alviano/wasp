@@ -573,11 +573,19 @@ Solver::propagateLiteralAsDeterministicConsequenceSatelite(
 void
 Solver::attachWatches()
 {
-    for( ClauseIterator it = clauses.begin(); it != clauses.end(); it++ )
+    for( unsigned int i = 0; i < clauses.size(); )
     {
-        assert( !( *it )->hasBeenDeleted() );
-        ( *it )->attachClause();
-    }
+        Clause* current = clauses[ i ];
+        if( current->hasBeenDeleted() )
+        {
+            deleteClause( current );
+        }
+        else
+        {
+            current->attachClause();
+            ++i;
+        }
+    }    
 }
 
 bool

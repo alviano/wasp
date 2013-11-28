@@ -38,7 +38,7 @@ Satelite::findSubsumed(
         {
             trace_msg( satelite, 1, "Clause " << *clause << " subsumes clause " << *current );
             current->detachClauseToAllLiterals( literal );
-            solver.deleteClause( current );
+            current->markAsDeleted();
         }
     }    
 }
@@ -125,18 +125,11 @@ Satelite::simplify()
         }
     } while( !trueLiterals.empty() );
     
-    for( unsigned int i = 0; i < solver.numberOfClauses(); )
+    for( unsigned int i = 0; i < solver.numberOfClauses(); ++i )
     {
         Clause* current = solver.clauseAt( i );
-        if( current->hasBeenDeleted() )
-        {
-            solver.deleteClause( current );
-        }
-        else
-        {
+        if( !current->hasBeenDeleted() )
             findSubsumed( current );
-            ++i;
-        }
     }
 
     return true;
