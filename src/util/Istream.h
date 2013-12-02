@@ -38,21 +38,26 @@ class Istream
         inline void skipBlanks();
         inline bool isCipher( char c ) const { return '0' <= c && c <= '9'; }
         inline bool isBlank( char c ) const;
+        inline void resetBuffer();
 
         istream& in;
         char buff[ 2048 ];
         unsigned idx;
 };
 
+void
+Istream::resetBuffer()
+{
+    idx = 0;
+    in.read( buff, 2047 );
+    buff[ in.gcount() ] = '\0';
+}
+
 char
 Istream::next()
 {
     if( buff[ idx ] == '\0' )
-    {
-        idx = 0;
-        in.read( buff, 2047 );
-        buff[ in.gcount() ] = '\0';
-    }
+        resetBuffer();
     return buff[ idx++ ];
 }
 
@@ -63,19 +68,19 @@ Istream::read(
     skipBlanksAndComments();
 
     int sign = 1;
-    char c = next();
+    char c = next();    
     if( c == '-' )
     {
-        sign = -1;
+        sign = -1;        
         c = next();
     }
 
     if( !isCipher( c ) )
         return false;
-    value = c - '0';
+    value = c - '0';    
     while( true )
     {
-        c = next();
+        c = next();    
         if( !isCipher( c ) )
         {
             value *= sign;
@@ -134,6 +139,8 @@ Istream::skipBlanksAndComments()
 {
     while( true )
     {
+        if( buff[ idx ] == '\0' )
+            resetBuffer();
         switch( buff[ idx ] )
         {
             case ' ':
@@ -145,7 +152,7 @@ Istream::skipBlanksAndComments()
             case 'c':
             {
                 char tmp;
-                while( ( tmp = next() ) != '\n' && tmp != '\0' );
+                while( ( tmp = next() ) != '\n' && tmp != '\0' );                
             }
 
             break;
