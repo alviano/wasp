@@ -154,6 +154,7 @@ Learning::onNavigatingLiteral(
 {
     assert( literal != Literal::null );
     unsigned int literalDecisionLevel = literal.getDecisionLevel();
+    assert( literalDecisionLevel > 0 );
     
     if( literalDecisionLevel == decisionLevel )
     {
@@ -161,11 +162,11 @@ Learning::onNavigatingLiteral(
         solver.onLiteralInvolvedInConflict( literal );
         addLiteralToNavigate( literal );
     }
-    else if( literalDecisionLevel > 0 )
+    else
     {
         // FIXME: Do we need to distinguish between the two cases? literal.onNavigatingLearnedClause();
         solver.onLiteralInvolvedInConflict( literal );
         addLiteralInLearnedClause( literal );
-    }
+    }    
 }
 
