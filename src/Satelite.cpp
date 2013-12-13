@@ -25,14 +25,14 @@ Satelite::findSubsumed(
 {
     trace_msg( satelite, 1, "Starting subsumption for the clause " << *clause );
     Literal literal = clause->getLiteralWithMinOccurrences();
-    
+
     trace_msg( satelite, 1, "Literal with the min number of occurrences is " << literal );
     literal.startIterationOverOccurrences();
-    
+
     while( literal.hasNextOccurrence() )
     {
         Clause* current = literal.nextOccurence();
-        
+
         trace_msg( satelite, 2, "Considering clause " << *current );
         if( clause != current && subset( clause, current ) )
         {
@@ -40,7 +40,7 @@ Satelite::findSubsumed(
             current->detachClauseToAllLiterals( literal );
             current->markAsDeleted();
         }
-    }    
+    }
 }
 
 void
@@ -100,7 +100,7 @@ Satelite::simplify()
         if( !current->hasBeenDeleted() )
             selfSubsume( current );
     }
-    
+
     do
     {
         while( !trueLiterals.empty() )

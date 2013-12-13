@@ -26,8 +26,6 @@ using namespace std;
 #include "Solver.h"
 #include "input/Dimacs.h"
 #include "inputBuilders/SATFormulaBuilder.h"
-#include "heuristic/ActivityBasedHeuristic.h"
-#include "heuristic/GlueBasedHeuristic.h"
 
 class WaspFacade
 {
@@ -47,11 +45,7 @@ class WaspFacade
         inline void setPrintProgram( bool printProgram );        
         
     private:
-        Solver solver;
-        
-        // FIXME
-        ActivityBasedHeuristic* heuristic;
-//        GlueBasedHeuristic* heuristic;
+        Solver solver;        
         
         unsigned int numberOfModels;
         unsigned int maxModels;
@@ -59,10 +53,7 @@ class WaspFacade
 };
 
 WaspFacade::WaspFacade() : numberOfModels( 0 ), maxModels( 1 ), printProgram( false )
-{
-    // FIXME
-    heuristic = new ActivityBasedHeuristic(); //GlueBasedHeuristic();
-    solver.setHeuristic( heuristic );
+{    
 }
 
 WaspFacade::~WaspFacade()

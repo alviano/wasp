@@ -34,9 +34,10 @@ using namespace std;
 #include "stl/UnorderedSet.h"
 #include "Learning.h"
 #include "outputBuilders/OutputBuilder.h"
-#include "Heuristic.h"
 #include "util/Assert.h"
 #include "Satelite.h"
+#include "Restart.h"
+#include "MinisatHeuristic.h"
 
 class Solver
 {
@@ -105,8 +106,7 @@ class Solver
         inline void unrollLastVariable();
         
         /* OPTIONS */
-        inline void setOutputBuilder( OutputBuilder* value );
-        inline void setHeuristic( Heuristic* value );
+        inline void setOutputBuilder( OutputBuilder* value );        
         
         typedef vector< Clause* >::iterator ClauseIterator;
         typedef vector< Clause* >::reverse_iterator ClauseReverseIterator;
@@ -135,16 +135,25 @@ class Solver
 
         inline void deleteLearnedClause( ClauseIterator iterator );
         inline void deleteClause( Clause* clause );
+        void deleteClauses();
+        void updateActivity( Clause* learnedClause );
+        inline void decrementActivity(){ deletionCounters.increment *= deletionCounters.decrement; }
+        inline void onLearning( Clause* learnedClause );
+        inline bool hasToDelete();
         
         void printProgram() const;
         
-        inline void initClauseData( Clause* clause ) { assert( heuristic != NULL ); heuristic->initClauseData( clause ); }
+//        inline void initClauseData( Clause* clause ) { assert( heuristic != NULL ); heuristic->initClauseData( clause ); }
 //        inline Heuristic* getHeuristic() { return heuristic; }
-        inline void onLiteralInvolvedInConflict( Literal l ) { assert( heuristic != NULL ); heuristic->onLiteralInvolvedInConflict( l ); }
-        inline void onClauseInvolvedInConflict( Clause* learnedClause ){ assert( heuristic != NULL ); heuristic->onClauseInvolvedInConflict( learnedClause ); }
-        inline void finalizeDeletion( unsigned int newVectorSize ){ learnedClauses.resize( newVectorSize ); }
+        inline void onLiteralInvolvedInConflict( Literal l ) { minisatHeuristic.onLiteralInvolvedInConflict( l ); }
+        inline void finalizeDeletion( unsigned int newVectorSize ) { learnedClauses.resize( newVectorSize ); }
+        inline void onRestart() { deletionCounters.maxLearned *= deletionCounters.learnedSizeIncrement; restart->onRestart(); }
+        
+        inline void setRestart( Restart* r );
         
     private:
+        inline Variable* addVariableInternal();
+        
         Solver( const Solver& ) : learning( *this )
         {
             assert( "The copy constructor has been disabled." && 0 );
@@ -162,26 +171,48 @@ class Solver
         Clause* conflictClause;
         
         Learning learning;
-        OutputBuilder* outputBuilder;
-        Heuristic* heuristic;
+        OutputBuilder* outputBuilder;        
         
+        MinisatHeuristic minisatHeuristic;
+        Restart* restart;
         Satelite* satelite;
         
         bool conflictAtLevelZero;
         unsigned int getNumberOfUndefined() const;
         bool allClausesSatisfied() const;
+
+        struct DeletionCounters
+        {
+            Activity increment;
+            Activity decrement;
+
+            double learnedSizeFactor;
+            double learnedSizeIncrement;
+            double maxLearned;
+            
+            void init()
+            {
+                increment = 1 ;
+                decrement = 1/0.999;
+                learnedSizeFactor = ( ( double ) 1 / ( double) 3 );
+                learnedSizeIncrement = 1.1;
+                maxLearned = 0.0;
+            }
+        } deletionCounters; 
 };
 
 Solver::Solver() 
-: currentDecisionLevel( 0 ),
-  conflictLiteral( NULL ),
-  conflictClause( NULL ),
-  learning( *this ),
-  outputBuilder( NULL ),
-  heuristic( NULL ),
-  conflictAtLevelZero( false )
+: 
+    currentDecisionLevel( 0 ),
+    conflictLiteral( NULL ),
+    conflictClause( NULL ),
+    learning( *this ),
+    outputBuilder( NULL ),
+    restart( NULL ),
+    conflictAtLevelZero( false )
 {
     satelite = new Satelite( *this );
+    deletionCounters.init();
 }
 
 void
@@ -194,38 +225,29 @@ Solver::setOutputBuilder(
     outputBuilder = value;
 }
 
-void
-Solver::setHeuristic(
-    Heuristic* value )
+Variable*
+Solver::addVariableInternal()
 {
-    assert( value != NULL );
-    if( heuristic != NULL )
-        delete heuristic;
-    heuristic = value;
+    Variable* variable = new Variable( variables.numberOfVariables() + 1 );
+    variables.push_back( variable );
+    assert( variables.numberOfVariables() == variable->getId() );
+    minisatHeuristic.onNewVariable( variable );
+    learning.onNewVariable();
+    return variable;
 }
 
 void
 Solver::addVariable( 
     const string& name )
 {    
-    Variable* variable = new Variable( variables.numberOfVariables() + 1 );
-    VariableNames::setName( variable, name );
-    variables.push_back( variable );
-    assert( variables.numberOfVariables() == variable->getId() );
-    assert( heuristic!= NULL );
-    heuristic->onNewVariable( *variable );
-    learning.onNewVariable();
+    Variable* variable = addVariableInternal();
+    VariableNames::setName( variable, name );    
 }
 
 void
 Solver::addVariable()
 {
-    Variable* variable = new Variable( variables.numberOfVariables()+1 );
-    variables.push_back( variable );
-    assert( variables.numberOfVariables() == variable->getId() );
-    assert( heuristic != NULL );
-    heuristic->onNewVariable( *variable );
-    learning.onNewVariable();
+    addVariableInternal();
 }
 
 Literal
@@ -234,16 +256,6 @@ Solver::getLiteral(
 {
     assert( "Lit is out of range." && static_cast< unsigned >( abs( lit ) ) <= variables.numberOfVariables() && abs( lit ) > 0);
     return lit > 0 ? Literal( variables[ lit ], POSITIVE ) : Literal( variables[ -lit ], NEGATIVE );
-//    if( lit > 0 )
-//    {
-//        Literal literal( variables[ lit ] );
-//        return literal;
-//    }
-//    else
-//    {
-//        Literal literal( variables[ -lit ], false );
-//        return literal;
-//    }    
 }
 
 void
@@ -362,9 +374,8 @@ Solver::unrollOne()
 void
 Solver::doRestart()
 {
-    assert_msg( heuristic != NULL, "Heuristic unset" );
     trace( solving, 2, "Performing restart.\n" );
-    heuristic->onRestart();
+    this->onRestart(); 
     unroll( 0 );
 }
 
@@ -434,7 +445,7 @@ Solver::foundIncoherence()
 void
 Solver::chooseLiteral()
 {
-    Literal choice = heuristic->makeAChoice();
+    Literal choice = minisatHeuristic.makeAChoice();
     trace( solving, 1, "Choice: %s.\n", toString( choice ).c_str() );
     setAChoice( choice );    
 }
@@ -458,7 +469,7 @@ Solver::analyzeConflict()
         assert( learnedClause->getAt( 1 ).getDecisionLevel() == learnedClause->getMaxDecisionLevel( 1, learnedClause->size() ) );
         addLearnedClause( learnedClause );
 
-        if( heuristic->hasToRestart() )
+        if( restart->hasToRestart() )
         {
             doRestart();
         }
@@ -473,11 +484,10 @@ Solver::analyzeConflict()
             
             assignLiteral( learnedClause );
             
-            heuristic->onLearning( learnedClause );  // FIXME: this should be moved outside
+            onLearning( learnedClause );  // FIXME: this should be moved outside
         }
     }
-    
-    heuristic->onConflict();
+
     clearConflictStatus();
 }
 
@@ -595,26 +605,39 @@ Solver::preprocessing()
     return satelite->simplify();
 }
 
-//bool
-//Solver::existsAuxLiteral(
-//    unsigned int id ) const
-//{
-//    return( id < auxLiterals.size() );
-//}
-//
-//AuxLiteral*
-//Solver::getAuxLiteral(
-//    unsigned int id )
-//{
-//    assert( existsAuxLiteral( id ) );
-//    return auxLiterals[ id ];
-//}
+void
+Solver::onLearning(
+    Clause* learnedClause )
+{
+    updateActivity( learnedClause );
+    decrementActivity();
+    if( hasToDelete() )
+    {
+        deleteClauses();
+    }
+}
 
-//unsigned int
-//Solver::numberOfAuxVariables()
-//{
-//    return auxLiterals.size();
-//}
+bool
+Solver::hasToDelete()
+{
+    if( deletionCounters.maxLearned == 0.0 )
+    {
+        deletionCounters.maxLearned = numberOfClauses() * deletionCounters.learnedSizeFactor;
+    }
+    
+    return ( ( int ) ( numberOfLearnedClauses() - numberOfAssignedLiterals() ) >= deletionCounters.maxLearned );
+}
+
+void
+Solver::setRestart(
+    Restart* r )
+{
+    if( restart != NULL )
+        delete restart;
+    
+    assert( r != NULL );    
+    restart = r;
+}
 
 #endif	/* SOLVER_H */
 

@@ -26,7 +26,6 @@
 #include "Clause.h"
 #include "Literal.h"
 #include "Learning.h"
-#include "Heuristic.h"
 
 using namespace std;
 
@@ -73,12 +72,7 @@ class Clause
 
         inline void swapUnwatchedLiterals( unsigned int pos1, unsigned int pos2 );
         inline void swapWatchedLiterals();
-        
-        inline bool hasHeuristicData(){ return heuristicData != NULL; }
-        inline Heuristic::ClauseData* getHeuristicData() { assert( heuristicData != NULL ); return heuristicData; }
-        inline const Heuristic::ClauseData* getHeuristicData() const { assert( heuristicData != NULL ); return heuristicData; }
-        inline void setHeuristicData( Heuristic::ClauseData* clauseData );
-        
+          
         inline long getSignature() const { return signature; }
         inline Literal getLiteralWithMinOccurrences() const;
         
@@ -91,11 +85,14 @@ class Clause
          */
         inline bool isSubsetOf( const Clause* clause ) const;
         
+        inline Activity& activity(){ return act; }
+        inline const Activity& activity() const { return act; }
+        inline void setLearned(){ learned = true; }
+        inline bool isLearned() const { return learned; }
+        
     protected:
         vector< Literal > literals;
         unsigned lastSwapIndex;
-
-        Heuristic::ClauseData* heuristicData;
 
         virtual ostream& print( ostream& out ) const;
   
@@ -118,9 +115,12 @@ class Clause
         
         long signature;
         unsigned int positionInSolver;
+        
+        Activity act;
+        bool learned;
 };
 
-Clause::Clause() : lastSwapIndex( 1 ), heuristicData( NULL ), signature( 0 )
+Clause::Clause() : lastSwapIndex( 1 ), signature( 0 ), act( 0.0 ), learned( false )
 {
 }
 
@@ -129,15 +129,6 @@ Clause::Clause() : lastSwapIndex( 1 ), heuristicData( NULL ), signature( 0 )
 //{
 //    literals.reserve( size );
 //}
-
-void
-Clause::setHeuristicData( 
-    Heuristic::ClauseData* clauseData )
-{
-    assert( heuristicData == NULL );
-    assert( clauseData != NULL );
-    heuristicData = clauseData;
-}
 
 void
 Clause::addLiteral(

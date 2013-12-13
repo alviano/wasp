@@ -20,11 +20,6 @@
 
 Solver::~Solver()
 {
-//    for( unsigned int i = 0; i < auxLiterals.size(); i++ )
-//    {
-//        delete auxLiterals[ i ];
-//    }
-    
     while( !clauses.empty() )
     {
         assert( clauses.back() );
@@ -41,12 +36,12 @@ Solver::~Solver()
         
     if( outputBuilder != NULL )
         delete outputBuilder;
-        
-    if( heuristic != NULL )
-        delete heuristic;
     
     if( satelite != NULL )
         delete satelite;
+    
+    if( restart != NULL )
+        delete restart;
 }
 
 void
@@ -113,26 +108,30 @@ Solver::addClauseFromModelAndRestart()
 bool 
 Solver::solve()
 {
-    trace( solving, 1, "Starting solving.\n" );
+    trace( solving, 1, "Starting solving.\n" );       
     
     if( conflictDetected() || conflictAtLevelZero )
     {
         trace( solving, 1, "Conflict at level 0.\n" );
         return false;
-    }
+    }    
+
+    cout << "NCLAUSES " << clauses.size() << endl;
     
     if( !preprocessing() )
         return false;
 
+    minisatHeuristic.simplifyVariablesAtLevelZero();    
     attachWatches();
+    
+    cout << "NCLAUSES AFTER " << clauses.size() << endl;    
     while( hasUndefinedLiterals() )
     {
-        /*
         static unsigned int PROVA = 0;
         static time_t PROVA_TIME = time( 0 );
 
 
-        unsigned int end = 3000000;
+        unsigned int end = 10001;
         unsigned int printValue = 10000;
 
         if( ++PROVA > end ) {
@@ -193,7 +192,6 @@ Solver::propagate(
         if( clause->onLiteralFalse( complement ) )
         {
             assignLiteral( clause );
-            heuristic->onUnitPropagation( clause );
         }
         else
             assert( !conflictDetected() );
@@ -328,4 +326,104 @@ Solver::allClausesSatisfied() const
     }
 
     return true;
+}
+
+void
+Solver::deleteClauses()
+{
+    Activity activitySum = 0;
+    unsigned int activityCount = 0;
+    Activity threshold = deletionCounters.increment / numberOfLearnedClauses();      
+    
+    ClauseIterator i = learnedClauses_begin();
+    ClauseIterator j = learnedClauses_begin();
+    
+    unsigned int size = numberOfLearnedClauses();
+    unsigned int halfSize = size / 2;    
+    unsigned int numberOfDeletions = 0;
+
+    assert( i != learnedClauses_end() );
+    
+    do
+    {
+        Clause& clause = **i;
+        
+        if( !clause.isLocked() )
+        {            
+            activitySum += clause.activity();
+            ++activityCount;
+            if ( clause.activity() < threshold )
+            {
+                deleteLearnedClause( i );
+                numberOfDeletions++;
+            }
+            else
+            {
+                *j = *i;
+                j++;
+            }
+        }
+        else
+        {
+            *j = *i;
+            j++;
+        }
+
+        ++i;
+    } while( i != learnedClauses_end() );
+    
+    finalizeDeletion( size - numberOfDeletions );
+    
+    numberOfDeletions = 0;
+    size = numberOfLearnedClauses();
+
+    if( activityCount > 0 && numberOfDeletions < halfSize )
+    {
+        activitySum = activitySum / activityCount;
+        i = learnedClauses_begin();
+        j = learnedClauses_begin();
+        assert( i != learnedClauses_end() );
+        do
+        {
+            if( numberOfDeletions < halfSize )
+            {
+                Clause& clause = **i;
+
+                if( !clause.isLocked() && clause.activity() < activitySum )
+                {
+                    deleteLearnedClause( i );
+                    numberOfDeletions++;
+                }
+                else
+                {
+                    *j = *i;
+                    j++;
+                }
+            }
+            else
+            {
+                *j = *i;
+                j++;
+            }
+            ++i;
+        } while( i != learnedClauses_end() );
+    }
+    
+    finalizeDeletion( size - numberOfDeletions );
+}
+
+void
+Solver::updateActivity( 
+    Clause* learnedClause )
+{
+    assert_msg( learnedClause != NULL, "It is not possible to update activity of NULL clauses.");
+    if( ( learnedClause->activity() += deletionCounters.increment ) > 1e20 )
+    {
+        for( ClauseIterator it = learnedClauses_begin(); it != learnedClauses_end(); ++it )
+        {
+            ( *it )->activity() *= 1e-20;
+        }
+
+        deletionCounters.increment *= 1e-20;
+    }
 }

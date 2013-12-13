@@ -105,6 +105,8 @@ class Variable
         inline Clause* nextOccurence( unsigned int sign );
         
         inline long getSignature() const { return signature; }
+        inline Activity& activity() { return act; }
+        inline const Activity& activity() const { return act; }
 
     private:
 
@@ -150,6 +152,8 @@ class Variable
         WatchedList< Clause* > allOccurrences[ 2 ];
         
         long signature;
+        
+        Activity act;
 };
 
 Variable::Variable(
@@ -157,7 +161,8 @@ Variable::Variable(
     id( id_ ),
     decisionLevel( 0 ),
     truthValue( UNDEFINED ),
-    implicant( NULL )    
+    implicant( NULL ),
+    act( 0.0 )
 {
     signature = ( long ) 1 << ( ( id - 1 ) & 63 );
 }

@@ -18,15 +18,7 @@
 
 #include "WaspFacade.h"
 
-#include "heuristic/restart/NoRestartStrategy.h"
-#include "heuristic/restart/MinisatRestartStrategy.h"
-#include "heuristic/restart/GeometricRestartStrategy.h"
-#include "heuristic/restart/SequenceBasedRestartStrategy.h"
-
-#include "heuristic/deletion/AggressiveDeletionStrategy.h"
-#include "heuristic/deletion/RestartsBasedDeletionStrategy.h"
-#include "heuristic/deletion/MinisatDeletionStrategy.h"
-#include "heuristic/deletion/GlueBasedDeletionStrategy.h"
+#include "Restart.h"
 
 #include "outputBuilders/WaspOutputBuilder.h"
 #include "outputBuilders/SilentOutputBuilder.h"
@@ -34,10 +26,7 @@
 #include "outputBuilders/CompetitionOutputBuilder.h"
 #include "outputBuilders/DimacsOutputBuilder.h"
 
-#include "heuristic/decision/BerkminHeuristic.h"
-#include "heuristic/decision/BerkminHeuristicWithCache.h"
-#include "heuristic/decision/FirstUndefinedHeuristic.h"
-#include "heuristic/decision/MinisatHeuristic.h"
+#include "MinisatHeuristic.h"
 
 void
 WaspFacade::readInput()
@@ -87,22 +76,22 @@ WaspFacade::setDeletionPolicy(
 {
     switch( deletionPolicy )
     {
-        case RESTARTS_BASED_DELETION_POLICY:
-            heuristic->setDeletionStrategy( new RestartsBasedDeletionStrategy( solver ) );
-            break;
-            
-        case MINISAT_DELETION_POLICY:
-            heuristic->setDeletionStrategy( new MinisatDeletionStrategy( solver ) );
-            break;
-            
-        case GLUCOSE_DELETION_POLICY:
-            heuristic->setDeletionStrategy( new GlueBasedDeletionStrategy( solver, deletionThreshold ) );
-            break;
-
-        case AGGRESSIVE_DELETION_POLICY:
-        default:
-            heuristic->setDeletionStrategy( new AggressiveDeletionStrategy( solver ) );
-            break;
+//        case RESTARTS_BASED_DELETION_POLICY:
+//            heuristic->setDeletionStrategy( new RestartsBasedDeletionStrategy( solver ) );
+//            break;
+//            
+//        case MINISAT_DELETION_POLICY:
+//            heuristic->setDeletionStrategy( new MinisatDeletionStrategy( solver ) );
+//            break;
+//            
+//        case GLUCOSE_DELETION_POLICY:
+//            heuristic->setDeletionStrategy( new GlueBasedDeletionStrategy( solver, deletionThreshold ) );
+//            break;
+//
+//        case AGGRESSIVE_DELETION_POLICY:
+//        default:
+//            heuristic->setDeletionStrategy( new AggressiveDeletionStrategy( solver ) );
+//            break;
     }
 }
 
@@ -113,27 +102,27 @@ WaspFacade::setDecisionPolicy(
 {
     switch( decisionPolicy )
     {
-        case HEURISTIC_BERKMIN:
-            assert( threshold > 0 );
-            heuristic->setDecisionStrategy( new BerkminHeuristic( solver, threshold ) );
-            break;
-            
-        case HEURISTIC_BERKMIN_CACHE:
-            assert( threshold > 0 );
-            heuristic->setDecisionStrategy( new BerkminHeuristicWithCache( solver, threshold ) );            
-            break;
-        
-        case HEURISTIC_FIRST_UNDEFINED:
-            heuristic->setDecisionStrategy( new FirstUndefinedHeuristic( solver ) );
-            break;
-            
-        case HEURISTIC_MINISAT:
-            heuristic->setDecisionStrategy( new MinisatHeuristic( solver ) );
-            break;
-    
-        default:
-            heuristic->setDecisionStrategy( new BerkminHeuristic( solver, 512 ) );
-            break;
+//        case HEURISTIC_BERKMIN:
+//            assert( threshold > 0 );
+//            heuristic->setDecisionStrategy( new BerkminHeuristic( solver, threshold ) );
+//            break;
+//            
+//        case HEURISTIC_BERKMIN_CACHE:
+//            assert( threshold > 0 );
+//            heuristic->setDecisionStrategy( new BerkminHeuristicWithCache( solver, threshold ) );            
+//            break;
+//        
+//        case HEURISTIC_FIRST_UNDEFINED:
+//            heuristic->setDecisionStrategy( new FirstUndefinedHeuristic( solver ) );
+//            break;
+//            
+//        case HEURISTIC_MINISAT:
+//            heuristic->setDecisionStrategy( new MinisatHeuristic( solver ) );
+//            break;
+//    
+//        default:
+//            heuristic->setDecisionStrategy( new BerkminHeuristic( solver, 512 ) );
+//            break;
     }
 }
 
@@ -172,23 +161,18 @@ WaspFacade::setRestartsPolicy(
     unsigned int threshold )
 {
     assert( threshold > 0 );
+    Restart* restart;
     switch( restartsPolicy )
     {
         case GEOMETRIC_RESTARTS_POLICY:
-            heuristic->setRestartStrategy( new GeometricRestartStrategy( threshold ) );
-            break;
-            
-        case MINISAT_RESTARTS_POLICY:
-            heuristic->setRestartStrategy( new MinisatRestartStrategy( threshold ) );
-            break;
-            
-        case NO_RESTARTS_POLICY:
-            heuristic->setRestartStrategy( new NoRestartStrategy() );
-            break;
-            
+            restart = new Restart( threshold, false );
+            solver.setRestart( restart );
+            break;            
+
         case SEQUENCE_BASED_RESTARTS_POLICY:
         default:
-            heuristic->setRestartStrategy( new SequenceBasedRestartStrategy( threshold ) );
+            restart = new Restart( threshold, true );
+            solver.setRestart( restart );
             break;
     }
 }

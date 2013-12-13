@@ -32,9 +32,7 @@ operator<<(
 }
 
 Clause::~Clause()
-{ 
-    if( heuristicData != NULL )
-        delete heuristicData;
+{
 }
 
 ostream&

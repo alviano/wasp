@@ -45,14 +45,18 @@ Learning::onConflict(
     assert( isVisitedVariablesEmpty() );
     
     learnedClause = new Clause();
-    solver.initClauseData( learnedClause );
+    learnedClause->setLearned();
+//    solver.initClauseData( learnedClause );
     decisionLevel = solver.getCurrentDecisionLevel();
 
     trace_msg( learning, 2, "Starting First UIP Learning Strategy. Current Level: " << decisionLevel );
     
     //Compute implicants of the conflicting literal.
-    if( conflictClause->hasHeuristicData() )
-        solver.onClauseInvolvedInConflict( conflictClause );
+//    if( conflictClause->hasHeuristicData() )    
+//        solver.onClauseInvolvedInConflict( conflictClause );
+    if( conflictClause->isLearned() )    
+        solver.updateActivity( conflictClause );
+    
     conflictClause->onLearning( this );
     assert( conflictLiteral.getVariable()->getImplicant() != NULL ); // FIXME: I added this assert. Is it right?
     conflictLiteral.getVariable()->getImplicant()->onLearning( this );
@@ -72,8 +76,10 @@ Learning::onConflict(
         //Compute implicants of the literal.
         if( implicant != NULL )
         {
-            if( implicant->hasHeuristicData() )
-                solver.onClauseInvolvedInConflict( implicant );
+//            if( implicant->hasHeuristicData() )
+//                solver.onClauseInvolvedInConflict( implicant );
+            if( implicant->isLearned() )
+                solver.updateActivity( implicant );
             implicant->onLearning( this );
         }
 	}
