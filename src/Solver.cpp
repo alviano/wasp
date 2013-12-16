@@ -116,17 +116,15 @@ Solver::solve()
         return false;
     }    
 
-    cout << "NCLAUSES " << clauses.size() << endl;
-    
     if( !preprocessing() )
         return false;
 
     minisatHeuristic.simplifyVariablesAtLevelZero();    
     attachWatches();
     
-    cout << "NCLAUSES AFTER " << clauses.size() << endl;    
     while( hasUndefinedLiterals() )
     {
+        /*
         static unsigned int PROVA = 0;
         static time_t PROVA_TIME = time( 0 );
 
