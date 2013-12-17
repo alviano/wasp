@@ -149,7 +149,7 @@ class Solver
         inline void finalizeDeletion( unsigned int newVectorSize ) { learnedClauses.resize( newVectorSize ); }
         inline void onRestart() { deletionCounters.maxLearned *= deletionCounters.learnedSizeIncrement; restart->onRestart(); }
         
-        inline void setRestart( Restart* r );
+        inline void setRestart( Restart* r );        
         
     private:
         inline Variable* addVariableInternal();
@@ -361,8 +361,8 @@ Solver::incrementCurrentDecisionLevel()
 
 void
 Solver::unrollLastVariable()
-{
-    variables.unrollLastVariable();
+{    
+    minisatHeuristic.onUnrollingVariable( variables.unrollLastVariable() );
 }
 
 void

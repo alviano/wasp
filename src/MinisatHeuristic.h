@@ -23,6 +23,7 @@
 #include "util/Trace.h"
 #include "Literal.h"
 #include "Variable.h"
+#include "stl/Heap.h"
 
 #include <cassert>
 using namespace std;
@@ -37,12 +38,14 @@ class MinisatHeuristic
         inline void onNewVariable( Variable* variable );
         inline void onLiteralInvolvedInConflict( Literal literal );
         inline void simplifyVariablesAtLevelZero();
+        inline void onUnrollingVariable( Variable* variable );
 
     private:
         inline bool bumpActivity( Variable* variable ){ return ( ( variable->activity() += variableIncrement ) > 1e100 ); }
         inline void rescaleActivity();
         inline void variableDecayActivity(){ trace( heuristic, 1, "Calling decay activity.\n" ); variableIncrement *= variableDecay; }
         inline void variableBumpActivity( Variable* variable );
+        void randomChoice();
 
         Activity variableIncrement;
         Activity variableDecay;
@@ -50,6 +53,7 @@ class MinisatHeuristic
         vector< Variable* > variables;
 
         Variable* chosenVariable;
+        Heap< Variable > heap;
 };
 
 MinisatHeuristic::MinisatHeuristic() :
@@ -64,6 +68,9 @@ MinisatHeuristic::variableBumpActivity(
     trace( heuristic, 1, "Bumping activity for variable %s.\n", toString( *variable ).c_str() );
 	if( bumpActivity( variable ) )
 		rescaleActivity();
+    
+    if( variable->isInHeap() )
+        heap.decrease( variable );
 }
 
 void
@@ -97,15 +104,23 @@ MinisatHeuristic::simplifyVariablesAtLevelZero()
     {
         if( !variables[ i ]->isUndefined() )
         {
+            assert_msg( variables[ i ]->getDecisionLevel() == 0, "Variable " << *variables[ i ] << " has not been inferred at level 0.");            
             variables[ i ] = variables.back();
             variables.pop_back();
         }
         else
-        {
-            assert_msg( variables[ i ]->getDecisionLevel() == 0, "Variable " << *variables[ i ] << " has not been inferred at level 0.");            
+        {       
+            heap.pushNoCheck( variables[ i ] );
             ++i;
         }
     }
+}
+
+void
+MinisatHeuristic::onUnrollingVariable(
+    Variable* variable )
+{
+    heap.push( variable );
 }
 
 #endif	/* MINISATHEURISTIC_H */

@@ -24,14 +24,24 @@
 #include "util/Constants.h"
 #include "WatchedList.h"
 #include "util/Assert.h"
-
+#include <boost/heap/fibonacci_heap.hpp>
 using namespace std;
+using namespace boost::heap;
 
 class Clause;
 class HeuristicCounterForLiteral;
 class HeuristicCounterFactoryForLiteral;
 class Learning;
 class Literal;
+
+class Variable;
+
+struct Comparator
+{
+    inline bool operator()(const Variable* n1, const Variable* n2 ) const;
+};
+
+typedef fibonacci_heap< Variable*, compare< Comparator > >::handle_type heap_handle;
 
 /**
  * This class stores all information about a Variable.
@@ -107,6 +117,12 @@ class Variable
         inline long getSignature() const { return signature; }
         inline Activity& activity() { return act; }
         inline const Activity& activity() const { return act; }
+        
+        inline void setHandle( heap_handle h ){ handle = h; }
+        inline heap_handle getHandle(){ return handle; }
+        
+        inline void setInHeap( bool v ){ inHeap = v; }
+        inline bool isInHeap(){ return inHeap; }
 
     private:
 
@@ -154,7 +170,12 @@ class Variable
         long signature;
         
         Activity act;
+        
+        heap_handle handle;
+        bool inHeap;
 };
+
+bool Comparator::operator()( const Variable* v1, const Variable* v2 ) const{ return v1->activity() < v2->activity(); }
 
 Variable::Variable(
     unsigned id_ ) :
@@ -162,7 +183,8 @@ Variable::Variable(
     decisionLevel( 0 ),
     truthValue( UNDEFINED ),
     implicant( NULL ),
-    act( 0.0 )
+    act( 0.0 ),
+    inHeap( false )
 {
     signature = ( long ) 1 << ( ( id - 1 ) & 63 );
 }

@@ -46,7 +46,7 @@ class Variables
         inline bool hasNextAssignedVariable() const;
         inline void startIterationOnAssignedVariable();
         
-        inline void unrollLastVariable();
+        inline Variable* unrollLastVariable();
         inline void resetLiteralsToPropagate() { nextVariableToPropagate = assignedVariablesSize; }
         
         inline unsigned numberOfAssignedLiterals() const { return assignedVariablesSize; }
@@ -141,12 +141,13 @@ Variables::getNextVariableToPropagate()
     return assignedVariables[ nextVariableToPropagate++ ];
 }
 
-void
+Variable*
 Variables::unrollLastVariable()
 {
     assert( assignedVariablesSize > 0 && assignedVariablesSize <= assignedVariables.size() );
     Variable* variable = assignedVariables[ --assignedVariablesSize ];
     variable->setUndefined();
+    return variable;
 //    if( variable->getId() < noUndefinedBefore )
 //    {
 //        noUndefinedBefore = variable->getId();
