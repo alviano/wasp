@@ -100,6 +100,7 @@ RESTARTS_POLICY Options::restartsPolicy = SEQUENCE_BASED_RESTARTS_POLICY;
 
 //unsigned int Options::restartsThreshold = 32;
 unsigned int Options::restartsThreshold = 100000;
+//unsigned int Options::restartsThreshold = 100;
 
 unsigned int Options::timeLimit = 0;
 
@@ -151,7 +152,7 @@ Options::parse(
                 
                 /* RESTART OPTIONS */                
 //                { "geometric-restarts", optional_argument, NULL, OPTIONID_geometric_restarts },
-//                { "minisat-restarts", optional_argument, NULL, OPTIONID_minisat_restarts },
+                { "minisat-restarts", optional_argument, NULL, OPTIONID_minisat_restarts },
 //                { "disable-restarts", no_argument, NULL, OPTIONID_disable_restarts },
 //                { "sequence-based-restarts", optional_argument, NULL, OPTIONID_sequence_based_restarts },
                 

@@ -158,8 +158,9 @@ Solver::solve()
                     trace( solving, 1, "Conflict at level 0: return. \n");
                     return false;
                 }
-
+                
                 analyzeConflict();
+                minisatHeuristic.variableDecayActivity();                
                 assert( hasNextVariableToPropagate() || getCurrentDecisionLevel() == 0 );
             }
         }

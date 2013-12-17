@@ -79,7 +79,11 @@ MinisatHeuristic::makeAChoice()
     assert( "The literal must be undefined." && chosenVariable->isUndefined() );
     trace( heuristic, 1, "Ending Minisat Heuristic.\n" );
     
-    //FIXME: Maybe in future we want to add the right minisat policy
+    //FIXME: Maybe in future we want to add the right minisat policy    
+    
+    if( chosenVariable->getCachedTruthValue() != UNDEFINED )
+        return chosenVariable->getCachedTruthValue() == TRUE ? Literal( chosenVariable, POSITIVE ) : Literal( chosenVariable, NEGATIVE );
+    
     return Literal( chosenVariable, NEGATIVE );
 }
 

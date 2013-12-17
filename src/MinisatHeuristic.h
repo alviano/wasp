@@ -39,11 +39,11 @@ class MinisatHeuristic
         inline void onLiteralInvolvedInConflict( Literal literal );
         inline void simplifyVariablesAtLevelZero();
         inline void onUnrollingVariable( Variable* variable );
-
+        inline void variableDecayActivity(){ trace( heuristic, 1, "Calling decay activity.\n" ); variableIncrement *= variableDecay; }
+        
     private:
         inline bool bumpActivity( Variable* variable ){ return ( ( variable->activity() += variableIncrement ) > 1e100 ); }
-        inline void rescaleActivity();
-        inline void variableDecayActivity(){ trace( heuristic, 1, "Calling decay activity.\n" ); variableIncrement *= variableDecay; }
+        inline void rescaleActivity();        
         inline void variableBumpActivity( Variable* variable );
         void randomChoice();
 
