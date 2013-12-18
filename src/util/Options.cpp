@@ -99,8 +99,8 @@ bool Options::printProgram = false;
 RESTARTS_POLICY Options::restartsPolicy = SEQUENCE_BASED_RESTARTS_POLICY;
 
 //unsigned int Options::restartsThreshold = 32;
-unsigned int Options::restartsThreshold = 100000;
-//unsigned int Options::restartsThreshold = 100;
+//unsigned int Options::restartsThreshold = 100000;
+unsigned int Options::restartsThreshold = 100;
 
 unsigned int Options::timeLimit = 0;
 

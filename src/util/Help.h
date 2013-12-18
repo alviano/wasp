@@ -47,10 +47,10 @@ class Help
             cout << separator << endl;
             #endif
 
-//            cout << "Restart options                       " << endl << endl;
+            cout << "Restart options                       " << endl << endl;
 //            cout << "--sequence-based-restarts=<N>          - Luby et al. sequence using N as number of conflicts." << endl;
 //            cout << "--geometric-restarts=<N>               - Geometric restarts." << endl;
-//            cout << "--minisat-restarts=<N>                 - Minisat restarts." << endl;
+            cout << "--minisat-restarts=<N>                 - Minisat restarts." << endl;
 //            cout << "--disable-restarts                     - Disable restarts." << endl;
 //            cout << separator << endl;
 //            
