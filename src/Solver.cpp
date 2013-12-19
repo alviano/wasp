@@ -17,6 +17,8 @@
  */
 
 #include "Solver.h"
+#include <algorithm>
+using namespace std;
 
 Solver::~Solver()
 {
@@ -116,12 +118,14 @@ Solver::solve()
         return false;
     }    
 
+    statistics( beforePreprocessing( numberOfVariables() - numberOfAssignedLiterals(), numberOfClauses() ) );
     if( !preprocessing() )
         return false;
 
     minisatHeuristic.simplifyVariablesAtLevelZero();    
     attachWatches();
     
+    statistics( afterPreprocessing( numberOfVariables() - numberOfAssignedLiterals(), numberOfClauses() ) );
     while( hasUndefinedLiterals() )
     {
         /*
@@ -156,6 +160,7 @@ Solver::solve()
                 if( getCurrentDecisionLevel() == 0 )
                 {
                     trace( solving, 1, "Conflict at level 0: return. \n");
+                    statistics( endSolving() );
                     return false;
                 }
                 
@@ -169,6 +174,7 @@ Solver::solve()
     assert_msg( getNumberOfUndefined() == 0, "Found a model with " << getNumberOfUndefined() << " undefined variables." );
     assert_msg( allClausesSatisfied(), "The model found is not correct." );
     
+    statistics( endSolving() );
     return true;
 }
 
@@ -327,89 +333,125 @@ Solver::allClausesSatisfied() const
     return true;
 }
 
+bool compareClauses( Clause* c1, Clause* c2 ){ return c1->activity() < c2->activity(); }
+
 void
 Solver::deleteClauses()
 {
-    Activity activitySum = 0;
-    unsigned int activityCount = 0;
-    Activity threshold = deletionCounters.increment / numberOfLearnedClauses();      
-    
     ClauseIterator i = learnedClauses_begin();
     ClauseIterator j = learnedClauses_begin();
+    Activity threshold = deletionCounters.increment / numberOfLearnedClauses();
     
-    unsigned int size = numberOfLearnedClauses();
-    unsigned int halfSize = size / 2;    
+    sort( learnedClauses.begin(), learnedClauses.end(), compareClauses );
+    
     unsigned int numberOfDeletions = 0;
-
-    assert( i != learnedClauses_end() );
-    
-    do
+    unsigned int size = numberOfLearnedClauses();
+    unsigned int toDelete = size / 2;
+    while( i != learnedClauses.end() )
     {
         Clause& clause = **i;
-        
-        if( !clause.isLocked() )
-        {            
-            activitySum += clause.activity();
-            ++activityCount;
-            if ( clause.activity() < threshold )
-            {
-                deleteLearnedClause( i );
-                numberOfDeletions++;
-            }
-            else
-            {
-                *j = *i;
-                j++;
-            }
+        if( clause.size() > 2 && !clause.isLocked() && ( numberOfDeletions < toDelete || clause.activity() < threshold ) )
+        {
+            deleteLearnedClause( i );
+            numberOfDeletions++;
         }
         else
         {
             *j = *i;
             j++;
         }
-
-        ++i;
-    } while( i != learnedClauses_end() );
-    
-    finalizeDeletion( size - numberOfDeletions );
-    
-    numberOfDeletions = 0;
-    size = numberOfLearnedClauses();
-
-    if( activityCount > 0 && numberOfDeletions < halfSize )
-    {
-        activitySum = activitySum / activityCount;
-        i = learnedClauses_begin();
-        j = learnedClauses_begin();
-        assert( i != learnedClauses_end() );
-        do
-        {
-            if( numberOfDeletions < halfSize )
-            {
-                Clause& clause = **i;
-
-                if( !clause.isLocked() && clause.activity() < activitySum )
-                {
-                    deleteLearnedClause( i );
-                    numberOfDeletions++;
-                }
-                else
-                {
-                    *j = *i;
-                    j++;
-                }
-            }
-            else
-            {
-                *j = *i;
-                j++;
-            }
-            ++i;
-        } while( i != learnedClauses_end() );
+        
+        i++;
     }
-    
+
     finalizeDeletion( size - numberOfDeletions );
+    statistics( onDeletion( size, numberOfDeletions ) );
 }
+
+//void
+//Solver::deleteClauses()
+//{
+//    Activity activitySum = 0;
+//    unsigned int activityCount = 0;
+//    Activity threshold = deletionCounters.increment / numberOfLearnedClauses();      
+//    
+//    ClauseIterator i = learnedClauses_begin();
+//    ClauseIterator j = learnedClauses_begin();
+//    
+//    unsigned int size = numberOfLearnedClauses();
+//    unsigned int halfSize = size / 2;    
+//    unsigned int numberOfDeletions = 0;
+//
+//    assert( i != learnedClauses_end() );
+//    
+//    do
+//    {
+//        Clause& clause = **i;
+//        
+//        if( !clause.isLocked() )
+//        {            
+//            activitySum += clause.activity();
+//            ++activityCount;
+//            if ( clause.activity() < threshold )
+//            {
+//                deleteLearnedClause( i );
+//                numberOfDeletions++;
+//            }
+//            else
+//            {
+//                *j = *i;
+//                j++;
+//            }
+//        }
+//        else
+//        {
+//            *j = *i;
+//            j++;
+//        }
+//
+//        ++i;
+//    } while( i != learnedClauses_end() );
+//    
+//    finalizeDeletion( size - numberOfDeletions );
+//    
+//    numberOfDeletions = 0;
+//    size = numberOfLearnedClauses();
+//
+//    if( activityCount > 0 && numberOfDeletions < halfSize )
+//    {
+//        activitySum = activitySum / activityCount;
+//        i = learnedClauses_begin();
+//        j = learnedClauses_begin();
+//        assert( i != learnedClauses_end() );
+//        do
+//        {
+//            if( numberOfDeletions < halfSize )
+//            {
+//                Clause& clause = **i;
+//
+//                if( !clause.isLocked() && clause.activity() < activitySum )
+//                {
+//                    deleteLearnedClause( i );
+//                    numberOfDeletions++;
+//                }
+//                else
+//                {
+//                    *j = *i;
+//                    j++;
+//                }
+//            }
+//            else
+//            {
+//                *j = *i;
+//                j++;
+//            }
+//            ++i;
+//        } while( i != learnedClauses_end() );
+//    }
+//    
+//    finalizeDeletion( size - numberOfDeletions );
+//    statistics( onDeletion( size, numberOfDeletions ) );
+//}
 
 void
 Solver::updateActivity( 

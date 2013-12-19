@@ -38,6 +38,7 @@ using namespace std;
 #include "Satelite.h"
 #include "Restart.h"
 #include "MinisatHeuristic.h"
+#include "util/Statistics.h"
 
 class Solver
 {
@@ -293,9 +294,10 @@ Solver::addClause(
     Clause* clause )
 {
     assert( clause != NULL );
-    unsigned int size = clause->size();
+    unsigned int size = clause->size();    
     if( size > 1 )
     {
+        statistics( onAddingClause( size ) );
 //        clause->attachClause();
         clause->attachClauseToAllLiterals();
         clause->setPositionInSolver( clauses.size() );
@@ -374,6 +376,7 @@ Solver::unrollOne()
 void
 Solver::doRestart()
 {
+    statistics( onRestart() );
     trace( solving, 2, "Performing restart.\n" );
     this->onRestart(); 
     unroll( 0 );
@@ -448,6 +451,7 @@ Solver::chooseLiteral()
     Literal choice = minisatHeuristic.makeAChoice();
     trace( solving, 1, "Choice: %s.\n", toString( choice ).c_str() );
     setAChoice( choice );    
+    statistics( onChoice() );
 }
 
 void
@@ -455,7 +459,7 @@ Solver::analyzeConflict()
 {
     Clause* learnedClause = learning.onConflict( conflictLiteral, conflictClause );
     assert( "Learned clause has not been calculated." && learnedClause != NULL );
-    
+    statistics( onLearning( learnedClause->size() ) );
     if( learnedClause->size() == 1 )
     {
         doRestart();
@@ -601,7 +605,7 @@ Solver::attachWatches()
 bool
 Solver::preprocessing()
 {
-    assert( satelite != NULL );
+    assert( satelite != NULL );    
     return satelite->simplify();
 }
 

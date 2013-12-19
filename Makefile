@@ -19,6 +19,10 @@ cxxflags.gprof = \
  -Wall -std=c++11 -DNDEBUG -O3 -g -pg
 linkflags.gprof = \
  -lm -g -pg
+cxxflags.stats = \
+ -Wall -std=c++11 -DNDEBUG -DSTATS_ON -O3
+linkflags.stats = \
+ -lm -g -pg
 
 # for g++ <= 4.6
 cxxflags.debug0x = \
@@ -36,6 +40,10 @@ linkflags.release0x = \
 cxxflags.gprof0x = \
  -Wall -std=c++0x -DNDEBUG -O3 -g -pg 
 linkflags.gprof0x = \
+ -lm -g -pg
+cxxflags.stats0x = \
+ -Wall -std=c++0x -DNDEBUG -DSTATS_ON -O3
+linkflags.stats0x = \
  -lm -g -pg
 ####
 
