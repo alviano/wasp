@@ -148,7 +148,7 @@ class Solver
 //        inline Heuristic* getHeuristic() { return heuristic; }
         inline void onLiteralInvolvedInConflict( Literal l ) { minisatHeuristic.onLiteralInvolvedInConflict( l ); }
         inline void finalizeDeletion( unsigned int newVectorSize ) { learnedClauses.resize( newVectorSize ); }
-        inline void onRestart() { deletionCounters.maxLearned *= deletionCounters.learnedSizeIncrement; restart->onRestart(); }
+        inline void onRestart() { restart->onRestart(); }
         
         inline void setRestart( Restart* r );        
         
@@ -190,6 +190,10 @@ class Solver
             double learnedSizeFactor;
             double learnedSizeIncrement;
             double maxLearned;
+            unsigned int learnedSizeAdjustStartConfl;
+            double learnedSizeAdjustConfl;
+            double learnedSizeAdjustIncrement;
+            unsigned int learnedSizeAdjustCnt;
             
             void init()
             {
@@ -198,6 +202,10 @@ class Solver
                 learnedSizeFactor = ( ( double ) 1 / ( double) 3 );
                 learnedSizeIncrement = 1.1;
                 maxLearned = 0.0;
+                learnedSizeAdjustStartConfl = 100;
+                learnedSizeAdjustConfl = 0.0;
+                learnedSizeAdjustCnt = 0;
+                learnedSizeAdjustIncrement = 1.5;
             }
         } deletionCounters; 
 };
@@ -492,6 +500,13 @@ Solver::analyzeConflict()
         }
     }
 
+    if( --deletionCounters.learnedSizeAdjustCnt == 0 )
+    {
+        deletionCounters.learnedSizeAdjustConfl *= deletionCounters.learnedSizeAdjustIncrement;
+        deletionCounters.learnedSizeAdjustCnt = ( unsigned int ) deletionCounters.learnedSizeAdjustConfl;
+        deletionCounters.maxLearned *= deletionCounters.learnedSizeIncrement;
+    }
+    
     clearConflictStatus();
 }
 
@@ -614,21 +629,12 @@ Solver::onLearning(
     Clause* learnedClause )
 {
     updateActivity( learnedClause );
-    decrementActivity();
-    if( hasToDelete() )
-    {
-        deleteClauses();
-    }
+    decrementActivity();    
 }
 
 bool
 Solver::hasToDelete()
 {
-    if( deletionCounters.maxLearned == 0.0 )
-    {
-        deletionCounters.maxLearned = numberOfClauses() * deletionCounters.learnedSizeFactor;
-    }
-    
     return ( ( int ) ( numberOfLearnedClauses() - numberOfAssignedLiterals() ) >= deletionCounters.maxLearned );
 }
 

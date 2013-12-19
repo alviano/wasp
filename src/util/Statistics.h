@@ -180,7 +180,7 @@ using namespace std;
 
             void printPartialStatistics()
             {
-                cerr << "Choices " << numberOfChoices << " - Learned " << numberOfLearnedClauses << " - Deleted " << numberOfDeletion << " - Restarts " << numberOfRestarts << endl;
+                cerr << "Choices " << numberOfChoices << " - Learned " << numberOfLearnedClauses - numberOfDeletion << " - Restarts " << numberOfRestarts << endl;
             }
     };
 

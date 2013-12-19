@@ -159,20 +159,12 @@ Learning::onNavigatingLiteral(
     Literal literal )
 {
     assert( literal != Literal::null );
-    unsigned int literalDecisionLevel = literal.getDecisionLevel();
-    assert( literalDecisionLevel > 0 );
-    
-    if( literalDecisionLevel == decisionLevel )
-    {
-        // FIXME: Do we need to distinguish between the two cases? onNavigatingImplicationGraph();
-        solver.onLiteralInvolvedInConflict( literal );
+    assert( literal.getDecisionLevel() > 0 );
+
+    solver.onLiteralInvolvedInConflict( literal );
+    if( literal.getDecisionLevel() == decisionLevel )
         addLiteralToNavigate( literal );
-    }
     else
-    {
-        // FIXME: Do we need to distinguish between the two cases? literal.onNavigatingLearnedClause();
-        solver.onLiteralInvolvedInConflict( literal );
-        addLiteralInLearnedClause( literal );
-    }    
+        addLiteralInLearnedClause( literal );    
 }
 

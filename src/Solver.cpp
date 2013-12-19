@@ -125,6 +125,10 @@ Solver::solve()
     minisatHeuristic.simplifyVariablesAtLevelZero();    
     attachWatches();
     
+    deletionCounters.maxLearned = numberOfClauses() * deletionCounters.learnedSizeFactor;
+    deletionCounters.learnedSizeAdjustConfl = deletionCounters.learnedSizeAdjustStartConfl;
+    deletionCounters.learnedSizeAdjustCnt = ( unsigned int ) deletionCounters.learnedSizeAdjustConfl;
+    
     statistics( afterPreprocessing( numberOfVariables() - numberOfAssignedLiterals(), numberOfClauses() ) );
     while( hasUndefinedLiterals() )
     {
@@ -145,6 +149,11 @@ Solver::solve()
             cout << PROVA << " " << learnedClauses.size() <<  " " << ( time( 0 ) - PROVA_TIME ) << endl;
         }
         //*/
+        
+        if( hasToDelete() )
+        {
+            deleteClauses();
+        }
 
         assert( !conflictDetected() );
         chooseLiteral();

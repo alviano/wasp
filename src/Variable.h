@@ -36,12 +36,14 @@ class Literal;
 
 class Variable;
 
-struct Comparator
+class Comparator
 {
+public:
     inline bool operator()(const Variable* n1, const Variable* n2 ) const;
 };
 
-typedef fibonacci_heap< Variable*, compare< Comparator > >::handle_type heap_handle;
+//typedef fibonacci_heap< Variable*, compare< Comparator > >::handle_type heap_handle;
+typedef unsigned int heap_handle;
 
 /**
  * This class stores all information about a Variable.
@@ -175,7 +177,7 @@ class Variable
         bool inHeap;
 };
 
-bool Comparator::operator()( const Variable* v1, const Variable* v2 ) const{ return v1->activity() < v2->activity(); }
+bool Comparator::operator()( const Variable* v1, const Variable* v2 ) const{ return v1->activity() > v2->activity(); }
 
 Variable::Variable(
     unsigned id_ ) :
