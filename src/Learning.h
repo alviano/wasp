@@ -83,7 +83,6 @@ class Learning
         
         void simplifyLearnedClause( Clause* lc );
         bool allMarked( const Clause* clause );
-//        void navigateImplicantForSimplification( const Clause* clause )
         
         #ifndef NDEBUG
         /**
@@ -105,12 +104,17 @@ class Learning
         unsigned int maxDecisionLevel;
         
         unsigned int maxPosition;
+        
+        vector< unsigned int > levels1;
+        vector< unsigned int > levels2;
 };
 
 Learning::Learning( Solver& s ) : solver( s ), decisionLevel( 0 ), learnedClause( NULL ), pendingVisitedVariables( 0 ), numberOfCalls( 0 ), maxDecisionLevel( 0 )
 {
     // variable 0 is not used
     visitedVariables.push_back( 0 );
+    levels1.push_back( 0 );
+    levels2.push_back( 0 );
 }
 
 Learning::~Learning()
@@ -125,8 +129,14 @@ Learning::clearDataStructures()
     pendingVisitedVariables = 0;
     if( numberOfCalls == 0 )
     {
+        assert( visitedVariables.size() == levels1.size() );
+        assert( levels1.size() == levels2.size() );
         for( unsigned i = 1; i < visitedVariables.size(); ++i )
+        {
             visitedVariables[ i ] = 0;
+            levels1[ i ] = 0;
+            levels2[ i ] = 0;
+        }
     }
 }
 
@@ -134,6 +144,8 @@ void
 Learning::onNewVariable()
 {
     visitedVariables.push_back( 0 );
+    levels1.push_back( 0 );
+    levels2.push_back( 0 );
 }
 
 #endif	/* LEARNING_H */

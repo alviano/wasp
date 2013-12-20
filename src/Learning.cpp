@@ -128,6 +128,12 @@ Learning::addLiteralInLearnedClause(
     {
         visitedVariables[ literal.getVariable()->getId() ] = numberOfCalls;
         assert( !literal.isUndefined() );
+        
+        if( levels1[ literal.getDecisionLevel() ] != numberOfCalls )
+            levels1[ literal.getDecisionLevel() ] = numberOfCalls;            
+        else
+            levels2[ literal.getDecisionLevel() ] = numberOfCalls;
+        
         if( literal.getDecisionLevel() > maxDecisionLevel )
         {
             maxDecisionLevel = literal.getDecisionLevel();
@@ -179,8 +185,9 @@ Learning::simplifyLearnedClause(
     
     for( unsigned int i = 1; i < learnedClause.size(); )
     {
+        assert( levels1[ learnedClause.getAt( i ).getVariable()->getDecisionLevel() ] == numberOfCalls );
         trace_msg( learning, 5, "Considering literal " << learnedClause.getAt( i ) );
-        if( allMarked( learnedClause.getAt( i ).getVariable()->getImplicant() ) )
+        if( levels2[ learnedClause.getAt( i ).getVariable()->getDecisionLevel() ] == numberOfCalls && allMarked( learnedClause.getAt( i ).getVariable()->getImplicant() ) )
         {
             trace_msg( learning, 5, "Removing literal " << learnedClause.getAt( i ) );
             learnedClause.swapLiteralsNoWatches( i, learnedClause.size() - 1 );
@@ -190,9 +197,10 @@ Learning::simplifyLearnedClause(
         {
             i++;
         }
+        
     }
     
-    if( allMarked( learnedClause.getAt( 0 ).getVariable()->getImplicant() ) )
+    if( levels2[ learnedClause.getAt( 0 ).getVariable()->getDecisionLevel() ] == numberOfCalls && allMarked( learnedClause.getAt( 0 ).getVariable()->getImplicant() ) )
     {
         trace_msg( learning, 5, "Removing literal " << learnedClause.getAt( 0 ) );
         learnedClause.swapLiteralsNoWatches( 0, learnedClause.size() - 1 );
