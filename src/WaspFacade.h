@@ -36,6 +36,8 @@ class WaspFacade
         void readInput();
         void solve();
         
+        inline void greetings(){ solver.greetings(); }
+        
         void setDeletionPolicy( DELETION_POLICY, unsigned int deletionThreshold );
         void setDecisionPolicy( DECISION_POLICY, unsigned int heuristicLimit );
         void setOutputPolicy( OUTPUT_POLICY );

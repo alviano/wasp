@@ -39,6 +39,7 @@ int main( int argc, char** argv )
     wasp::Options::parse( argc, argv );    
     WaspFacade waspFacade;
     wasp::Options::setOptions( waspFacade );
+    waspFacade.greetings();
     waspFacade.readInput();    
     waspFacade.solve();
 

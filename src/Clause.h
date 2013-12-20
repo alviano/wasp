@@ -58,11 +58,12 @@ class Clause
         inline void detachClause();
         inline void detachClauseToAllLiterals( Literal literal );
         inline void removeLiteral( Literal literal );
+        inline void removeLastLiteralNoWatches(){ literals.pop_back(); }
         
         inline void onLearning( Learning* strategy );
         inline bool onLiteralFalse( Literal literal );
 
-        inline unsigned int size() const;
+            inline unsigned int size() const;
 //        inline bool checkUnsatisfiedAndOptimize( Heuristic* collector );
         bool isUnsatisfied() const;
         
@@ -70,8 +71,9 @@ class Clause
 
         inline bool isLocked() const;        
 
+        inline void swapLiteralsNoWatches( unsigned int pos1, unsigned int pos2 ){ swapLiterals( pos1, pos2 ); }
         inline void swapUnwatchedLiterals( unsigned int pos1, unsigned int pos2 );
-        inline void swapWatchedLiterals();
+        inline void swapWatchedLiterals();        
           
         inline long getSignature() const { return signature; }
         inline Literal getLiteralWithMinOccurrences() const;

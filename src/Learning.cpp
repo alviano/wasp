@@ -23,15 +23,6 @@
 
 #include <cassert>
 
-bool
-Learning::isVisitedVariablesEmpty() const
-{
-    for( unsigned i = 1; i < visitedVariables.size(); ++i )
-        if( visitedVariables[ i ] == numberOfCalls )
-            return false;
-    return true;
-}
-
 Clause*
 Learning::onConflict(
     Literal conflictLiteral,
@@ -87,6 +78,9 @@ Learning::onConflict(
     Literal firstUIP = getNextLiteralToNavigate();
     trace( learning, 2, "First UIP: %s.\n", toString( firstUIP ).c_str() );
     
+    if( learnedClause->size() > 1 )
+        simplifyLearnedClause( learnedClause );
+
 	learnedClause->addLiteral( firstUIP );    
     
     assert( learnedClause->size() > 0 );
@@ -168,3 +162,88 @@ Learning::onNavigatingLiteral(
         addLiteralInLearnedClause( literal );    
 }
 
+void
+Learning::simplifyLearnedClause(
+    Clause* lc )
+{
+    assert( lc != NULL );
+    assert( lc->size() > 1 );
+
+    statistics( startShrinkingLearnedClause( lc->size() + 1 ) );
+    Clause& learnedClause = *lc;
+    learnedClause.swapLiteralsNoWatches( 0, maxPosition );
+    maxPosition = 0;
+    
+    trace_msg( learning, 1, "Simplifying learned clause " << *lc );
+    trace_msg( learning, 5, "Considering literal " << learnedClause.getAt( i ) );
+    
+    for( unsigned int i = 1; i < learnedClause.size(); )
+    {
+        trace_msg( learning, 5, "Considering literal " << learnedClause.getAt( i ) );
+        if( allMarked( learnedClause.getAt( i ).getVariable()->getImplicant() ) )
+        {
+            trace_msg( learning, 5, "Removing literal " << learnedClause.getAt( i ) );
+            learnedClause.swapLiteralsNoWatches( i, learnedClause.size() - 1 );
+            learnedClause.removeLastLiteralNoWatches();
+        }
+        else
+        {
+            i++;
+        }
+    }
+    
+    if( allMarked( learnedClause.getAt( 0 ).getVariable()->getImplicant() ) )
+    {
+        trace_msg( learning, 5, "Removing literal " << learnedClause.getAt( 0 ) );
+        learnedClause.swapLiteralsNoWatches( 0, learnedClause.size() - 1 );
+        learnedClause.removeLastLiteralNoWatches();
+        maxDecisionLevel = 0;
+        for( unsigned int i = 0; i < learnedClause.size(); i++ )
+        {
+            Literal literal = learnedClause.getAt( i );
+            if( literal.getDecisionLevel() > maxDecisionLevel )
+            {
+                maxDecisionLevel = literal.getDecisionLevel();
+                maxPosition = i;
+            }
+        }
+    }
+    
+    statistics( endShrinkingLearnedClause( lc->size() + 1 ) );
+}
+
+bool
+Learning::allMarked(
+    const Clause* clause )
+{
+    if( clause == NULL )
+    {
+        trace_msg( learning, 5, "All marked on NULL clause" );
+        return false;
+    }
+    trace_msg( learning, 5, "All marked on clause " << *clause );
+    
+    for( unsigned int i = 1; i < clause->size(); i++ )
+    {
+        trace_msg( learning, 5, "Considering literal " << clause->getAt( i ) << " in position " << i );
+
+        if( visitedVariables[ clause->getAt( i ).getVariable()->getId() ] != numberOfCalls )
+        {
+            if( allMarked( clause->getAt( i ).getVariable()->getImplicant() ) )
+            {
+                trace_msg( learning, 5, "Literal " << clause->getAt( i ) << " set as visited" );
+                visitedVariables[ clause->getAt( i ).getVariable()->getId() ] = numberOfCalls;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else
+        {
+            trace_msg( learning, 5, "Literal " << clause->getAt( i ) << " has been visited." );
+        }
+    }
+    
+    return true;
+}

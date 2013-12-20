@@ -81,10 +81,23 @@ class Learning
          */
         Literal getNextLiteralToNavigate();
         
+        void simplifyLearnedClause( Clause* lc );
+        bool allMarked( const Clause* clause );
+//        void navigateImplicantForSimplification( const Clause* clause )
+        
+        #ifndef NDEBUG
         /**
-         * The variables of the current conflict level which have been visited.
-         */
-        bool isVisitedVariablesEmpty() const;
+        * The variables of the current conflict level which have been visited.
+        */
+        inline bool isVisitedVariablesEmpty() const
+        {
+            for( unsigned i = 1; i < visitedVariables.size(); ++i )
+            if( visitedVariables[ i ] == numberOfCalls )
+                return false;
+            return true;
+        }
+        #endif
+
         vector< unsigned > visitedVariables;
         unsigned int pendingVisitedVariables;
         unsigned numberOfCalls;

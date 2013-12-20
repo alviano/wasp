@@ -35,6 +35,7 @@ class OutputBuilder
         virtual void printVariable( const Variable* ) = 0;
         virtual void endModel() = 0;
         virtual void onProgramIncoherent() = 0;
+        virtual void greetings(){ cout << COMMENT_DIMACS << " " << WASP_STRING << endl; }
 //        virtual void onAnswerSetFoundWithWeakConstraint( Interpretation&, Program& );
 };
 

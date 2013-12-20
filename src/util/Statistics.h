@@ -38,9 +38,11 @@ using namespace std;
             numberOfLearnedClauses( 0 ), numberOfLearnedUnaryClauses( 0 ),
             numberOfLearnedBinaryClauses( 0 ), numberOfLearnedTernaryClauses( 0 ),
             sumOfSizeLearnedClauses( 0 ), minLearnedSize( MAXUNSIGNEDINT ), maxLearnedSize( 0 ),
-            numberOfBinaryClauses( 0 ), numberOfTernaryClauses( 0 ),            
+            numberOfBinaryClauses( 0 ), numberOfTernaryClauses( 0 ), numberOfClauses( 0 ),          
             numberOfDeletion( 0 ), numberOfDeletionInvokation( 0 ),
-            minDeletion( MAXUNSIGNEDINT ), maxDeletion( 0 )
+            minDeletion( MAXUNSIGNEDINT ), maxDeletion( 0 ), shrink( 0 ),
+            shrinkedClauses( 0 ), shrinkedLiterals( 0 ),
+            max_literals( 0 ), tot_literals( 0 )
             {
             }
 
@@ -76,6 +78,23 @@ using namespace std;
                 else if( size == 3 )
                     numberOfLearnedTernaryClauses++;
             }
+            
+            inline void startShrinkingLearnedClause( unsigned int size )
+            {
+                shrink = size;
+                max_literals += size;
+            }
+            
+            inline void endShrinkingLearnedClause( unsigned int size )
+            {
+                tot_literals += size;
+                shrink -= size;
+                if( shrink > 0 )
+                {
+                    shrinkedClauses++;
+                    shrinkedLiterals += shrink;
+                }
+            }
 
             inline void onDeletion( unsigned int numberOfLearnedClauses, unsigned int del )
             {
@@ -94,22 +113,25 @@ using namespace std;
                 if( size == 2 )                
                     numberOfBinaryClauses++;
                 else if( size == 3 )
-                    numberOfTernaryClauses++;                
+                    numberOfTernaryClauses++;
+                
+                numberOfClauses++;
             }
 
             inline void afterPreprocessing( unsigned int vars, unsigned int clauses )
             {
-                cerr << "Clauses after preprocessing    : " << clauses << endl;
-                cerr << "Variables after preprocessing  : " << vars << endl;
+                cerr << "Clauses after satelite         : " << clauses << endl;
+                cerr << "Variables after satelite       : " << vars << endl;
                 
                 cerr << separator << endl;
             }
 
             inline void beforePreprocessing( unsigned int vars, unsigned int clauses )
             {
-                cerr << "Clauses                        : " << clauses << endl;
-                cerr << "   Binary                      : " << numberOfBinaryClauses << "(" << ( numberOfBinaryClauses / clauses ) * 100 << "%)" << endl;
-                cerr << "   Ternary                     : " << numberOfTernaryClauses << "(" << ( numberOfTernaryClauses / clauses ) * 100 << "%)" << endl;
+                cerr << "Clauses after first propagation: " << clauses << endl;
+                cerr << "Original Number of Clauses     : " << numberOfClauses << endl;
+                cerr << "   Binary                      : " << numberOfBinaryClauses << " (" << ( ( double ) numberOfBinaryClauses * 100 / ( double )numberOfClauses ) << "%)" << endl;
+                cerr << "   Ternary                     : " << numberOfTernaryClauses << " (" << ( double )( numberOfTernaryClauses * 100 / ( double ) numberOfClauses ) << "%)" << endl;
                 cerr << "Variables                      : " << vars << endl;
                 
                 cerr << separator << endl;
@@ -140,12 +162,20 @@ using namespace std;
             unsigned int maxLearnedSize;
             
             unsigned int numberOfBinaryClauses;
-            unsigned int numberOfTernaryClauses;            
+            unsigned int numberOfTernaryClauses;
+            unsigned int numberOfClauses;
             
             unsigned int numberOfDeletion;
             unsigned int numberOfDeletionInvokation;
             unsigned int minDeletion;
             unsigned int maxDeletion;
+            
+            unsigned int shrink;
+            unsigned int shrinkedClauses;
+            unsigned int shrinkedLiterals;
+            
+            unsigned int max_literals; 
+            unsigned int tot_literals;
             
             void printStatistics()
             {
@@ -157,7 +187,7 @@ using namespace std;
                 cerr << "   Unary                       : " << numberOfLearnedUnaryClauses << endl;
                 cerr << "   Binary                      : " << numberOfLearnedBinaryClauses << endl;
                 cerr << "   Ternary                     : " << numberOfLearnedTernaryClauses << endl;
-                cerr << "   AVG Size                    : " << ( double ) ( sumOfSizeLearnedClauses / numberOfLearnedClauses ) << endl;
+                cerr << "   AVG Size                    : " << ( ( double ) sumOfSizeLearnedClauses / ( double ) numberOfLearnedClauses ) << endl;
                 cerr << "   Min Size                    : " << minLearnedSize << endl;
                 cerr << "   Max Size                    : " << maxLearnedSize << endl;
                 }
@@ -175,7 +205,10 @@ using namespace std;
                 cerr << separator << endl;
                 cerr << "Solver" << endl << endl;
                 cerr << "Number of choices              : " << numberOfChoices << endl;
-                cerr << "Number of restarts             : " << numberOfRestarts << endl;        
+                cerr << "Number of restarts             : " << numberOfRestarts << endl;
+                cerr << "Shrinked clauses               : " << shrinkedClauses << " (" << ( ( double ) shrinkedClauses * 100 / ( double ) numberOfLearnedClauses ) << "%)" << endl;
+                cerr << "Shrinked literals              : " << shrinkedLiterals << " (" << ( ( double ) shrinkedLiterals * 100 / ( double ) sumOfSizeLearnedClauses ) << "%)" << endl;
+                cerr << "Conflict literals              : " << tot_literals <<  " (deleted " << ( ( max_literals - tot_literals ) * 100 / ( double ) max_literals ) << "%)" << endl; 
             }
 
             void printPartialStatistics()

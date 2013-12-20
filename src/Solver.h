@@ -46,6 +46,8 @@ class Solver
         inline Solver();
         ~Solver();
         
+        inline void greetings(){ outputBuilder->greetings(); }
+        
         inline void init();
         bool solve();
         void propagate( Variable* variable );
@@ -271,7 +273,6 @@ void
 Solver::init()
 {
     variables.init();    
-    cout << COMMENT_DIMACS << " " << WASP_STRING << endl;
 }
 
 void
