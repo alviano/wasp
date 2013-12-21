@@ -25,6 +25,11 @@ ostream& operator<<(
     ostream& out,
     const Variable& var )
 {
+#ifndef NDEBUG    
+    if( VariableNames::isHidden( &var ) )
+        out << var.id;
+    else
+#endif
     out << VariableNames::getName( &var );
     return out;
 }

@@ -95,7 +95,7 @@ class Solver
         
         inline void setAChoice( Literal choice );        
         
-        inline void analyzeConflict();
+        inline bool analyzeConflict();
         inline void clearConflictStatus();
         inline void chooseLiteral();
         inline bool conflictDetected();
@@ -150,10 +150,12 @@ class Solver
 //        inline void initClauseData( Clause* clause ) { assert( heuristic != NULL ); heuristic->initClauseData( clause ); }
 //        inline Heuristic* getHeuristic() { return heuristic; }
         inline void onLiteralInvolvedInConflict( Literal l ) { minisatHeuristic.onLiteralInvolvedInConflict( l ); }
-        inline void finalizeDeletion( unsigned int newVectorSize ) { learnedClauses.resize( newVectorSize ); }
-        inline void onRestart() { restart->onRestart(); }
+        inline void finalizeDeletion( unsigned int newVectorSize ) { learnedClauses.resize( newVectorSize ); }        
         
-        inline void setRestart( Restart* r );        
+        inline void setRestart( Restart* r );
+        
+        void simplifyOnRestart();
+        void removeSatisfied( vector< Clause* >& clauses );
         
     private:
         inline Variable* addVariableInternal();
@@ -184,6 +186,12 @@ class Solver
         bool conflictAtLevelZero;
         unsigned int getNumberOfUndefined() const;
         bool allClausesSatisfied() const;
+        
+        unsigned int assignedVariablesAtLevelZero;
+        int64_t nextValueOfPropagation;
+        
+        uint64_t literalsInClauses;
+        uint64_t literalsInLearnedClauses;
 
         struct DeletionCounters
         {
@@ -221,7 +229,11 @@ Solver::Solver()
     learning( *this ),
     outputBuilder( NULL ),
     restart( NULL ),
-    conflictAtLevelZero( false )
+    conflictAtLevelZero( false ),
+    assignedVariablesAtLevelZero( MAXUNSIGNEDINT ),
+    nextValueOfPropagation( 0 ),
+    literalsInClauses( 0 ),
+    literalsInLearnedClauses( 0 )    
 {
     satelite = new Satelite( *this );
     deletionCounters.init();
@@ -349,6 +361,7 @@ Solver::addLearnedClause(
     assert( learnedClause != NULL );
     learnedClause->attachClause();
     learnedClauses.push_back( learnedClause );
+    literalsInLearnedClauses += learnedClause->size();
 }
 
 Variable*
@@ -396,7 +409,7 @@ Solver::doRestart()
 {
     statistics( onRestart() );
     trace( solving, 2, "Performing restart.\n" );
-    this->onRestart(); 
+    restart->onRestart();
     unroll( 0 );
 }
 
@@ -407,6 +420,7 @@ Solver::deleteLearnedClause(
     Clause* learnedClause = *iterator;
     trace_msg( solving, 4, "Deleting learned clause " << *learnedClause );
     learnedClause->detachClause();
+    literalsInLearnedClauses -= learnedClause->size();
     delete learnedClause;
 //    learnedClauses.erase( iterator );
 }
@@ -472,7 +486,7 @@ Solver::chooseLiteral()
     statistics( onChoice() );
 }
 
-void
+bool
 Solver::analyzeConflict()
 {
     Clause* learnedClause = learning.onConflict( conflictLiteral, conflictClause );
@@ -481,8 +495,21 @@ Solver::analyzeConflict()
     if( learnedClause->size() == 1 )
     {
         doRestart();
-        assignLiteral( learnedClause->getAt( 0 ) );
+        assignLiteral( learnedClause->getAt( 0 ) );        
         delete learnedClause;
+
+        clearConflictStatus();
+        while( hasNextVariableToPropagate() )
+        {
+            nextValueOfPropagation--;            
+            Variable* variableToPropagate = getNextVariableToPropagate();
+            propagate( variableToPropagate );
+
+            if( conflictDetected() )
+                return false;
+        }
+        
+        simplifyOnRestart();
     }
     else
     {
@@ -494,6 +521,7 @@ Solver::analyzeConflict()
         if( restart->hasToRestart() )
         {
             doRestart();
+            simplifyOnRestart();
         }
         else
         {
@@ -518,6 +546,8 @@ Solver::analyzeConflict()
     }
     
     clearConflictStatus();
+    
+    return true;
 }
 
 void
@@ -621,6 +651,7 @@ Solver::attachWatches()
         }
         else
         {
+            literalsInClauses += current->size();
             current->attachClause();
             ++i;
         }

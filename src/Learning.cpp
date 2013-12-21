@@ -28,7 +28,7 @@ bool
 Learning::isVisitedVariablesEmpty() const
 {
     for( unsigned i = 1; i <= solver.numberOfVariables(); ++i )
-        if( solver.getVariable( i )->activity() == numberOfCalls )
+        if( solver.getVariable( i )->visited() == numberOfCalls )
             return false;
     return true;
 }
@@ -187,7 +187,6 @@ Learning::simplifyLearnedClause(
     maxPosition = 0;
     
     trace_msg( learning, 1, "Simplifying learned clause " << *lc );
-    trace_msg( learning, 5, "Considering literal " << learnedClause.getAt( i ) );
     
     for( unsigned int i = 1; i < learnedClause.size(); )
     {
@@ -266,6 +265,6 @@ Learning::resetVariablesNumberOfCalls()
 {
     for( unsigned i = 1; i <= solver.numberOfVariables(); ++i )
     {
-        solver.getVariable( i )->activity() = 0;
+        solver.getVariable( i )->visited() = 0;
     }
 }

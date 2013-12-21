@@ -63,7 +63,7 @@ class Clause
         inline void onLearning( Learning* strategy );
         inline bool onLiteralFalse( Literal literal );
 
-            inline unsigned int size() const;
+        inline unsigned int size() const;
 //        inline bool checkUnsatisfiedAndOptimize( Heuristic* collector );
         bool isUnsatisfied() const;
         
@@ -75,7 +75,7 @@ class Clause
         inline void swapUnwatchedLiterals( unsigned int pos1, unsigned int pos2 );
         inline void swapWatchedLiterals();        
           
-        inline long getSignature() const { return signature; }
+        inline uint64_t getSignature() const { return signature; }
         inline Literal getLiteralWithMinOccurrences() const;
         
         inline void setPositionInSolver( unsigned int pos ) { positionInSolver = pos; }
@@ -91,6 +91,8 @@ class Clause
         inline const Activity& activity() const { return act; }
         inline void setLearned(){ learned = true; }
         inline bool isLearned() const { return learned; }
+        
+        inline bool removeSatisfiedLiterals();
         
     protected:
         vector< Literal > literals;
@@ -115,7 +117,7 @@ class Clause
 
         inline void swapLiterals( unsigned int pos1, unsigned int pos2 );
         
-        long signature;
+        uint64_t signature;
         unsigned int positionInSolver;
         
         Activity act;
@@ -486,6 +488,41 @@ Clause::isSubsetOf(
     }
     
     return true;
+}
+
+bool
+Clause::removeSatisfiedLiterals()
+{
+    if( literals[ 0 ].isTrue() )
+    {        
+        if( isLocked() )
+            literals[ 0 ].getVariable()->setImplicant( NULL );    
+        return true;        
+    }
+    
+    assert_msg( !literals[ 0 ].isFalse(), "Literal " << literals[ 0 ] <<  " in clause " << *this << " is false" );
+    assert_msg( !literals[ 1 ].isFalse(), "Literal " << literals[ 1 ] <<  " in clause " << *this << " is false" );
+
+    if( literals[ 1 ].isTrue() )
+        return true;        
+    
+    for( unsigned int i = 2; i < literals.size(); )
+    {
+        if( literals[ i ].isTrue() )
+            return true;
+
+        if( literals[ i ].isFalse() )
+        {
+            literals[ i ] = literals.back();
+            literals.pop_back();
+        }
+        else
+        {
+            i++;
+        }        
+    }
+        
+    return false;
 }
 
 #endif

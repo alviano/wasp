@@ -32,97 +32,103 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 // A heap implementation with support for decrease/increase key.
 template< class K >
 class Heap {
-    vector< K* > heap;     // Heap of Keys
-    Comparator lt;       // The heap is a minimum-heap with respect to this comparator
+    vector< K* > heap;// Heap of Keys
+    Comparator lt; // The heap is a minimum-heap with respect to this comparator
 
     // Index "traversal" functions
-    static inline unsigned int left  (unsigned int i) { return i*2+1; }
-    static inline unsigned int right (unsigned int i) { return (i+1)*2; }
-    static inline unsigned int parent(unsigned int i) { return (i-1) >> 1; }
+    static inline unsigned int left( unsigned int i ) { return i * 2 + 1; }
+    static inline unsigned int right( unsigned int i ) { return ( i + 1 ) * 2; }
+    static inline unsigned int parent( unsigned int i ) { return ( i - 1 ) >> 1; }
 
-    void percolateUp(unsigned int i)
+    void percolateUp( unsigned int i )
     {
-        K*   x  = heap[i];
-        int p  = parent(i);
+        K*   x  = heap[ i ];
+        int p  = parent( i );
         
-        while (i != 0 && lt(x, heap[p])){
-            heap[i]          = heap[p];
-            heap[p]->setHandle(i);
-            i                = p;
-            p                = parent(p);
+        while( i != 0 && lt( x, heap[ p ] ) )
+        {
+            heap[ i ] = heap[ p ];
+            heap[ p ]->setHandle( i );
+            i = p;
+            p = parent( p );
         }
-        heap   [i] = x;
-        x->setHandle(i);
+        heap[ i ] = x;
+        x->setHandle( i );
     }
 
 
-    void percolateDown(unsigned int i)
+    void percolateDown( unsigned int i )
     {
-        K* x = heap[i];
-        while (left(i) < heap.size()){
-            int child = right(i) < heap.size() && lt(heap[right(i)], heap[left(i)]) ? right(i) : left(i);
-            if (!lt(heap[child], x)) break;
-            heap[i]          = heap[child];
-            heap[i]->setHandle(i);
-            i                = child;
+        K* x = heap[ i ];
+        while( left( i ) < heap.size() )
+        {
+            int child = right( i ) < heap.size() && lt( heap[ right( i ) ], heap[ left( i ) ] ) ? right( i ) : left( i );
+            if( !lt( heap[ child ], x ) )
+                break;
+            heap[ i ] = heap[ child ];
+            heap[ i ]->setHandle( i );
+            i = child;
         }
-        heap   [i] = x;
-        x->setHandle(i);
+        heap[ i ] = x;
+        x->setHandle( i );
     }
 
 
   public:
     Heap(){}
 
-    int  size      ()          const { return heap.size(); }
-    bool empty     ()          const { return heap.size() == 0; }
-    bool inHeap    (K* k)       const { return k->isInHeap(); }
-    int  operator[](int index) const { assert(index < heap.size()); return heap[index]; }
+    int size() const { return heap.size(); }
+    bool empty() const { return heap.size() == 0; }
+    bool inHeap ( K* k ) const { return k->isInHeap(); }
+    int  operator[]( int index ) const{ assert( index < heap.size() ); return heap[ index ]; }
 
-    void decrease  (K* k) { assert(inHeap(k)); percolateUp  (k->getHandle()); }
-    void increase  (K* k) { assert(inHeap(k)); percolateDown(k->getHandle()); }
+    void decrease( K* k ) { assert( inHeap( k ) ); percolateUp( k->getHandle() ); }
+    void increase( K* k ) { assert( inHeap( k ) ); percolateDown( k->getHandle() ); }
 
 
     // Safe variant of insert/decrease/increase:
-    void update(K* k)
+    void update( K* k )
     {
-        if (!inHeap(k))
-            insert(k);
-        else {
-            percolateUp(k->getHandle());
-            percolateDown(k->getHandle()); }
+        if( !inHeap( k ) )
+            insert( k );
+        else
+        {
+            percolateUp( k->getHandle() );
+            percolateDown( k->getHandle() );
+        }
     }
 
-
-    void push(K* k)
+    void push( K* k )
     {
         if( k->isInHeap() )
             return;
         pushNoCheck( k );
     }
 
-    void pushNoCheck(K* k)
+    void pushNoCheck( K* k )
     {
         assert( !k->isInHeap() );
-		k->setInHeap(true);
-		k->setHandle(heap.size());
-        heap.push_back(k);
-        percolateUp(k->getHandle());
+		k->setInHeap( true );
+		k->setHandle( heap.size() );
+        heap.push_back( k );
+        percolateUp( k->getHandle() );
     }
 
-    void remove(K* k)
+    void remove( K* k )
     {
-        assert(inHeap(k));
+        assert( inHeap( k ) );
 
-        int k_pos  = k->getHandle();
-        k->setInHeap(false);
+        int k_pos = k->getHandle();
+        k->setInHeap( false );
 
-        if (k_pos < heap.size()-1){
-            heap[k_pos]          = heap.back();
-			heap[k_pos]->setHandle(k_pos);
+        if( k_pos < heap.size() - 1 )
+        {
+            heap[ k_pos ] = heap.back();
+			heap[ k_pos ]->setHandle( k_pos );
             heap.pop_back();
-            percolateDown(k_pos);
-        }else
+            percolateDown( k_pos );
+        }
+        else
             heap.pop();
     }
 
@@ -133,21 +139,23 @@ class Heap {
     
     void pop()
     {
-        heap[0]->setInHeap(false);
-        heap[0] = heap.back();
-        heap[0]->setHandle(0);
+        heap[ 0 ]->setInHeap( false );
+        heap[ 0 ] = heap.back();
+        heap[ 0 ]->setHandle( 0 );
         heap.pop_back();
-        if (heap.size() > 1) percolateDown(0);
+        if( heap.size() > 1 )
+            percolateDown( 0 );
     }
 
     K* removeMin()
     {
-        K x              = heap[0];
-        heap[0]          = heap.back();
-        heap[0]->setHandle(0);
-        x->setInHeap(false);
+        K x = heap[ 0 ];
+        heap[ 0 ] = heap.back();
+        heap[ 0 ]->setHandle( 0 );
+        x->setInHeap( false );
         heap.pop_back();
-        if (heap.size() > 1) percolateDown(0);
+        if( heap.size() > 1 )
+            percolateDown( 0 );
         return x; 
     }
 

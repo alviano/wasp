@@ -65,12 +65,12 @@ void
 MinisatHeuristic::variableBumpActivity(
     Variable* variable )
 {
-    trace( heuristic, 1, "Bumping activity for variable %s.\n", toString( *variable ).c_str() );
+    trace( heuristic, 1, "Bumping activity for variable %s.\n", toString( *variable ).c_str() );    
 	if( bumpActivity( variable ) )
 		rescaleActivity();
     
     if( variable->isInHeap() )
-        heap.decrease( variable );
+        heap.decrease( variable );    
 }
 
 void
@@ -78,8 +78,8 @@ MinisatHeuristic::rescaleActivity()
 {
     trace( heuristic, 1, "Rescaling activity.\n" );
     unsigned int size = variables.size();
-	for( unsigned int i = 0; i < size; ++i )
-        variables[ i ]->activity() *= 1e-100;		
+    for( unsigned int i = 0; i < size; ++i )
+        variables[ i ]->activity() *= 1e-100;
 	variableIncrement *= 1e-100;
 }
 

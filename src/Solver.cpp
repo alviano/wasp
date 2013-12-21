@@ -17,7 +17,9 @@
  */
 
 #include "Solver.h"
+#include "input/Dimacs.h"
 #include <algorithm>
+#include <stdint.h>
 using namespace std;
 
 Solver::~Solver()
@@ -104,6 +106,7 @@ Solver::addClauseFromModelAndRestart()
     }
     
     this->doRestart();
+    simplifyOnRestart();
     return addClause( clause );
 }
 
@@ -123,13 +126,16 @@ Solver::solve()
         return false;
 
     minisatHeuristic.simplifyVariablesAtLevelZero();    
-    attachWatches();
+    attachWatches();    
+    
+    assignedVariablesAtLevelZero = numberOfAssignedLiterals();
     
     deletionCounters.maxLearned = numberOfClauses() * deletionCounters.learnedSizeFactor;
     deletionCounters.learnedSizeAdjustConfl = deletionCounters.learnedSizeAdjustStartConfl;
     deletionCounters.learnedSizeAdjustCnt = ( unsigned int ) deletionCounters.learnedSizeAdjustConfl;
     
     statistics( afterPreprocessing( numberOfVariables() - numberOfAssignedLiterals(), numberOfClauses() ) );
+    
     while( hasUndefinedLiterals() )
     {
         /*
@@ -160,7 +166,8 @@ Solver::solve()
         
         while( hasNextVariableToPropagate() )
         {
-            Variable* variableToPropagate = getNextVariableToPropagate();            
+            nextValueOfPropagation--;
+            Variable* variableToPropagate = getNextVariableToPropagate();
             propagate( variableToPropagate );
 
             if( conflictDetected() )
@@ -173,7 +180,8 @@ Solver::solve()
                     return false;
                 }
                 
-                analyzeConflict();
+                if( !analyzeConflict() )
+                    return false;
                 minisatHeuristic.variableDecayActivity();                
                 assert( hasNextVariableToPropagate() || getCurrentDecisionLevel() == 0 );
             }
@@ -192,7 +200,7 @@ Solver::propagate(
     Variable* variable )
 {
     assert( "Variable to propagate has not been set." && variable != NULL );
-    trace( solving, 2, "Propagating: %s.\n", toString( *variable ).c_str() );
+    trace_msg( solving, 2, "Propagating: " << *variable << " as " << ( variable->isTrue() ? "true" : "false" ) );
     
     Literal complement = Literal::createOppositeFromAssignedVariable( variable );
     
@@ -475,5 +483,54 @@ Solver::updateActivity(
         }
 
         deletionCounters.increment *= 1e-20;
+    }
+}
+
+void
+Solver::simplifyOnRestart()
+{
+    if( variables.numberOfAssignedLiterals() == assignedVariablesAtLevelZero || nextValueOfPropagation > 0 )
+        return;
+
+    removeSatisfied( learnedClauses );    
+    //Maybe in future we want to disable this function.
+    removeSatisfied( clauses );
+
+    assignedVariablesAtLevelZero = variables.numberOfAssignedLiterals();
+    nextValueOfPropagation = literalsInClauses + literalsInLearnedClauses;
+}
+
+void
+Solver::removeSatisfied(
+    vector< Clause* >& clauses )
+{
+    assert( currentDecisionLevel == 0 );
+    for( unsigned int i = 0; i < clauses.size(); )
+    {
+        assert_msg( clauses[ i ] != NULL, "Current clause is NULL" );
+        Clause* current = clauses[ i ];
+        uint64_t size = current->size();
+        if( current->removeSatisfiedLiterals() )
+        {
+            current->detachClause();            
+            if( current->isLearned() )
+                literalsInLearnedClauses -= size;
+            else
+                literalsInClauses -= size;
+            assert( !current->isLocked() );
+            delete current;
+            clauses[ i ] = clauses.back();            
+            clauses.pop_back();            
+        }
+        else
+        {
+            ++i;
+            uint64_t newsize = current->size();
+            size -= newsize;
+            if( current->isLearned() )
+                literalsInLearnedClauses -= size;
+            else
+                literalsInClauses -= size;
+        }
     }
 }

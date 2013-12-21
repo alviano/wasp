@@ -170,12 +170,12 @@ using namespace std;
             unsigned int minDeletion;
             unsigned int maxDeletion;
             
-            unsigned int shrink;
-            unsigned int shrinkedClauses;
-            unsigned int shrinkedLiterals;
+            uint64_t shrink;
+            uint64_t shrinkedClauses;
+            uint64_t shrinkedLiterals;
             
-            unsigned int max_literals; 
-            unsigned int tot_literals;
+            uint64_t max_literals; 
+            uint64_t tot_literals;
             
             void printStatistics()
             {

@@ -39,7 +39,7 @@ class Variable;
 class Comparator
 {
 public:
-    inline bool operator()(const Variable* n1, const Variable* n2 ) const;
+    inline bool operator()( const Variable* n1, const Variable* n2 ) const;
 };
 
 //typedef fibonacci_heap< Variable*, compare< Comparator > >::handle_type heap_handle;
@@ -116,7 +116,7 @@ class Variable
         inline bool hasNextOccurrence( unsigned int sign );
         inline Clause* nextOccurence( unsigned int sign );
         
-        inline long getSignature() const { return signature; }
+        inline uint64_t getSignature() const { return signature; }
         inline Activity& activity() { return act; }
         inline const Activity& activity() const { return act; }
         
@@ -172,7 +172,7 @@ class Variable
          */        
         WatchedList< Clause* > allOccurrences[ 2 ];
         
-        long signature;
+        uint64_t signature;
         
         Activity act;
         
@@ -194,7 +194,7 @@ Variable::Variable(
     inHeap( false ),
     visitedInLearning( 0 )
 {
-    signature = ( long ) 1 << ( ( id - 1 ) & 63 );
+    signature = ( ( uint64_t ) 1 ) << ( ( id - 1 ) & 63 );
 }
 
 
