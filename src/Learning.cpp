@@ -264,7 +264,6 @@ Learning::allMarked(
 void
 Learning::resetVariablesNumberOfCalls()
 {
-    cout << "QU" << endl;
     for( unsigned i = 1; i <= solver.numberOfVariables(); ++i )
     {
         solver.getVariable( i )->activity() = 0;
