@@ -22,7 +22,6 @@
 #include <cassert>
 #include <iostream>
 #include <vector>
-
 using namespace std;
 
 class Clause;
@@ -39,7 +38,7 @@ class Learning
         void onNavigatingLiteral( Literal );
         Clause* onConflict( Literal conflictLiteral, Clause* conflictClause );
         
-        inline void onNewVariable();
+        inline void onNewVariable();        
         
     private:
     
@@ -88,33 +87,24 @@ class Learning
         /**
         * The variables of the current conflict level which have been visited.
         */
-        inline bool isVisitedVariablesEmpty() const
-        {
-            for( unsigned i = 1; i < visitedVariables.size(); ++i )
-            if( visitedVariables[ i ] == numberOfCalls )
-                return false;
-            return true;
-        }
+        bool isVisitedVariablesEmpty() const;
         #endif
 
-        vector< unsigned > visitedVariables;
+        void resetVariablesNumberOfCalls();
+
+//        vector< unsigned > visitedVariables;
         unsigned int pendingVisitedVariables;
         unsigned numberOfCalls;
         
         unsigned int maxDecisionLevel;
         
         unsigned int maxPosition;
-        
-        vector< unsigned int > levels1;
-        vector< unsigned int > levels2;
 };
 
 Learning::Learning( Solver& s ) : solver( s ), decisionLevel( 0 ), learnedClause( NULL ), pendingVisitedVariables( 0 ), numberOfCalls( 0 ), maxDecisionLevel( 0 )
 {
     // variable 0 is not used
-    visitedVariables.push_back( 0 );
-    levels1.push_back( 0 );
-    levels2.push_back( 0 );
+//    visitedVariables.push_back( 0 );
 }
 
 Learning::~Learning()
@@ -129,23 +119,14 @@ Learning::clearDataStructures()
     pendingVisitedVariables = 0;
     if( numberOfCalls == 0 )
     {
-        assert( visitedVariables.size() == levels1.size() );
-        assert( levels1.size() == levels2.size() );
-        for( unsigned i = 1; i < visitedVariables.size(); ++i )
-        {
-            visitedVariables[ i ] = 0;
-            levels1[ i ] = 0;
-            levels2[ i ] = 0;
-        }
+        resetVariablesNumberOfCalls();
     }
 }
 
 void
 Learning::onNewVariable()
 {
-    visitedVariables.push_back( 0 );
-    levels1.push_back( 0 );
-    levels2.push_back( 0 );
+//    visitedVariables.push_back( 0 );
 }
 
 #endif	/* LEARNING_H */

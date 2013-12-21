@@ -23,6 +23,17 @@
 
 #include <cassert>
 
+#ifndef NDEBUG
+bool
+Learning::isVisitedVariablesEmpty() const
+{
+    for( unsigned i = 1; i <= solver.numberOfVariables(); ++i )
+        if( solver.getVariable( i )->activity() == numberOfCalls )
+            return false;
+    return true;
+}
+#endif
+
 Clause*
 Learning::onConflict(
     Literal conflictLiteral,
@@ -53,7 +64,7 @@ Learning::onConflict(
     conflictLiteral.getVariable()->getImplicant()->onLearning( this );
 
     trace( learning, 2, "Conflict literal: %s.\n", toString( conflictLiteral ).c_str() );
-    assert( conflictLiteral.getVariable()->getId() < visitedVariables.size() && visitedVariables[ conflictLiteral.getVariable()->getId() ] == numberOfCalls );
+    assert( conflictLiteral.getVariable()->visited() == numberOfCalls );
     solver.startIterationOnAssignedVariable();
     
     //If there is only one element, this element is the first UIP.
@@ -110,7 +121,7 @@ Learning::getNextLiteralToNavigate()
         solver.unrollLastVariable();
         assert( next.isUndefined() );
 
-        if( visitedVariables[ next.getVariable()->getId() ] == numberOfCalls )
+        if( next.getVariable()->visited() == numberOfCalls )
         {
             --pendingVisitedVariables;
             return next;
@@ -124,15 +135,10 @@ Learning::addLiteralInLearnedClause(
 {
     assert( "Learned clause is not initialized." && learnedClause != NULL );
 
-    if( visitedVariables[ literal.getVariable()->getId() ] != numberOfCalls )
+    if( literal.getVariable()->visited() != numberOfCalls )
     {
-        visitedVariables[ literal.getVariable()->getId() ] = numberOfCalls;
-        assert( !literal.isUndefined() );
-        
-        if( levels1[ literal.getDecisionLevel() ] != numberOfCalls )
-            levels1[ literal.getDecisionLevel() ] = numberOfCalls;            
-        else
-            levels2[ literal.getDecisionLevel() ] = numberOfCalls;
+        literal.getVariable()->visited() = numberOfCalls;
+        assert( !literal.isUndefined() );        
         
         if( literal.getDecisionLevel() > maxDecisionLevel )
         {
@@ -147,9 +153,9 @@ void
 Learning::addLiteralToNavigate( 
     Literal literal )
 {
-    if( visitedVariables[ literal.getVariable()->getId() ] != numberOfCalls )
+    if( literal.getVariable()->visited() != numberOfCalls )
     {
-        visitedVariables[ literal.getVariable()->getId() ] = numberOfCalls;
+        literal.getVariable()->visited() = numberOfCalls;
         ++pendingVisitedVariables;    
     }
 }
@@ -185,9 +191,8 @@ Learning::simplifyLearnedClause(
     
     for( unsigned int i = 1; i < learnedClause.size(); )
     {
-        assert( levels1[ learnedClause.getAt( i ).getVariable()->getDecisionLevel() ] == numberOfCalls );
         trace_msg( learning, 5, "Considering literal " << learnedClause.getAt( i ) );
-        if( levels2[ learnedClause.getAt( i ).getVariable()->getDecisionLevel() ] == numberOfCalls && allMarked( learnedClause.getAt( i ).getVariable()->getImplicant() ) )
+        if( allMarked( learnedClause.getAt( i ).getVariable()->getImplicant() ) )
         {
             trace_msg( learning, 5, "Removing literal " << learnedClause.getAt( i ) );
             learnedClause.swapLiteralsNoWatches( i, learnedClause.size() - 1 );
@@ -200,7 +205,7 @@ Learning::simplifyLearnedClause(
         
     }
     
-    if( levels2[ learnedClause.getAt( 0 ).getVariable()->getDecisionLevel() ] == numberOfCalls && allMarked( learnedClause.getAt( 0 ).getVariable()->getImplicant() ) )
+    if( allMarked( learnedClause.getAt( 0 ).getVariable()->getImplicant() ) )
     {
         trace_msg( learning, 5, "Removing literal " << learnedClause.getAt( 0 ) );
         learnedClause.swapLiteralsNoWatches( 0, learnedClause.size() - 1 );
@@ -235,12 +240,12 @@ Learning::allMarked(
     {
         trace_msg( learning, 5, "Considering literal " << clause->getAt( i ) << " in position " << i );
 
-        if( visitedVariables[ clause->getAt( i ).getVariable()->getId() ] != numberOfCalls )
+        if( clause->getAt( i ).getVariable()->visited() != numberOfCalls )
         {
             if( allMarked( clause->getAt( i ).getVariable()->getImplicant() ) )
             {
                 trace_msg( learning, 5, "Literal " << clause->getAt( i ) << " set as visited" );
-                visitedVariables[ clause->getAt( i ).getVariable()->getId() ] = numberOfCalls;
+                clause->getAt( i ).getVariable()->visited() = numberOfCalls;
             }
             else
             {
@@ -254,4 +259,14 @@ Learning::allMarked(
     }
     
     return true;
+}
+
+void
+Learning::resetVariablesNumberOfCalls()
+{
+    cout << "QU" << endl;
+    for( unsigned i = 1; i <= solver.numberOfVariables(); ++i )
+    {
+        solver.getVariable( i )->activity() = 0;
+    }
 }

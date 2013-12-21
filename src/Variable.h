@@ -24,9 +24,9 @@
 #include "util/Constants.h"
 #include "WatchedList.h"
 #include "util/Assert.h"
-#include <boost/heap/fibonacci_heap.hpp>
+//#include <boost/heap/fibonacci_heap.hpp>
 using namespace std;
-using namespace boost::heap;
+//using namespace boost::heap;
 
 class Clause;
 class HeuristicCounterForLiteral;
@@ -125,6 +125,9 @@ class Variable
         
         inline void setInHeap( bool v ){ inHeap = v; }
         inline bool isInHeap(){ return inHeap; }
+        
+        inline unsigned int& visited(){ return visitedInLearning; }
+        inline const unsigned int& visited() const{ return visitedInLearning; }
 
     private:
 
@@ -175,6 +178,8 @@ class Variable
         
         heap_handle handle;
         bool inHeap;
+        
+        unsigned int visitedInLearning;
 };
 
 bool Comparator::operator()( const Variable* v1, const Variable* v2 ) const{ return v1->activity() > v2->activity(); }
@@ -186,7 +191,8 @@ Variable::Variable(
     truthValue( UNDEFINED ),
     implicant( NULL ),
     act( 0.0 ),
-    inHeap( false )
+    inHeap( false ),
+    visitedInLearning( 0 )
 {
     signature = ( long ) 1 << ( ( id - 1 ) & 63 );
 }

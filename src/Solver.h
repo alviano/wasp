@@ -65,6 +65,7 @@ class Solver
         bool addClauseFromModelAndRestart();
         
         inline Literal getLiteral( int lit );
+        inline Variable* getVariable( unsigned int var );
         
         inline Variable* getNextVariableToPropagate();
         inline bool hasNextVariableToPropagate() const;        
@@ -267,6 +268,14 @@ Solver::getLiteral(
 {
     assert( "Lit is out of range." && static_cast< unsigned >( abs( lit ) ) <= variables.numberOfVariables() && abs( lit ) > 0);
     return lit > 0 ? Literal( variables[ lit ], POSITIVE ) : Literal( variables[ -lit ], NEGATIVE );
+}
+
+Variable*
+Solver::getVariable(
+    unsigned int var )
+{
+    assert_msg( ( var > 0 && var <= variables.numberOfVariables() ), "Variable id " << var << " is greater than the number of variables: " << numberOfVariables() );
+    return variables[ var ];
 }
 
 void
