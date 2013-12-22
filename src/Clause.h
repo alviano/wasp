@@ -52,6 +52,9 @@ class Clause
         inline bool hasBeenDeleted() const { return literals[ 0 ] == Literal::null; }
         inline void addLiteral( Literal literal );
 
+        inline bool contains( Literal literal );
+        inline bool containsAnyComplementOf( Clause* clause );
+
         inline void attachClause();
         inline void attachClause( unsigned int firstWatch, unsigned int secondWatch );
         inline void attachClauseToAllLiterals();
@@ -522,6 +525,26 @@ Clause::removeSatisfiedLiterals()
         }        
     }
         
+    return false;
+}
+
+bool
+Clause::contains(
+    Literal literal )
+{
+    for( unsigned k = 0; k < literals.size(); ++k )
+        if( literals[ k ] ==  literal )
+            return true;
+    return false;
+}
+
+bool
+Clause::containsAnyComplementOf(
+    Clause* clause )
+{
+    for( unsigned i = 0; i < clause->size(); ++i )
+        if( contains( clause->getAt( i ).getOppositeLiteral() ) )
+            return true;
     return false;
 }
 

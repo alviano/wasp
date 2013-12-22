@@ -35,9 +35,15 @@ class Satelite
 
     private:
         inline bool subset( const Clause* c1, const Clause* c2 );
+        bool isSubsumed( Clause* clause, Literal literal );
         void findSubsumed( const Clause* clause );
         void findSubsumedForSelfSubsumption( const Clause* clause, Literal literal );
         void selfSubsume( Clause* clause );
+        bool tryToEliminate( Variable* variable );
+        bool tryToEliminateByDefinition( Variable* variable );
+        bool tryToEliminateByDefinition( Variable* variable, unsigned sign );
+        bool tryToSubstitute( Variable* variable, unsigned sign, Clause* result );
+
         Solver& solver;
         vector< Clause* > strengthened;
         unordered_set< Clause* > inserted;

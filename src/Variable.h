@@ -115,7 +115,8 @@ class Variable
         inline void startIterationOverOccurrences( unsigned int sign );
         inline bool hasNextOccurrence( unsigned int sign );
         inline Clause* nextOccurence( unsigned int sign );
-        
+        inline Clause* getOccurrence( unsigned int idx, unsigned int sign ) { return allOccurrences[ sign ][ idx ]; }
+
         inline uint64_t getSignature() const { return signature; }
         inline Activity& activity() { return act; }
         inline const Activity& activity() const { return act; }

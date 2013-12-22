@@ -86,6 +86,8 @@ class Literal
         inline void startIterationOverOccurrences();
         inline bool hasNextOccurrence();
         inline Clause* nextOccurence();
+
+        inline Clause* getOccurrence( unsigned int idx ) { return getVariable()->getOccurrence( idx, getSign() ); }
         
 	private:
         

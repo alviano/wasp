@@ -37,6 +37,7 @@ class WatchedList : private vector< T >
 
 	    using vector< T >::size;
         using vector< T >::empty;
+        using vector< T >::operator[];
         
         inline void add( T element );
         inline void remove( T element );
