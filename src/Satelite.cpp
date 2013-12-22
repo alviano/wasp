@@ -19,7 +19,6 @@
 #include "Satelite.h"
 #include "Solver.h"
 
-// TODO: remove the suffix Malvi
 bool
 Satelite::isSubsumed(
     Clause* clause,
