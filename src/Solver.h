@@ -158,6 +158,9 @@ class Solver
         void simplifyOnRestart();
         void removeSatisfied( vector< Clause* >& clauses );
         
+        inline Clause* newClause();
+        inline void releaseClause( Clause* clause );
+        
     private:
         inline Variable* addVariableInternal();
         
@@ -193,6 +196,8 @@ class Solver
         
         uint64_t literalsInClauses;
         uint64_t literalsInLearnedClauses;
+        
+        vector< Clause* > poolOfClauses;
 
         struct DeletionCounters
         {
@@ -345,13 +350,15 @@ Solver::addClause(
         }
         else
         {
-            delete clause;
+            releaseClause( clause );
+//            delete clause;
             return true;
         }
     }
 
     conflictAtLevelZero = true;
-    delete clause;
+    releaseClause( clause );
+//    delete clause;
     return false;
 }
 
@@ -422,7 +429,8 @@ Solver::deleteLearnedClause(
     trace_msg( solving, 4, "Deleting learned clause " << *learnedClause );
     learnedClause->detachClause();
     literalsInLearnedClauses -= learnedClause->size();
-    delete learnedClause;
+    releaseClause( learnedClause );
+//    delete learnedClause;
 //    learnedClauses.erase( iterator );
 }
 
@@ -439,7 +447,8 @@ Solver::deleteClause(
     trace_msg( solving, 6, "Swapping clause " << *clause << " and " << *clauses[ position ] );
     clauses[ position ]->setPositionInSolver( position );
     clauses.pop_back();
-    delete clause;
+//    delete clause;
+    releaseClause( clause );
 }
 
 unsigned int
@@ -497,7 +506,8 @@ Solver::analyzeConflict()
     {
         doRestart();
         assignLiteral( learnedClause->getAt( 0 ) );        
-        delete learnedClause;
+//        delete learnedClause;
+        releaseClause( learnedClause );
 
         clearConflictStatus();
         while( hasNextVariableToPropagate() )
@@ -689,6 +699,29 @@ Solver::setRestart(
     
     assert( r != NULL );    
     restart = r;
+}
+
+Clause*
+Solver::newClause()
+{
+    if( poolOfClauses.empty() )
+    {
+        unsigned int bufferSize = 20;
+        for( unsigned int i = 0; i < bufferSize; i++ )
+            poolOfClauses.push_back( new Clause() );       
+    }
+    
+    Clause* back = poolOfClauses.back();
+    poolOfClauses.pop_back();
+    return back;
+}
+
+void
+Solver::releaseClause(
+    Clause* clause )
+{
+    clause->free();    
+    poolOfClauses.push_back( clause );
 }
 
 #endif	/* SOLVER_H */

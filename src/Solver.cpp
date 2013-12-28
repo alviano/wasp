@@ -37,6 +37,13 @@ Solver::~Solver()
         delete learnedClauses.back();
         learnedClauses.pop_back();
     }
+    
+    while( !poolOfClauses.empty() )
+    {
+        assert( poolOfClauses.back() );
+        delete poolOfClauses.back();
+        poolOfClauses.pop_back();
+    }
         
     if( outputBuilder != NULL )
         delete outputBuilder;

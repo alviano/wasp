@@ -80,7 +80,8 @@ Dimacs::readClause(
 
     unordered_set< int > tempSet;    
     bool trivial = false;
-    Clause* clause = new Clause();
+//    Clause* clause = new Clause();
+    Clause* clause = solver.newClause();
 
     do
     {
@@ -108,7 +109,8 @@ Dimacs::readClause(
     else
     {
         trace_msg( parser, 1, "Deleting clause " << *clause << " because is trivial" );
-        delete clause;
+//        delete clause;
+        solver.releaseClause( clause );
     }
     
     return true;
