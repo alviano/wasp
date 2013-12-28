@@ -72,7 +72,11 @@ Dimacs::readClause(
     readNextLiteral( input, next );
 
     if( next == 0 )
-        ErrorMessage::errorDuringParsing( "Empty clause are not allowed." );
+    {
+        solver.foundEmptyClause();
+        return false;
+    }
+//        ErrorMessage::errorDuringParsing( "Empty clause are not allowed." );
 
     unordered_set< int > tempSet;    
     bool trivial = false;

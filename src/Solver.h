@@ -95,6 +95,7 @@ class Solver
         
         inline void setAChoice( Literal choice );        
         
+        inline void foundEmptyClause(){ conflictAtLevelZero = true; }
         inline bool analyzeConflict();
         inline void clearConflictStatus();
         inline void chooseLiteral();
