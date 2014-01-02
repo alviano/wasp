@@ -126,9 +126,10 @@ class Clause
         bool learned;
 };
 
-Clause::Clause()
+Clause::Clause(): lastSwapIndex(1), signature(0), act(0.0), learned(false)
 {
-    free();
+    literals.reserve(8);
+    //free();
 }
 
 //Clause::Clause(
