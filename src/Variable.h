@@ -107,6 +107,7 @@ class Variable
         inline unsigned int numberOfPositiveWatchedClauses() const;
         inline unsigned int numberOfWatchedClauses( unsigned int sign ) const;
         inline unsigned int numberOfOccurrences( unsigned int sign ) const;
+        inline unsigned int numberOfOccurrences() const;
         
         inline void unitPropagationStart();
         inline bool unitPropagationHasNext();
@@ -244,7 +245,7 @@ Variable::setTruthValue(
      * If truthValue is not undefined we assume that there is a conflict.
      * The solver should check if the variable has been already assigned.
      */
-//    assert_msg( truthValue != truth, "A variable is assigned twice with the same truthValue."  );
+    assert_msg( truthValue != truth, "A variable is assigned twice with the same truthValue."  );
     return false;
 }
 
@@ -404,6 +405,12 @@ Variable::numberOfOccurrences(
 {
     assert_msg( sign <= 1, "The sign must be 0 or 1. Found value " << sign );
     return allOccurrences[ sign ].size();
+}
+
+unsigned int
+Variable::numberOfOccurrences() const
+{
+    return allOccurrences[ NEGATIVE ].size() + allOccurrences[ POSITIVE ].size();
 }
 
 void

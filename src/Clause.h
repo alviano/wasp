@@ -49,7 +49,7 @@ class Clause
         inline Literal getAt( unsigned idx ) const { assert( idx < literals.size() ); return literals[ idx ]; }
         inline void flipLiteralAt( unsigned idx ) { assert( idx < literals.size() ); literals[ idx ] = literals[ idx ].getOppositeLiteral(); }
         inline void markAsDeleted() { literals[ 0 ] = Literal::null; }
-        inline bool hasBeenDeleted() const { return literals[ 0 ] == Literal::null; }
+        inline bool hasBeenDeleted() const { assert( !literals.empty() ); return literals[ 0 ] == Literal::null; }
         inline void addLiteral( Literal literal );
 
         inline bool contains( Literal literal );
@@ -96,6 +96,7 @@ class Clause
         inline bool isLearned() const { return learned; }
         
         inline bool removeSatisfiedLiterals();
+        inline bool removeDuplicatesAndCheckIfTautological();
         
     protected:
         vector< Literal > literals;
@@ -119,6 +120,8 @@ class Clause
         void notifyImplication( Solver& solver );
 
         inline void swapLiterals( unsigned int pos1, unsigned int pos2 );
+        
+        inline void recomputeSignature();
         
         uint64_t signature;
         unsigned int positionInSolver;
@@ -246,6 +249,8 @@ Clause::removeLiteral(
     literal.eraseClause( this );
     assert( literals.back() == literal || literals.back() == literals[ i ] );
     literals.pop_back();
+    
+    recomputeSignature();
 }
 
 bool
@@ -546,6 +551,54 @@ Clause::containsAnyComplementOf(
         if( contains( clause->getAt( i ).getOppositeLiteral() ) )
             return true;
     return false;
+}
+
+inline bool literalComparator( Literal l1, Literal l2 ){ return l1.getVariable() < l2.getVariable(); }
+
+bool
+Clause::removeDuplicatesAndCheckIfTautological()
+{
+    sort( literals.begin(), literals.end(), literalComparator ); 
+    
+    Literal previousLiteral = literals[ 0 ];
+    
+    unsigned int i = 1;
+    unsigned int j = 1;
+    while( i < literals.size() )
+    {
+        if( previousLiteral != literals[ i ] )
+        {
+            //The same variable with two different polarities: clause is tautological
+            if( previousLiteral.getVariable() == literals[ i ].getVariable() )
+            {
+                //TAUTOLOGICAL
+	            return true;
+			}
+			else
+			{
+                literals[ j ] = literals[ i ];
+         	   	++j;
+				previousLiteral = literals[ i ];
+			}
+        }
+        
+        ++i;
+    }
+
+	literals.resize( j );
+    
+    if( i != j )
+        recomputeSignature();
+
+    return false;
+}
+
+void
+Clause::recomputeSignature()
+{
+    signature = 0;    
+    for( unsigned int i = 0; i < literals.size(); i++ )    
+         signature |= literals[ i ].getVariable()->getSignature();    
 }
 
 #endif

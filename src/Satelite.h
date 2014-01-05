@@ -23,7 +23,10 @@
 using namespace std;
 
 #include "util/Assert.h"
+#include "util/Trace.h"
+#include "util/Options.h"
 #include "Clause.h"
+#include "stl/UnorderedSet.h"
 
 class Satelite
 {
@@ -32,8 +35,11 @@ class Satelite
         inline ~Satelite();
         bool simplify();
         inline void onStrengtheningClause( Clause* clause );
-
+        inline void onAddingVariable( Variable* var ){ touched.push_back( var ); }
+        inline void onDeletingClause( Clause* clause );        
+        
     private:
+        inline void onAddingClause( Clause* clause );
         inline bool subset( const Clause* c1, const Clause* c2 );
         bool isSubsumed( Clause* clause, Literal literal );
         void findSubsumed( const Clause* clause );
@@ -43,16 +49,27 @@ class Satelite
         bool tryToEliminateByDefinition( Variable* variable );
         bool tryToEliminateByDefinition( Variable* variable, unsigned sign );
         bool tryToSubstitute( Variable* variable, unsigned sign, Clause* result );
+        
+        inline void touchVariablesInClause( Clause* clause );
+        
+        bool propagateTopLevel();        
 
         Solver& solver;
         vector< Clause* > strengthened;
-        unordered_set< Clause* > inserted;
+        unordered_set< Clause* > insertedInStrengthened;
         
-        vector< Literal > trueLiterals;        
+        vector< Literal > trueLiterals;
+        vector< Variable* > touched;
+        vector< Clause* > added;        
+        
+        unordered_set< Variable* > insertedInTouched;
+        bool ok;
+        
+        bool active;
 };
 
 Satelite::Satelite(
-    Solver& s ) : solver( s )
+    Solver& s ) : solver( s ), ok( true ), active( false )
 {
 }
 
@@ -78,10 +95,56 @@ void
 Satelite::onStrengtheningClause(
     Clause* clause )
 {
-    assert( clause != NULL );
-    if( inserted.insert( clause ).second )
-        strengthened.push_back( clause );
+    if( active )
+    {
+        assert( clause != NULL );
+        if( insertedInStrengthened.insert( clause ).second )
+        {
+            trace_msg( satelite, 3, "Strengthening clause " << *clause );
+            strengthened.push_back( clause );
+            touchVariablesInClause( clause );
+        }
+    }
 }
 
+void
+Satelite::onDeletingClause(
+    Clause* clause )
+{
+    if( active )
+    {
+        trace_msg( satelite, 3, "Deleting clause " << *clause );
+        touchVariablesInClause( clause );
+    }
+}
+
+void
+Satelite::touchVariablesInClause(
+    Clause* clause )
+{
+    assert( !clause->hasBeenDeleted() );
+    
+    for( unsigned int j = 0; j < clause->size(); j++ )
+    {
+        Variable* variable = clause->getAt( j ).getVariable();
+        
+        if( variable->isUndefined() && variable->numberOfOccurrences() > 0 )
+        {
+            if( insertedInTouched.insert( variable ).second )
+                touched.push_back( variable );
+        }
+    }
+}
+
+void
+Satelite::onAddingClause(
+    Clause* clause )
+{
+    assert( active );
+    
+    trace_msg( satelite, 3, "Adding clause " << *clause );
+    added.push_back( clause );
+    touchVariablesInClause( clause );
+}
 
 #endif

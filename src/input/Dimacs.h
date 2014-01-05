@@ -50,7 +50,7 @@ class Dimacs
 
         bool readClause( Istream& input );
 
-        inline void readNextLiteral( Istream& input, int& next );
+        inline bool readNextLiteral( Istream& input, int& next );
 
         Solver& solver;
         
@@ -59,13 +59,12 @@ class Dimacs
         unsigned int numberOfVariables;
 };
 
-void
+bool
 Dimacs::readNextLiteral(
     Istream& input,
     int& next )
 {
-    if( !input.read( next ) )
-        ErrorMessage::errorDuringParsing( "Unexpected symbol." );
+    return ( input.read( next ) || input.eof() );    
 }
 
 #endif

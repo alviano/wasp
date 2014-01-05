@@ -144,6 +144,7 @@ class Solver
         inline void decrementActivity(){ deletionCounters.increment *= deletionCounters.decrement; }
         inline void onLearning( Clause* learnedClause );
         inline bool hasToDelete();
+        inline void markClauseForDeletion( Clause* clause ){ satelite->onDeletingClause( clause ); clause->markAsDeleted(); }
         
         void printProgram() const;
         
@@ -257,6 +258,7 @@ Solver::addVariableInternal()
     assert( variables.numberOfVariables() == variable->getId() );
     minisatHeuristic.onNewVariable( variable );
     learning.onNewVariable();
+    satelite->onAddingVariable( variable );
     return variable;
 }
 

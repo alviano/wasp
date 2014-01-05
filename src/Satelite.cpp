@@ -55,7 +55,7 @@ Satelite::findSubsumed(
         {
             trace_msg( satelite, 1, "Clause " << *clause << " subsumes clause " << *current );
             current->detachClauseToAllLiterals( literal );
-            current->markAsDeleted();
+            solver.markClauseForDeletion( current );
         }
     }
 }
@@ -82,7 +82,7 @@ Satelite::findSubsumedForSelfSubsumption(
             {
                 trueLiterals.push_back( current->getAt( 0 ) );
                 current->detachClauseToAllLiterals( Literal::null );
-                current->markAsDeleted();
+                solver.markClauseForDeletion( current );
             }
             else
             {
@@ -105,56 +105,135 @@ Satelite::selfSubsume(
         findSubsumedForSelfSubsumption( clause, clause->getAt( i ) );
         trace_msg( satelite, 1, "Restoring literal " << clause->getAt( i ) );
         clause->flipLiteralAt( i );
-    }    
+    }
 }
 
 bool
 Satelite::simplify()
 {
-    for( unsigned int i = 0; i < solver.numberOfClauses(); ++i )
-    {
-        Clause* current = solver.clauseAt( i );
-        if( !current->hasBeenDeleted() )
-            selfSubsume( current );
-    }
-
-    do
-    {
-        while( !trueLiterals.empty() )
-        {
-            Literal lit = trueLiterals.back();
-            trueLiterals.pop_back();
-            if( !lit.isTrue() )
-            {
-                if( !solver.propagateLiteralAsDeterministicConsequenceSatelite( lit ) )
-                    return false;
-            }
-        }
-
-        while( !strengthened.empty() )
-        {
-            Clause* clause = strengthened.back();            
-            strengthened.pop_back();
-            inserted.erase( clause );
-            
-            if( !clause->hasBeenDeleted() )
-                selfSubsume( clause );
-        }
-        
-        // TODO: check position of variable elimination and limit to "reasonable" variables!
-        for( unsigned i = 1; i <= solver.numberOfVariables(); ++i )
-        {
-            tryToEliminate( solver.getVariable( i ) );
-        }
-    } while( !trueLiterals.empty() );
+    active = true;
+    
+    added.reserve( solver.numberOfClauses() );
     
     for( unsigned int i = 0; i < solver.numberOfClauses(); ++i )
     {
         Clause* current = solver.clauseAt( i );
-        if( !current->hasBeenDeleted() )
-            findSubsumed( current );
+        assert( !current->hasBeenDeleted() );        
+        added.push_back( current );
     }
+    
+    do
+    {
+        vector< bool > seenLiterals( 2 * solver.numberOfVariables(), false );
 
+        vector< Clause* > S0; //From minisat paper
+        vector< Clause* > S1;
+        unordered_set< Clause* > insertedInS0;
+        unordered_set< Clause* > insertedInS1;
+        
+        for( unsigned int i = 0; i < added.size(); i++ )
+        {
+            Clause* c = added[ i ];
+            
+            if( c->hasBeenDeleted() )
+                continue;
+
+            for( unsigned int j = 0; j < c->size(); j++ )
+            {
+                Literal lit = c->getAt( j );
+                assert_msg( lit.getVariable()->getId() > 0, "Literal " << lit << " has id " << lit.getVariable()->getId() );
+                unsigned int litId = 2 * ( lit.getVariable()->getId() ) - lit.getSign() - 1;
+                assert_msg( litId < seenLiterals.size(), "Literal id is " << litId << " while the total number of literals is " << seenLiterals.size() );
+                if( seenLiterals[ litId ] )
+                    continue;
+
+                seenLiterals[ litId ] = true;
+
+                for( unsigned int k = 0; k < lit.numberOfOccurrences(); k++ )
+                {
+                    Clause* current = lit.getOccurrence( k );
+                    assert( !current->hasBeenDeleted() );
+                    if( insertedInS0.insert( current ).second )
+                    {
+                        S0.push_back( current );
+                    }
+                }
+
+                Literal oppositeLiteral = lit.getOppositeLiteral();
+                for( unsigned int k = 0; k < oppositeLiteral.numberOfOccurrences(); k++ )
+                {
+                    Clause* current = oppositeLiteral.getOccurrence( k );
+                    assert( !current->hasBeenDeleted() );
+                    if( insertedInS1.insert( current ).second )
+                    {
+                        S1.push_back( current );
+                    }
+                }
+            }
+
+            if( insertedInS1.insert( c ).second )
+                S1.push_back( c );
+
+        }
+        added.clear();
+
+        for( unsigned int i = 0; i < S1.size(); i++ )
+        {
+            Clause* current = S1[ i ];
+            if( !current->hasBeenDeleted() )
+                selfSubsume( current );
+        }
+
+        if( !propagateTopLevel() )
+            return false;        
+
+        while( !strengthened.empty() )
+        {
+            vector< Clause* > strengthenedCopy; 
+            strengthened.swap( strengthenedCopy );
+            assert( strengthened.empty() );
+            insertedInStrengthened.clear();
+
+            for( unsigned int i = 0; i < strengthenedCopy.size(); i++ )
+            {
+                Clause* current = strengthenedCopy[ i ];
+                if( current->hasBeenDeleted() )
+                    continue;
+
+                if( insertedInS1.find( current ) == insertedInS1.end() )
+                    selfSubsume( current );
+            }
+
+            if( !propagateTopLevel() )
+                return false;
+        }
+        
+        for( unsigned int i = 0; i < S0.size(); ++i )
+        {
+            Clause* current = S0[ i ];
+            if( !current->hasBeenDeleted() )
+                findSubsumed( current );
+        }        
+        
+        vector< Variable* > touchedCopy;
+        do
+        {
+            touchedCopy.clear();
+            touched.swap( touchedCopy );        
+            insertedInTouched.clear();
+            assert( touched.empty() );
+            
+            for( unsigned int i = 0; i < touchedCopy.size(); i++ )
+            {
+                tryToEliminate( touchedCopy[ i ] );
+                if( !ok )
+                    return false;
+            }
+        } while( !touched.empty() );        
+
+    } while( !added.empty() );    
+    
+    active = false;
     return true;
 }
 
@@ -162,8 +241,10 @@ bool
 Satelite::tryToEliminate(
     Variable* variable )
 {
+    trace_msg( satelite, 2, "Trying to eliminate variable " << *variable );
     if( !variable->isUndefined() )
         return false;
+
     if( variable->numberOfOccurrences( POSITIVE ) >= 8 && variable->numberOfOccurrences( NEGATIVE ) >= 8 )
         return false;
     
@@ -181,7 +262,7 @@ Satelite::tryToEliminate(
     
     if( tryToEliminateByDefinition( variable ) )
         return true;
-    
+        
     return false;
 }
 
@@ -201,13 +282,16 @@ Satelite::tryToEliminateByDefinition(
             Literal literal = clause->getAt( 0 ).getVariable() == variable ? clause->getAt( 1 ).getOppositeLiteral() : clause->getAt( 0 ).getOppositeLiteral();
             negatedDefinition.addLiteral( literal );
         }
-    }
+    }    
     
     for( unsigned i = 0; i < negatedDefinition.size(); ++i )
     {
         if( isSubsumed( &negatedDefinition, negatedDefinition.getAt( i ) ) )
         {
-            // TODO: propagate at level 0
+            // DONE: propagate at level 0
+            //Propagate the opposite literal
+            Literal literal( variable, 1 - sign );
+            ok = solver.propagateLiteralAsDeterministicConsequenceSatelite( literal );
             return true;
         }
     }
@@ -228,54 +312,80 @@ Satelite::tryToEliminateByDefinition(
     if( result == NULL )
         return false;
     
-    return tryToSubstitute( variable, sign, result );
+    Clause resultCopy;
+    
+    for( unsigned int i = 0; i < result->size(); i++ )
+    {
+        Literal lit = result->getAt( i );
+        if( lit.getVariable() != variable )
+        {
+            resultCopy.addLiteral( lit );
+        }
+    }    
+    
+    return tryToSubstitute( variable, sign, &resultCopy );
 }
 
 bool
 Satelite::tryToSubstitute(
     Variable* variable,
     unsigned sign,
-    Clause* result )
+    Clause* definition )
 {
     assert( POSITIVE == 0 && NEGATIVE == 1 );
 
+    assert( trueLiterals.empty() );
+    trace_msg( satelite, 5, "Trying to substitute " << *variable << ". Its definition is " << *definition );
     vector< Clause* > newClauses;
     
-    for( unsigned i = 0; i < result->size(); ++i )
+    for( unsigned i = 0; i < definition->size(); ++i )
     {
-        if( result->getAt( i ).getVariable() == variable )
-            continue;
-        
+//        if( definition->getAt( i ).getVariable() == variable )
+//            continue;
+
         for( unsigned j = 0; j < variable->numberOfOccurrences( sign ); ++j )
-        {
+        {            
             Clause* clause = variable->getOccurrence( j, sign );
-            if( clause->contains( result->getAt( i ) ) )
+            if( clause->contains( definition->getAt( i ) ) )
                 continue;
 
             Clause* newClause = new Clause();
             for( unsigned k = 0; k < clause->size(); ++k )
-                newClause->addLiteral( clause->getAt( k ) == Literal( variable, sign ) ? result->getAt( i ).getOppositeLiteral() : clause->getAt( k ) );
+                newClause->addLiteral( clause->getAt( k ) == Literal( variable, sign ) ? definition->getAt( i ).getOppositeLiteral() : clause->getAt( k ) );
             
-            // TODO: remove duplicates and destroy if tautological
-            newClauses.push_back( newClause );
+            // DONE: remove duplicates and destroy if tautological
+            #ifndef NDEBUG
+            bool tautological =
+            #endif
+            newClause->removeDuplicatesAndCheckIfTautological();
+            
+            assert_msg( !tautological, "Clause " << *newClause << " is tautological" );
+            if( newClause->size() == 1 )
+            {
+                trueLiterals.push_back( newClause->getAt( 0 ) );
+                delete newClause;
+            }
+            else
+                newClauses.push_back( newClause );      
         }
     }
     
     for( unsigned j = 0; j < variable->numberOfOccurrences( 1 - sign ); ++j )
     {
         Clause* clause = variable->getOccurrence( j, 1 - sign );
-        if( clause->containsAnyComplementOf( result ) )
+         
+        if( clause->containsAnyComplementOf( definition ) )        
             continue;
-            
+
         Clause* newClause = new Clause();
         for( unsigned k = 0; k < clause->size(); ++k )
         {
             if( clause->getAt( k ).getVariable() == variable )
             {
-                for( unsigned i = 0; i < result->size(); ++i )
+                for( unsigned i = 0; i < definition->size(); ++i )
                 {
-                    if( result->getAt( i ).getVariable() != variable )
-                        newClause->addLiteral( result->getAt( i ) );
+                    if( definition->getAt( i ).getVariable() != variable )
+                        newClause->addLiteral( definition->getAt( i ) );
                 }
             }
             else
@@ -284,14 +394,58 @@ Satelite::tryToSubstitute(
             }
         }
         
-        // TODO: remove duplicates and destroy if tautological
-        newClauses.push_back( newClause );
+        // DONE: remove duplicates and destroy if tautological
+        if( newClause->removeDuplicatesAndCheckIfTautological() )    
+            delete newClause;        
+        else
+        {
+            if( newClause->size() == 1 )
+            {
+                trueLiterals.push_back( newClause->getAt( 0 ) );
+                delete newClause;
+            }
+            else
+                newClauses.push_back( newClause );
+        }
+    }
+
+    if( newClauses.size() > variable->numberOfOccurrences( POSITIVE ) + variable->numberOfOccurrences( NEGATIVE ) )
+    {
+        trueLiterals.clear();
+        return false;    
     }
     
-    if( newClauses.size() > variable->numberOfOccurrences( POSITIVE ) + variable->numberOfOccurrences( NEGATIVE ) )
-        return false;
+    // DONE: substitute
+    Literal positiveLiteral( variable, POSITIVE );
+    positiveLiteral.startIterationOverOccurrences();
+    while( positiveLiteral.hasNextOccurrence() )
+    {
+        Clause* clause = positiveLiteral.nextOccurence();
+        clause->detachClauseToAllLiterals( positiveLiteral );
+        solver.markClauseForDeletion( clause );
+    }
     
-    // TODO: substitute
+    Literal negativeLiteral( variable, NEGATIVE );
+    negativeLiteral.startIterationOverOccurrences();
+    while( negativeLiteral.hasNextOccurrence() )
+    {
+        Clause* clause = negativeLiteral.nextOccurence();
+        clause->detachClauseToAllLiterals( negativeLiteral );
+        solver.markClauseForDeletion( clause );
+    }
+    
+    for( unsigned int i = 0; i < newClauses.size(); i++ )
+    {
+        Clause* c = newClauses[ i ];
+        assert( c->size() >= 2 );        
+        onAddingClause( c );
+        solver.addClause( c );        
+    }
+    
+    assert_msg( variable->numberOfOccurrences() == 0, "Variable " << *variable << " has been eliminated but has still " << variable->numberOfOccurrences() << " occurrences" );
+    trace_msg( satelite, 2, "Eliminated variable " << *variable );   
+    
+    ok = propagateTopLevel();    
     return true;
 }
 
@@ -299,7 +453,6 @@ bool
 Satelite::tryToEliminateByDefinition(
     Variable* variable )
 {
-    // FIXME: In satelite <= 2 is used. Check why.
     if( variable->numberOfOccurrences( POSITIVE ) <= 1 && variable->numberOfOccurrences( NEGATIVE ) <= 1 )
         return false;
     
@@ -307,4 +460,21 @@ Satelite::tryToEliminateByDefinition(
         return true;
     
     return false;
+}
+
+bool
+Satelite::propagateTopLevel()
+{
+    while( !trueLiterals.empty() )
+    {
+        Literal lit = trueLiterals.back();
+        trueLiterals.pop_back();
+        if( !lit.isTrue() )
+        {
+            if( !solver.propagateLiteralAsDeterministicConsequenceSatelite( lit ) )
+                return false;
+        }
+    }
+    
+    return true;
 }

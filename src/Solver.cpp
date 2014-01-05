@@ -134,7 +134,7 @@ Solver::solve()
     deletionCounters.learnedSizeAdjustConfl = deletionCounters.learnedSizeAdjustStartConfl;
     deletionCounters.learnedSizeAdjustCnt = ( unsigned int ) deletionCounters.learnedSizeAdjustConfl;
     
-    statistics( afterPreprocessing( numberOfVariables() - numberOfAssignedLiterals(), numberOfClauses() ) );
+    statistics( afterPreprocessing( numberOfVariables() - numberOfAssignedLiterals(), numberOfClauses() ) );    
     
     while( hasUndefinedLiterals() )
     {
@@ -278,7 +278,7 @@ Solver::propagateAtLevelZeroSatelite(
         Clause* clause = literal.nextOccurence();
         trace_msg( solving, 5, "Considering clause " << *clause );
         clause->detachClauseToAllLiterals( literal );
-        clause->markAsDeleted();
+        markClauseForDeletion( clause );
     }
 
     assert( !conflictDetected() );
@@ -301,7 +301,7 @@ Solver::propagateAtLevelZeroSatelite(
                 assignLiteral( clause->getAt( 0 ) );
             }
             clause->detachClauseToAllLiterals( Literal::null );
-            clause->markAsDeleted();
+            markClauseForDeletion( clause );
         }
         else
         {

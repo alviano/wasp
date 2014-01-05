@@ -31,7 +31,8 @@ class Istream
         inline bool read( unsigned int& value );
         inline bool read( int& value );
         inline bool read( string& value );
-        inline bool readInfoDimacs( unsigned int& numberOfVariables, unsigned int& numberOfClauses );
+        inline bool readInfoDimacs( unsigned int& numberOfVariables, unsigned int& numberOfClauses );        
+        inline bool eof(){ return buff[ 0 ] == EOF; }
 
     private:
         inline void skipBlanksAndComments();
@@ -49,8 +50,15 @@ void
 Istream::resetBuffer()
 {
     idx = 0;
-    in.read( buff, 2047 );
-    buff[ in.gcount() ] = '\0';
+    if( in )
+    {
+        in.read( buff, 2047 );
+        buff[ in.gcount() ] = '\0';
+    }
+    else
+    {
+        buff[ 0 ] = EOF;
+    }
 }
 
 char

@@ -47,7 +47,7 @@ Dimacs::parse(
 {
     if( !input.readInfoDimacs( numberOfVariables, numberOfClauses ) )
         ErrorMessage::errorDuringParsing( "Unexpected symbol." ); 
-    insertVariables( numberOfVariables );
+    //insertVariables( numberOfVariables );
     readAllClauses( input );
 }
 
@@ -56,9 +56,19 @@ Dimacs::readAllClauses(
     Istream& input )
 {
     trace_msg( parser, 1, "Starting iteration on " << numberOfClauses << " clauses.");
-    for( unsigned int i = 0; i < numberOfClauses; i++ )
-        if( !readClause( input ) )
-            return;    
+    
+    unsigned int numOfClauses = 0;
+//    for( unsigned int i = 0; i < numberOfClauses; i++ )
+    while( readClause( input ) )
+    {
+        numOfClauses++; 
+    }
+
+    if( input.eof() && numOfClauses != numberOfClauses )
+        cerr << "Warning: Read " << numOfClauses << " clauses, expected " << numberOfClauses << " clauses" << endl;
+    
+    if( input.eof() && solver.numberOfVariables() != numberOfVariables )
+        cerr << "Warning: Read " << solver.numberOfVariables() << " variables, expected " << numberOfVariables << " variables" << endl;
 }
 
 bool
@@ -69,7 +79,12 @@ Dimacs::readClause(
     int next;
 
     //read the next literal
-    readNextLiteral( input, next );
+    bool result = readNextLiteral( input, next );
+    if( input.eof() )
+        return false;
+    
+    if( !result )
+        ErrorMessage::errorDuringParsing( "Unexpected symbol." );
 
     if( next == 0 )
         ErrorMessage::errorDuringParsing( "Empty clause are not allowed." );
@@ -80,9 +95,13 @@ Dimacs::readClause(
 
     do
     {
+        while( solver.numberOfVariables() < abs( next ) )
+            solver.addVariable();
+
         //insert the current literal in the set
         bool inserted = !tempSet.insert( next ).second;
-        trace_msg( parser, 2, "Reading " << next );
+        trace_msg( parser, 2, "Reading " << next );        
+        
         Literal literal = solver.getLiteral( next );
 
         //if a literal appears in a clause C with both polarities then C is a tautology
@@ -93,7 +112,9 @@ Dimacs::readClause(
             clause->addLiteral( literal );
 
         //read the next literal
-        readNextLiteral( input, next );
+        bool result = readNextLiteral( input, next );
+        if( !result )
+            ErrorMessage::errorDuringParsing( "Unexpected symbol." );
     } while( next != 0 );
     
     if( !trivial )
