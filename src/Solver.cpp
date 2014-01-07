@@ -188,6 +188,7 @@ Solver::solve()
         }
     }
     
+    completeModel();
     assert_msg( getNumberOfUndefined() == 0, "Found a model with " << getNumberOfUndefined() << " undefined variables." );
     assert_msg( allClausesSatisfied(), "The model found is not correct." );
     
@@ -342,8 +343,7 @@ Solver::allClausesSatisfied() const
     for( ConstClauseIterator it = clauses.begin(); it != clauses.end(); ++it )
     {
         Clause& clause = *( *it );
-
-        if( clause.isUnsatisfied() )
+        if( !clause.isSatisfied() )
             return false;
     }
 

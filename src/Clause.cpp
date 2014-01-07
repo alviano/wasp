@@ -93,11 +93,11 @@ Clause::getMaxDecisionLevel(
 //}
 
 bool
-Clause::isUnsatisfied() const
+Clause::isSatisfied() const
 {
     for( unsigned i = 0; i < literals.size(); ++i )
         if( literals[ i ].isTrue() )
-            return false;
-    return true;
+            return true;
+    return false;
 }
 

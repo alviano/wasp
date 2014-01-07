@@ -123,7 +123,7 @@ Satelite::touchVariablesInClause(
     Clause* clause )
 {
     assert( !clause->hasBeenDeleted() );
-    
+
     for( unsigned int j = 0; j < clause->size(); j++ )
     {
         Variable* variable = clause->getAt( j ).getVariable();
@@ -141,7 +141,6 @@ Satelite::onAddingClause(
     Clause* clause )
 {
     assert( active );
-    
     trace_msg( satelite, 3, "Adding clause " << *clause );
     added.push_back( clause );
     touchVariablesInClause( clause );

@@ -157,6 +157,9 @@ class Solver
         
         void simplifyOnRestart();
         void removeSatisfied( vector< Clause* >& clauses );
+
+        inline void onEliminatingVariable( Variable* variable, unsigned int sign, Clause* definition );
+        inline void completeModel();
         
     private:
         inline Variable* addVariableInternal();
@@ -193,6 +196,8 @@ class Solver
         
         uint64_t literalsInClauses;
         uint64_t literalsInLearnedClauses;
+        
+        vector< Variable* > eliminatedVariables;
 
         struct DeletionCounters
         {
@@ -690,6 +695,41 @@ Solver::setRestart(
     
     assert( r != NULL );    
     restart = r;
+}
+
+void
+Solver::onEliminatingVariable(
+    Variable* variable,
+    unsigned int sign,
+    Clause* definition )
+{
+    variables.onEliminatingVariable( variable, sign, definition );
+    eliminatedVariables.push_back( variable );
+}
+
+void
+Solver::completeModel()
+{
+    while( !eliminatedVariables.empty() )
+    {
+        Variable* back = eliminatedVariables.back();
+        eliminatedVariables.pop_back();
+        
+        assert( back->hasBeenEliminated() );
+        unsigned int sign = back->getSignOfEliminatedVariable();
+        assert( sign == POSITIVE || sign == NEGATIVE );
+        
+        Literal literal( back, sign );
+        back->setUndefinedBrutal();
+        
+        const Clause* definition = back->getDefinition();
+        #ifndef NDEBUG
+        bool result =
+        #endif
+        definition->isSatisfied() ? literal.getOppositeLiteral().setTrue() : literal.setTrue();
+        
+        assert( result );
+    }
 }
 
 #endif	/* SOLVER_H */

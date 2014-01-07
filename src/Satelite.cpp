@@ -282,8 +282,7 @@ Satelite::tryToEliminateByDefinition(
             Literal literal = clause->getAt( 0 ).getVariable() == variable ? clause->getAt( 1 ).getOppositeLiteral() : clause->getAt( 0 ).getOppositeLiteral();
             negatedDefinition.addLiteral( literal );
         }
-    }    
-    
+    }
     for( unsigned i = 0; i < negatedDefinition.size(); ++i )
     {
         if( isSubsumed( &negatedDefinition, negatedDefinition.getAt( i ) ) )
@@ -312,18 +311,18 @@ Satelite::tryToEliminateByDefinition(
     if( result == NULL )
         return false;
     
-    Clause resultCopy;
+    Clause* resultCopy = new Clause();
     
     for( unsigned int i = 0; i < result->size(); i++ )
     {
         Literal lit = result->getAt( i );
         if( lit.getVariable() != variable )
         {
-            resultCopy.addLiteral( lit );
+            resultCopy->addLiteral( lit );
         }
     }    
     
-    return tryToSubstitute( variable, sign, &resultCopy );
+    return tryToSubstitute( variable, sign, resultCopy );
 }
 
 bool
@@ -335,7 +334,7 @@ Satelite::tryToSubstitute(
     assert( POSITIVE == 0 && NEGATIVE == 1 );
 
     assert( trueLiterals.empty() );
-    trace_msg( satelite, 5, "Trying to substitute " << *variable << ". Its definition is " << *definition );
+    trace_msg( satelite, 5, "Trying to substitute " << *variable << ( sign == POSITIVE ? " positive" : " negative" ) << ". Its definition is " << *definition );
     vector< Clause* > newClauses;
     
     for( unsigned i = 0; i < definition->size(); ++i )
@@ -411,6 +410,7 @@ Satelite::tryToSubstitute(
 
     if( newClauses.size() > variable->numberOfOccurrences( POSITIVE ) + variable->numberOfOccurrences( NEGATIVE ) )
     {
+        delete definition;
         trueLiterals.clear();
         return false;    
     }
@@ -445,7 +445,9 @@ Satelite::tryToSubstitute(
     assert_msg( variable->numberOfOccurrences() == 0, "Variable " << *variable << " has been eliminated but has still " << variable->numberOfOccurrences() << " occurrences" );
     trace_msg( satelite, 2, "Eliminated variable " << *variable );   
     
-    ok = propagateTopLevel();    
+    ok = propagateTopLevel();
+    
+    solver.onEliminatingVariable( variable, sign, definition );
     return true;
 }
 

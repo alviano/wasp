@@ -59,6 +59,7 @@ class Variables
         
         inline bool assign( int level, Literal literal );
         inline bool assign( int level, Clause* implicant );
+        inline void onEliminatingVariable( Variable* variable, unsigned int sign, Clause* definition );
 
         inline Variable* operator[]( unsigned idx ) { return variables[ idx ]; }
         inline Variable const* operator[]( unsigned idx ) const { return variables[ idx ]; }
@@ -235,6 +236,19 @@ Variables::assign(
         return true;
     }
     return false;
+}
+
+void
+Variables::onEliminatingVariable(
+    Variable* variable,
+    unsigned int sign,
+    Clause* definition )
+{
+    assert( variable != NULL );
+    assert( assignedVariablesSize < variables.size() );
+    assert_msg( !checkVariableHasBeenAssigned( variable ), "The variable " << *variable << " has been already assigned." );
+    assignedVariables[ assignedVariablesSize++ ] = variable;        
+    variable->setEliminated( sign, definition );    
 }
 
 bool

@@ -41,6 +41,8 @@ Variable::~Variable()
 //    
 //    if( heuristicCounters[ 1 ] )
 //        delete heuristicCounters[ 1 ];
+    if( definition )
+        delete definition;
 }
 
 //void

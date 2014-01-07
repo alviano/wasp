@@ -72,6 +72,7 @@ class Variable
 
         inline bool isUndefined() const;
         inline void setUndefined();
+        inline void setUndefinedBrutal();
 
         inline bool isImplicant( const Clause* clause ) const;
         inline bool hasImplicant() const;
@@ -130,7 +131,12 @@ class Variable
         
         inline unsigned int& visited(){ return visitedInLearning; }
         inline const unsigned int& visited() const{ return visitedInLearning; }
-
+        
+        inline const Clause* getDefinition() const { return definition; }     
+        inline void setEliminated( unsigned int sign, Clause* definition );
+        inline unsigned int getSignOfEliminatedVariable() const { return signOfEliminatedVariable; }
+        inline bool hasBeenEliminated() const { return definition != NULL; }
+        
     private:
 
         inline Variable( const Variable& );
@@ -182,6 +188,9 @@ class Variable
         bool inHeap;
         
         unsigned int visitedInLearning;
+        
+        Clause* definition;
+        unsigned int signOfEliminatedVariable;
 };
 
 bool Comparator::operator()( const Variable* v1, const Variable* v2 ) const{ return v1->activity() > v2->activity(); }
@@ -194,7 +203,9 @@ Variable::Variable(
     implicant( NULL ),
     act( 0.0 ),
     inHeap( false ),
-    visitedInLearning( 0 )
+    visitedInLearning( 0 ),
+    definition( NULL ),
+    signOfEliminatedVariable( 0 )
 {
     signature = ( ( uint64_t ) 1 ) << ( ( id - 1 ) & 63 );
 }
@@ -262,6 +273,12 @@ Variable::setUndefined()
     assert( ( ( truthValue & ~UNROLL_MASK ) & UNROLL_MASK ) == UNDEFINED );
     assert( getTruthValue() == TRUE ? ( truthValue & ~UNROLL_MASK ) == CACHE_TRUE : ( truthValue & ~UNROLL_MASK ) == CACHE_FALSE );
     truthValue &= ~UNROLL_MASK;
+}
+
+void
+Variable::setUndefinedBrutal()
+{
+    truthValue = UNDEFINED;
 }
 
 bool
@@ -488,6 +505,23 @@ Variable::nextOccurence(
 {
     assert_msg( sign <= 1, "The sign must be 0 or 1. Found value " << sign );
     return allOccurrences[ sign ].next();
+}
+
+void
+Variable::setEliminated(
+    unsigned int sign,
+    Clause* def )
+{
+    assert_msg( sign <= 1, "The sign must be 0 or 1. Found value " << sign );
+    assert( def != NULL );
+    signOfEliminatedVariable = sign;
+    definition = def;
+    
+    #ifndef NDEBUG
+    bool result = 
+    #endif
+    setTruthValue( TRUE );    
+    assert( result );
 }
 
 #endif /* VARIABLE_H */
