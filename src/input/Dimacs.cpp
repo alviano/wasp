@@ -87,11 +87,16 @@ Dimacs::readClause(
         ErrorMessage::errorDuringParsing( "Unexpected symbol." );
 
     if( next == 0 )
-        ErrorMessage::errorDuringParsing( "Empty clause are not allowed." );
+    {
+        solver.foundEmptyClause();
+        return false;
+    }
+//        ErrorMessage::errorDuringParsing( "Empty clause are not allowed." );
 
     unordered_set< int > tempSet;    
     bool trivial = false;
-    Clause* clause = new Clause();
+//    Clause* clause = new Clause();
+    Clause* clause = solver.newClause();
 
     do
     {
@@ -125,7 +130,8 @@ Dimacs::readClause(
     else
     {
         trace_msg( parser, 1, "Deleting clause " << *clause << " because is trivial" );
-        delete clause;
+//        delete clause;
+        solver.releaseClause( clause );
     }
     
     return true;

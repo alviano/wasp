@@ -42,9 +42,9 @@ class Clause
     friend ostream &operator<<( ostream & out, const Clause & clause );
     friend Clause* Learning::onConflict( Literal conflictLiteral, Clause* conflictClause );
 
-    public:
-        inline Clause();
+    public:        
         virtual ~Clause();
+        inline Clause();
 
         inline Literal getAt( unsigned idx ) const { assert( idx < literals.size() ); return literals[ idx ]; }
         inline void flipLiteralAt( unsigned idx ) { assert( idx < literals.size() ); literals[ idx ] = literals[ idx ].getOppositeLiteral(); }
@@ -98,13 +98,15 @@ class Clause
         inline bool removeSatisfiedLiterals();
         inline bool removeDuplicatesAndCheckIfTautological();
         
+        inline void free();        
+        
     protected:
         vector< Literal > literals;
         unsigned lastSwapIndex;
 
-        virtual ostream& print( ostream& out ) const;
-  
+        virtual ostream& print( ostream& out ) const;  
     private:
+        
         Clause( const Clause& )
         {
             assert( "The copy constructor has been disabled." && 0 );
@@ -130,8 +132,10 @@ class Clause
         bool learned;
 };
 
-Clause::Clause() : lastSwapIndex( 1 ), signature( 0 ), act( 0.0 ), learned( false )
+Clause::Clause(): lastSwapIndex( 1 ), signature( 0 ), act( 0.0 ), learned( false )
 {
+    literals.reserve( 8 );
+    //free();
 }
 
 //Clause::Clause(
@@ -598,7 +602,17 @@ Clause::recomputeSignature()
 {
     signature = 0;    
     for( unsigned int i = 0; i < literals.size(); i++ )    
-         signature |= literals[ i ].getVariable()->getSignature();    
+         signature |= literals[ i ].getVariable()->getSignature();
+}
+
+void
+Clause::free()
+{
+    lastSwapIndex = 1;
+    signature = 0;
+    act = 0.0;
+    learned = false;
+    literals.clear();
 }
 
 #endif

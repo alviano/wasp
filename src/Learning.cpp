@@ -46,7 +46,7 @@ Learning::onConflict(
     assert( "The counter must be equal to 0." && pendingVisitedVariables == 0 );
     assert( isVisitedVariablesEmpty() );
     
-    learnedClause = new Clause();
+    learnedClause = solver.newClause();
     learnedClause->setLearned();
 //    solver.initClauseData( learnedClause );
     decisionLevel = solver.getCurrentDecisionLevel();

@@ -37,6 +37,13 @@ Solver::~Solver()
         delete learnedClauses.back();
         learnedClauses.pop_back();
     }
+    
+    while( !poolOfClauses.empty() )
+    {
+        assert( poolOfClauses.back() );
+        delete poolOfClauses.back();
+        poolOfClauses.pop_back();
+    }
         
     if( outputBuilder != NULL )
         delete outputBuilder;
@@ -80,7 +87,7 @@ Solver::addClauseFromModelAndRestart()
     assert( variables.numberOfAssignedLiterals() > 0 );
     
     trace_msg( enumeration, 2, "Creating the clause representing the model." );
-    Clause* clause = new Clause();
+    Clause* clause = newClause(); //new Clause();
     
     for( unsigned int i = 1; i <= variables.numberOfVariables(); i++ )
     {
