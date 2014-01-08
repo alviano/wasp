@@ -43,6 +43,15 @@ Variable::~Variable()
 //        delete heuristicCounters[ 1 ];
     if( definition )
         delete definition;
+    
+    if( signOfEliminatedVariable == ELIMINATED_BY_DISTRIBUTION )
+    {
+        for( unsigned int i = 0; i < numberOfOccurrences( POSITIVE ); i++ )
+            delete getOccurrence( i, POSITIVE );
+        
+        for( unsigned int i = 0; i < numberOfOccurrences( NEGATIVE ); i++ )
+            delete getOccurrence( i, NEGATIVE );
+    }
 }
 
 //void

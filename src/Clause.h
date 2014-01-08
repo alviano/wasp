@@ -59,12 +59,13 @@ class Clause
         inline void attachClause( unsigned int firstWatch, unsigned int secondWatch );
         inline void attachClauseToAllLiterals();
         inline void detachClause();
-        inline void detachClauseToAllLiterals( Literal literal );
+        inline void detachClauseToAllLiterals( Literal literal );        
         inline void removeLiteral( Literal literal );
         inline void removeLastLiteralNoWatches(){ literals.pop_back(); }
         
         inline void onLearning( Learning* strategy );
         inline bool onLiteralFalse( Literal literal );
+        inline void onRemovingNoDelete( Literal literal );
 
         inline unsigned int size() const;
 //        inline bool checkUnsatisfiedAndOptimize( Heuristic* collector );
@@ -233,6 +234,21 @@ Clause::detachClauseToAllLiterals(
         else
             literals[ i ].findAndEraseClause( this );
     }    
+}
+
+void
+Clause::onRemovingNoDelete(
+    Literal literal )
+{
+    for( unsigned int i = 0; i < literals.size(); ++i )
+    {
+        if( literals[ i ] != literal )
+            literals[ i ].findAndEraseClause( this );
+    }
+    
+    assert( literals.size() > 0 );
+    literals.push_back( getAt( 0 ) );
+    markAsDeleted();
 }
 
 void

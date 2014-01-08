@@ -49,6 +49,8 @@ class Satelite
         bool tryToEliminateByDefinition( Variable* variable );
         bool tryToEliminateByDefinition( Variable* variable, unsigned sign );
         bool tryToSubstitute( Variable* variable, unsigned sign, Clause* result );
+        bool tryToEliminateByDistribution( Variable* variable );
+        void substitute( Variable* variable, vector< Clause* >& newClauses );
         
         inline void touchVariablesInClause( Clause* clause );
         

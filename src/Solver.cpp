@@ -276,6 +276,9 @@ void
 Solver::propagateAtLevelZeroSatelite(
     Variable* variable )
 {
+    if( variable->hasBeenEliminated() )    
+        return;
+    
     assert( "Variable to propagate has not been set." && variable != NULL );    
     Literal literal = Literal::createFromAssignedVariable( variable );
     trace_msg( solving, 2, "Propagating " << literal << " as true at level 0" );

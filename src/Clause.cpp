@@ -95,7 +95,13 @@ Clause::getMaxDecisionLevel(
 bool
 Clause::isSatisfied() const
 {
-    for( unsigned i = 0; i < literals.size(); ++i )
+    assert( size() > 0 );
+    
+    unsigned i = 0;
+    if( hasBeenDeleted() )
+        i = 1;
+    
+    for( ; i < literals.size(); ++i )
         if( literals[ i ].isTrue() )
             return true;
     return false;

@@ -262,6 +262,8 @@ Satelite::tryToEliminate(
     
     if( tryToEliminateByDefinition( variable ) )
         return true;
+    else
+        return tryToEliminateByDistribution( variable );    
         
     return false;
 }
@@ -411,40 +413,15 @@ Satelite::tryToSubstitute(
     if( newClauses.size() > variable->numberOfOccurrences( POSITIVE ) + variable->numberOfOccurrences( NEGATIVE ) )
     {
         delete definition;
-	for( unsigned int i = 0; i < newClauses.size(); ++i )
-	{
-		delete newClauses[ i ];
-	}
+        for( unsigned int i = 0; i < newClauses.size(); ++i )
+        {
+            delete newClauses[ i ];
+        }
         trueLiterals.clear();
-        return false;    
+        return false;
     }
     
-    // DONE: substitute
-    Literal positiveLiteral( variable, POSITIVE );
-    positiveLiteral.startIterationOverOccurrences();
-    while( positiveLiteral.hasNextOccurrence() )
-    {
-        Clause* clause = positiveLiteral.nextOccurence();
-        clause->detachClauseToAllLiterals( positiveLiteral );
-        solver.markClauseForDeletion( clause );
-    }
-    
-    Literal negativeLiteral( variable, NEGATIVE );
-    negativeLiteral.startIterationOverOccurrences();
-    while( negativeLiteral.hasNextOccurrence() )
-    {
-        Clause* clause = negativeLiteral.nextOccurence();
-        clause->detachClauseToAllLiterals( negativeLiteral );
-        solver.markClauseForDeletion( clause );
-    }
-    
-    for( unsigned int i = 0; i < newClauses.size(); i++ )
-    {
-        Clause* c = newClauses[ i ];
-        assert( c->size() >= 2 );        
-        onAddingClause( c );
-        solver.addClause( c );        
-    }
+    substitute( variable, newClauses );
     
     assert_msg( variable->numberOfOccurrences() == 0, "Variable " << *variable << " has been eliminated but has still " << variable->numberOfOccurrences() << " occurrences" );
     trace_msg( satelite, 2, "Eliminated variable " << *variable );   
@@ -477,10 +454,144 @@ Satelite::propagateTopLevel()
         trueLiterals.pop_back();
         if( !lit.isTrue() )
         {
+            if( lit.getVariable()->getId() == 172691 )
+                cout << "FAMOSO" << endl;
             if( !solver.propagateLiteralAsDeterministicConsequenceSatelite( lit ) )
                 return false;
         }
     }
     
     return true;
+}
+
+bool
+Satelite::tryToEliminateByDistribution( 
+    Variable* variable )
+{
+    trace_msg( satelite, 5, "Trying to eliminate " << *variable << " by distribution" );
+
+    vector< Clause* > newClauses;
+    for( unsigned int i = 0; i < variable->numberOfOccurrences( POSITIVE ); i++ )
+    {
+        for( unsigned int j = 0; j < variable->numberOfOccurrences( NEGATIVE ); j++ )
+        {
+            Clause* newClause = new Clause();            
+            Clause* firstClause = variable->getOccurrence( i, POSITIVE );
+            Clause* secondClause = variable->getOccurrence( j, NEGATIVE );
+
+            bool tautological = false;
+            for( unsigned int k = 0; k < firstClause->size(); k++ )
+            {
+                Literal lit = firstClause->getAt( k );
+                if( lit.getVariable() != variable )
+                    newClause->addLiteral( lit );
+            }
+                        
+            for( unsigned int k = 0; k < secondClause->size(); k++ )
+            {
+                Literal lit = secondClause->getAt( k );
+                if( lit.getVariable() == variable )
+                    continue;
+
+                if( newClause->contains( lit ) )
+                    continue;
+                else if( newClause->contains( lit.getOppositeLiteral() ) )
+                {
+                    tautological = true;
+                    break;
+                }
+                else
+                {
+                    newClause->addLiteral( lit );
+                }
+            }
+
+            //The new clause is tautological
+            if( tautological ) 
+                delete newClause;                
+            else if( newClause->size() == 1 )
+            {
+                trueLiterals.push_back( newClause->getAt( 0 ) );
+                delete newClause;
+            }
+            else
+            {
+                newClauses.push_back( newClause );
+                
+                if( newClauses.size() > variable->numberOfOccurrences() )
+                {
+                    for( unsigned int i = 0; i < newClauses.size(); ++i )
+                        delete newClauses[ i ];
+                    trueLiterals.clear();
+                    return false;
+                }
+            }
+        }
+    }
+
+    // DONE: substitute
+    Literal positiveLiteral( variable, POSITIVE );
+    positiveLiteral.startIterationOverOccurrences();
+    while( positiveLiteral.hasNextOccurrence() )
+    {
+        Clause* clause = positiveLiteral.nextOccurence();
+        solver.removeClauseNoDeletion( clause );
+        clause->onRemovingNoDelete( positiveLiteral );        
+    }
+    
+    Literal negativeLiteral( variable, NEGATIVE );
+    negativeLiteral.startIterationOverOccurrences();
+    while( negativeLiteral.hasNextOccurrence() )
+    {
+        Clause* clause = negativeLiteral.nextOccurence();
+        solver.removeClauseNoDeletion( clause );        
+        clause->onRemovingNoDelete( negativeLiteral );
+    }
+    
+    for( unsigned int i = 0; i < newClauses.size(); i++ )
+    {
+        Clause* c = newClauses[ i ];
+        assert( c->size() >= 2 );        
+        onAddingClause( c );
+        solver.addClause( c );        
+    }
+    
+    trace_msg( satelite, 2, "Eliminated variable " << *variable );   
+    
+    solver.onEliminatingVariable( variable, ELIMINATED_BY_DISTRIBUTION, NULL );
+    ok = propagateTopLevel();    
+    return true;
+}
+
+void
+Satelite::substitute(
+    Variable* variable,
+    vector< Clause* >& newClauses )
+{
+    // DONE: substitute
+    Literal positiveLiteral( variable, POSITIVE );
+    positiveLiteral.startIterationOverOccurrences();
+    while( positiveLiteral.hasNextOccurrence() )
+    {
+        Clause* clause = positiveLiteral.nextOccurence();
+        clause->detachClauseToAllLiterals( positiveLiteral );
+        solver.markClauseForDeletion( clause );
+    }
+    
+    Literal negativeLiteral( variable, NEGATIVE );
+    negativeLiteral.startIterationOverOccurrences();
+    while( negativeLiteral.hasNextOccurrence() )
+    {
+        Clause* clause = negativeLiteral.nextOccurence();
+        clause->detachClauseToAllLiterals( negativeLiteral );
+        solver.markClauseForDeletion( clause );
+    }
+    
+    for( unsigned int i = 0; i < newClauses.size(); i++ )
+    {
+        Clause* c = newClauses[ i ];
+        assert( c->size() >= 2 );        
+        onAddingClause( c );
+        solver.addClause( c );        
+    }
 }

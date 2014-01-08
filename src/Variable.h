@@ -135,7 +135,7 @@ class Variable
         inline const Clause* getDefinition() const { return definition; }     
         inline void setEliminated( unsigned int sign, Clause* definition );
         inline unsigned int getSignOfEliminatedVariable() const { return signOfEliminatedVariable; }
-        inline bool hasBeenEliminated() const { return definition != NULL; }
+        inline bool hasBeenEliminated() const { return signOfEliminatedVariable != MAXUNSIGNEDINT; }
         
     private:
 
@@ -205,7 +205,7 @@ Variable::Variable(
     inHeap( false ),
     visitedInLearning( 0 ),
     definition( NULL ),
-    signOfEliminatedVariable( 0 )
+    signOfEliminatedVariable( MAXUNSIGNEDINT )
 {
     signature = ( ( uint64_t ) 1 ) << ( ( id - 1 ) & 63 );
 }
@@ -512,8 +512,8 @@ Variable::setEliminated(
     unsigned int sign,
     Clause* def )
 {
-    assert_msg( sign <= 1, "The sign must be 0 or 1. Found value " << sign );
-    assert( def != NULL );
+    assert_msg( sign <= 2, "The sign must be 0 or 1. Found value " << sign );
+    assert( def != NULL || sign == ELIMINATED_BY_DISTRIBUTION );
     signOfEliminatedVariable = sign;
     definition = def;
     
