@@ -411,6 +411,10 @@ Satelite::tryToSubstitute(
     if( newClauses.size() > variable->numberOfOccurrences( POSITIVE ) + variable->numberOfOccurrences( NEGATIVE ) )
     {
         delete definition;
+	for( unsigned int i = 0; i < newClauses.size(); ++i )
+	{
+		delete newClauses[ i ];
+	}
         trueLiterals.clear();
         return false;    
     }
