@@ -30,10 +30,10 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 //=================================================================================================
 // A heap implementation with support for decrease/increase key.
-template< class K >
+template< class K, class COMP >
 class Heap {
     vector< K* > heap;// Heap of Keys
-    Comparator lt; // The heap is a minimum-heap with respect to this comparator
+    COMP lt; // The heap is a minimum-heap with respect to this comparator
 
     // Index "traversal" functions
     static inline unsigned int left( unsigned int i ) { return i * 2 + 1; }
@@ -149,7 +149,7 @@ class Heap {
 
     K* removeMin()
     {
-        K x = heap[ 0 ];
+        K* x = heap[ 0 ];
         heap[ 0 ] = heap.back();
         heap[ 0 ]->setHandle( 0 );
         x->setInHeap( false );

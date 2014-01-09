@@ -42,6 +42,12 @@ public:
     inline bool operator()( const Variable* n1, const Variable* n2 ) const;
 };
 
+class EliminationComparator
+{
+public:
+    inline bool operator()( const Variable* n1, const Variable* n2 ) const;
+};
+
 //typedef fibonacci_heap< Variable*, compare< Comparator > >::handle_type heap_handle;
 typedef unsigned int heap_handle;
 
@@ -136,6 +142,7 @@ class Variable
         inline void setEliminated( unsigned int sign, Clause* definition );
         inline unsigned int getSignOfEliminatedVariable() const { return signOfEliminatedVariable; }
         inline bool hasBeenEliminated() const { return signOfEliminatedVariable != MAXUNSIGNEDINT; }
+        inline unsigned int cost() const { return numberOfOccurrences( POSITIVE ) * numberOfOccurrences( NEGATIVE ); }
         
     private:
 
@@ -194,6 +201,7 @@ class Variable
 };
 
 bool Comparator::operator()( const Variable* v1, const Variable* v2 ) const{ return v1->activity() > v2->activity(); }
+bool EliminationComparator::operator()( const Variable* v1, const Variable* v2 ) const{ return v1->cost() < v2->cost(); }
 
 Variable::Variable(
     unsigned id_ ) :

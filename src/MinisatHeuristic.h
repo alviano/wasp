@@ -53,7 +53,7 @@ class MinisatHeuristic
         vector< Variable* > variables;
 
         Variable* chosenVariable;
-        Heap< Variable > heap;
+        Heap< Variable, Comparator > heap;
 };
 
 MinisatHeuristic::MinisatHeuristic() :

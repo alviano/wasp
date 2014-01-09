@@ -188,7 +188,10 @@ Solver::solve()
                 }
                 
                 if( !analyzeConflict() )
+                {
+                    statistics( endSolving() );
                     return false;
+                }
                 minisatHeuristic.variableDecayActivity();                
                 assert( hasNextVariableToPropagate() || getCurrentDecisionLevel() == 0 );
             }
