@@ -691,23 +691,24 @@ Clause::subsumes(
         return NO_SUBSUMPTION;
     
     SubsumptionData ret = SUBSUMPTION;
-    unsigned int position = MAXUNSIGNEDINT;
+    unsigned int position = MAXUNSIGNEDINT;    
     
     for( unsigned int i = 0; i < size; i++ )
     {
         for( unsigned int j = 0; j < otherSize; j++ )
         {
-            if( getAt( i ) == other.getAt( i ) )            
-                break;
-            else if( ret == SUBSUMPTION && getAt( i ) == other.getAt( i ).getOppositeLiteral() )
+            if( getAt( i ) == other.getAt( j ) )
+                goto ok;
+            else if( ret == SUBSUMPTION && getAt( i ) == other.getAt( j ).getOppositeLiteral() )
             {
                 ret = SELFSUBSUMPTION;
-                position = i;
-                break;
+                position = j;
+                goto ok;
             }
-            else
-                return NO_SUBSUMPTION;
         }
+        
+        return NO_SUBSUMPTION;
+        ok:;
     }
     
     if( ret == SELFSUBSUMPTION )
