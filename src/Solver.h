@@ -61,6 +61,7 @@ class Solver
         inline void addVariable();        
         
         inline bool addClause( Clause* clause );
+        inline bool addClauseFromModel( Clause* clause );
         inline void addLearnedClause( Clause* learnedClause );
         bool addClauseFromModelAndRestart();
         
@@ -369,6 +370,41 @@ Solver::addClause(
     return false;
 }
 
+bool
+Solver::addClauseFromModel(
+    Clause* clause )
+{
+    assert( clause != NULL );
+    unsigned int size = clause->size();
+    if( size > 1 )
+    {
+        statistics( onAddingClause( size ) );
+        clause->attachClause();
+        clause->setPositionInSolver( clauses.size() );
+        clauses.push_back( clause );
+        return true;
+    }
+
+    if( size == 1 )
+    {
+        assignLiteral( clause->getAt( 0 ) );
+        releaseClause( clause );
+
+        clearConflictStatus();
+        while( hasNextVariableToPropagate() )
+        {
+            nextValueOfPropagation--;
+            Variable* variableToPropagate = getNextVariableToPropagate();
+            propagate( variableToPropagate );
+
+            if( conflictDetected() )            
+                return false;
+        }
+    }
+
+    return true;
+}
+
 void
 Solver::addLearnedClause( 
     Clause* learnedClause )
@@ -509,6 +545,7 @@ Solver::analyzeConflict()
     Clause* learnedClause = learning.onConflict( conflictLiteral, conflictClause );
     assert( "Learned clause has not been calculated." && learnedClause != NULL );
     statistics( onLearning( learnedClause->size() ) );
+    
     if( learnedClause->size() == 1 )
     {
         doRestart();
@@ -679,8 +716,29 @@ Solver::attachWatches()
 bool
 Solver::preprocessing()
 {
-    assert( satelite != NULL );    
-    return satelite->simplify();
+    if( conflictDetected() || conflictAtLevelZero )
+    {
+        trace( solving, 1, "Conflict at level 0.\n" );
+        return false;
+    }    
+
+    statistics( beforePreprocessing( numberOfVariables() - numberOfAssignedLiterals(), numberOfClauses() ) );
+    assert( satelite != NULL );        
+    if( !satelite->simplify() )
+        return false;
+
+    minisatHeuristic.simplifyVariablesAtLevelZero();    
+    attachWatches();    
+    
+    assignedVariablesAtLevelZero = numberOfAssignedLiterals();
+    
+    deletionCounters.maxLearned = numberOfClauses() * deletionCounters.learnedSizeFactor;
+    deletionCounters.learnedSizeAdjustConfl = deletionCounters.learnedSizeAdjustStartConfl;
+    deletionCounters.learnedSizeAdjustCnt = ( unsigned int ) deletionCounters.learnedSizeAdjustConfl;
+    
+    statistics( afterPreprocessing( numberOfVariables() - numberOfAssignedLiterals(), numberOfClauses() ) );
+
+    return true;
 }
 
 void
@@ -721,23 +779,23 @@ Solver::onEliminatingVariable(
 void
 Solver::completeModel()
 {
-    while( !eliminatedVariables.empty() )
+    trace_msg( satelite, 5, "Completing model" );
+    for( int i = eliminatedVariables.size() - 1; i >= 0; i-- )    
     {
-        Variable* back = eliminatedVariables.back();
-        eliminatedVariables.pop_back();
-        
+        Variable* back = eliminatedVariables[ i ];
+
         assert( back->hasBeenEliminated() );
         unsigned int sign = back->getSignOfEliminatedVariable();
         assert( sign == POSITIVE || sign == NEGATIVE );
         
         Literal literal( back, sign );
         back->setUndefinedBrutal();
-        
         const Clause* definition = back->getDefinition();
+        trace_msg( satelite, 5, "Considering variable " << *back << " and its definition " << *definition << " which is " << ( definition->isSatisfied() ? "satisfied" : "unsatisfied" ) );
         #ifndef NDEBUG
         bool result =
         #endif
-        definition->isSatisfied() ? literal.getOppositeLiteral().setTrue() : literal.setTrue();
+        definition->isSatisfied() ? literal.getOppositeLiteral().setTrue() : literal.setTrue();                
         
         assert( result );
     }

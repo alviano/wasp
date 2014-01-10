@@ -111,7 +111,7 @@ Trie::endInsertion()
     
     if( !current->hasLabel() )
 	{
-		current->setLabel( numberOfLabels++ );        
+		current->setLabel( ++numberOfLabels );        
 	}
     
     unsigned int value = current->getLabel();

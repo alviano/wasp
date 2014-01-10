@@ -59,7 +59,9 @@ void
 Solver::unroll(
     unsigned int level )
 {
-    assert( "Level is not valid." && level < unrollVector.size() && currentDecisionLevel >= level );
+    assert_msg( !unrollVector.empty(), "There is nothing to unroll" );
+    assert_msg( level < unrollVector.size(), "Level " << level << " is greater than unrollVector size " << unrollVector.size() );
+    assert_msg( currentDecisionLevel >= level, "Level " << level << " is greater than current decision level " << currentDecisionLevel );
     assert( "Vector for unroll is inconsistent" && variables.numberOfAssignedLiterals() >= unrollVector[ level ] );    
     unsigned int toUnroll = variables.numberOfAssignedLiterals() - unrollVector[ level ];
     unsigned int toPop = currentDecisionLevel - level;
@@ -94,7 +96,7 @@ Solver::addClauseFromModelAndRestart()
         Variable* v = variables[ i ];
         assert( !v->isUndefined() );
         
-        trace_msg( enumeration, 3, "Checking literal " << *v << " with decision level " << v->getDecisionLevel() << " and its implicant is " << ( v->hasImplicant() ? "null" : "not null" ) );
+        trace_msg( enumeration, 3, "Checking literal " << *v << " with decision level " << v->getDecisionLevel() << " and its implicant is " << ( v->hasImplicant() ? "not null" : "null" ) );
         if( !v->hasImplicant() && v->getDecisionLevel() != 0 )
         {
             if( v->isTrue() )
@@ -110,38 +112,23 @@ Solver::addClauseFromModelAndRestart()
                 clause->addLiteral( lit );
             }
         }
+    }    
+    
+    if( clause->size() == 0 )
+    {
+        releaseClause( clause );
+        return false;
     }
     
     this->doRestart();
     simplifyOnRestart();
-    return addClause( clause );
+    return addClauseFromModel( clause );
 }
 
 bool 
 Solver::solve()
 {
-    trace( solving, 1, "Starting solving.\n" );       
-    
-    if( conflictDetected() || conflictAtLevelZero )
-    {
-        trace( solving, 1, "Conflict at level 0.\n" );
-        return false;
-    }    
-
-    statistics( beforePreprocessing( numberOfVariables() - numberOfAssignedLiterals(), numberOfClauses() ) );
-    if( !preprocessing() )
-        return false;
-
-    minisatHeuristic.simplifyVariablesAtLevelZero();    
-    attachWatches();    
-    
-    assignedVariablesAtLevelZero = numberOfAssignedLiterals();
-    
-    deletionCounters.maxLearned = numberOfClauses() * deletionCounters.learnedSizeFactor;
-    deletionCounters.learnedSizeAdjustConfl = deletionCounters.learnedSizeAdjustStartConfl;
-    deletionCounters.learnedSizeAdjustCnt = ( unsigned int ) deletionCounters.learnedSizeAdjustConfl;
-    
-    statistics( afterPreprocessing( numberOfVariables() - numberOfAssignedLiterals(), numberOfClauses() ) );    
+    trace( solving, 1, "Starting solving.\n" );    
     
     while( hasUndefinedLiterals() )
     {
