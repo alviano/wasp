@@ -45,17 +45,17 @@ class Satelite
         
     private:
         inline void onAddingClause( Clause* clause );
-//        inline bool subset( const Clause* c1, const Clause* c2 );
-//        bool isSubsumed( Clause* clause, Literal literal );
+        inline bool subset( const Clause* c1, const Clause* c2 );
+        bool isSubsumed( Clause* clause, Literal literal );
 //        void findSubsumed( const Clause* clause );
 //        void findSubsumedForSelfSubsumption( const Clause* clause, Literal literal );
 //        void selfSubsume( Clause* clause );
-//        bool tryToEliminate( Variable* variable );
-//        bool tryToEliminateByDefinition( Variable* variable );
-//        bool tryToEliminateByDefinition( Variable* variable, unsigned sign );
-//        bool tryToSubstitute( Variable* variable, unsigned sign, Clause* result );
+        bool tryToEliminate( Variable* variable );
+        bool tryToEliminateByDefinition( Variable* variable );
+        bool tryToEliminateByDefinition( Variable* variable, unsigned sign );
+        bool tryToSubstitute( Variable* variable, unsigned sign, Clause* result );
         bool tryToEliminateByDistribution( Variable* variable );
-//        void substitute( Variable* variable, vector< Clause* >& newClauses );        
+        void substitute( Variable* variable, vector< Clause* >& newClauses );        
         
         inline bool eliminateVariable( Variable* variable );
         bool backwardSubsumptionCheck();
@@ -98,19 +98,19 @@ Satelite::~Satelite()
 {
 }
 
-//bool
-//Satelite::subset(
-//    const Clause* c1,
-//    const Clause* c2 )
-//{
-//    if( c1->size() > c2->size() )
-//        return false;
-//    
-//    if( ( c1->getSignature() & ~c2->getSignature() ) != 0 )
-//        return false;
-//    
-//    return c1->isSubsetOf( c2 );
-//}
+bool
+Satelite::subset(
+    const Clause* c1,
+    const Clause* c2 )
+{
+    if( c1->size() > c2->size() )
+        return false;
+    
+    if( ( c1->getSignature() & ~c2->getSignature() ) != 0 )
+        return false;
+    
+    return c1->isSubsetOf( c2 );
+}
 
 void
 Satelite::onStrengtheningClause(
@@ -181,7 +181,7 @@ bool
 Satelite::eliminateVariable(
     Variable* variable )
 {
-    if( tryToEliminateByDistribution( variable ) )
+    if( tryToEliminate( variable ) )//tryToEliminateByDistribution( variable ) )
     {
         if( !ok )
             return false;

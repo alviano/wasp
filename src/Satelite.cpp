@@ -19,22 +19,22 @@
 #include "Satelite.h"
 #include "Solver.h"
 
-//bool
-//Satelite::isSubsumed(
-//    Clause* clause,
-//    Literal literal )
-//{
-//    for( unsigned i = 0; i < literal.numberOfOccurrences(); ++i )
-//    {
-//        Clause* current = literal.getOccurrence( i );
-//
-//        trace_msg( satelite, 2, "Considering clause " << *current );
-//        if( clause != current && subset( current, clause ) )
-//            return true;
-//    }
-//    
-//    return false;
-//}
+bool
+Satelite::isSubsumed(
+    Clause* clause,
+    Literal literal )
+{
+    for( unsigned i = 0; i < literal.numberOfOccurrences(); ++i )
+    {
+        Clause* current = literal.getOccurrence( i );
+
+        trace_msg( satelite, 2, "Considering clause " << *current );
+        if( clause != current && subset( current, clause ) )
+            return true;
+    }
+    
+    return false;
+}
 //
 //void
 //Satelite::findSubsumed(
@@ -234,213 +234,216 @@
 //    return true;
 //}
 //
-//bool
-//Satelite::tryToEliminate(
-//    Variable* variable )
-//{
-//    trace_msg( satelite, 2, "Trying to eliminate variable " << *variable );
-//    if( !variable->isUndefined() )
-//        return false;
-//
-//    if( variable->numberOfOccurrences( POSITIVE ) >= 8 && variable->numberOfOccurrences( NEGATIVE ) >= 8 )
-//        return false;
-//    
-//    if( variable->numberOfOccurrences( POSITIVE ) >= 3 && variable->numberOfOccurrences( NEGATIVE ) >= 3 )
-//    {
-//        unsigned literals = 0;
-//        for( unsigned i = 0; i < variable->numberOfOccurrences( POSITIVE ); ++i )
-//            literals += variable->getOccurrence( i, POSITIVE )->size();
-//        for( unsigned i = 0; i < variable->numberOfOccurrences( NEGATIVE ); ++i )
-//            literals += variable->getOccurrence( i, NEGATIVE )->size();
-//            
-//        if( literals > 300 )
-//            return false;
-//    }
-//    
-//    if( tryToEliminateByDefinition( variable ) )
-//        return true;
+bool
+Satelite::tryToEliminate(
+    Variable* variable )
+{
+    trace_msg( satelite, 2, "Trying to eliminate variable " << *variable );
+    if( !variable->isUndefined() )
+        return false;
+    
+    if( variable->cost() > wasp::Options::maxCost )
+        return false;
+    
+    if( variable->numberOfOccurrences( POSITIVE ) >= 8 && variable->numberOfOccurrences( NEGATIVE ) >= 8 )
+        return false;
+    
+    if( variable->numberOfOccurrences( POSITIVE ) >= 3 && variable->numberOfOccurrences( NEGATIVE ) >= 3 )
+    {
+        unsigned literals = 0;
+        for( unsigned i = 0; i < variable->numberOfOccurrences( POSITIVE ); ++i )
+            literals += variable->getOccurrence( i, POSITIVE )->size();
+        for( unsigned i = 0; i < variable->numberOfOccurrences( NEGATIVE ); ++i )
+            literals += variable->getOccurrence( i, NEGATIVE )->size();
+            
+        if( literals > 300 )
+            return false;
+    }
+    
+    if( tryToEliminateByDefinition( variable ) )
+        return true;
 //    else
 //        return tryToEliminateByDistribution( variable );    
-//        
-//    return false;
-//}
-//
-//bool
-//Satelite::tryToEliminateByDefinition(
-//    Variable* variable,
-//    unsigned sign )
-//{
-//    assert( POSITIVE == 0 && NEGATIVE == 1 );
-//
-//    Clause negatedDefinition;
-//    for( unsigned i = 0; i < variable->numberOfOccurrences( 1 - sign ); ++i )
-//    {
-//        Clause* clause = variable->getOccurrence( i, 1 - sign );
-//        if( clause->size() == 2 )
-//        {
-//            Literal literal = clause->getAt( 0 ).getVariable() == variable ? clause->getAt( 1 ).getOppositeLiteral() : clause->getAt( 0 ).getOppositeLiteral();
-//            negatedDefinition.addLiteral( literal );
-//        }
-//    }
-//    for( unsigned i = 0; i < negatedDefinition.size(); ++i )
-//    {
-//        if( isSubsumed( &negatedDefinition, negatedDefinition.getAt( i ) ) )
-//        {
-//            // DONE: propagate at level 0
-//            //Propagate the opposite literal
-//            Literal literal( variable, 1 - sign );
-//            ok = solver.propagateLiteralAsDeterministicConsequenceSatelite( literal );
-//            return true;
-//        }
-//    }
-//    
-//    negatedDefinition.addLiteral( Literal( variable, sign ) );
-//    
-//    Clause* result = NULL;
-//    for( unsigned i = 0; i < variable->numberOfOccurrences( sign ); ++i )
-//    {
-//        Clause* clause = variable->getOccurrence( i, sign );
-//        if( subset( clause, &negatedDefinition ) )
-//        {
-//            if( result == NULL || result->size() >= clause->size() )
-//                result = clause;
-//        }
-//    }
-//    
-//    if( result == NULL )
-//        return false;
-//    
-//    Clause* resultCopy = new Clause();
-//    
-//    for( unsigned int i = 0; i < result->size(); i++ )
-//    {
-//        Literal lit = result->getAt( i );
-//        if( lit.getVariable() != variable )
-//        {
-//            resultCopy->addLiteral( lit );
-//        }
-//    }    
-//    
-//    return tryToSubstitute( variable, sign, resultCopy );
-//}
-//
-//bool
-//Satelite::tryToSubstitute(
-//    Variable* variable,
-//    unsigned sign,
-//    Clause* definition )
-//{
-//    assert( POSITIVE == 0 && NEGATIVE == 1 );
-//
-//    assert( trueLiterals.empty() );
-//    trace_msg( satelite, 5, "Trying to substitute " << *variable << ( sign == POSITIVE ? " positive" : " negative" ) << ". Its definition is " << *definition );
-//    vector< Clause* > newClauses;
-//    
-//    for( unsigned i = 0; i < definition->size(); ++i )
-//    {
-////        if( definition->getAt( i ).getVariable() == variable )
-////            continue;
-//
-//        for( unsigned j = 0; j < variable->numberOfOccurrences( sign ); ++j )
-//        {            
-//            Clause* clause = variable->getOccurrence( j, sign );
-//            if( clause->contains( definition->getAt( i ) ) )
-//                continue;
-//
-//            Clause* newClause = new Clause();
-//            for( unsigned k = 0; k < clause->size(); ++k )
-//                newClause->addLiteral( clause->getAt( k ) == Literal( variable, sign ) ? definition->getAt( i ).getOppositeLiteral() : clause->getAt( k ) );
-//            
-//            // DONE: remove duplicates and destroy if tautological
-//            #ifndef NDEBUG
-//            bool tautological =
-//            #endif
-//            newClause->removeDuplicatesAndCheckIfTautological();
-//            
-//            assert_msg( !tautological, "Clause " << *newClause << " is tautological" );
-//            if( newClause->size() == 1 )
-//            {
-//                trueLiterals.push_back( newClause->getAt( 0 ) );
-//                delete newClause;
-//            }
-//            else
-//                newClauses.push_back( newClause );      
-//        }
-//    }
-//    
-//    for( unsigned j = 0; j < variable->numberOfOccurrences( 1 - sign ); ++j )
-//    {
-//        Clause* clause = variable->getOccurrence( j, 1 - sign );
-//         
-//        if( clause->containsAnyComplementOf( definition ) )        
+        
+    return false;
+}
+
+bool
+Satelite::tryToEliminateByDefinition(
+    Variable* variable,
+    unsigned sign )
+{
+    assert( POSITIVE == 0 && NEGATIVE == 1 );
+
+    Clause negatedDefinition;
+    for( unsigned i = 0; i < variable->numberOfOccurrences( 1 - sign ); ++i )
+    {
+        Clause* clause = variable->getOccurrence( i, 1 - sign );
+        if( clause->size() == 2 )
+        {
+            Literal literal = clause->getAt( 0 ).getVariable() == variable ? clause->getAt( 1 ).getOppositeLiteral() : clause->getAt( 0 ).getOppositeLiteral();
+            negatedDefinition.addLiteral( literal );
+        }
+    }
+    for( unsigned i = 0; i < negatedDefinition.size(); ++i )
+    {
+        if( isSubsumed( &negatedDefinition, negatedDefinition.getAt( i ) ) )
+        {
+            // DONE: propagate at level 0
+            //Propagate the opposite literal
+            Literal literal( variable, 1 - sign );
+            ok = solver.propagateLiteralAsDeterministicConsequenceSatelite( literal );
+            return true;
+        }
+    }
+    
+    negatedDefinition.addLiteral( Literal( variable, sign ) );
+    
+    Clause* result = NULL;
+    for( unsigned i = 0; i < variable->numberOfOccurrences( sign ); ++i )
+    {
+        Clause* clause = variable->getOccurrence( i, sign );
+        if( subset( clause, &negatedDefinition ) )
+        {
+            if( result == NULL || result->size() >= clause->size() )
+                result = clause;
+        }
+    }
+    
+    if( result == NULL )
+        return false;
+    
+    Clause* resultCopy = new Clause();
+    
+    for( unsigned int i = 0; i < result->size(); i++ )
+    {
+        Literal lit = result->getAt( i );
+        if( lit.getVariable() != variable )
+        {
+            resultCopy->addLiteral( lit );
+        }
+    }    
+    
+    return tryToSubstitute( variable, sign, resultCopy );
+}
+
+bool
+Satelite::tryToSubstitute(
+    Variable* variable,
+    unsigned sign,
+    Clause* definition )
+{
+    assert( POSITIVE == 0 && NEGATIVE == 1 );
+
+    assert( trueLiterals.empty() );
+    trace_msg( satelite, 5, "Trying to substitute " << *variable << ( sign == POSITIVE ? " positive" : " negative" ) << ". Its definition is " << *definition );
+    vector< Clause* > newClauses;
+    
+    for( unsigned i = 0; i < definition->size(); ++i )
+    {
+//        if( definition->getAt( i ).getVariable() == variable )
 //            continue;
-//
-//        Clause* newClause = new Clause();
-//        for( unsigned k = 0; k < clause->size(); ++k )
-//        {
-//            if( clause->getAt( k ).getVariable() == variable )
-//            {
-//                for( unsigned i = 0; i < definition->size(); ++i )
-//                {
-//                    if( definition->getAt( i ).getVariable() != variable )
-//                        newClause->addLiteral( definition->getAt( i ) );
-//                }
-//            }
-//            else
-//            {
-//                newClause->addLiteral( clause->getAt( k ) );
-//            }
-//        }
-//        
-//        // DONE: remove duplicates and destroy if tautological
-//        if( newClause->removeDuplicatesAndCheckIfTautological() )    
-//            delete newClause;        
-//        else
-//        {
-//            if( newClause->size() == 1 )
-//            {
-//                trueLiterals.push_back( newClause->getAt( 0 ) );
-//                delete newClause;
-//            }
-//            else
-//                newClauses.push_back( newClause );
-//        }
-//    }
-//
-//    if( newClauses.size() > variable->numberOfOccurrences( POSITIVE ) + variable->numberOfOccurrences( NEGATIVE ) )
-//    {
-//        delete definition;
-//        for( unsigned int i = 0; i < newClauses.size(); ++i )
-//        {
-//            delete newClauses[ i ];
-//        }
-//        trueLiterals.clear();
-//        return false;
-//    }
-//    
-//    substitute( variable, newClauses );
-//    
-//    assert_msg( variable->numberOfOccurrences() == 0, "Variable " << *variable << " has been eliminated but has still " << variable->numberOfOccurrences() << " occurrences" );
-//    trace_msg( satelite, 2, "Eliminated variable " << *variable );   
-//    
-//    ok = propagateTopLevel();
-//    
-//    solver.onEliminatingVariable( variable, sign, definition );
-//    return true;
-//}
-//
-//bool
-//Satelite::tryToEliminateByDefinition(
-//    Variable* variable )
-//{
-//    if( variable->numberOfOccurrences( POSITIVE ) <= 1 && variable->numberOfOccurrences( NEGATIVE ) <= 1 )
-//        return false;
-//    
-//    if( tryToEliminateByDefinition( variable, POSITIVE ) || tryToEliminateByDefinition( variable, NEGATIVE ) )
-//        return true;
-//    
-//    return false;
-//}
+
+        for( unsigned j = 0; j < variable->numberOfOccurrences( sign ); ++j )
+        {            
+            Clause* clause = variable->getOccurrence( j, sign );
+            if( clause->contains( definition->getAt( i ) ) )
+                continue;
+
+            Clause* newClause = new Clause();
+            for( unsigned k = 0; k < clause->size(); ++k )
+                newClause->addLiteral( clause->getAt( k ) == Literal( variable, sign ) ? definition->getAt( i ).getOppositeLiteral() : clause->getAt( k ) );
+            
+            // DONE: remove duplicates and destroy if tautological
+            #ifndef NDEBUG
+            bool tautological =
+            #endif
+            newClause->removeDuplicatesAndCheckIfTautological();
+            
+            assert_msg( !tautological, "Clause " << *newClause << " is tautological" );
+            if( newClause->size() == 1 )
+            {
+                trueLiterals.push_back( newClause->getAt( 0 ) );
+                delete newClause;
+            }
+            else
+                newClauses.push_back( newClause );      
+        }
+    }
+    
+    for( unsigned j = 0; j < variable->numberOfOccurrences( 1 - sign ); ++j )
+    {
+        Clause* clause = variable->getOccurrence( j, 1 - sign );
+         
+        if( clause->containsAnyComplementOf( definition ) )        
+            continue;
+
+        Clause* newClause = new Clause();
+        for( unsigned k = 0; k < clause->size(); ++k )
+        {
+            if( clause->getAt( k ).getVariable() == variable )
+            {
+                for( unsigned i = 0; i < definition->size(); ++i )
+                {
+                    if( definition->getAt( i ).getVariable() != variable )
+                        newClause->addLiteral( definition->getAt( i ) );
+                }
+            }
+            else
+            {
+                newClause->addLiteral( clause->getAt( k ) );
+            }
+        }
+        
+        // DONE: remove duplicates and destroy if tautological
+        if( newClause->removeDuplicatesAndCheckIfTautological() )    
+            delete newClause;        
+        else
+        {
+            if( newClause->size() == 1 )
+            {
+                trueLiterals.push_back( newClause->getAt( 0 ) );
+                delete newClause;
+            }
+            else
+                newClauses.push_back( newClause );
+        }
+    }
+
+    if( newClauses.size() > variable->numberOfOccurrences( POSITIVE ) + variable->numberOfOccurrences( NEGATIVE ) )
+    {
+        delete definition;
+        for( unsigned int i = 0; i < newClauses.size(); ++i )
+        {
+            delete newClauses[ i ];
+        }
+        trueLiterals.clear();
+        return false;
+    }
+    
+    substitute( variable, newClauses );
+    
+    assert_msg( variable->numberOfOccurrences() == 0, "Variable " << *variable << " has been eliminated but has still " << variable->numberOfOccurrences() << " occurrences" );
+    trace_msg( satelite, 2, "Eliminated variable " << *variable );   
+    
+    ok = propagateTopLevel();
+    
+    solver.onEliminatingVariable( variable, sign, definition );
+    return true;
+}
+
+bool
+Satelite::tryToEliminateByDefinition(
+    Variable* variable )
+{
+    if( variable->numberOfOccurrences( POSITIVE ) <= 1 && variable->numberOfOccurrences( NEGATIVE ) <= 1 )
+        return false;
+    
+    if( tryToEliminateByDefinition( variable, POSITIVE ) || tryToEliminateByDefinition( variable, NEGATIVE ) )
+        return true;
+    
+    return false;
+}
 
 bool
 Satelite::propagateTopLevel()
@@ -558,38 +561,38 @@ Satelite::tryToEliminateByDistribution(
     return true;
 }
 
-//void
-//Satelite::substitute(
-//    Variable* variable,
-//    vector< Clause* >& newClauses )
-//{
-//    // DONE: substitute
-//    Literal positiveLiteral( variable, POSITIVE );
-//    positiveLiteral.startIterationOverOccurrences();
-//    while( positiveLiteral.hasNextOccurrence() )
-//    {
-//        Clause* clause = positiveLiteral.nextOccurence();
-//        clause->detachClauseToAllLiterals( positiveLiteral );
-//        solver.markClauseForDeletion( clause );
-//    }
-//    
-//    Literal negativeLiteral( variable, NEGATIVE );
-//    negativeLiteral.startIterationOverOccurrences();
-//    while( negativeLiteral.hasNextOccurrence() )
-//    {
-//        Clause* clause = negativeLiteral.nextOccurence();
-//        clause->detachClauseToAllLiterals( negativeLiteral );
-//        solver.markClauseForDeletion( clause );
-//    }
-//    
-//    for( unsigned int i = 0; i < newClauses.size(); i++ )
-//    {
-//        Clause* c = newClauses[ i ];
-//        assert( c->size() >= 2 );        
-//        onAddingClause( c );
-//        solver.addClause( c );        
-//    }
-//}
+void
+Satelite::substitute(
+    Variable* variable,
+    vector< Clause* >& newClauses )
+{
+    // DONE: substitute
+    Literal positiveLiteral( variable, POSITIVE );
+    positiveLiteral.startIterationOverOccurrences();
+    while( positiveLiteral.hasNextOccurrence() )
+    {
+        Clause* clause = positiveLiteral.nextOccurence();
+        clause->detachClauseToAllLiterals( positiveLiteral );
+        solver.markClauseForDeletion( clause );
+    }
+    
+    Literal negativeLiteral( variable, NEGATIVE );
+    negativeLiteral.startIterationOverOccurrences();
+    while( negativeLiteral.hasNextOccurrence() )
+    {
+        Clause* clause = negativeLiteral.nextOccurence();
+        clause->detachClauseToAllLiterals( negativeLiteral );
+        solver.markClauseForDeletion( clause );
+    }
+    
+    for( unsigned int i = 0; i < newClauses.size(); i++ )
+    {
+        Clause* c = newClauses[ i ];
+        assert( c->size() >= 2 );        
+        onAddingClause( c );
+        solver.addClause( c );        
+    }
+}
 
 bool
 Satelite::simplificationsMinisat2()
