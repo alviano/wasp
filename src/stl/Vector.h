@@ -1,55 +1,108 @@
-/*
- *
- *  Copyright 2013 Mario Alviano, Carmine Dodaro, and Francesco Ricca.
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- *
- */
-
-#ifndef VECTOR_H
-#define	VECTOR_H
+#ifndef W_VECTOR_H
+#define W_VECTOR_H
 
 #include <cassert>
-#include <vector>
-using std::vector;
+#include <cstdio>
+#include <cstring>
+using namespace std;
 
 template< class T >
-class Vector : private vector< T >
+class Vector
 {
-    public:    
-        inline Vector() : vector< T >() {}
+	public:
+		inline Vector();
+		inline ~Vector();
 
-        using vector< T >::back;
-        using vector< T >::clear;
-        using vector< T >::empty;
-        using vector< T >::operator[];
-        using vector< T >::pop_back;
-        using vector< T >::push_back;
-        using vector< T >::reserve;
-        using vector< T >::size;
+		inline unsigned int capacity() const { return capacity_; }
+		inline unsigned int size() const { return size_; }
+		inline bool empty() const { return size_ == 0; }
 
-        inline void erase( unsigned int position );        
+		inline void shrink( unsigned int newSize ) { assert( newSize <= size_ ); size_ = newSize; }
+		inline void push_back( T element );
+		inline void pop_back() { --size_; }
+		inline void clear() { size_ = 0; }
+				
+		const T& back() const { assert( !empty() ); return vector[ size_ - 1 ]; }
+		T& back() { assert( !empty() ); return vector[ size_ - 1 ]; }
+
+		inline const T& operator[] ( unsigned int index ) const { assert( index < size_ ); return vector[ index ]; }
+		inline T& operator[] ( unsigned int index ) { assert( index < size_ ); return vector[ index ]; }
+
+		inline void swap( Vector< T* >& other ) { T* tmp = other.vector; other.vector = vector; vector = tmp; }
+        
+        inline bool existElement( T );
+        inline unsigned int findElement( T );
+
+	private:
+		T*   vector;
+	    unsigned int size_;
+        unsigned int capacity_;
+
+	   	Vector< T >& operator=( Vector< T >& );
+	    Vector( const Vector< T >& );
+	
+		inline void resetCapacity( unsigned int value );
 };
 
 template< class T >
-void
-Vector< T >::erase(
-    unsigned int position )
+Vector< T >::Vector() : vector( NULL ), size_( 0 ), capacity_( 0 )
 {
-    assert( position < size() );
-    vector< T >::operator[]( position ) = vector< T >::back();
-    vector< T >::pop_back();
 }
 
-#endif	/* VECTOR_H */
+template< class T >
+Vector< T >::~Vector()
+{
+	if( vector )
+		delete vector;
+}
+
+template< class T >
+void
+Vector< T >::push_back(
+	T element )
+{
+	if( size_ == capacity_ )
+		resetCapacity( size_ + 1 );
+	
+	assert( size_ < capacity_ );
+	vector[ size_++ ] = element;
+}
+
+inline unsigned int max( unsigned int x, unsigned int y ) { return ( x > y ) ? x : y; }
+template< class T >
+void
+Vector< T >::resetCapacity(
+	unsigned int min_cap )
+{
+    if( capacity_ >= min_cap )
+		return;
+    unsigned int add = max( ( min_cap - capacity_ + 1 ) & ~1, ( ( capacity_ >> 1 ) + 2 ) & ~1 );   // NOTE: grow by approximately 3/2
+
+	T* tmpVector = new T[ capacity_ + add ];
+	memcpy( tmpVector, vector, sizeof( T ) * capacity_ );
+
+	capacity_ += add;
+	delete vector;
+	vector = tmpVector;	
+}
+
+template< class T >
+bool
+Vector< T >::existElement( T elem )
+{
+    return findElement( elem ) != MAXUNSIGNEDINT;
+}
+
+template< class T >
+unsigned int
+Vector< T >::findElement( T elem )
+{
+    for( unsigned int i = 0; i < size_; ++i )    
+        if( elem == vector[ i ] )
+            return i;
+    
+    return MAXUNSIGNEDINT;
+}
+
+#endif
 

@@ -21,23 +21,24 @@
 
 #include <algorithm>
 #include <cassert>
-#include <iostream>
-#include <vector>
-#include <unordered_map>
-#include <unordered_set>
+//#include <iostream>
+//#include <vector>
+//#include <unordered_map>
+//#include <unordered_set>
 
-#include "util/Constants.h"
+//#include "util/Constants.h"
+#include "stl/Vector.h"
 using namespace std;
 
 template< class T >
-class WatchedList : private vector< T >
+class WatchedList : private Vector< T >
 {
 	public:
 	    inline WatchedList();
 
-	    using vector< T >::size;
-        using vector< T >::empty;
-        using vector< T >::operator[];
+	    using Vector< T >::size;
+        using Vector< T >::empty;
+        using Vector< T >::operator[];
         
         inline void add( T element );
         inline void remove( T element );
@@ -79,8 +80,9 @@ void
 WatchedList< T >::add( 
     T element )
 {
-    assert( find( vector< T >::begin(), vector< T >::end(), element ) == vector< T >::end() );
-    vector< T >::push_back( element );
+//    assert( find( vector< T >::begin(), vector< T >::end(), element ) == vector< T >::end() );
+    assert( !Vector< T >::existElement( element ) );
+    Vector< T >::push_back( element );
 }
 
 template< class T >
@@ -88,9 +90,9 @@ void
 WatchedList< T >::remove(
     T element )
 {
-    assert( nextIndex > 0 && nextIndex <= size() && vector< T >::operator[]( nextIndex - 1 ) == element );
-    vector< T >::operator[]( --nextIndex ) = vector< T >::back();
-    vector< T >::pop_back();
+    assert( nextIndex > 0 && nextIndex <= size() && Vector< T >::operator[]( nextIndex - 1 ) == element );
+    Vector< T >::operator[]( --nextIndex ) = Vector< T >::back();
+    Vector< T >::pop_back();
 }
 
 template< class T >
@@ -98,10 +100,15 @@ void
 WatchedList< T >::findAndRemove(
     T element )
 {
-    typename vector< T >::iterator it = find( vector< T >::begin(), vector< T >::end(), element );
-    assert( it != vector< T >::end() );
-    *it = vector< T >::back();
-    vector< T >::pop_back();
+//    typename vector< T >::iterator it = find( vector< T >::begin(), vector< T >::end(), element );
+//    assert( it != vector< T >::end() );
+//    *it = vector< T >::back();
+//    vector< T >::pop_back();
+    assert( Vector< T >::existElement( element ) );
+    unsigned int position = Vector< T >::findElement( element );
+    assert( position < Vector< T >::size() );
+    Vector< T >::operator[]( position ) = Vector< T >::back();
+    Vector< T >::pop_back();
 }
 
 template< class T >
@@ -115,7 +122,7 @@ template< class T >
 T
 WatchedList< T >::next()
 {    
-    return vector< T >::operator[]( nextIndex++ );
+    return Vector< T >::operator[]( nextIndex++ );
 }
 
 template< class T >
@@ -127,4 +134,3 @@ WatchedList< T >::startIteration()
 }
 
 #endif	/* WATCHEDLIST_H */
-
