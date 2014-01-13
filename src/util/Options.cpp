@@ -91,8 +91,8 @@ vector< const char* > Options::inputFiles;
 //unsigned int Options::decisionThreshold = UINT_MAX;
 unsigned int Options::decisionThreshold = 512;
 
-//OUTPUT_POLICY Options::outputPolicy = WASP_OUTPUT;
-OUTPUT_POLICY Options::outputPolicy = DIMACS_OUTPUT;
+OUTPUT_POLICY Options::outputPolicy = WASP_OUTPUT;
+//OUTPUT_POLICY Options::outputPolicy = DIMACS_OUTPUT;
 
 bool Options::printProgram = false;
 

@@ -143,6 +143,8 @@ GringoNumericFormat::addLiteralInClause(
     Literal literal,
     Clause* clause )
 {
+    if( clause->contains( literal ) )
+        return true;
     if( literal.isUndefined() )
         clause->addLiteral( literal );
     else if( literal.isTrue() )

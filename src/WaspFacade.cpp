@@ -36,13 +36,11 @@ WaspFacade::readInput()
     inputFacade.parse();
     
     if( inputFacade.isInstanceOfSAT() )
-    {
         solver.setOutputBuilder( new DimacsOutputBuilder() );
-    }
     else if( !inputFacade.isInstanceOfASP() )
-    {
-        ErrorMessage::errorDuringParsing( "Error while reading input file." );
-    }    
+        ErrorMessage::errorDuringParsing( "Error while reading input file." );    
+    else    
+        solver.setOutputBuilder( new WaspOutputBuilder() );
 }
 
 void
