@@ -39,8 +39,8 @@ WaspFacade::readInput()
         solver.setOutputBuilder( new DimacsOutputBuilder() );
     else if( !inputFacade.isInstanceOfASP() )
         ErrorMessage::errorDuringParsing( "Error while reading input file." );    
-    else    
-        solver.setOutputBuilder( new WaspOutputBuilder() );
+//    else    
+//        solver.setOutputBuilder( new WaspOutputBuilder() );
 }
 
 void
