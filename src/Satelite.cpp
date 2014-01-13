@@ -35,208 +35,205 @@ Satelite::isSubsumed(
     
     return false;
 }
-
-void
-Satelite::findSubsumed(
-    const Clause* clause )
-{
-    trace_msg( satelite, 1, "Starting subsumption for the clause " << *clause );
-    Literal literal = clause->getLiteralWithMinOccurrences();
-
-    trace_msg( satelite, 1, "Literal with the min number of occurrences is " << literal );
-    literal.startIterationOverOccurrences();
-
-    while( literal.hasNextOccurrence() )
-    {
-        Clause* current = literal.nextOccurence();
-
-        trace_msg( satelite, 2, "Considering clause " << *current );
-        if( clause != current && subset( clause, current ) )
-        {
-            trace_msg( satelite, 1, "Clause " << *clause << " subsumes clause " << *current );
-            current->detachClauseToAllLiterals( literal );
-            solver.markClauseForDeletion( current );
-        }
-    }
-}
-
-void
-Satelite::findSubsumedForSelfSubsumption(
-    const Clause* clause,
-    Literal literal )
-{
-    trace_msg( satelite, 1, "Starting self subsumption for the clause " << *clause << " and literal " << literal );
-    literal.startIterationOverOccurrences();
-    
-    while( literal.hasNextOccurrence() )
-    {
-        Clause* current = literal.nextOccurence();
-        
-        trace_msg( satelite, 2, "Considering clause " << *current );
-        if( clause != current && subset( clause, current ) )
-        {
-            trace_msg( satelite, 1, "Strengthening " << *current << " by removing literal " << literal );
-            current->removeLiteral( literal );
-
-            if( current->size() == 1 )
-            {
-                trueLiterals.push_back( current->getAt( 0 ) );
-                current->detachClauseToAllLiterals( Literal::null );
-                solver.markClauseForDeletion( current );
-            }
-            else
-            {
-                this->onStrengtheningClause( current );
-                trace_msg( satelite, 2, "Clause after removing literal is: " << *current );
-            }
-        }
-    }
-}
-
-void
-Satelite::selfSubsume(
-    Clause* clause )
-{    
-    trace_msg( satelite, 2, "Self subsume. Clause: " << *clause );
-    for( unsigned int i = 0; i < clause->size(); i++ )
-    {
-        trace_msg( satelite, 1, "Flipping literal " << clause->getAt( i ) );
-        clause->flipLiteralAt( i );
-        findSubsumedForSelfSubsumption( clause, clause->getAt( i ) );
-        trace_msg( satelite, 1, "Restoring literal " << clause->getAt( i ) );
-        clause->flipLiteralAt( i );
-    }
-}
-
-bool
-Satelite::simplify()
-{
-    active = true;
-    
-    added.reserve( solver.numberOfClauses() );
-    
-    for( unsigned int i = 0; i < solver.numberOfClauses(); ++i )
-    {
-        Clause* current = solver.clauseAt( i );
-        assert( !current->hasBeenDeleted() );        
-        added.push_back( current );
-    }
-    
-    do
-    {
-        vector< bool > seenLiterals( 2 * solver.numberOfVariables(), false );
-
-        vector< Clause* > S0; //From minisat paper
-        vector< Clause* > S1;
-        unordered_set< Clause* > insertedInS0;
-        unordered_set< Clause* > insertedInS1;
-        
-        for( unsigned int i = 0; i < added.size(); i++ )
-        {
-            Clause* c = added[ i ];
-            
-            if( c->hasBeenDeleted() )
-                continue;
-
-            for( unsigned int j = 0; j < c->size(); j++ )
-            {
-                Literal lit = c->getAt( j );
-                assert_msg( lit.getVariable()->getId() > 0, "Literal " << lit << " has id " << lit.getVariable()->getId() );
-                unsigned int litId = 2 * ( lit.getVariable()->getId() ) - lit.getSign() - 1;
-                assert_msg( litId < seenLiterals.size(), "Literal id is " << litId << " while the total number of literals is " << seenLiterals.size() );
-                if( seenLiterals[ litId ] )
-                    continue;
-
-                seenLiterals[ litId ] = true;
-
-                for( unsigned int k = 0; k < lit.numberOfOccurrences(); k++ )
-                {
-                    Clause* current = lit.getOccurrence( k );
-                    assert( !current->hasBeenDeleted() );
-                    if( insertedInS0.insert( current ).second )
-                    {
-                        S0.push_back( current );
-                    }
-                }
-
-                Literal oppositeLiteral = lit.getOppositeLiteral();
-                for( unsigned int k = 0; k < oppositeLiteral.numberOfOccurrences(); k++ )
-                {
-                    Clause* current = oppositeLiteral.getOccurrence( k );
-                    assert( !current->hasBeenDeleted() );
-                    if( insertedInS1.insert( current ).second )
-                    {
-                        S1.push_back( current );
-                    }
-                }
-            }
-
-            if( insertedInS1.insert( c ).second )
-                S1.push_back( c );
-
-        }
-        added.clear();
-
-        for( unsigned int i = 0; i < S1.size(); i++ )
-        {
-            Clause* current = S1[ i ];
-            if( !current->hasBeenDeleted() )
-                selfSubsume( current );
-        }
-
-        if( !propagateTopLevel() )
-            return false;        
-
-        while( !strengthened.empty() )
-        {
-            vector< Clause* > strengthenedCopy; 
-            strengthened.swap( strengthenedCopy );
-            assert( strengthened.empty() );
-            insertedInStrengthened.clear();
-
-            for( unsigned int i = 0; i < strengthenedCopy.size(); i++ )
-            {
-                Clause* current = strengthenedCopy[ i ];
-                if( current->hasBeenDeleted() )
-                    continue;
-
-                if( insertedInS1.find( current ) == insertedInS1.end() )
-                    selfSubsume( current );
-            }
-
-            if( !propagateTopLevel() )
-                return false;
-        }
-        
-        for( unsigned int i = 0; i < S0.size(); ++i )
-        {
-            Clause* current = S0[ i ];
-            if( !current->hasBeenDeleted() )
-                findSubsumed( current );
-        }        
-        
-        vector< Variable* > touchedCopy;
-        do
-        {
-            touchedCopy.clear();
-            touched.swap( touchedCopy );        
-            insertedInTouched.clear();
-            assert( touched.empty() );
-            
-            for( unsigned int i = 0; i < touchedCopy.size(); i++ )
-            {
-                tryToEliminate( touchedCopy[ i ] );
-                if( !ok )
-                    return false;
-            }
-        } while( !touched.empty() );        
-
-    } while( !added.empty() );    
-    
-    active = false;
-    return true;
-}
-
+//
+//void
+//Satelite::findSubsumed(
+//    const Clause* clause )
+//{
+//    trace_msg( satelite, 1, "Starting subsumption for the clause " << *clause );
+//    Literal literal = clause->getLiteralWithMinOccurrences();
+//
+//    trace_msg( satelite, 1, "Literal with the min number of occurrences is " << literal );
+//    literal.startIterationOverOccurrences();
+//
+//    while( literal.hasNextOccurrence() )
+//    {
+//        Clause* current = literal.nextOccurence();
+//
+//        trace_msg( satelite, 2, "Considering clause " << *current );
+//        if( clause != current && subset( clause, current ) )
+//        {
+//            trace_msg( satelite, 1, "Clause " << *clause << " subsumes clause " << *current );
+//            current->detachClauseToAllLiterals( literal );
+//            solver.markClauseForDeletion( current );
+//        }
+//    }
+//}
+//
+//void
+//Satelite::findSubsumedForSelfSubsumption(
+//    const Clause* clause,
+//    Literal literal )
+//{
+//    trace_msg( satelite, 1, "Starting self subsumption for the clause " << *clause << " and literal " << literal );
+//    literal.startIterationOverOccurrences();
+//    
+//    while( literal.hasNextOccurrence() )
+//    {
+//        Clause* current = literal.nextOccurence();
+//        
+//        trace_msg( satelite, 2, "Considering clause " << *current );
+//        if( clause != current && subset( clause, current ) )
+//        {
+//            trace_msg( satelite, 1, "Strengthening " << *current << " by removing literal " << literal );
+//            current->removeLiteral( literal );
+//
+//            if( current->size() == 1 )
+//            {
+//                trueLiterals.push_back( current->getAt( 0 ) );
+//                current->detachClauseToAllLiterals( Literal::null );
+//                solver.markClauseForDeletion( current );
+//            }
+//            else
+//            {
+//                this->onStrengtheningClause( current );
+//                trace_msg( satelite, 2, "Clause after removing literal is: " << *current );
+//            }
+//        }
+//    }
+//}
+//
+//void
+//Satelite::selfSubsume(
+//    Clause* clause )
+//{    
+//    trace_msg( satelite, 2, "Self subsume. Clause: " << *clause );
+//    for( unsigned int i = 0; i < clause->size(); i++ )
+//    {
+//        trace_msg( satelite, 1, "Flipping literal " << clause->getAt( i ) );
+//        clause->flipLiteralAt( i );
+//        findSubsumedForSelfSubsumption( clause, clause->getAt( i ) );
+//        trace_msg( satelite, 1, "Restoring literal " << clause->getAt( i ) );
+//        clause->flipLiteralAt( i );
+//    }
+//}
+//
+//bool
+//Satelite::simplificationsSatelite()
+//{
+//    added.reserve( solver.numberOfClauses() );
+//    
+//    for( unsigned int i = 0; i < solver.numberOfClauses(); ++i )
+//    {
+//        Clause* current = solver.clauseAt( i );
+//        assert( !current->hasBeenDeleted() );        
+//        added.push_back( current );
+//    }
+//    
+//    do
+//    {
+//        vector< bool > seenLiterals( 2 * solver.numberOfVariables(), false );
+//
+//        vector< Clause* > S0; //From minisat paper
+//        vector< Clause* > S1;
+//        unordered_set< Clause* > insertedInS0;
+//        unordered_set< Clause* > insertedInS1;
+//        
+//        for( unsigned int i = 0; i < added.size(); i++ )
+//        {
+//            Clause* c = added[ i ];
+//            
+//            if( c->hasBeenDeleted() )
+//                continue;
+//
+//            for( unsigned int j = 0; j < c->size(); j++ )
+//            {
+//                Literal lit = c->getAt( j );
+//                assert_msg( lit.getVariable()->getId() > 0, "Literal " << lit << " has id " << lit.getVariable()->getId() );
+//                unsigned int litId = 2 * ( lit.getVariable()->getId() ) - lit.getSign() - 1;
+//                assert_msg( litId < seenLiterals.size(), "Literal id is " << litId << " while the total number of literals is " << seenLiterals.size() );
+//                if( seenLiterals[ litId ] )
+//                    continue;
+//
+//                seenLiterals[ litId ] = true;
+//
+//                for( unsigned int k = 0; k < lit.numberOfOccurrences(); k++ )
+//                {
+//                    Clause* current = lit.getOccurrence( k );
+//                    assert( !current->hasBeenDeleted() );
+//                    if( insertedInS0.insert( current ).second )
+//                    {
+//                        S0.push_back( current );
+//                    }
+//                }
+//
+//                Literal oppositeLiteral = lit.getOppositeLiteral();
+//                for( unsigned int k = 0; k < oppositeLiteral.numberOfOccurrences(); k++ )
+//                {
+//                    Clause* current = oppositeLiteral.getOccurrence( k );
+//                    assert( !current->hasBeenDeleted() );
+//                    if( insertedInS1.insert( current ).second )
+//                    {
+//                        S1.push_back( current );
+//                    }
+//                }
+//            }
+//
+//            if( insertedInS1.insert( c ).second )
+//                S1.push_back( c );
+//
+//        }
+//        added.clear();
+//
+//        for( unsigned int i = 0; i < S1.size(); i++ )
+//        {
+//            Clause* current = S1[ i ];
+//            if( !current->hasBeenDeleted() )
+//                selfSubsume( current );
+//        }
+//
+//        if( !propagateTopLevel() )
+//            return false;        
+//
+//        while( !strengthened.empty() )
+//        {
+//            vector< Clause* > strengthenedCopy; 
+//            strengthened.swap( strengthenedCopy );
+//            assert( strengthened.empty() );
+//            insertedInStrengthened.clear();
+//
+//            for( unsigned int i = 0; i < strengthenedCopy.size(); i++ )
+//            {
+//                Clause* current = strengthenedCopy[ i ];
+//                if( current->hasBeenDeleted() )
+//                    continue;
+//
+//                if( insertedInS1.find( current ) == insertedInS1.end() )
+//                    selfSubsume( current );
+//            }
+//
+//            if( !propagateTopLevel() )
+//                return false;
+//        }
+//        
+//        for( unsigned int i = 0; i < S0.size(); ++i )
+//        {
+//            Clause* current = S0[ i ];
+//            if( !current->hasBeenDeleted() )
+//                findSubsumed( current );
+//        }        
+//        
+//        vector< Variable* > touchedCopy;
+//        do
+//        {
+//            touchedCopy.clear();
+//            touched.swap( touchedCopy );        
+//            insertedInTouched.clear();
+//            assert( touched.empty() );
+//            
+//            for( unsigned int i = 0; i < touchedCopy.size(); i++ )
+//            {
+//                tryToEliminate( touchedCopy[ i ] );
+//                if( !ok )
+//                    return false;
+//            }
+//        } while( !touched.empty() );        
+//
+//    } while( !added.empty() );    
+//    
+//    return true;
+//}
+//
 bool
 Satelite::tryToEliminate(
     Variable* variable )
@@ -244,7 +241,10 @@ Satelite::tryToEliminate(
     trace_msg( satelite, 2, "Trying to eliminate variable " << *variable );
     if( !variable->isUndefined() )
         return false;
-
+    
+    if( variable->cost() > wasp::Options::maxCost )
+        return false;
+    
     if( variable->numberOfOccurrences( POSITIVE ) >= 8 && variable->numberOfOccurrences( NEGATIVE ) >= 8 )
         return false;
     
@@ -262,6 +262,8 @@ Satelite::tryToEliminate(
     
     if( tryToEliminateByDefinition( variable ) )
         return true;
+//    else
+//        return tryToEliminateByDistribution( variable );    
         
     return false;
 }
@@ -411,40 +413,15 @@ Satelite::tryToSubstitute(
     if( newClauses.size() > variable->numberOfOccurrences( POSITIVE ) + variable->numberOfOccurrences( NEGATIVE ) )
     {
         delete definition;
-	for( unsigned int i = 0; i < newClauses.size(); ++i )
-	{
-		delete newClauses[ i ];
-	}
+        for( unsigned int i = 0; i < newClauses.size(); ++i )
+        {
+            delete newClauses[ i ];
+        }
         trueLiterals.clear();
-        return false;    
+        return false;
     }
     
-    // DONE: substitute
-    Literal positiveLiteral( variable, POSITIVE );
-    positiveLiteral.startIterationOverOccurrences();
-    while( positiveLiteral.hasNextOccurrence() )
-    {
-        Clause* clause = positiveLiteral.nextOccurence();
-        clause->detachClauseToAllLiterals( positiveLiteral );
-        solver.markClauseForDeletion( clause );
-    }
-    
-    Literal negativeLiteral( variable, NEGATIVE );
-    negativeLiteral.startIterationOverOccurrences();
-    while( negativeLiteral.hasNextOccurrence() )
-    {
-        Clause* clause = negativeLiteral.nextOccurence();
-        clause->detachClauseToAllLiterals( negativeLiteral );
-        solver.markClauseForDeletion( clause );
-    }
-    
-    for( unsigned int i = 0; i < newClauses.size(); i++ )
-    {
-        Clause* c = newClauses[ i ];
-        assert( c->size() >= 2 );        
-        onAddingClause( c );
-        solver.addClause( c );        
-    }
+    substitute( variable, newClauses );
     
     assert_msg( variable->numberOfOccurrences() == 0, "Variable " << *variable << " has been eliminated but has still " << variable->numberOfOccurrences() << " occurrences" );
     trace_msg( satelite, 2, "Eliminated variable " << *variable );   
@@ -483,4 +460,269 @@ Satelite::propagateTopLevel()
     }
     
     return true;
+}
+
+bool
+Satelite::tryToEliminateByDistribution( 
+    Variable* variable )
+{
+    trace_msg( satelite, 5, "Trying to eliminate " << *variable << " by distribution" );
+
+    vector< Clause* > newClauses;
+    for( unsigned int i = 0; i < variable->numberOfOccurrences( POSITIVE ); i++ )
+    {
+        for( unsigned int j = 0; j < variable->numberOfOccurrences( NEGATIVE ); j++ )
+        {
+            Clause* newClause = new Clause();            
+            Clause* firstClause = variable->getOccurrence( i, POSITIVE );
+            Clause* secondClause = variable->getOccurrence( j, NEGATIVE );
+
+            bool tautological = false;
+            for( unsigned int k = 0; k < firstClause->size(); k++ )
+            {
+                Literal lit = firstClause->getAt( k );
+                if( lit.getVariable() != variable )
+                    newClause->addLiteral( lit );
+            }
+                        
+            for( unsigned int k = 0; k < secondClause->size(); k++ )
+            {
+                Literal lit = secondClause->getAt( k );
+                if( lit.getVariable() == variable )
+                    continue;
+
+                if( newClause->contains( lit ) )
+                    continue;
+                else if( newClause->contains( lit.getOppositeLiteral() ) )
+                {
+                    tautological = true;
+                    break;
+                }
+                else
+                {
+                    newClause->addLiteral( lit );
+                }
+            }
+
+            //The new clause is tautological
+            if( tautological ) 
+                delete newClause;                
+            else if( newClause->size() == 1 )
+            {
+                trueLiterals.push_back( newClause->getAt( 0 ) );
+                delete newClause;
+            }
+            else
+            {
+                newClauses.push_back( newClause );
+                
+                if( newClauses.size() > variable->numberOfOccurrences() || newClause->size() > clauseLimit )
+                {
+                    for( unsigned int i = 0; i < newClauses.size(); ++i )
+                        delete newClauses[ i ];
+                    trueLiterals.clear();
+                    return false;
+                }
+            }
+        }
+    }
+
+    // DONE: substitute
+    Literal positiveLiteral( variable, POSITIVE );
+    positiveLiteral.startIterationOverOccurrences();
+    while( positiveLiteral.hasNextOccurrence() )
+    {
+        Clause* clause = positiveLiteral.nextOccurence();
+        solver.removeClauseNoDeletion( clause );
+        clause->onRemovingNoDelete( positiveLiteral );        
+    }
+    
+    Literal negativeLiteral( variable, NEGATIVE );
+    negativeLiteral.startIterationOverOccurrences();
+    while( negativeLiteral.hasNextOccurrence() )
+    {
+        Clause* clause = negativeLiteral.nextOccurence();
+        solver.removeClauseNoDeletion( clause );        
+        clause->onRemovingNoDelete( negativeLiteral );
+    }
+    
+    for( unsigned int i = 0; i < newClauses.size(); i++ )
+    {
+        Clause* c = newClauses[ i ];
+        assert( c->size() >= 2 );        
+        onAddingClause( c );
+        solver.addClause( c );        
+    }
+    
+    trace_msg( satelite, 2, "Eliminated variable " << *variable );   
+    
+    solver.onEliminatingVariable( variable, ELIMINATED_BY_DISTRIBUTION, NULL );
+    ok = propagateTopLevel();    
+    return true;
+}
+
+void
+Satelite::substitute(
+    Variable* variable,
+    vector< Clause* >& newClauses )
+{
+    // DONE: substitute
+    Literal positiveLiteral( variable, POSITIVE );
+    positiveLiteral.startIterationOverOccurrences();
+    while( positiveLiteral.hasNextOccurrence() )
+    {
+        Clause* clause = positiveLiteral.nextOccurence();
+        clause->detachClauseToAllLiterals( positiveLiteral );
+        solver.markClauseForDeletion( clause );
+    }
+    
+    Literal negativeLiteral( variable, NEGATIVE );
+    negativeLiteral.startIterationOverOccurrences();
+    while( negativeLiteral.hasNextOccurrence() )
+    {
+        Clause* clause = negativeLiteral.nextOccurence();
+        clause->detachClauseToAllLiterals( negativeLiteral );
+        solver.markClauseForDeletion( clause );
+    }
+    
+    for( unsigned int i = 0; i < newClauses.size(); i++ )
+    {
+        Clause* c = newClauses[ i ];
+        assert( c->size() >= 2 );        
+        onAddingClause( c );
+        solver.addClause( c );        
+    }
+}
+
+bool
+Satelite::simplificationsMinisat2()
+{
+    assert( numberOfTouched != 0 );
+    while( numberOfTouched > 0 && elim_heap.size() > 0 )
+    {
+        gatherTouchedClauses();
+        numberOfTouched = 0;
+
+        if( !backwardSubsumptionCheck() )
+            return false;
+        
+        ok = propagateTopLevel();
+        if( !ok )
+            return false;
+        
+        while( !elim_heap.empty() )
+        {
+            Variable* v = elim_heap.removeMin();
+            if( !v->isUndefined() || v->hasBeenEliminated() )
+                continue;
+            
+            if( !eliminateVariable( v ) )
+                return false;
+        }
+    }
+
+    return true;
+}
+
+bool
+Satelite::backwardSubsumptionCheck()
+{
+    while( subsumptionQueue.size() > 0 )
+    {
+        Clause* clause = subsumptionQueue.front();
+        clause->resetInQueue();
+        subsumptionQueue.pop();
+
+        if( clause->hasBeenDeleted() )
+            continue;
+
+        trace_msg( satelite, 1, "Starting subsumption for the clause " << *clause );
+        Variable* variable = clause->getVariableWithMinOccurrences();
+        
+        assert( variable != NULL );
+        trace_msg( satelite, 1, "Variable with the min number of occurrences is " << *variable );
+        
+        Literal literal( variable, POSITIVE );
+        checkSubsumptionForClause( clause, literal );
+        checkSubsumptionForClause( clause, literal.getOppositeLiteral() );
+        
+        ok = propagateTopLevel();
+        if( !ok )
+            return false;
+    }
+
+    return true;
+}
+
+void
+Satelite::gatherTouchedClauses(
+    Variable* variable )
+{    
+    for( unsigned int i = 0; i < variable->numberOfOccurrences( POSITIVE ); i++ )
+    {
+        Clause* clause = variable->getOccurrence( i, POSITIVE );
+        assert( clause != NULL && !clause->hasBeenDeleted() );
+        addClauseInSubsumptionQueue( clause );
+    }
+    
+    for( unsigned int i = 0; i < variable->numberOfOccurrences( NEGATIVE ); i++ )
+    {
+        Clause* clause = variable->getOccurrence( i, NEGATIVE );
+        assert( clause != NULL && !clause->hasBeenDeleted() );
+        addClauseInSubsumptionQueue( clause );
+    }
+}
+
+void
+Satelite::gatherTouchedClauses()
+{
+    for( unsigned int i = 1; i < touchedVariables.size(); i++ )
+    {
+        if( touchedVariables[ i ] )
+        {
+            gatherTouchedClauses( solver.getVariable( i ) );
+            touchedVariables[ i ] = false;
+        }
+    }
+}
+
+void
+Satelite::checkSubsumptionForClause(
+    Clause* clause,
+    Literal bestLiteral )
+{
+    bestLiteral.startIterationOverOccurrences();
+
+    while( bestLiteral.hasNextOccurrence() )
+    {
+        Clause* current = bestLiteral.nextOccurence();            
+        assert( !current->hasBeenDeleted() );
+        trace_msg( satelite, 2, "Considering clause " << *current );
+        if( clause != current && current->size() < subsumptionLimit )
+        {
+            SubsumptionData data = clause->subsumes( *current );
+            if( data == SUBSUMPTION )
+            {
+                trace_msg( satelite, 1, "Clause " << *clause << " subsumes clause " << *current );
+                current->detachClauseToAllLiterals( bestLiteral );
+                solver.markClauseForDeletion( current );
+            }
+            else if( data == SELFSUBSUMPTION )
+            {
+                bool isCurrentLiteral = current->getAt( current->size() - 1 ) == bestLiteral;
+                current->removeLiteralInLastPosition( isCurrentLiteral );
+                if( current->size() == 1 )
+                {
+                    trueLiterals.push_back( current->getAt( 0 ) );
+                    current->detachClauseToAllLiterals( Literal::null );
+                    solver.markClauseForDeletion( current );
+                }
+                else
+                {
+                    this->onStrengtheningClause( current );
+                    trace_msg( satelite, 2, "Clause after removing literal is: " << *current );
+                }
+            }
+        }
+    }
 }

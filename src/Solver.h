@@ -141,6 +141,7 @@ class Solver
 
         inline void deleteLearnedClause( ClauseIterator iterator );
         inline void deleteClause( Clause* clause );
+        inline void removeClauseNoDeletion( Clause* clause );
         void deleteClauses();
         void updateActivity( Clause* learnedClause );
         inline void decrementActivity(){ deletionCounters.increment *= deletionCounters.decrement; }
@@ -494,6 +495,22 @@ Solver::deleteClause(
     releaseClause( clause );
 }
 
+void
+Solver::removeClauseNoDeletion( 
+    Clause* clause )
+{
+    satelite->onDeletingClause( clause );
+    unsigned int position = clause->getPositionInSolver();
+    assert_msg( position < clauses.size(), "Position " << position << " is greater than size of the clauses vector " << clauses.size() );
+    assert_msg( clause == clauses[ position ], "The clause to delete " << *clause << " is not equal to the clause " << clauses[ position ] << " in position " << position  );
+    trace_msg( solving, 4, "Deleting clause " << *clause );
+
+    clauses[ position ] = clauses.back();
+    trace_msg( solving, 6, "Swapping clause " << *clause << " and " << *clauses[ position ] );
+    clauses[ position ]->setPositionInSolver( position );
+    clauses.pop_back();
+}
+
 unsigned int
 Solver::numberOfClauses()
 {
@@ -683,7 +700,7 @@ Solver::propagateLiteralAsDeterministicConsequenceSatelite(
 
     while( hasNextVariableToPropagate() )
     {
-        Variable* variableToPropagate = getNextVariableToPropagate();
+        Variable* variableToPropagate = getNextVariableToPropagate();        
         propagateAtLevelZeroSatelite( variableToPropagate );
 
         if( conflictDetected() )
@@ -779,25 +796,79 @@ Solver::onEliminatingVariable(
 void
 Solver::completeModel()
 {
-    trace_msg( satelite, 5, "Completing model" );
+    trace_msg( satelite, 5, "Completing the model for eliminated variables" );  
     for( int i = eliminatedVariables.size() - 1; i >= 0; i-- )    
     {
         Variable* back = eliminatedVariables[ i ];
 
         assert( back->hasBeenEliminated() );
         unsigned int sign = back->getSignOfEliminatedVariable();
-        assert( sign == POSITIVE || sign == NEGATIVE );
+    
+        trace_msg( satelite, 5, "Processing variable " << *back );
+        if( sign == ELIMINATED_BY_DISTRIBUTION )
+        {
+            trace_msg( satelite, 5, "Eliminated by distribution " << *back );
+            bool found = false;            
+            Literal positiveLiteral( back, POSITIVE );
+            positiveLiteral.startIterationOverOccurrences();
+            while( positiveLiteral.hasNextOccurrence() )
+            {
+                Clause* clause = positiveLiteral.nextOccurence();
+                assert( clause->hasBeenDeleted() );
+                if( !clause->isSatisfied() )
+                {
+                    back->setUndefinedBrutal();                    
+                    #ifndef NDEBUG
+                    bool result =
+                    #endif
+                    positiveLiteral.setTrue();
+                    assert( result );
+                    found = true;
+                    
+                    trace_msg( satelite, 5, "Clause " << *clause << " is not satisfied: inferring " << positiveLiteral );
+                    break;
+                }
+            }            
+            if( !found )
+            {
+                Literal negativeLiteral( back, NEGATIVE );
+                negativeLiteral.startIterationOverOccurrences();
+                while( negativeLiteral.hasNextOccurrence() )
+                {
+                    Clause* clause = negativeLiteral.nextOccurence();                    
+                    assert( clause->hasBeenDeleted() );
+                    if( !clause->isSatisfied() )                        
+                    {
+                        back->setUndefinedBrutal();
+
+                        #ifndef NDEBUG
+                        bool result =
+                        #endif
+                        negativeLiteral.setTrue();                            
+                        assert( result );
+                        
+                        trace_msg( satelite, 5, "Clause " << *clause << " is not satisfied: inferring " << negativeLiteral );
+                        break;
+                    }
+                }
+            }
+        }
+        else
+        {            
+            assert( sign == POSITIVE || sign == NEGATIVE );
         
-        Literal literal( back, sign );
-        back->setUndefinedBrutal();
-        const Clause* definition = back->getDefinition();
-        trace_msg( satelite, 5, "Considering variable " << *back << " and its definition " << *definition << " which is " << ( definition->isSatisfied() ? "satisfied" : "unsatisfied" ) );
-        #ifndef NDEBUG
-        bool result =
-        #endif
-        definition->isSatisfied() ? literal.getOppositeLiteral().setTrue() : literal.setTrue();                
-        
-        assert( result );
+            Literal literal( back, sign );
+            back->setUndefinedBrutal();
+            const Clause* definition = back->getDefinition();
+            trace_msg( satelite, 5, "Considering variable " << *back << " and its definition " << *definition << " which is " << ( definition->isSatisfied() ? "satisfied" : "unsatisfied" ) );
+            #ifndef NDEBUG
+            bool result =
+            #endif
+            definition->isSatisfied() ? literal.getOppositeLiteral().setTrue() : literal.setTrue();                
+
+            assert( result );
+            trace_msg( satelite, 5, "Inferring " << ( definition->isSatisfied() ? literal.getOppositeLiteral() : literal ) );            
+        }
     }
 }
 

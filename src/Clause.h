@@ -30,6 +30,7 @@
 using namespace std;
 
 class Solver;
+enum SubsumptionData { NO_SUBSUMPTION = 0, SUBSUMPTION = 1, SELFSUBSUMPTION = 2 };
 
 /**
  *  This class represents a clause.
@@ -59,12 +60,14 @@ class Clause
         inline void attachClause( unsigned int firstWatch, unsigned int secondWatch );
         inline void attachClauseToAllLiterals();
         inline void detachClause();
-        inline void detachClauseToAllLiterals( Literal literal );
+        inline void detachClauseToAllLiterals( Literal literal );        
         inline void removeLiteral( Literal literal );
+        inline void removeLiteralInLastPosition( bool currentLiteral );
         inline void removeLastLiteralNoWatches(){ literals.pop_back(); }
         
         inline void onLearning( Learning* strategy );
         inline bool onLiteralFalse( Literal literal );
+        inline void onRemovingNoDelete( Literal literal );
 
         inline unsigned int size() const;
 //        inline bool checkUnsatisfiedAndOptimize( Heuristic* collector );
@@ -80,9 +83,10 @@ class Clause
           
         inline uint64_t getSignature() const { return signature; }
         inline Literal getLiteralWithMinOccurrences() const;
+        inline Variable* getVariableWithMinOccurrences();
         
-        inline void setPositionInSolver( unsigned int pos ) { positionInSolver = pos; }
-        inline unsigned int getPositionInSolver(){ return positionInSolver; }
+        inline void setPositionInSolver( unsigned int pos ) { clauseData.positionInSolver = pos; }
+        inline unsigned int getPositionInSolver(){ return clauseData.positionInSolver; }
 
         /**
          * This method returns true if the clause is a subset of another clause.
@@ -92,13 +96,18 @@ class Clause
         
         inline Activity& activity(){ return act; }
         inline const Activity& activity() const { return act; }
-        inline void setLearned(){ learned = true; }
-        inline bool isLearned() const { return learned; }
+        inline void setLearned(){ clauseData.learned = 1; }
+        inline bool isLearned() const { return clauseData.learned == 1; }
         
         inline bool removeSatisfiedLiterals();
         inline bool removeDuplicatesAndCheckIfTautological();
         
-        inline void free();        
+        inline void free();
+        inline SubsumptionData subsumes( Clause& other );        
+        
+        inline void resetInQueue(){ clauseData.inQueue = 0; }
+        inline void setInQueue(){ clauseData.inQueue = 1; }
+        inline bool isInQueue(){ return clauseData.inQueue == 1; }
         
     protected:
         vector< Literal > literals;
@@ -126,15 +135,24 @@ class Clause
         inline void recomputeSignature();
         
         uint64_t signature;
-        unsigned int positionInSolver;
+//        unsigned int positionInSolver;
         
         Activity act;
-        bool learned;
+//        bool learned;
+        
+        struct
+        {        
+            unsigned inQueue                : 1;
+            unsigned learned                : 1;            
+            unsigned positionInSolver       : 30;
+        } clauseData;
 };
 
-Clause::Clause(): lastSwapIndex( 1 ), signature( 0 ), act( 0.0 ), learned( false )
+Clause::Clause(): lastSwapIndex( 1 ), signature( 0 ), act( 0.0 )
 {
     literals.reserve( 8 );
+    clauseData.inQueue = 0;
+    clauseData.learned = 0;    
     //free();
 }
 
@@ -236,6 +254,21 @@ Clause::detachClauseToAllLiterals(
 }
 
 void
+Clause::onRemovingNoDelete(
+    Literal literal )
+{
+    for( unsigned int i = 0; i < literals.size(); ++i )
+    {
+        if( literals[ i ] != literal )
+            literals[ i ].findAndEraseClause( this );
+    }
+    
+    assert( literals.size() > 0 );
+    literals.push_back( getAt( 0 ) );
+    markAsDeleted();
+}
+
+void
 Clause::removeLiteral(
     Literal literal )
 {
@@ -254,6 +287,18 @@ Clause::removeLiteral(
     assert( literals.back() == literal || literals.back() == literals[ i ] );
     literals.pop_back();
     
+    recomputeSignature();
+}
+
+void
+Clause::removeLiteralInLastPosition(
+    bool currentLiteral )
+{
+    if( currentLiteral )
+        literals.back().eraseClause( this );
+    else
+        literals.back().findAndEraseClause( this );
+    literals.pop_back();
     recomputeSignature();
 }
 
@@ -488,6 +533,26 @@ Clause::getLiteralWithMinOccurrences() const
     return minLiteral;
 }
 
+Variable*
+Clause::getVariableWithMinOccurrences()
+{
+    assert( literals.size() > 1 );
+    Variable* minVariable = literals[ 0 ].getVariable();
+    assert( minVariable->numberOfOccurrences() > 0 );
+
+    unsigned int i = 1;
+    do
+    {
+        assert( literals[ i ].getVariable()->numberOfOccurrences() > 0 );
+        if( literals[ i ].getVariable()->numberOfOccurrences() < minVariable->numberOfOccurrences() )
+        {
+            minVariable = literals[ i ].getVariable();
+        }
+    } while( ++i < literals.size() );    
+        
+    return minVariable;
+}
+
 bool
 Clause::isSubsetOf(
     const Clause* clause ) const
@@ -611,8 +676,48 @@ Clause::free()
     lastSwapIndex = 1;
     signature = 0;
     act = 0.0;
-    learned = false;
+    clauseData.inQueue = 0;
+    clauseData.learned = 0;
     literals.clear();
+}
+
+SubsumptionData
+Clause::subsumes(
+    Clause& other )
+{
+    unsigned int size = this->size();
+    unsigned int otherSize = other.size();
+    if( size < otherSize && ( signature & ~other.signature ) != 0 )
+        return NO_SUBSUMPTION;
+    
+    SubsumptionData ret = SUBSUMPTION;
+    unsigned int position = MAXUNSIGNEDINT;    
+    
+    for( unsigned int i = 0; i < size; i++ )
+    {
+        for( unsigned int j = 0; j < otherSize; j++ )
+        {
+            if( getAt( i ) == other.getAt( j ) )
+                goto ok;
+            else if( ret == SUBSUMPTION && getAt( i ) == other.getAt( j ).getOppositeLiteral() )
+            {
+                ret = SELFSUBSUMPTION;
+                position = j;
+                goto ok;
+            }
+        }
+        
+        return NO_SUBSUMPTION;
+        ok:;
+    }
+    
+    if( ret == SELFSUBSUMPTION )
+    {
+        assert_msg( position < otherSize, "Position is " << position << " while the size of the clause is " << otherSize );
+        other.swapLiterals( position, otherSize - 1 );
+    }
+
+    return ret;
 }
 
 #endif

@@ -42,6 +42,7 @@ namespace wasp
 
             static void parse( int argc, char* const* argv );
             static void setOptions( WaspFacade& waspFacade );
+            static unsigned int maxCost;
         
         private:
 

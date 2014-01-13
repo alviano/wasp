@@ -22,6 +22,7 @@
 
 #include "../Solver.h"
 #include "../stl/Trie.h"
+#include <unordered_set>
 
 using namespace std;
 
