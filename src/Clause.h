@@ -121,6 +121,7 @@ class Clause
             assert( "The copy constructor has been disabled." && 0 );
         }
         
+		inline void resetLastSwapIndex() { lastSwapIndex = 1; }
         inline void setWatchesInRandomPositions();
         
         inline void attachFirstWatch();
@@ -373,6 +374,9 @@ Clause::onLearning(
             assert_msg( literal.isFalse(), "Literal " << literal << " is not false." );
             swapUnwatchedLiterals( i, literals.size() - 1 );
             literals.pop_back();
+
+			if( lastSwapIndex >= literals.size() )
+				resetLastSwapIndex();
         }
     }
 }
@@ -468,6 +472,7 @@ Clause::updateWatch()
     
     for( unsigned i = 2; i <= lastSwapIndex; ++i )
     {
+		assert( i < literals.size() );
         if( !literals[ i ].isFalse() )
         {
             //Detach the old watch
@@ -598,6 +603,9 @@ Clause::removeSatisfiedLiterals()
             i++;
         }        
     }
+
+	if( lastSwapIndex >= literals.size() )
+		resetLastSwapIndex();
         
     return false;
 }
