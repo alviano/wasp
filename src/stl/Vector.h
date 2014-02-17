@@ -53,7 +53,7 @@ template< class T >
 Vector< T >::~Vector()
 {
 	if( vector )
-		delete vector;
+		delete [] vector;
 }
 
 template< class T >
@@ -82,7 +82,7 @@ Vector< T >::resetCapacity(
 	memcpy( tmpVector, vector, sizeof( T ) * capacity_ );
 
 	capacity_ += add;
-	delete vector;
+	delete [] vector;
 	vector = tmpVector;	
 }
 
