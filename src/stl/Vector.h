@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cstdio>
 #include <cstring>
+#include "../util/Constants.h"
 using namespace std;
 
 template< class T >

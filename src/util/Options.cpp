@@ -135,7 +135,7 @@ Options::parse(
                 { "trace-parser", required_argument, NULL, OPTIONID_trace_parser },
                 { "trace-solving", required_argument, NULL, OPTIONID_trace_solving },
                 { "trace-mc", required_argument, NULL, OPTIONID_trace_checker },
-                { "trace-us", required_argument, NULL, OPTIONID_trace_us },
+                { "trace-unfoundedset", required_argument, NULL, OPTIONID_trace_us },
                 { "trace-heuristic", required_argument, NULL, OPTIONID_trace_heuristic },
                 { "trace-learning", required_argument, NULL, OPTIONID_trace_learning },
                 { "trace-enumeration", required_argument, NULL, OPTIONID_trace_enumeration },

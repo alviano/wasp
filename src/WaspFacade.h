@@ -31,7 +31,7 @@ class WaspFacade
 {
     public:
         inline WaspFacade();
-        inline ~WaspFacade();
+        inline ~WaspFacade(){}
         
         void readInput();
         void solve();
@@ -43,11 +43,13 @@ class WaspFacade
         void setOutputPolicy( OUTPUT_POLICY );
         void setRestartsPolicy( RESTARTS_POLICY, unsigned int threshold );
 
-        inline void setMaxModels( unsigned int max );
-        inline void setPrintProgram( bool printProgram );        
+        inline void setMaxModels( unsigned int max ) { maxModels = max; }
+        inline void setPrintProgram( bool printProgram ) { this->printProgram = printProgram; }
         
     private:
         Solver solver;        
+        
+        inline bool solveInternal();
         
         unsigned int numberOfModels;
         unsigned int maxModels;
@@ -58,22 +60,14 @@ WaspFacade::WaspFacade() : numberOfModels( 0 ), maxModels( 1 ), printProgram( fa
 {    
 }
 
-WaspFacade::~WaspFacade()
+bool
+WaspFacade::solveInternal()
 {
+    if( solver.tight() )
+        return solver.solve();
+    else
+        return solver.solvePropagators();
 }
-
-void
-WaspFacade::setMaxModels(
-    unsigned int max )
-{
-    maxModels = max;
-}
-
-void
-WaspFacade::setPrintProgram(
-    bool print )
-{
-    printProgram = print;
-}
+        
 
 #endif	/* WASPFACADE_H */

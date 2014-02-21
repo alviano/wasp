@@ -16,6 +16,9 @@
  *
  */
 
+#include "Component.h"
+
+
 #include "Variable.h"
 #include "Clause.h"
 #include "Literal.h"
@@ -71,4 +74,12 @@ Variable::onLearning(
     {
         implicant->onLearning( strategy );
     }
+}
+
+void
+Variable::onLearningForUnfounded(
+    Learning& learning )
+{
+    assert( component != NULL );
+    component->onLearningForUnfounded( id, learning );
 }

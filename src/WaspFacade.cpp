@@ -56,7 +56,7 @@ WaspFacade::solve()
     
     if( solver.preprocessing() )
     {
-        while( solver.solve() )
+        while( solveInternal() )
         {
             solver.printAnswerSet();
             trace_msg( enumeration, 1, "Model number: " << numberOfModels + 1 );

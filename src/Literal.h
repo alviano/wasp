@@ -60,7 +60,9 @@ class Literal
 
         inline void addClause( Clause* clause );
         inline void eraseClause( Clause* clause );
-        inline void findAndEraseClause( Clause* clauses );        
+        inline void findAndEraseClause( Clause* clauses );   
+        
+        inline void addPostPropagator( PostPropagator* p );
         
         inline unsigned int getDecisionLevel() const;
 
@@ -89,14 +91,14 @@ class Literal
 
         inline Clause* getOccurrence( unsigned int idx ) { return getVariable()->getOccurrence( idx, getSign() ); }
         
+        inline bool isPositive() const;
+
 	private:
         
         /**
          * This function returns 1 if the literal is positive, 0 otherwise.
          */
         inline unsigned int getOppositeSign() const;                
-        
-        inline bool isPositive() const;
         
         uintptr_t signedVariable;
 };
@@ -300,6 +302,14 @@ Literal::eraseClause(
 {
     assert( "Variable has not been set." && getVariable() != NULL );
     getVariable()->eraseClause( clause, getSign() );
+}
+
+void
+Literal::addPostPropagator(
+    PostPropagator* p )
+{
+    assert( "Variable has not been set." && getVariable() != NULL );
+    getVariable()->addPostPropagator( p, getSign() );
 }
 
 void

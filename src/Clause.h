@@ -42,6 +42,7 @@ class Clause
 {
     friend ostream &operator<<( ostream & out, const Clause & clause );
     friend Clause* Learning::onConflict( Literal conflictLiteral, Clause* conflictClause );
+    friend Clause* Learning::learnClausesFromUnfoundedSet( Vector< Variable* >& unfoundedSet );
 
     public:        
         virtual ~Clause();
@@ -73,7 +74,7 @@ class Clause
 //        inline bool checkUnsatisfiedAndOptimize( Heuristic* collector );
         bool isSatisfied() const;
         
-        unsigned getMaxDecisionLevel( unsigned from, unsigned to) const;       
+        unsigned getMaxDecisionLevel( unsigned from, unsigned to ) const;       
 
         inline bool isLocked() const;        
 
@@ -109,6 +110,10 @@ class Clause
         inline void setInQueue(){ clauseData.inQueue = 1; }
         inline bool isInQueue(){ return clauseData.inQueue == 1; }
         
+        inline void copyLiterals( const Clause& c );
+        
+        inline void swapLiterals( unsigned int pos1, unsigned int pos2 );
+        
     protected:
         vector< Literal > literals;
         unsigned lastSwapIndex;
@@ -129,9 +134,7 @@ class Clause
         inline void detachSecondWatch();
         
         inline bool updateWatch();
-        void notifyImplication( Solver& solver );
-
-        inline void swapLiterals( unsigned int pos1, unsigned int pos2 );
+        void notifyImplication( Solver& solver );        
         
         inline void recomputeSignature();
         
@@ -726,6 +729,14 @@ Clause::subsumes(
     }
 
     return ret;
+}
+
+void
+Clause::copyLiterals(
+    const Clause& c )
+{
+    for( unsigned int i = 0; i < c.literals.size(); i++ )    
+        this->addLiteral( c.literals[ i ] );    
 }
 
 #endif

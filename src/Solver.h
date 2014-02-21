@@ -39,6 +39,8 @@ using namespace std;
 #include "Restart.h"
 #include "MinisatHeuristic.h"
 #include "util/Statistics.h"
+#include "PostPropagator.h"
+#include "DependencyGraph.h"
 
 class Solver
 {
@@ -50,7 +52,10 @@ class Solver
         
         inline void init();
         bool solve();
-        void propagate( Variable* variable );
+        bool solvePropagators();
+        void unitPropagation( Variable* variable );
+        void postPropagation( Variable* variable );
+        inline void propagateWithPropagators( Variable* variable );
         void propagateAtLevelZero( Variable* variable );
         void propagateAtLevelZeroSatelite( Variable* variable );
 
@@ -167,6 +172,17 @@ class Solver
         inline Clause* newClause();
         inline void releaseClause( Clause* clause );
         
+        inline void addPostPropagator( PostPropagator* postPropagator );
+        inline void resetPostPropagators();
+        
+        inline void addEdgeInDependencyGraph( unsigned int v1, unsigned int v2 ){ dependencyGraph.addEdge( v1, v2 ); }
+        inline void computeStrongConnectedComponents(){ dependencyGraph.computeStrongConnectedComponents( gusDataVector ); }
+        inline bool tight() const { return dependencyGraph.tight(); }
+        inline unsigned int getNumberOfCyclicComponents(){ return dependencyGraph.numberOfCyclicComponents(); }
+        inline Component* getCyclicComponent( unsigned int position ){ return dependencyGraph.getCyclicComponent( position ); }
+        
+        inline void addGUSData( GUSData* gd ) { gusDataVector.push_back( gd ); }        
+        
     private:
         inline Variable* addVariableInternal();
         
@@ -203,9 +219,13 @@ class Solver
         uint64_t literalsInClauses;
         uint64_t literalsInLearnedClauses;
         
-
         vector< Variable* > eliminatedVariables;
         vector< Clause* > poolOfClauses;
+
+        DependencyGraph dependencyGraph;
+        Vector< PostPropagator* > postPropagators;
+        
+        vector< GUSData* > gusDataVector;
 
         struct DeletionCounters
         {
@@ -377,6 +397,8 @@ Solver::addClauseFromModel(
 {
     assert( clause != NULL );
     unsigned int size = clause->size();
+    assert( size != 0 );
+    
     if( size > 1 )
     {
         statistics( onAddingClause( size ) );
@@ -385,22 +407,21 @@ Solver::addClauseFromModel(
         clauses.push_back( clause );
         return true;
     }
-
-    if( size == 1 )
+    else
     {
         assignLiteral( clause->getAt( 0 ) );
         releaseClause( clause );
 
-        clearConflictStatus();
-        while( hasNextVariableToPropagate() )
-        {
-            nextValueOfPropagation--;
-            Variable* variableToPropagate = getNextVariableToPropagate();
-            propagate( variableToPropagate );
-
-            if( conflictDetected() )            
-                return false;
-        }
+//        clearConflictStatus();
+//        while( hasNextVariableToPropagate() )
+//        {
+//            nextValueOfPropagation--;
+//            Variable* variableToPropagate = getNextVariableToPropagate();
+//            propagateWithPropagators( variableToPropagate );
+//
+//            if( conflictDetected() )            
+//                return false;
+//        }
     }
 
     return true;
@@ -566,7 +587,7 @@ Solver::analyzeConflict()
     if( learnedClause->size() == 1 )
     {
         doRestart();
-        assignLiteral( learnedClause->getAt( 0 ) );        
+        assignLiteral( learnedClause->getAt( 0 ) );
 //        delete learnedClause;
         releaseClause( learnedClause );
 
@@ -575,7 +596,7 @@ Solver::analyzeConflict()
         {
             nextValueOfPropagation--;            
             Variable* variableToPropagate = getNextVariableToPropagate();
-            propagate( variableToPropagate );
+            propagateWithPropagators( variableToPropagate );
 
             if( conflictDetected() )
                 return false;
@@ -608,6 +629,8 @@ Solver::analyzeConflict()
             
             onLearning( learnedClause );  // FIXME: this should be moved outside
         }
+        
+        clearConflictStatus();
     }
 
     if( --deletionCounters.learnedSizeAdjustCnt == 0 )
@@ -616,15 +639,14 @@ Solver::analyzeConflict()
         deletionCounters.learnedSizeAdjustCnt = ( unsigned int ) deletionCounters.learnedSizeAdjustConfl;
         deletionCounters.maxLearned *= deletionCounters.learnedSizeIncrement;
     }
-    
-    clearConflictStatus();
-    
+
     return true;
 }
 
 void
 Solver::clearConflictStatus()
 {
+    resetPostPropagators();
     conflictLiteral = Literal::null;
     conflictClause = NULL;
 }
@@ -893,6 +915,36 @@ Solver::releaseClause(
 {
     clause->free();    
     poolOfClauses.push_back( clause );
+}
+
+void
+Solver::addPostPropagator(
+    PostPropagator* postPropagator )
+{
+    if( !postPropagator->hasBeenAdded() )
+    {
+        postPropagators.push_back( postPropagator );
+        postPropagator->onAdding();
+    }
+}
+
+void
+Solver::resetPostPropagators()
+{
+    while( !postPropagators.empty() )
+    {
+        PostPropagator* postPropagator = postPropagators.back();        
+        postPropagators.pop_back();        
+        postPropagator->onRemoving();
+    }
+}
+
+void
+Solver::propagateWithPropagators(
+    Variable* variable )
+{
+    unitPropagation( variable );
+    postPropagation( variable );
 }
 
 #endif	/* SOLVER_H */

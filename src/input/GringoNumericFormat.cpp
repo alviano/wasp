@@ -83,6 +83,13 @@ GringoNumericFormat::parse(
     readTrueAtoms( input );
     readFalseAtoms( input );
     readErrorNumber( input );
+    
+    solver.computeStrongConnectedComponents();
+    
+    if( !solver.tight() )
+    {
+        programIsNotTight();
+    }
 }
 
 void
@@ -122,6 +129,9 @@ GringoNumericFormat::readNormalRule(
             ok = solver.addClause( c );
             if( !ok )
                 return;
+
+            if( bodyLiteral.isPositive() )
+                solver.addEdgeInDependencyGraph( getIdInSolver( headAtom, false ), bodyLiteral.getVariable()->getId() );
         }
         else
         {
@@ -255,23 +265,37 @@ GringoNumericFormat::readBody(
                     {
                         Clause* c = solver.newClause();
                         addLiteralInClause( oppLit, c );
-                        
+
                         assert( clause->getAt( i ).getOppositeLiteral().isUndefined() );
                         c->addLiteral( clause->getAt( i ).getOppositeLiteral() );
 
                         trace_msg( parser, 1, "Adding supporting rule " << *c << " for variable " << lit );
                         ok = solver.addClause( c );
+                        if( !ok )
+                            return Literal::null;
+
+                        if( !clause->getAt( i ).isPositive() )
+                            solver.addEdgeInDependencyGraph( oppLit.getVariable()->getId(), clause->getAt( i ).getVariable()->getId() );
+
+                        assert_msg( idAuxLiteral < supportVectorForAuxVariables.size(), "Id is " << idAuxLiteral << " while the size of the vector is " << supportVectorForAuxVariables.size() );
+                        supportVectorForAuxVariables[ idAuxLiteral ].push_back( clause->getAt( i ).getOppositeLiteral() );
                     }
 
                     addLiteralInClause( lit, clause );
 
                     trace_msg( parser, 1, "Adding clause " << *clause );
                     ok = solver.addClause( clause );
+                    if( !ok )
+                        return Literal::null;
                 }
                 else
                 {
                     solver.releaseClause( clause );
                 }
+            }
+            else
+            {
+                addTrueLiteralInSolver( -idInSolver );
             }
             return lit;
         }
@@ -362,7 +386,7 @@ GringoNumericFormat::readConstraint(
         if( trivialClause )
             return;
 
-        trace_msg( parser, 1, "Adding clause " << *clause << "which represent a constraint" );
+        trace_msg( parser, 1, "Adding clause " << *clause << " which represent a constraint" );        
         ok = solver.addClause( clause );
         if( !ok )
             return;
@@ -482,6 +506,7 @@ GringoNumericFormat::readTrueAtoms(
     
     while( nextAtom != 0 )
     {
+        addNewVariable( nextAtom );
         trace_msg( parser, 2, "Adding " << nextAtom << " as true" );
         addTrueLiteralInSolver( getIdInSolver( nextAtom, false ) );
         input >> nextAtom;
@@ -502,6 +527,7 @@ GringoNumericFormat::readFalseAtoms(
     
     while( nextAtom != 0 )
     {
+        addNewVariable( nextAtom );
         trace_msg( parser, 2, "Adding " << nextAtom << " as false" );
         addTrueLiteralInSolver( -getIdInSolver( nextAtom, false ) );
         input >> nextAtom;
@@ -586,6 +612,7 @@ GringoNumericFormat::addNewVariable(
     while( variable > numberOfAddedVariables )
     {
         solver.addVariable();
+        solver.addEdgeInDependencyGraph( solver.numberOfVariables(), 0 );
         ++numberOfAddedVariables;
         trace_msg( parser, 4, "Adding a new variable id " << numberOfAddedVariables << ". Id in solver: " << solver.numberOfVariables() );
         gringoIdToSolverId[ numberOfAddedVariables ] = solver.numberOfVariables();
@@ -612,9 +639,11 @@ GringoNumericFormat::addNewAuxVariable(
     #else
     solver.addVariable();
     #endif
+    solver.addEdgeInDependencyGraph( solver.numberOfVariables(), 0 );    
     trace_msg( parser, 4, "Adding aux variable id " << auxVariable << ". Id in solver: " << solver.numberOfVariables() );
     gringoIdToSolverId[ -auxVariable ] = solver.numberOfVariables();
     ++numberOfAddedAuxVariables;
+    supportVectorForAuxVariables.push_back( vector< Literal >() );
     
     assert_msg( auxVariable == numberOfAddedAuxVariables, "Aux variable id " << auxVariable << " must be equal to the number of added variable " << numberOfAddedAuxVariables );    
 }
@@ -623,7 +652,7 @@ void
 GringoNumericFormat::dealWithSupport()
 {
     assert_msg( supportVector[ 0 ].empty(), "Support vector in position 0 contains " << supportVector[ 0 ].size() << " elements" );
-    assert_msg( supportVector[ 1 ].empty(), "Support vector in position 1 contains " << supportVector[ 1 ].size() << " elements" );
+    assert_msg( supportVector.size() == 1 || supportVector[ 1 ].empty(), "Support vector in position 1 contains " << supportVector[ 1 ].size() << " elements" );
     
     trace_msg( parser, 1, "Starting iteration on normal variables for dealing with support. Number of variables: " << supportVector.size() - 1 );
     assert_msg( supportVector.size() - 1 == numberOfAddedVariables, "Support vector contains " << supportVector.size() << " elements and there are " << numberOfAddedVariables << " variables" );
@@ -631,13 +660,13 @@ GringoNumericFormat::dealWithSupport()
     {
         vector< Literal >& lits = supportVector[ i ];
         unsigned int atomId = getIdInSolver( i, false );
-        
+
         if( supportedVariables.find( getVariable( atomId ) ) != supportedVariables.end() )
         {
             trace_msg( parser, 2, "Atom " << atomId << " is supported: no operations required" );
             continue;
         }
-        
+
         if( lits.empty() )
         {
             trace_msg( parser, 2, "Atom " << atomId << " has no supporting rules. It must be inferred false" );
@@ -670,5 +699,116 @@ GringoNumericFormat::dealWithSupport()
         ok = solver.addClause( clause );
         if( !ok )
             return;
+    }    
+}
+
+void
+GringoNumericFormat::programIsNotTight()
+{
+    unordered_map< Variable*, Component* > variableComponent;
+    
+    //Add two fake positions
+    solver.addGUSData( NULL );
+    solver.addGUSData( NULL );
+    for( unsigned int i = 2; i <= solver.numberOfVariables(); i++ )
+    {
+        GUSData* gd = new GUSData();
+        gd->variable = solver.getVariable( i );
+        solver.addGUSData( gd );        
     }
+    
+    trace_msg( parser, 2, "Program is not tight. Number of cyclic components " << solver.getNumberOfCyclicComponents() );
+    for( unsigned int i = 0; i < solver.getNumberOfCyclicComponents(); i++ )
+    {
+        Component* component = solver.getCyclicComponent( i );
+        
+        for( unsigned int j = 0; j < component->size(); j++ )
+        {
+            unsigned int varId = component->getVariable( j );
+            trace_msg( parser, 2, "Variable " << *solver.getVariable( varId ) << " is in the cyclic component " << i );
+            Variable* currentVariable = solver.getVariable( varId );
+            currentVariable->setComponent( component );
+            variableComponent[ currentVariable ] = component;
+            component->variableHasNoSourcePointer( currentVariable );
+        }
+        
+        solver.addPostPropagator( component );
+    }                
+    
+    unordered_map< Variable*, unordered_set< PostPropagator* > > literalsPostPropagator[ 2 ];    
+    
+    for( unsigned int i = 2; i < supportVector.size(); i++ )
+    {
+        unsigned int atomId = getIdInSolver( i, false );
+        Variable* variable = getVariable( atomId );
+
+        if( !variable->isInCyclicComponent() || supportedVariables.find( variable ) != supportedVariables.end() )
+            continue;
+        
+        vector< Literal >& lits = supportVector[ i ];
+        if( lits.empty() )
+            continue;
+
+        trace_msg( parser, 2, "Creating GUS data structures for variable " << *variable << " which has " << lits.size() << " supporting rules" );
+        
+        Component* component = variableComponent[ variable ];
+        assert( component != NULL );
+        
+        unordered_set< Variable* > tmp;
+        for( unsigned int j = 0; j < lits.size(); j++ )
+        {
+            if( !tmp.insert( lits[ j ].getVariable() ).second )
+                continue;
+
+            if( lits[ j ].isPositive() && variable->inTheSameComponent( lits[ j ].getVariable() ) )
+            {
+                trace_msg( parser, 3, "Adding " << lits[ j ] << " as internal rule for " << *variable );
+                component->addInternalLiteralForVariable( variable->getId(), lits[ j ] );
+            }
+            else
+            {
+                trace_msg( parser, 3, "Adding " << lits[ j ] << " as external rule for " << *variable );
+                component->addExternalLiteralForVariable( variable->getId(), lits[ j ] );
+            }
+            
+            component->addVariablePossiblySupportedByLiteral( variable, lits[ j ] );
+            
+            unsigned int sign = lits[ j ].getSign();
+            if( literalsPostPropagator[ sign ][ lits[ j ].getVariable() ].insert( component ).second )            
+                lits[ j ].addPostPropagator( component );
+        }
+    }    
+    
+    for( unsigned int i = 1; i < supportVectorForAuxVariables.size(); i++ )
+    {
+        unsigned int atomId = getIdInSolver( i, true );
+        Variable* variable = getVariable( atomId );
+        
+        if( !variable->isInCyclicComponent() || supportedVariables.find( variable ) != supportedVariables.end() )
+            continue;
+
+        vector< Literal >& lits = supportVectorForAuxVariables[ i ];
+        if( lits.empty() )
+            continue;
+
+        trace_msg( parser, 2, "Creating GUS data structures for variable " << *variable << " which has " << lits.size() << " supporting rules" );
+
+        Component* component = variableComponent[ variable ];
+        component->setAuxVariable( variable->getId() );
+        
+        assert( component != NULL );
+
+        unordered_set< Variable* > tmp;
+        for( unsigned int j = 0; j < lits.size(); j++ )
+        {
+            if( !tmp.insert( lits[ j ].getVariable() ).second )
+                continue;
+            trace_msg( parser, 3, "Adding " << lits[ j ] << " as supporting rule for " << *variable );
+            if( lits[ j ].isPositive() && lits[ j ].getVariable()->inTheSameComponent( variable ) )
+            {
+                component->addAuxVariableSupportedByLiteral( variable, lits[ j ] );
+                component->addInternalLiteralForVariable( variable->getId(), lits[ j ] );
+            }
+        }
+    }    
 }

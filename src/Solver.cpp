@@ -128,7 +128,10 @@ Solver::addClauseFromModelAndRestart()
 bool 
 Solver::solve()
 {
-    trace( solving, 1, "Starting solving.\n" );    
+    trace( solving, 1, "Starting solving.\n" );
+    
+    if( hasNextVariableToPropagate() )
+        goto propagationLabel;
     
     while( hasUndefinedLiterals() )
     {
@@ -158,11 +161,12 @@ Solver::solve()
         assert( !conflictDetected() );
         chooseLiteral();
         
+        propagationLabel:;
         while( hasNextVariableToPropagate() )
         {
             nextValueOfPropagation--;
             Variable* variableToPropagate = getNextVariableToPropagate();
-            propagate( variableToPropagate );
+            unitPropagation( variableToPropagate );
 
             if( conflictDetected() )
             {
@@ -193,8 +197,110 @@ Solver::solve()
     return true;
 }
 
+bool 
+Solver::solvePropagators()
+{
+    trace( solving, 1, "Starting solving.\n" );
+    if( hasNextVariableToPropagate() )
+        goto propagationLabel;
+    
+    if( !postPropagators.empty() )
+        goto postPropagationLabel;
+    
+    while( hasUndefinedLiterals() )
+    {
+        if( hasToDelete() )
+            deleteClauses();
+        
+        assert( !conflictDetected() );
+        chooseLiteral();
+        
+        propagationLabel:;
+        Variable* variableToPropagate;
+        while( hasNextVariableToPropagate() )
+        {
+            nextValueOfPropagation--;
+            variableToPropagate = getNextVariableToPropagate();
+            propagateWithPropagators( variableToPropagate );
+
+            conflict:;
+            if( conflictDetected() )
+            {
+                trace( solving, 1, "Conflict detected.\n" );
+                if( getCurrentDecisionLevel() == 0 )
+                {
+                    trace( solving, 1, "Conflict at level 0: return. \n");
+                    statistics( endSolving() );
+                    return false;
+                }
+                
+                if( !analyzeConflict() )
+                {
+                    statistics( endSolving() );
+                    return false;
+                }
+                minisatHeuristic.variableDecayActivity();                
+                assert( hasNextVariableToPropagate() || getCurrentDecisionLevel() == 0 );
+            }
+        }
+        
+        postPropagationLabel:;
+        while( !postPropagators.empty() )
+        {
+            PostPropagator* postPropagator = postPropagators.back();
+            Clause* clauseToPropagate = postPropagator->getClauseToPropagate( learning );
+            if( clauseToPropagate == NULL )
+            {
+                postPropagators.pop_back();
+                postPropagator->onRemoving();                                            
+            }
+            else
+            {
+                unsigned int size = clauseToPropagate->size();
+                if( size == 0 )
+                {
+                    delete clauseToPropagate;
+                    return false;
+                }
+                else if( size == 1 )
+                {
+                    if( getCurrentDecisionLevel() != 0 )
+                        doRestart();
+                    assignLiteral( clauseToPropagate->getAt( 0 ) );
+                    delete clauseToPropagate;
+                }
+                else
+                {
+                    if( clauseToPropagate->getAt( 1 ).getDecisionLevel() < getCurrentDecisionLevel() )
+                    {
+                        trace( solving, 2, "Learned clause from propagator and backjumping to level %d.\n", clauseToPropagate->getAt( 1 ).getDecisionLevel() );            
+                        unroll( clauseToPropagate->getAt( 1 ).getDecisionLevel() );
+                    }
+                    statistics( onLearning( clauseToPropagate->size() ) );
+                    addLearnedClause( clauseToPropagate );
+                    assert( !clauseToPropagate->getAt( 0 ).isTrue() );
+                    assignLiteral( clauseToPropagate );
+                    onLearning( clauseToPropagate );
+                }
+                
+                if( conflictDetected() )
+                    goto conflict;
+                else
+                    goto propagationLabel;
+            }
+        }
+    }
+    
+    completeModel();
+    assert_msg( getNumberOfUndefined() == 0, "Found a model with " << getNumberOfUndefined() << " undefined variables." );
+    assert_msg( allClausesSatisfied(), "The model found is not correct." );
+    
+    statistics( endSolving() );
+    return true;
+}
+
 void
-Solver::propagate(
+Solver::unitPropagation(
     Variable* variable )
 {
     assert( "Variable to propagate has not been set." && variable != NULL );
@@ -216,6 +322,32 @@ Solver::propagate(
         else
             assert( !conflictDetected() );
     }
+}
+
+void
+Solver::postPropagation(
+    Variable* variable )
+{
+    assert( "Variable to propagate has not been set." && variable != NULL );
+    trace_msg( solving, 2, "Post Propagating: " << *variable << " as " << ( variable->isTrue() ? "true" : "false" ) );
+    if( conflictDetected() )
+        return;
+    
+    Literal complement = Literal::createOppositeFromAssignedVariable( variable );    
+    
+    variable->postPropagationStart();    
+
+    while( variable->postPropagationHasNext() && !conflictDetected() )
+    {
+        PostPropagator* postPropagator = variable->postPropagationNext();
+        assert( "Post propagator is null." && postPropagator != NULL );
+        bool res = postPropagator->onLiteralFalse( complement );
+        
+        if( res )
+            addPostPropagator( postPropagator );
+    }
+    
+    assert( !conflictDetected() );
 }
 
 void
@@ -260,6 +392,8 @@ Solver::propagateAtLevelZero(
         else
             assert( !conflictDetected() );
     }
+    
+    postPropagation( variable );
 }
 
 void
@@ -309,7 +443,7 @@ Solver::propagateAtLevelZeroSatelite(
             satelite->onStrengtheningClause( clause );
             assert( !conflictDetected() );
         }
-    }
+    }    
 }
 
 void

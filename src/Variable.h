@@ -24,6 +24,7 @@
 #include "util/Constants.h"
 #include "WatchedList.h"
 #include "util/Assert.h"
+
 //#include <boost/heap/fibonacci_heap.hpp>
 using namespace std;
 //using namespace boost::heap;
@@ -33,6 +34,8 @@ class HeuristicCounterForLiteral;
 class HeuristicCounterFactoryForLiteral;
 class Learning;
 class Literal;
+class Component;
+class PostPropagator;
 
 class Variable;
 
@@ -70,6 +73,7 @@ class Variable
 //        inline void setName( string& name );
         
         inline bool isTrue() const;
+        inline bool isFalse() const;
         
 //        inline bool setFalse();
 //        inline bool setTrue();
@@ -119,6 +123,10 @@ class Variable
         inline void unitPropagationStart();
         inline bool unitPropagationHasNext();
         inline Clause* unitPropagationNext();        
+
+        inline void postPropagationStart();
+        inline bool postPropagationHasNext();
+        inline PostPropagator* postPropagationNext();
         
         inline void startIterationOverOccurrences( unsigned int sign );
         inline bool hasNextOccurrence( unsigned int sign );
@@ -143,6 +151,14 @@ class Variable
         inline unsigned int getSignOfEliminatedVariable() const { return signOfEliminatedVariable; }
         inline bool hasBeenEliminated() const { return signOfEliminatedVariable != MAXUNSIGNEDINT; }
         inline unsigned int cost() const { return numberOfOccurrences( POSITIVE ) * numberOfOccurrences( NEGATIVE ); }
+        
+        inline bool inTheSameComponent( const Variable* var ) const { return component != NULL && component == var->component; } 
+        inline bool isInCyclicComponent() const { return component != NULL; }
+        inline void setComponent( Component* c ){ assert( component == NULL ); component = c; }
+        inline Component* getComponent() { return component; }
+        
+        void onLearningForUnfounded( Learning& learning );        
+        inline void addPostPropagator( PostPropagator* p, unsigned int sign ) { postPropagators[ sign ].add( p ); }
         
     private:
 
@@ -187,6 +203,12 @@ class Variable
          */        
         WatchedList< Clause* > allOccurrences[ 2 ];
         
+        /**
+         * Position POSITIVE of this vector contains the occurrences of the positive literal associated with this variable.
+         * Position NEGATIVE of this vector contains the occurrences of the negative literal associated with this variable.
+         */        
+        WatchedList< PostPropagator* > postPropagators[ 2 ];
+        
         uint64_t signature;
         
         Activity act;
@@ -198,6 +220,8 @@ class Variable
         
         Clause* definition;
         unsigned int signOfEliminatedVariable;
+        
+        Component* component;
 };
 
 bool Comparator::operator()( const Variable* v1, const Variable* v2 ) const{ return v1->activity() > v2->activity(); }
@@ -213,7 +237,8 @@ Variable::Variable(
     inHeap( false ),
     visitedInLearning( 0 ),
     definition( NULL ),
-    signOfEliminatedVariable( MAXUNSIGNEDINT )
+    signOfEliminatedVariable( MAXUNSIGNEDINT ),
+    component( NULL )
 {
     signature = ( ( uint64_t ) 1 ) << ( ( id - 1 ) & 63 );
 }
@@ -238,6 +263,12 @@ bool
 Variable::isTrue() const
 {
     return getTruthValue() == TRUE;
+}
+
+bool
+Variable::isFalse() const
+{
+    return getTruthValue() == FALSE;
 }
 
 //bool
@@ -489,6 +520,51 @@ Variable::unitPropagationNext()
     #endif
     
     return watchedLists[ ( getTruthValue() >> 1 ) ].next();
+}
+
+void
+Variable::postPropagationStart()
+{
+    assert_msg( !this->isUndefined(), "Propagating variable " << *this << ", the truth value is Undefined." );
+    assert( FALSE == 1 && TRUE == 2 );
+
+    #ifndef NDEBUG
+    unsigned int sign = ( getTruthValue() >> 1 );
+    assert( sign <= 1 );
+    assert( getTruthValue() == TRUE ? sign == NEGATIVE : sign == POSITIVE );
+    #endif
+    
+    postPropagators[ ( getTruthValue() >> 1 ) ].startIteration();
+}
+
+bool
+Variable::postPropagationHasNext()
+{
+    assert_msg( !this->isUndefined(), "Propagating variable " << *this << ", the truth value is Undefined." );
+    assert( FALSE == 1 && TRUE == 2 );
+
+    #ifndef NDEBUG
+    unsigned int sign = ( getTruthValue() >> 1 );
+    assert( sign <= 1 );
+    assert( getTruthValue() == TRUE ? sign == NEGATIVE : sign == POSITIVE );
+    #endif
+    
+    return postPropagators[ ( getTruthValue() >> 1 ) ].hasNext();
+}
+
+PostPropagator*
+Variable::postPropagationNext()
+{
+    assert_msg( !this->isUndefined(), "Propagating variable " << *this << ", the truth value is Undefined." );
+    assert( FALSE == 1 && TRUE == 2 );
+
+    #ifndef NDEBUG
+    unsigned int sign = ( getTruthValue() >> 1 );
+    assert( sign <= 1 );
+    assert( getTruthValue() == TRUE ? sign == NEGATIVE : sign == POSITIVE );
+    #endif
+    
+    return postPropagators[ ( getTruthValue() >> 1 ) ].next();
 }
 
 void

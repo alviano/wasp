@@ -48,20 +48,19 @@ Learning::onConflict(
     
     learnedClause = solver.newClause();
     learnedClause->setLearned();
-//    solver.initClauseData( learnedClause );
     decisionLevel = solver.getCurrentDecisionLevel();
 
     trace_msg( learning, 2, "Starting First UIP Learning Strategy. Current Level: " << decisionLevel );
     
     //Compute implicants of the conflicting literal.
-//    if( conflictClause->hasHeuristicData() )    
-//        solver.onClauseInvolvedInConflict( conflictClause );
     if( conflictClause->isLearned() )    
         solver.updateActivity( conflictClause );
     
     conflictClause->onLearning( this );
-    assert( conflictLiteral.getVariable()->getImplicant() != NULL ); // FIXME: I added this assert. Is it right?
-    conflictLiteral.getVariable()->getImplicant()->onLearning( this );
+    //assert_msg( conflictLiteral.getVariable()->getImplicant() != NULL, "Conflict literal " << conflictLiteral << " has no implicant" ); // FIXME: I added this assert. Is it right? It is true only for tight programs.
+    
+    if( conflictLiteral.getVariable()->getImplicant() != NULL  )
+        conflictLiteral.getVariable()->getImplicant()->onLearning( this );
 
     trace( learning, 2, "Conflict literal: %s.\n", toString( conflictLiteral ).c_str() );
     assert( conflictLiteral.getVariable()->visited() == numberOfCalls );
@@ -78,8 +77,6 @@ Learning::onConflict(
         //Compute implicants of the literal.
         if( implicant != NULL )
         {
-//            if( implicant->hasHeuristicData() )
-//                solver.onClauseInvolvedInConflict( implicant );
             if( implicant->isLearned() )
                 solver.updateActivity( implicant );
             implicant->onLearning( this );
@@ -98,7 +95,7 @@ Learning::onConflict(
     
     if( learnedClause->size() >= 2 )
     {
-        assert( learnedClause->getAt( learnedClause->size() - 1).getDecisionLevel() == solver.getCurrentDecisionLevel() );
+        assert( learnedClause->getAt( learnedClause->size() - 1 ).getDecisionLevel() == solver.getCurrentDecisionLevel() );
         learnedClause->swapLiterals( 0, learnedClause->size() - 1 );
         learnedClause->swapLiterals( 1, maxPosition != 0 ? maxPosition : learnedClause->size() - 1 );
         assert( learnedClause->getAt( 0 ).getDecisionLevel() == solver.getCurrentDecisionLevel() );
@@ -172,6 +169,15 @@ Learning::onNavigatingLiteral(
         addLiteralToNavigate( literal );
     else
         addLiteralInLearnedClause( literal );    
+}
+
+void
+Learning::onNavigatingLiteralForUnfoundedSetLearning(
+    Literal literal )
+{
+    assert( literal != Literal::null );
+    assert( literal.getDecisionLevel() > 0 );
+    addLiteralInLearnedClause( literal );    
 }
 
 void
@@ -267,4 +273,36 @@ Learning::resetVariablesNumberOfCalls()
     {
         solver.getVariable( i )->visited() = 0;
     }
+}
+
+Clause*
+Learning::learnClausesFromUnfoundedSet(
+    Vector< Variable* >& unfoundedSet )
+{
+    ++numberOfCalls;
+    clearDataStructures();
+    assert( "Learned clause has to be NULL in the beginning." && learnedClause == NULL );
+    assert( "The counter must be equal to 0." && pendingVisitedVariables == 0 );
+    assert( isVisitedVariablesEmpty() );
+
+    learnedClause = solver.newClause();
+    learnedClause->setLearned();
+    decisionLevel = solver.getCurrentDecisionLevel();
+
+    trace_msg( learning, 2, "Starting First UIP Learning Strategy. Current Level: " << decisionLevel );
+
+    for( unsigned int i = 0; i < unfoundedSet.size(); i++ )
+    {
+        Variable* variable = unfoundedSet[ i ];
+        variable->onLearningForUnfounded( *this );
+    }
+    
+    if( learnedClause->size() > 1 )
+        simplifyLearnedClause( learnedClause );
+
+	if( learnedClause->size() >= 2 )
+        learnedClause->swapLiterals( 0, maxPosition );
+    
+    trace( learning, 1, "Learned Clause: %s.\n", toString( *learnedClause ).c_str() );
+    return learnedClause;
 }

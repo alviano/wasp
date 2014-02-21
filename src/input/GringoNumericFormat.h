@@ -48,8 +48,7 @@ class GringoNumericFormat
         */
         void parse( istream& input );
 
-    private:        
-
+    private:
         void dealWithSupport();
         void readAtomsTable( istream& input );
         void readNormalRule( istream& input );
@@ -79,11 +78,14 @@ class GringoNumericFormat
         
         inline bool addLiteralInClause( Literal literal, Clause* clause );
         
+        void programIsNotTight();
+        
         Solver& solver;
         unsigned int numberOfAddedVariables;
         unsigned int numberOfAddedAuxVariables;
 
         vector< vector< Literal > > supportVector;
+        vector< vector< Literal > > supportVectorForAuxVariables;
         unordered_set< Variable* > supportedVariables;
 
         unordered_set< int > addedLiterals;
@@ -98,6 +100,7 @@ GringoNumericFormat::GringoNumericFormat(
 {
     //push an empty position
     supportVector.push_back( vector< Literal >() );
+    supportVectorForAuxVariables.push_back( vector< Literal >() );
 }
 
 unsigned int

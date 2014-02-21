@@ -22,6 +22,7 @@
 #include <cassert>
 #include <iostream>
 #include <vector>
+#include "stl/Vector.h"
 using namespace std;
 
 class Clause;
@@ -36,9 +37,12 @@ class Learning
         inline ~Learning();
         
         void onNavigatingLiteral( Literal );
+        void onNavigatingLiteralForUnfoundedSetLearning( Literal );
         Clause* onConflict( Literal conflictLiteral, Clause* conflictClause );
         
-        inline void onNewVariable();        
+        inline void onNewVariable();
+        
+        Clause* learnClausesFromUnfoundedSet( Vector< Variable* >& unfoundedSet );
         
     private:
     
