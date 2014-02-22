@@ -44,6 +44,13 @@ Solver::~Solver()
         delete poolOfClauses.back();
         poolOfClauses.pop_back();
     }
+    
+    while( !gusDataVector.empty() )
+    {
+        assert( gusDataVector.back() );
+        delete gusDataVector.back();
+        gusDataVector.pop_back();
+    }
         
     if( outputBuilder != NULL )
         delete outputBuilder;
