@@ -754,6 +754,8 @@ GringoNumericFormat::programIsNotTight()
         Component* component = variableComponent[ variable ];
         assert( component != NULL );
         
+        variable->setFrozen();
+        
         unordered_set< Variable* > tmp;
         for( unsigned int j = 0; j < lits.size(); j++ )
         {
@@ -776,6 +778,8 @@ GringoNumericFormat::programIsNotTight()
             unsigned int sign = lits[ j ].getSign();
             if( literalsPostPropagator[ sign ][ lits[ j ].getVariable() ].insert( component ).second )            
                 lits[ j ].addPostPropagator( component );
+            
+            lits[ j ].getVariable()->setFrozen();
         }
     }    
     
@@ -793,6 +797,8 @@ GringoNumericFormat::programIsNotTight()
 
         trace_msg( parser, 2, "Creating GUS data structures for variable " << *variable << " which has " << lits.size() << " supporting rules" );
 
+        variable->setFrozen();
+        
         Component* component = variableComponent[ variable ];
         component->setAuxVariable( variable->getId() );
         
@@ -809,6 +815,8 @@ GringoNumericFormat::programIsNotTight()
                 component->addAuxVariableSupportedByLiteral( variable, lits[ j ] );
                 component->addInternalLiteralForVariable( variable->getId(), lits[ j ] );
             }
+            
+            lits[ j ].getVariable()->setFrozen();
         }
     }    
 }

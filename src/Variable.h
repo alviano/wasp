@@ -160,6 +160,9 @@ class Variable
         void onLearningForUnfounded( Learning& learning );        
         inline void addPostPropagator( PostPropagator* p, unsigned int sign ) { postPropagators[ sign ].add( p ); }
         
+        bool isFrozen() const { return frozen; }
+        void setFrozen() { frozen = true; }
+        
     private:
 
         inline Variable( const Variable& );
@@ -222,6 +225,7 @@ class Variable
         unsigned int signOfEliminatedVariable;
         
         Component* component;
+        bool frozen;
 };
 
 bool Comparator::operator()( const Variable* v1, const Variable* v2 ) const{ return v1->activity() > v2->activity(); }
@@ -238,7 +242,8 @@ Variable::Variable(
     visitedInLearning( 0 ),
     definition( NULL ),
     signOfEliminatedVariable( MAXUNSIGNEDINT ),
-    component( NULL )
+    component( NULL ),
+    frozen( false )
 {
     signature = ( ( uint64_t ) 1 ) << ( ( id - 1 ) & 63 );
 }

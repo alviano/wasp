@@ -47,8 +47,8 @@ Solver::~Solver()
     
     while( !gusDataVector.empty() )
     {
-        assert( gusDataVector.back() );
-        delete gusDataVector.back();
+        if( gusDataVector.back() )
+            delete gusDataVector.back();
         gusDataVector.pop_back();
     }
         
