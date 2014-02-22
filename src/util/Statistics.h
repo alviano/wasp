@@ -22,6 +22,7 @@
 #include <cassert>
 #include <string>
 #include <iostream>
+#include <vector>
 using namespace std;
 
 #include "Constants.h"
@@ -42,7 +43,10 @@ using namespace std;
             numberOfDeletion( 0 ), numberOfDeletionInvokation( 0 ),
             minDeletion( MAXUNSIGNEDINT ), maxDeletion( 0 ), shrink( 0 ),
             shrinkedClauses( 0 ), shrinkedLiterals( 0 ),
-            max_literals( 0 ), tot_literals( 0 )
+            max_literals( 0 ), tot_literals( 0 ), numberOfLearnedClausesFromPropagators( 0 ),
+            numberOfLearnedUnaryClausesFromPropagators( 0 ),numberOfLearnedBinaryClausesFromPropagators( 0 ),
+            numberOfLearnedTernaryClausesFromPropagators( 0 ), sumOfSizeLearnedClausesFromPropagators( 0 ),
+            minLearnedSizeFromPropagators( MAXUNSIGNEDINT ), maxLearnedSizeFromPropagators( 0 )
             {
             }
 
@@ -78,6 +82,24 @@ using namespace std;
                 else if( size == 3 )
                     numberOfLearnedTernaryClauses++;
             }
+            
+            inline void onLearningFromPropagators( unsigned int sizeFromPropagators )
+            {
+                if( sizeFromPropagators < minLearnedSizeFromPropagators )
+                    minLearnedSizeFromPropagators = sizeFromPropagators;
+
+                if( sizeFromPropagators > maxLearnedSizeFromPropagators )
+                    maxLearnedSizeFromPropagators = sizeFromPropagators;
+
+                sumOfSizeLearnedClausesFromPropagators += sizeFromPropagators;
+                numberOfLearnedClausesFromPropagators++;
+                if( sizeFromPropagators == 1 )
+                    numberOfLearnedUnaryClausesFromPropagators++;
+                if( sizeFromPropagators == 2 )
+                    numberOfLearnedBinaryClausesFromPropagators++;
+                else if( sizeFromPropagators == 3 )
+                    numberOfLearnedTernaryClausesFromPropagators++;
+            }            
             
             inline void startShrinkingLearnedClause( unsigned int size )
             {
@@ -142,6 +164,11 @@ using namespace std;
                 printStatistics();
             }
             
+            inline void addCyclicComponent( unsigned int numberOfAtoms )
+            {
+                cyclicComponents.push_back( numberOfAtoms );
+            }
+            
             inline static Statistics& inst(){ return statistics; }
 
         private:
@@ -177,11 +204,21 @@ using namespace std;
             uint64_t max_literals; 
             uint64_t tot_literals;
             
+            unsigned int numberOfLearnedClausesFromPropagators;
+            unsigned int numberOfLearnedUnaryClausesFromPropagators;
+            unsigned int numberOfLearnedBinaryClausesFromPropagators;
+            unsigned int numberOfLearnedTernaryClausesFromPropagators;
+            unsigned int sumOfSizeLearnedClausesFromPropagators;
+            unsigned int minLearnedSizeFromPropagators;
+            unsigned int maxLearnedSizeFromPropagators;            
+            
+            vector< unsigned int > cyclicComponents;             
+            
             void printStatistics()
             {
                 cerr << separator << endl;
                 cerr << "Learning" << endl << endl;
-                cerr << "Number of Learned Clauses      : " << numberOfLearnedClauses << endl;
+                cerr << "Learned clauses                : " << numberOfLearnedClauses << endl;
                 if( numberOfLearnedClauses > 0 )
                 {
                 cerr << "   Unary                       : " << numberOfLearnedUnaryClauses << endl;
@@ -189,7 +226,29 @@ using namespace std;
                 cerr << "   Ternary                     : " << numberOfLearnedTernaryClauses << endl;
                 cerr << "   AVG Size                    : " << ( ( double ) sumOfSizeLearnedClauses / ( double ) numberOfLearnedClauses ) << endl;
                 cerr << "   Min Size                    : " << minLearnedSize << endl;
-                cerr << "   Max Size                    : " << maxLearnedSize << endl;
+                cerr << "   Max Size                    : " << maxLearnedSize << endl;                
+                }
+                
+                cerr << "Learned from propagators       : " << numberOfLearnedClausesFromPropagators << endl;
+                if( numberOfLearnedClausesFromPropagators > 0 )
+                {
+                cerr << "   Unary                       : " << numberOfLearnedUnaryClausesFromPropagators << endl;
+                cerr << "   Binary                      : " << numberOfLearnedBinaryClausesFromPropagators << endl;
+                cerr << "   Ternary                     : " << numberOfLearnedTernaryClausesFromPropagators << endl;
+                cerr << "   AVG Size                    : " << ( ( double ) sumOfSizeLearnedClausesFromPropagators / ( double ) numberOfLearnedClausesFromPropagators ) << endl;
+                cerr << "   Min Size                    : " << minLearnedSizeFromPropagators << endl;
+                cerr << "   Max Size                    : " << maxLearnedSizeFromPropagators << endl;
+                }
+                
+                cerr << separator << endl;
+                cerr << "Tight                          : " << ( cyclicComponents.empty() ? "yes" : "no" ) << endl;
+                if( !cyclicComponents.empty() )
+                {
+                cerr << "Cyclic components              : " << cyclicComponents.size() << endl;
+                for( unsigned int i = 0; i < cyclicComponents.size(); i++ )
+                {
+                cerr << "   Atoms in component " << ( i + 1 ) << "        : " << cyclicComponents[ i ] << endl;
+                }
                 }
                 
                 cerr << separator << endl;

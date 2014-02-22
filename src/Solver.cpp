@@ -264,6 +264,7 @@ Solver::solvePropagators()
             else
             {
                 unsigned int size = clauseToPropagate->size();
+                statistics( onLearningFromPropagators( size ) );
                 if( size == 0 )
                 {
                     delete clauseToPropagate;
@@ -283,7 +284,6 @@ Solver::solvePropagators()
                         trace( solving, 2, "Learned clause from propagator and backjumping to level %d.\n", clauseToPropagate->getAt( 1 ).getDecisionLevel() );            
                         unroll( clauseToPropagate->getAt( 1 ).getDecisionLevel() );
                     }
-                    statistics( onLearning( clauseToPropagate->size() ) );
                     addLearnedClause( clauseToPropagate );
                     assert( !clauseToPropagate->getAt( 0 ).isTrue() );
                     assignLiteral( clauseToPropagate );

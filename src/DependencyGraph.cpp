@@ -21,6 +21,8 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/strong_components.hpp>
 
+#include "util/Statistics.h"
+
 /**
  * The dependency graph.
  */
@@ -91,6 +93,7 @@ DependencyGraph::computeStrongConnectedComponents(
 		assert( currentComponent != NULL );
 		if( currentComponent->isCyclic() )
         {
+            statistics( addCyclicComponent( currentComponent->size() ) );
 			cyclicComponents.push_back( currentComponent );
             currentComponent->setId( id++ );
         }
