@@ -146,6 +146,17 @@ using namespace std;
                 cerr << "Variables after satelite       : " << vars << endl;
                 
                 cerr << separator << endl;
+                cerr << "Tight                          : " << ( cyclicComponents.empty() ? "yes" : "no" ) << endl;
+                if( !cyclicComponents.empty() )
+                {
+                cerr << "Cyclic components              : " << cyclicComponents.size() << endl;
+                for( unsigned int i = 0; i < cyclicComponents.size(); i++ )
+                {
+                cerr << "   Atoms in component " << ( i + 1 ) << "        : " << cyclicComponents[ i ] << endl;
+                }
+                }
+                
+                cerr << separator << endl;                
             }
 
             inline void beforePreprocessing( unsigned int vars, unsigned int clauses )
@@ -239,18 +250,7 @@ using namespace std;
                 cerr << "   Min Size                    : " << minLearnedSizeFromPropagators << endl;
                 cerr << "   Max Size                    : " << maxLearnedSizeFromPropagators << endl;
                 }
-                
-                cerr << separator << endl;
-                cerr << "Tight                          : " << ( cyclicComponents.empty() ? "yes" : "no" ) << endl;
-                if( !cyclicComponents.empty() )
-                {
-                cerr << "Cyclic components              : " << cyclicComponents.size() << endl;
-                for( unsigned int i = 0; i < cyclicComponents.size(); i++ )
-                {
-                cerr << "   Atoms in component " << ( i + 1 ) << "        : " << cyclicComponents[ i ] << endl;
-                }
-                }
-                
+                                
                 cerr << separator << endl;
                 cerr << "Deletion" << endl << endl;
                 cerr << "Deletion Invokation            : " << numberOfDeletionInvokation << endl;

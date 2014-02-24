@@ -267,13 +267,17 @@ Solver::solvePropagators()
                 statistics( onLearningFromPropagators( size ) );
                 if( size == 0 )
                 {
+                    clearConflictStatus();
                     delete clauseToPropagate;
                     return false;
                 }
                 else if( size == 1 )
                 {
                     if( getCurrentDecisionLevel() != 0 )
+                    {
+                        clearConflictStatus();                    
                         doRestart();
+                    }
                     assignLiteral( clauseToPropagate->getAt( 0 ) );
                     delete clauseToPropagate;
                 }
@@ -281,6 +285,7 @@ Solver::solvePropagators()
                 {
                     if( clauseToPropagate->getAt( 1 ).getDecisionLevel() < getCurrentDecisionLevel() )
                     {
+                        clearConflictStatus();                    
                         trace( solving, 2, "Learned clause from propagator and backjumping to level %d.\n", clauseToPropagate->getAt( 1 ).getDecisionLevel() );            
                         unroll( clauseToPropagate->getAt( 1 ).getDecisionLevel() );
                     }
