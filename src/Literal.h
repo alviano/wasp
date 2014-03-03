@@ -45,6 +45,8 @@ class Literal
         inline Literal( const Literal& );
         inline ~Literal();
 
+        inline int getId() const { return isPositive() ? getVariable()->getId() : -getVariable()->getId(); }
+
         inline bool isTrue() const;
         inline bool isFalse() const;
         inline bool isUndefined() const;
@@ -92,6 +94,7 @@ class Literal
         inline Clause* getOccurrence( unsigned int idx ) { return getVariable()->getOccurrence( idx, getSign() ); }
         
         inline bool isPositive() const;
+        inline bool isNegative() const { return !isPositive(); }
 
 	private:
         

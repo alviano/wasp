@@ -102,6 +102,7 @@ class Clause
         
         inline bool removeSatisfiedLiterals();
         inline bool removeDuplicatesAndCheckIfTautological();
+        inline bool removeDuplicatesAndFalseAndCheckIfTautological();
         
         inline void free();
         inline SubsumptionData subsumes( Clause& other );        
@@ -113,6 +114,8 @@ class Clause
         inline void copyLiterals( const Clause& c );
         
         inline void swapLiterals( unsigned int pos1, unsigned int pos2 );
+        
+        inline void recomputeSignature();
         
     protected:
         vector< Literal > literals;
@@ -135,8 +138,6 @@ class Clause
         
         inline bool updateWatch();
         void notifyImplication( Solver& solver );        
-        
-        inline void recomputeSignature();
         
         uint64_t signature;
 //        unsigned int positionInSolver;
@@ -358,7 +359,7 @@ Clause::onLearning(
     assert( "LearningStrategy is not initialized." && strategy != NULL );
 
     //Navigating all literals in the clause.
-    assert_msg( literals[ 0 ].getDecisionLevel() != 0, "Literal " << literals[ 0 ] << " is in position 0 and it has been inferred at level 0. Clause: " << *this );
+    assert_msg( literals[ 0 ].getDecisionLevel() != 0, "Literal " << literals[ 0 ] << " is in position 0 and it has been inferred " << ( literals[ 0 ].isTrue() ? "TRUE" : "FALSE" ) << " at level 0. Clause: " << *this );
     strategy->onNavigatingLiteral( literals[ 0 ] );
 
     assert_msg( literals[ 1 ].getDecisionLevel() != 0, "Literal " << literals[ 1 ] << " is in position 1 and it has been inferred at level 0. Clause: " << *this );
@@ -647,6 +648,46 @@ Clause::removeDuplicatesAndCheckIfTautological()
     while( i < literals.size() )
     {
         if( previousLiteral != literals[ i ] )
+        {
+            //The same variable with two different polarities: clause is tautological
+            if( previousLiteral.getVariable() == literals[ i ].getVariable() )
+            {
+                //TAUTOLOGICAL
+	            return true;
+			}
+			else
+			{
+                literals[ j ] = literals[ i ];
+         	   	++j;
+				previousLiteral = literals[ i ];
+			}
+        }
+        
+        ++i;
+    }
+
+	literals.resize( j );
+    
+    if( i != j )
+        recomputeSignature();
+
+    return false;
+}
+
+bool
+Clause::removeDuplicatesAndFalseAndCheckIfTautological()
+{
+    sort( literals.begin(), literals.end(), literalComparator ); 
+    
+    Literal previousLiteral = Literal::null;
+    
+    unsigned int i = 0;
+    unsigned int j = 0;
+    while( i < literals.size() )
+    {
+        if( literals[ i ].isTrue() )
+            return true;
+        if( !literals[ i ].isFalse() && previousLiteral != literals[ i ] )
         {
             //The same variable with two different polarities: clause is tautological
             if( previousLiteral.getVariable() == literals[ i ].getVariable() )

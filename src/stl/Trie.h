@@ -29,7 +29,7 @@ using namespace std;
 class Node {
 
 	public:
-		Node( int content_for_node ) : content( content_for_node ), label( UINT_MAX ){}
+		inline Node( int content_for_node ) : content( content_for_node ), label( UINT_MAX ){}
 		~Node() 
 		{ 
 			for( unordered_map< int, Node* >::iterator it = childrenMap.begin(); it != childrenMap.end(); ++it )
@@ -39,10 +39,10 @@ class Node {
 			}
 		}
 
-		int getContent() const { return content; }		
-		bool hasLabel() const { return label != UINT_MAX; }
-        unsigned int getLabel() const { return label; }
-		void setLabel( unsigned int l ) { label = l; }
+		inline int getContent() const { return content; }		
+		inline bool hasLabel() const { return label != UINT_MAX; }
+        inline unsigned int getLabel() const { return label; }
+		inline void setLabel( unsigned int l ) { label = l; }
 
 		Node* findChild( int c )
 		{ 
@@ -53,7 +53,7 @@ class Node {
 			return NULL;
 		}
 
-		void addChild( Node* child )
+		inline void addChild( Node* child )
 		{
 			assert( childrenMap.find( child->getContent() ) == childrenMap.end() );
 			childrenMap[ child->getContent() ] = child;

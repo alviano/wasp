@@ -100,7 +100,7 @@ Dimacs::readClause(
 
     do
     {
-        while( solver.numberOfVariables() < abs( next ) )
+        while( solver.numberOfVariables() < static_cast< unsigned >( abs( next ) ) )
             solver.addVariable();
 
         //insert the current literal in the set
