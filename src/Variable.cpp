@@ -222,6 +222,9 @@ Variable::propagateAtLevelZero(
         }
         wl.clearAndDelete();
     }
+
+    assert( allOccurrences[ POSITIVE ].size() == 0 );
+    assert( allOccurrences[ NEGATIVE ].size() == 0 );
 }
 
 void

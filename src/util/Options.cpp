@@ -51,6 +51,7 @@ namespace wasp
 #define OPTIONID_competition_output ( 'z' + 21 )
 #define OPTIONID_third_competition_output ( 'z' + 22 )
 #define OPTIONID_printprogram ( 'z' + 23 )
+#define OPTIONID_printdimacs ( 'z' + 24 )
 
 /* HEURISTIC OPTIONS */
 #define OPTIONID_fuheuristic ( 'z' + 30 )
@@ -96,6 +97,7 @@ OUTPUT_POLICY Options::outputPolicy = WASP_OUTPUT;
 //OUTPUT_POLICY Options::outputPolicy = DIMACS_OUTPUT;
 
 bool Options::printProgram = false;
+bool Options::printDimacs = false;
 
 RESTARTS_POLICY Options::restartsPolicy = SEQUENCE_BASED_RESTARTS_POLICY;
 
@@ -146,6 +148,7 @@ Options::parse(
                 { "silent", no_argument, NULL, OPTIONID_silent },                
                 { "third-competition-output", no_argument, NULL, OPTIONID_third_competition_output },
                 { "printprogram", no_argument, NULL, OPTIONID_printprogram },
+                { "printdimacs", no_argument, NULL, OPTIONID_printdimacs },
 
                 /* HEURISTIC OPTIONS */
 //                { "heuristic-berkmin", optional_argument, NULL, OPTIONID_berkminheuristic },
@@ -245,6 +248,10 @@ Options::parse(
 
             case OPTIONID_printprogram:
                 printProgram = true;
+                break;
+
+            case OPTIONID_printdimacs:
+                printDimacs = true;
                 break;
 
             case OPTIONID_berkminheuristic:
@@ -378,6 +385,7 @@ Options::setOptions(
     waspFacade.setRestartsPolicy( restartsPolicy, restartsThreshold );
     waspFacade.setMaxModels( maxModels );
     waspFacade.setPrintProgram( printProgram );
+    waspFacade.setPrintDimacs( printDimacs);
 }
 
 };

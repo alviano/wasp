@@ -98,9 +98,13 @@ TESTS_DIR_wasp1_AllAnswerSets = $(TESTS_DIR)/wasp1/AllAnswerSets
 TESTS_SRC_wasp1_AllAnswerSets = $(sort $(shell find $(TESTS_DIR_wasp1_AllAnswerSets) -name '*.test.py'))
 TESTS_OUT_wasp1_AllAnswerSets = $(patsubst %.test.py,%.test.py.text, $(TESTS_SRC_wasp1_AllAnswerSets))
 
-TESTS_DIR_asp_AllAnswerSets = $(TESTS_DIR)/asp/AllAnswerSets
-TESTS_SRC_asp_AllAnswerSets = $(sort $(shell find $(TESTS_DIR_asp_AllAnswerSets) -name '*.test.py'))
-TESTS_OUT_asp_AllAnswerSets = $(patsubst %.test.py,%.test.py.text, $(TESTS_SRC_asp_AllAnswerSets))
+TESTS_DIR_asp_AllAnswerSetsTight = $(TESTS_DIR)/asp/AllAnswerSets/tight
+TESTS_SRC_asp_AllAnswerSetsTight = $(sort $(shell find $(TESTS_DIR_asp_AllAnswerSetsTight) -name '*.test.py'))
+TESTS_OUT_asp_AllAnswerSetsTight = $(patsubst %.test.py,%.test.py.text, $(TESTS_SRC_asp_AllAnswerSetsTight))
+
+TESTS_DIR_asp_AllAnswerSetsNonTight = $(TESTS_DIR)/asp/AllAnswerSets/nontight
+TESTS_SRC_asp_AllAnswerSetsNonTight = $(sort $(shell find $(TESTS_DIR_asp_AllAnswerSetsNonTight) -name '*.test.py'))
+TESTS_OUT_asp_AllAnswerSetsNonTight = $(patsubst %.test.py,%.test.py.text, $(TESTS_SRC_asp_AllAnswerSetsNonTight))
 
 TESTS_DIR_asp_AllAnswerSetsIntensive = $(TESTS_DIR)/asp/AllAnswerSetsIntensive
 TESTS_SRC_asp_AllAnswerSetsIntensive = $(sort $(shell find $(TESTS_DIR_asp_AllAnswerSetsIntensive) -name '*.test.py'))
@@ -153,13 +157,17 @@ tests/sat/Intensive3: $(TESTS_OUT_sat_Intensive3)
 $(TESTS_OUT_sat_Intensive3):
 	@$(TESTS_TESTER) "$(TESTS_COMMAND_SatModel)" $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_SatModels) $(TESTS_REPORT_text)
 
-tests/asp: tests/asp/AllAnswerSets tests/asp/AllAnswerSetsIntensive
+tests/asp: tests/asp/AllAnswerSets/tight tests/asp/AllAnswerSets/nontight tests/asp/AllAnswerSetsIntensive
 
-tests/asp/AllAnswerSets: $(TESTS_OUT_asp_AllAnswerSets)
+tests/asp/AllAnswerSets/tight: $(TESTS_OUT_asp_AllAnswerSetsTight)
+tests/asp/AllAnswerSets/nontight: $(TESTS_OUT_asp_AllAnswerSetsNonTight)
 
 tests/asp/AllAnswerSetsIntensive: $(TESTS_OUT_asp_AllAnswerSetsIntensive)
 
-$(TESTS_OUT_asp_AllAnswerSets):
+$(TESTS_OUT_asp_AllAnswerSetsTight):
+	@$(TESTS_TESTER) "$(TESTS_COMMAND_AllAnswerSets)" $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_AllAnswerSets) $(TESTS_REPORT_text)
+
+$(TESTS_OUT_asp_AllAnswerSetsNonTight):
 	@$(TESTS_TESTER) "$(TESTS_COMMAND_AllAnswerSets)" $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_AllAnswerSets) $(TESTS_REPORT_text)
 
 $(TESTS_OUT_asp_AllAnswerSetsIntensive):

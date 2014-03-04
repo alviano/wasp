@@ -53,6 +53,7 @@ class Clause
         inline void markAsDeleted() { literals[ 0 ] = Literal::null; }
         inline bool hasBeenDeleted() const { assert( !literals.empty() ); return literals[ 0 ] == Literal::null; }
         inline void addLiteral( Literal literal );
+        inline bool addUndefinedLiteral( Literal literal );
 
         inline bool contains( Literal literal );
         inline bool containsAnyComplementOf( Clause* clause );
@@ -117,6 +118,10 @@ class Clause
         
         inline void recomputeSignature();
         
+        void printDimacs() const;
+        
+        bool allUndefined() const;
+        
     protected:
         vector< Literal > literals;
         unsigned lastSwapIndex;
@@ -172,6 +177,19 @@ Clause::addLiteral(
 {
     literals.push_back( literal );
     signature |= literal.getVariable()->getSignature();
+}
+
+bool
+Clause::addUndefinedLiteral(
+    Literal literal )
+{
+    if( literal.isTrue() )
+        return false;
+    if( literal.isUndefined() )
+    {
+        addLiteral( literal );
+    }
+    return true;
 }
 
 void
@@ -346,6 +364,7 @@ Clause::onLearning(
 
     //Navigating all literals in the clause.
     assert_msg( literals[ 0 ].getDecisionLevel() != 0, "Literal " << literals[ 0 ] << " is in position 0 and it has been inferred " << ( literals[ 0 ].isTrue() ? "TRUE" : "FALSE" ) << " at level 0. Clause: " << *this );
+    
     strategy->onNavigatingLiteral( literals[ 0 ] );
 
     assert_msg( literals[ 1 ].getDecisionLevel() != 0, "Literal " << literals[ 1 ] << " is in position 1 and it has been inferred at level 0. Clause: " << *this );

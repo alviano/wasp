@@ -93,11 +93,11 @@ class Solver
         inline void onLearningUnaryClause( Literal literalToPropagate, Clause* learnedClause );        
         inline void doRestart();        
         
-        inline unsigned int numberOfClauses();
-        inline unsigned int numberOfLearnedClauses();        
-        inline unsigned int numberOfAssignedLiterals();
-        inline unsigned int numberOfVariables();
-        inline unsigned int numberOfAuxVariables();
+        inline unsigned int numberOfClauses() const { return clauses.size(); }
+        inline unsigned int numberOfLearnedClauses() const;         
+        inline unsigned int numberOfAssignedLiterals() const;
+        inline unsigned int numberOfVariables() const;
+        inline unsigned int numberOfAuxVariables() const;
         
         inline void setAChoice( Literal choice );        
         
@@ -124,7 +124,6 @@ class Solver
         typedef vector< Clause* >::const_iterator ConstClauseIterator;
         typedef vector< Clause* >::const_reverse_iterator ConstClauseReverseIterator;
         
-        inline unsigned int numberOfClauses() const { return clauses.size(); }
         inline Clause* clauseAt( unsigned int i ) { assert( i < numberOfClauses() ); return clauses[ i ]; }
         
         inline ClauseIterator clauses_begin() { return clauses.begin(); }
@@ -155,6 +154,7 @@ class Solver
         inline void markClauseForDeletion( Clause* clause ){ satelite->onDeletingClause( clause ); clause->markAsDeleted(); }
         
         void printProgram() const;
+        void printDimacs() const;
         
 //        inline void initClauseData( Clause* clause ) { assert( heuristic != NULL ); heuristic->initClauseData( clause ); }
 //        inline Heuristic* getHeuristic() { return heuristic; }
@@ -175,7 +175,7 @@ class Solver
         inline void addPostPropagator( PostPropagator* postPropagator );
         inline void resetPostPropagators();
         
-        inline void addEdgeInDependencyGraph( unsigned int v1, unsigned int v2 ){ dependencyGraph.addEdge( v1, v2 ); }
+        inline void addEdgeInDependencyGraph( unsigned int v1, unsigned int v2 ){ /*dependencyGraph.addEdge( v1, v2 );*/ }
         inline void computeStrongConnectedComponents(){ dependencyGraph.computeStrongConnectedComponents( gusDataVector ); }
         inline bool tight() const { return dependencyGraph.tight(); }
         inline unsigned int getNumberOfCyclicComponents(){ return dependencyGraph.numberOfCyclicComponents(); }
@@ -189,6 +189,8 @@ class Solver
         
     private:
         inline Variable* addVariableInternal();
+        
+        bool checkVariablesState() const;
         
         Solver( const Solver& ) : learning( *this )
         {
@@ -363,6 +365,8 @@ Solver::addClause(
     Clause* clause )
 {
     assert( clause != NULL );
+    assert( clause->allUndefined() );
+    
     unsigned int size = clause->size();    
     if( size > 1 )
     {
@@ -537,13 +541,7 @@ Solver::removeClauseNoDeletion(
 }
 
 unsigned int
-Solver::numberOfClauses()
-{
-    return clauses.size();
-}
-
-unsigned int
-Solver::numberOfLearnedClauses()
+Solver::numberOfLearnedClauses() const
 {
     return learnedClauses.size();
 }
@@ -659,13 +657,13 @@ Solver::clearConflictStatus()
 }
 
 unsigned int
-Solver::numberOfAssignedLiterals()
+Solver::numberOfAssignedLiterals() const
 {
     return variables.numberOfAssignedLiterals();
 }
 
 unsigned int
-Solver::numberOfVariables()
+Solver::numberOfVariables() const
 {
     return variables.numberOfVariables();
 }
@@ -769,7 +767,8 @@ Solver::preprocessing()
     }    
 
     statistics( beforePreprocessing( numberOfVariables() - numberOfAssignedLiterals(), numberOfClauses() ) );
-    assert( satelite != NULL );        
+    assert( satelite != NULL );
+    assert( checkVariablesState() );
     if( !satelite->simplify() )
         return false;
 

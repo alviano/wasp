@@ -76,6 +76,11 @@ WaspFacade::solve()
     
     if( solver.preprocessing() )
     {
+        if( printDimacs )
+        {
+            solver.printDimacs();
+            return;
+        }
         while( solveInternal() )
         {
             solver.printAnswerSet();

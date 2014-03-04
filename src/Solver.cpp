@@ -364,6 +364,16 @@ Solver::printProgram() const
     }
 }
 
+void
+Solver::printDimacs() const
+{
+    cout << "p cnf " << numberOfClauses() << " " << numberOfVariables() << endl;
+    for( ConstClauseIterator it = clauses.begin(); it != clauses.end(); ++it )
+    {
+        (**it).printDimacs();
+    }
+}
+
 unsigned int
 Solver::getNumberOfUndefined() const
 {
@@ -579,4 +589,26 @@ Solver::removeSatisfied(
                 literalsInClauses -= size;
         }
     }
+}
+
+bool
+Solver::checkVariablesState() const
+{
+    assert( currentDecisionLevel == 0 );
+    for( unsigned i = 0; i < clauses.size(); i++ )
+    {
+        Clause* clause = clauses[ i ];
+        for( unsigned j = 0; j < clause->size(); j++ )
+            if( !clause->getAt( j ).isUndefined() )
+            {
+                cout << j << " " << clause->getAt( j ).isTrue() << endl;
+                cout << clause->getAt( j ).numberOfOccurrences() << endl;
+                for( unsigned k = 0; k < clause->getAt( j ).numberOfOccurrences(); k++)
+                    cout << *clause->getAt(j).getOccurrence(k) << endl;
+                cout << *clause << endl;
+                return false;                
+            }
+    }
+    
+    return true;
 }

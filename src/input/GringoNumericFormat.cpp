@@ -117,7 +117,7 @@ GringoNumericFormat::parse(
 //    cout << "occs\n";
 //    for( unsigned i = 1; i < 10; i++)
 //        cout << c[i] << endl;
-    cout << "Solving..." << endl;
+//    cout << "Solving..." << endl;
 }
 
 void
@@ -128,6 +128,11 @@ GringoNumericFormat::readNormalRule(
     input >> head;
 
     Clause* body = readBody( input );
+    if( body == NULL )
+    {
+        getLiteralForInputVar( head, POSITIVE );
+        return;
+    }
 
     if( head == 1 )
         addConstraint( body );
@@ -167,6 +172,7 @@ GringoNumericFormat::getBodyLiteral(
     Clause* body )
 {
     assert( body->size() >= 2 );
+    assert( body->allUndefined() );
     
     bodiesDictionary.startInsertion();
     for( unsigned i = 0; i < body->size(); ++i )
@@ -204,10 +210,15 @@ GringoNumericFormat::addNormalRule(
     Literal body )
 {
     Clause* clause = solver.newClause();
-    clause->addLiteral( getLiteralForInputVar( head, POSITIVE ) );
-    clause->addLiteral( body );
-    if( !solver.addClause( clause ) )
-        consistent = false;
+    if( clause->addUndefinedLiteral( getLiteralForInputVar( head, POSITIVE ) ) && clause->addUndefinedLiteral( body ) )
+    {
+        if( !solver.addClause( clause ) )
+            consistent = false;
+    }
+    else
+    {
+        solver.releaseClause( clause );
+    }
     
     supportVectorInputVar[ head ]->addLiteral( body.getOppositeLiteral() );
 }
@@ -221,18 +232,28 @@ GringoNumericFormat::readBody( istream& input )
     if( bodySize < negativeSize )
         ErrorMessage::errorDuringParsing( "Body size must be greater than or equal to negative size." );
    
+    bool remove = false;
     Clause* clause = solver.newClause();
     while( negativeSize-- > 0 )
     {
         input >> tmp;
-        clause->addLiteral( getLiteralForInputVar( tmp, POSITIVE ) );
+        if( !clause->addUndefinedLiteral( getLiteralForInputVar( tmp, POSITIVE ) ) )
+            remove = true;
         --bodySize;
     }
     while( bodySize-- > 0 )
     {
         input >> tmp;
-        clause->addLiteral( getLiteralForInputVar( tmp, NEGATIVE ) );
+        if( !clause->addUndefinedLiteral( getLiteralForInputVar( tmp, NEGATIVE ) ) )
+            remove = true;
     }
+    
+    if( remove )
+    {
+        solver.releaseClause( clause );
+        return NULL;
+    }
+    
     return clause;
 }
 
@@ -241,6 +262,7 @@ GringoNumericFormat::getLiteralForInputVar(
     unsigned int id,
     unsigned int sign )
 {
+    assert( id != 0 );
     while( inputVarId.size() <= id )
     {
         solver.addVariable();
@@ -270,7 +292,7 @@ GringoNumericFormat::addSupportClauses()
     for( unsigned i = 1; i < inputVarId.size(); ++i )
     {
         Clause* clause = supportVectorInputVar[ i ];
-        if( clause->getAt( 0 ) == getLiteralForInputVar( 1, NEGATIVE ) )
+        if( clause->size() > 0 && clause->getAt( 0 ) == getLiteralForInputVar( 1, NEGATIVE ) )
         {
             solver.releaseClause( clause );
             solver.addEdgeInDependencyGraph( inputVarId[ i ], 0 );
@@ -281,8 +303,7 @@ GringoNumericFormat::addSupportClauses()
             if( clause->getAt( j ).isPositive() )
                 solver.addEdgeInDependencyGraph( inputVarId[ i ], clause->getAt( j ).getVariable()->getId() );
             
-        clause->addLiteral( getLiteralForInputVar( i, NEGATIVE ) );
-        if( clause->removeDuplicatesAndFalseAndCheckIfTautological() )
+        if( !clause->addUndefinedLiteral( getLiteralForInputVar( i, NEGATIVE ) ) || clause->removeDuplicatesAndFalseAndCheckIfTautological() )
         {
             solver.releaseClause( clause );
             continue;
@@ -312,8 +333,10 @@ GringoNumericFormat::readAtomsTable(
     char name[ 1024 ];
     while( nextAtom != 0 )
     {
+        assert_msg( nextAtom < inputVarId.size(), "nextAtom = " << nextAtom << "; size = " << inputVarId.size() );
+        assert( inputVarId[ nextAtom ] > 1 );
+        
         input.getline( name, 1024 );
-
         VariableNames::setName( solver.getVariable( inputVarId[ nextAtom ] ), name+1 );
         input >> nextAtom;
     }

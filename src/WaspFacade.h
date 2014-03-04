@@ -44,6 +44,7 @@ class WaspFacade
 
         inline void setMaxModels( unsigned int max ) { maxModels = max; }
         inline void setPrintProgram( bool printProgram ) { this->printProgram = printProgram; }
+        inline void setPrintDimacs( bool printDimacs) { this->printDimacs = printDimacs; }
         
     private:
         Solver solver;        
@@ -53,9 +54,10 @@ class WaspFacade
         unsigned int numberOfModels;
         unsigned int maxModels;
         bool printProgram;
+        bool printDimacs;
 };
 
-WaspFacade::WaspFacade() : numberOfModels( 0 ), maxModels( 1 ), printProgram( false )
+WaspFacade::WaspFacade() : numberOfModels( 0 ), maxModels( 1 ), printProgram( false ), printDimacs( false )
 {    
 }
 
