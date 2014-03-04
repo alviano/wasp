@@ -321,12 +321,12 @@ GringoNumericFormat::readAtomsTable(
     #ifdef TRACE_ON
     for( unsigned int i = 1; i <= solver.numberOfVariables(); i++ )
     {
-        if( VariableNames::isHidden( getVariable( i ) ) )
+        if( VariableNames::isHidden( solver.getVariable( i ) ) )
         {
             stringstream s;
             s << "#hidden" << i;
             string name = s.str();
-            VariableNames::setName( getVariable( i ), name );
+            VariableNames::setName( solver.getVariable( i ), name );
         }
     }
     #endif

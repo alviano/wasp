@@ -26,7 +26,7 @@ def checkModel(model):
 def checker(actualOutput, actualError):
     global output
     
-    if( actualError ):
+    if actualError:
         reportFailure(output, actualError)
         return
         

@@ -22,6 +22,7 @@ class Vector
 		inline void push_back( T element );
 		inline void pop_back() { --size_; }
 		inline void clear() { size_ = 0; }
+        inline void clearAndDelete() { delete[] vector; size_ = capacity_ = 0; vector = NULL; }
 				
 		const T& back() const { assert( !empty() ); return vector[ size_ - 1 ]; }
 		T& back() { assert( !empty() ); return vector[ size_ - 1 ]; }

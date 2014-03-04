@@ -134,7 +134,6 @@ class Clause
         
         inline void attachFirstWatch();
         inline void attachSecondWatch();        
-        inline void detachSecondWatch();
         
         inline bool updateWatch();
         void notifyImplication( Solver& solver );        
@@ -187,13 +186,6 @@ Clause::attachSecondWatch()
 {
     assert( "Unary clause must be removed." && literals.size() > 1 );
     literals[ 1 ].addWatchedClause( this );
-}
-
-void
-Clause::detachSecondWatch()
-{
-    assert( "The watchToDetach points to a NULL literal." && literals[ 1 ].getVariable() != NULL );
-    literals[ 1 ].eraseWatchedClause( this );
 }
 
 void
@@ -251,9 +243,7 @@ Clause::detachClauseToAllLiterals(
 {
     for( unsigned int i = 0; i < literals.size(); ++i )
     {
-        if( literals[ i ] == literal )
-            literals[ i ].eraseClause( this );
-        else
+        if( literals[ i ] != literal )
             literals[ i ].findAndEraseClause( this );
     }    
 }
@@ -288,7 +278,6 @@ Clause::removeLiteral(
         }
     }
 
-    literal.eraseClause( this );
     assert( literals.back() == literal || literals.back() == literals[ i ] );
     literals.pop_back();
     
@@ -300,7 +289,7 @@ Clause::removeLiteralInLastPosition(
     bool currentLiteral )
 {
     if( currentLiteral )
-        literals.back().eraseClause( this );
+        literals.back().findAndEraseClause( this );
     else
         literals.back().findAndEraseClause( this );
     literals.pop_back();
@@ -461,9 +450,6 @@ Clause::updateWatch()
     {
         if( !literals[ i ].isFalse() )
         {
-            //Detach the old watch
-            detachSecondWatch();
-
             lastSwapIndex = i;
             //Swap the two literals
             swapLiterals( 1, lastSwapIndex );
@@ -476,12 +462,9 @@ Clause::updateWatch()
     
     for( unsigned i = 2; i <= lastSwapIndex; ++i )
     {
-		assert( i < literals.size() );
+        assert( i < literals.size() );
         if( !literals[ i ].isFalse() )
         {
-            //Detach the old watch
-            detachSecondWatch();
-
             lastSwapIndex = i;
             //Swap the two literals
             swapLiterals( 1, lastSwapIndex );

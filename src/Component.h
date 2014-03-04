@@ -159,20 +159,20 @@ Component::iterationOnSupportedByThisExternal(
     unsigned int varId = lit.getVariable()->getId();
 
     bool add = false;
-    WatchedList< Variable* >& wl = getGUSData( varId ).supportedByThisExternalRule[ sign ];
+//    WatchedList< Variable* >& wl = getGUSData( varId ).supportedByThisExternalRule[ sign ];
 
-    wl.startIteration();
-    while( wl.hasNext() )
-    {
-        Variable* variable = wl.next();        
-        trace_msg( unfoundedset, 3, "Considering variable " << *variable << " which is " << ( variable->isFalse() ? "false" : "true" ) << " and " << ( ( getGUSData( variable->getId() ).inQueue ) ? "in queue" : "not in queue" ) );
-        if( !variable->isFalse() && !( getGUSData( variable->getId() ).inQueue ) )
-        {
-            variableHasNoSourcePointer( variable );
-            add = true;
-            wl.remove( variable );
-        }
-    }
+//    wl.startIteration();
+//    while( wl.hasNext() )
+//    {
+//        Variable* variable = wl.next();        
+//        trace_msg( unfoundedset, 3, "Considering variable " << *variable << " which is " << ( variable->isFalse() ? "false" : "true" ) << " and " << ( ( getGUSData( variable->getId() ).inQueue ) ? "in queue" : "not in queue" ) );
+//        if( !variable->isFalse() && !( getGUSData( variable->getId() ).inQueue ) )
+//        {
+//            variableHasNoSourcePointer( variable );
+//            add = true;
+//            wl.remove( variable );
+//        }
+//    }
     
     return add;
 }
@@ -188,18 +188,18 @@ Component::iterationOnSupportedByThisInternal(
     bool add = false;
     WatchedList< Variable* >& wl = getGUSData( varId ).supportedByThisInternalRule[ sign ];
 
-    wl.startIteration();
-    while( wl.hasNext() )
-    {
-        Variable* variable = wl.next();
-        trace_msg( unfoundedset, 3, "Considering variable " << *variable << " which is " << ( variable->isFalse() ? "false" : "true" ) << " and " << ( ( getGUSData( variable->getId() ).inQueue ) ? "in queue" : "not in queue" ) );
-        if( !variable->isFalse() && !( getGUSData( variable->getId() ).inQueue ) )
-        {
-            variableHasNoSourcePointer( variable );
-            add = true;
-            wl.remove( variable );
-        }
-    }
+//    wl.startIteration();
+//    while( wl.hasNext() )
+//    {
+//        Variable* variable = wl.next();
+//        trace_msg( unfoundedset, 3, "Considering variable " << *variable << " which is " << ( variable->isFalse() ? "false" : "true" ) << " and " << ( ( getGUSData( variable->getId() ).inQueue ) ? "in queue" : "not in queue" ) );
+//        if( !variable->isFalse() && !( getGUSData( variable->getId() ).inQueue ) )
+//        {
+//            variableHasNoSourcePointer( variable );
+//            add = true;
+//            wl.remove( variable );
+//        }
+//    }
     
     return add;
 }

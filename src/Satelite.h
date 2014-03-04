@@ -198,7 +198,7 @@ Satelite::onAddingVariable(
     assert( touchedVariables.size() == variable->getId() );
     touchedVariables.push_back( true );
     numberOfTouched++;
-    elim_heap.pushNoCheck( variable );
+//    elim_heap.pushNoCheck( variable );
 }
 
 void
