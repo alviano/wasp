@@ -68,12 +68,56 @@ GringoNumericFormat::parse(
     readFalseAtoms( input );
     readErrorNumber( input );
     
-    solver.computeStrongConnectedComponents();
+//    solver.computeStrongConnectedComponents();
     
     if( !solver.tight() )
     {
         programIsNotTight();
     }
+    
+    //TODO: remove
+//    cout << inputVarId.size() << " " << auxVarId.size() << endl;
+//    unsigned sizes[1024] = {0};
+//    unsigned occs[1024] = {0};
+//    unsigned occs_[1024] = {0};
+//    for( unsigned i = 0; i < auxVarId.size(); i++ )
+//        if( supportVectorAuxVar[i] != NULL  )
+//        {
+//            sizes[  supportVectorAuxVar[i]->size() ]++;
+//            
+//            Literal lit = solver.getLiteral( auxVarId[ i ]);
+//            lit.startIterationOverOccurrences();
+//            unsigned count = 0;
+//            while(lit.hasNextOccurrence())
+//            {
+//                Clause* c = lit.nextOccurence();
+//                count++;
+//                occs_[c->size()]++;
+//            }
+//            lit = lit.getOppositeLiteral();
+//            lit.startIterationOverOccurrences();
+//            while(lit.hasNextOccurrence())
+//            {
+//                Clause* c = lit.nextOccurence();
+//                count++;
+//                occs_[c->size()]++;
+//            }
+//            occs[count]++;
+//        }
+//    cout << "sizes\n";
+//    for( unsigned i = 1; i < 10; i++)
+//        cout << sizes[i] << endl;
+//    cout << "occs\n";
+//    for( unsigned i = 1; i < 10; i++)
+//        cout << occs[i] << " " << occs_[i] << endl;
+//        
+//    unsigned c[1024] = {0};
+//    for( unsigned i = 0; i < solver.numberOfClauses(); i++ )
+//        c[solver.clauseAt( i )->size()]++;
+//    cout << "occs\n";
+//    for( unsigned i = 1; i < 10; i++)
+//        cout << c[i] << endl;
+    cout << "Solving..." << endl;
 }
 
 void
