@@ -23,6 +23,7 @@ class Vector
 		inline void pop_back() { --size_; }
 		inline void clear() { size_ = 0; }
         inline void clearAndDelete() { delete[] vector; size_ = capacity_ = 0; vector = NULL; }
+        inline void findAndRemove( T element );
 				
 		const T& back() const { assert( !empty() ); return vector[ size_ - 1 ]; }
 		T& back() { assert( !empty() ); return vector[ size_ - 1 ]; }
@@ -104,6 +105,22 @@ Vector< T >::findElement( T elem )
             return i;
     
     return MAXUNSIGNEDINT;
+}
+
+template< class T >
+void
+Vector< T >::findAndRemove(
+    T element )
+{
+//    typename vector< T >::iterator it = find( vector< T >::begin(), vector< T >::end(), element );
+//    assert( it != vector< T >::end() );
+//    *it = vector< T >::back();
+//    vector< T >::pop_back();
+    assert( existElement( element ) );
+    unsigned int position = findElement( element );
+    assert( position < size() );
+    operator[]( position ) = back();
+    pop_back();
 }
 
 #endif

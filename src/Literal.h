@@ -89,6 +89,8 @@ class Literal
         
         inline bool isPositive() const;
         inline bool isNegative() const { return !isPositive(); }
+        
+        inline void checkSubsumptionForClause( Solver& solver, Clause* clause ) { getVariable()->checkSubsumptionForClause( solver, clause, getSign() ); }
 
 	private:
         

@@ -144,7 +144,7 @@ class Variable
         inline Component* getComponent() { return component; }
         
         void onLearningForUnfounded( Learning& learning );        
-        inline void addPostPropagator( PostPropagator* p, unsigned int sign ) { postPropagators[ sign ].add( p ); }
+        inline void addPostPropagator( PostPropagator* p, unsigned int sign ) { postPropagators[ sign ].push_back( p ); }
         
         bool isFrozen() const { return frozen; }
         void setFrozen() { frozen = true; }
@@ -153,6 +153,12 @@ class Variable
         void postPropagation( Solver& solver );
         
         void propagateAtLevelZero( Solver& solver );
+        void propagateAtLevelZeroSatelite( Solver& solver );
+        
+        void removeAllClauses( Solver& solver );
+        void markAllClauses( Solver& solver );
+        
+        void checkSubsumptionForClause( Solver& solver, Clause* clause, unsigned sign );
         
     private:
 
@@ -195,13 +201,13 @@ class Variable
          * Position POSITIVE of this vector contains the occurrences of the positive literal associated with this variable.
          * Position NEGATIVE of this vector contains the occurrences of the negative literal associated with this variable.
          */        
-        WatchedList< Clause* > allOccurrences[ 2 ];
+        Vector< Clause* > allOccurrences[ 2 ];
         
         /**
          * Position POSITIVE of this vector contains the occurrences of the positive literal associated with this variable.
          * Position NEGATIVE of this vector contains the occurrences of the negative literal associated with this variable.
          */        
-        WatchedList< PostPropagator* > postPropagators[ 2 ];
+        Vector< PostPropagator* > postPropagators[ 2 ];
         
         uint64_t signature;
         
@@ -401,7 +407,7 @@ Variable::addClause(
     unsigned int sign )
 {
     assert_msg( sign <= 1, "The sign must be 0 or 1. Found value " << sign );
-    allOccurrences[ sign ].add( clause );
+    allOccurrences[ sign ].push_back( clause );
 }
 
 void

@@ -41,7 +41,11 @@ class Satelite
         inline void onStrengtheningClause( Clause* clause );
         inline void onAddingVariable( Variable* var );
         
-        inline void onDeletingClause( Clause* clause );        
+        inline void onDeletingClause( Clause* clause );
+
+        inline unsigned getSubsumptionLimit() const { return subsumptionLimit; }
+        
+        inline void addTrueLiteral( Literal l ) { trueLiterals.push_back( l ); }
         
     private:
         inline void onAddingClause( Clause* clause );
@@ -198,7 +202,7 @@ Satelite::onAddingVariable(
     assert( touchedVariables.size() == variable->getId() );
     touchedVariables.push_back( true );
     numberOfTouched++;
-//    elim_heap.pushNoCheck( variable );
+    elim_heap.pushNoCheck( variable );
 }
 
 void

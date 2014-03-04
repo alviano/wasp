@@ -61,9 +61,9 @@ class Clause
         inline void attachClause( unsigned int firstWatch, unsigned int secondWatch );
         inline void attachClauseToAllLiterals();
         inline void detachClause();
-        inline void detachClauseToAllLiterals( Literal literal );        
+        inline void detachClauseFromAllLiterals();        
+        inline void detachClauseFromAllLiterals( Literal literal );        
         inline void removeLiteral( Literal literal );
-        inline void removeLiteralInLastPosition( bool currentLiteral );
         inline void removeLastLiteralNoWatches(){ literals.pop_back(); }
         
         inline void onLearning( Learning* strategy );
@@ -238,13 +238,22 @@ Clause::detachClause()
 }
 
 void
-Clause::detachClauseToAllLiterals(
+Clause::detachClauseFromAllLiterals(
     Literal literal )
 {
     for( unsigned int i = 0; i < literals.size(); ++i )
     {
         if( literals[ i ] != literal )
             literals[ i ].findAndEraseClause( this );
+    }    
+}
+
+void
+Clause::detachClauseFromAllLiterals()
+{
+    for( unsigned int i = 0; i < literals.size(); ++i )
+    {
+        literals[ i ].findAndEraseClause( this );
     }    
 }
 
@@ -281,18 +290,6 @@ Clause::removeLiteral(
     assert( literals.back() == literal || literals.back() == literals[ i ] );
     literals.pop_back();
     
-    recomputeSignature();
-}
-
-void
-Clause::removeLiteralInLastPosition(
-    bool currentLiteral )
-{
-    if( currentLiteral )
-        literals.back().findAndEraseClause( this );
-    else
-        literals.back().findAndEraseClause( this );
-    literals.pop_back();
     recomputeSignature();
 }
 
@@ -529,13 +526,14 @@ Variable*
 Clause::getVariableWithMinOccurrences()
 {
     assert( literals.size() > 1 );
+    assert( !hasBeenDeleted() );
     Variable* minVariable = literals[ 0 ].getVariable();
-    assert( minVariable->numberOfOccurrences() > 0 );
+    assert_msg( minVariable->numberOfOccurrences() > 0, "Variable " << *minVariable << " does not know to occur in " << *this );
 
     unsigned int i = 1;
     do
     {
-        assert( literals[ i ].getVariable()->numberOfOccurrences() > 0 );
+        assert_msg( literals[ i ].getVariable()->numberOfOccurrences() > 0, "Variable " << *literals[ i ].getVariable() << " does not know to occur in " << *this );
         if( literals[ i ].getVariable()->numberOfOccurrences() < minVariable->numberOfOccurrences() )
         {
             minVariable = literals[ i ].getVariable();

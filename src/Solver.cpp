@@ -348,50 +348,11 @@ void
 Solver::propagateAtLevelZeroSatelite(
     Variable* variable )
 {
-//    if( variable->hasBeenEliminated() )    
-//        return;
-//    
-//    assert( "Variable to propagate has not been set." && variable != NULL );    
-//    Literal literal = Literal::createFromAssignedVariable( variable );
-//    trace_msg( solving, 2, "Propagating " << literal << " as true at level 0" );
-//    literal.startIterationOverOccurrences();
-//
-//    while( literal.hasNextOccurrence() )
-//    {
-//        Clause* clause = literal.nextOccurence();
-//        trace_msg( solving, 5, "Considering clause " << *clause );
-//        clause->detachClauseToAllLiterals( literal );
-//        markClauseForDeletion( clause );
-//    }
-//
-//    assert( !conflictDetected() );
-//    Literal complement = Literal::createOppositeFromAssignedVariable( variable );
-//    trace_msg( solving, 2, "Propagating " << complement << " as false at level 0" );
-//    complement.startIterationOverOccurrences();
-//
-//    while( complement.hasNextOccurrence() && !conflictDetected() )
-//    {
-//        Clause* clause = complement.nextOccurence();
-//        assert( "Next clause to propagate is null." && clause != NULL );
-//        trace( solving, 5, "Considering clause %s.\n", toString( *clause ).c_str() );
-//        
-//        clause->removeLiteral( complement );
-//        if( clause->size() == 1 )
-//        {
-//            if( !clause->getAt( 0 ).isTrue() )
-//            {
-//                trace_msg( solving, 5, "Assigning literal " << clause->getAt( 0 ) << " as true" );
-//                assignLiteral( clause->getAt( 0 ) );
-//            }
-//            clause->detachClauseToAllLiterals( Literal::null );
-//            markClauseForDeletion( clause );
-//        }
-//        else
-//        {
-//            satelite->onStrengtheningClause( clause );
-//            assert( !conflictDetected() );
-//        }
-//    }    
+    if( variable->hasBeenEliminated() )    
+        return;
+    
+    assert( "Variable to propagate has not been set." && variable != NULL );    
+    variable->propagateAtLevelZeroSatelite( *this );
 }
 
 void
