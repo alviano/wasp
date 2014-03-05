@@ -545,15 +545,15 @@ Solver::updateActivity(
 void
 Solver::simplifyOnRestart()
 {
-//    if( variables.numberOfAssignedLiterals() == assignedVariablesAtLevelZero || nextValueOfPropagation > 0 )
-//        return;
-//
-//    removeSatisfied( learnedClauses );    
-//    //Maybe in future we want to disable this function.
-//    removeSatisfied( clauses );
-//
-//    assignedVariablesAtLevelZero = variables.numberOfAssignedLiterals();
-//    nextValueOfPropagation = literalsInClauses + literalsInLearnedClauses;
+    if( variables.numberOfAssignedLiterals() == assignedVariablesAtLevelZero || nextValueOfPropagation > 0 )
+        return;
+
+    removeSatisfied( learnedClauses );    
+    //Maybe in future we want to disable this function.
+    removeSatisfied( clauses );
+
+    assignedVariablesAtLevelZero = variables.numberOfAssignedLiterals();
+    nextValueOfPropagation = literalsInClauses + literalsInLearnedClauses;
 }
 
 void
