@@ -47,14 +47,18 @@ public:
     
 private:
     void readNormalRule( istream& input );
-    void addFact( unsigned head, Clause* body );
-    void addNormalRule( unsigned head, Literal body );
-    void addConstraint( Clause* body  );
-    Clause* readBody( istream& input );
-    Literal getBodyLiteral( Clause* body );
+    void readNormalRule( istream& input, unsigned head );
+    void readConstraint( istream& input );
+    void addFact( unsigned head );
+//    void addNormalRule( unsigned head, Literal body );
+//    void addConstraint( Clause* body );
+//    Clause* readBody( istream& input, vector< Variable* >& truePositiveLiterals );
+//    Literal getBodyLiteral( Clause* body );
     
-    void addSupportClauses();
-    void programIsNotTight();
+//    void addSupportClauses();
+//    void programIsNotTight();
+    void computeSCCs();
+    void computeCompletion();
     
     void readAtomsTable( istream& input );
 
@@ -63,32 +67,36 @@ private:
 
     void readErrorNumber( istream& input );
     
-    Literal getLiteralForInputVar( unsigned int id, unsigned int sign );
-    Literal getLiteralForAuxVar( unsigned int id, unsigned int sign );
+    void createStructures( unsigned id );
+    
+    void propagate( Variable* var );
+    
+//    Literal getLiteralForInputVar( unsigned int id, unsigned int sign );
+//    Literal getLiteralForAuxVar( unsigned int id, unsigned int sign );
 
     Solver& solver;
     
-    bool consistent;
-    Trie bodiesDictionary;
+//    Trie bodiesDictionary;
     
-    vector< unsigned int > inputVarId;
-    vector< unsigned int > auxVarId;
+//    vector< unsigned int > inputVarId;
+//    vector< unsigned int > auxVarId;
     
-    vector< Clause* > supportVectorInputVar;
-    vector< Clause* > supportVectorAuxVar;
+    unsigned propagatedLiterals;
+    
+    vector< bool > facts;
+    vector< vector< int > > normalRules;
+    vector< vector< unsigned > > headOccurrences;
+    vector< vector< unsigned > > posOccurrences;
+    vector< vector< unsigned > > negOccurrences;
 };
 
 GringoNumericFormat::GringoNumericFormat(
-    Solver& s ) : solver( s ), consistent( true )
+    Solver& s ) : solver( s ), propagatedLiterals( 0 )
 {
-    //push an empty position
-    inputVarId.push_back( 0 );
-    auxVarId.push_back( 0 );
-    supportVectorInputVar.push_back( NULL );
-    supportVectorAuxVar.push_back( NULL );
-    
-    Literal skip = getLiteralForInputVar( 1, NEGATIVE );
-    supportVectorInputVar[ 1 ]->addLiteral( skip );
+    facts.push_back( false );
+    headOccurrences.push_back( vector< unsigned >() );
+    posOccurrences.push_back( vector< unsigned >() );
+    negOccurrences.push_back( vector< unsigned >() );
 }
 
 GringoNumericFormat::~GringoNumericFormat()

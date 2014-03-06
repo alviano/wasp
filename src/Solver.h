@@ -65,6 +65,8 @@ class Solver
         inline void addVariable( const string& name );
         inline void addVariable();        
         
+        inline bool cleanAndAddClause( Clause* clause );
+        inline bool addClause( Literal literal );
         inline bool addClause( Clause* clause );
         inline bool addClauseFromModel( Clause* clause );
         inline void addLearnedClause( Clause* learnedClause );
@@ -98,6 +100,8 @@ class Solver
         inline unsigned int numberOfAssignedLiterals() const;
         inline unsigned int numberOfVariables() const;
         inline unsigned int numberOfAuxVariables() const;
+        
+        inline Variable* getAssignedVariable( unsigned idx ) { return variables.getAssignedVariable( idx ); }
         
         inline void setAChoice( Literal choice );        
         
@@ -175,7 +179,7 @@ class Solver
         inline void addPostPropagator( PostPropagator* postPropagator );
         inline void resetPostPropagators();
         
-        inline void addEdgeInDependencyGraph( unsigned int v1, unsigned int v2 ){ /*dependencyGraph.addEdge( v1, v2 );*/ }
+        inline void addEdgeInDependencyGraph( unsigned int v1, unsigned int v2 ){ dependencyGraph.addEdge( v1, v2 ); }
         inline void computeStrongConnectedComponents(){ dependencyGraph.computeStrongConnectedComponents( gusDataVector ); }
         inline bool tight() const { return dependencyGraph.tight(); }
         inline unsigned int getNumberOfCyclicComponents(){ return dependencyGraph.numberOfCyclicComponents(); }
@@ -186,6 +190,8 @@ class Solver
         inline void onStrengtheningClause( Clause* clause ) { satelite->onStrengtheningClause( clause ); }
         
         inline Satelite* getSatelite() { return satelite; }
+        
+        inline bool hasConflictAtLevelZero() const { return conflictAtLevelZero; }
         
     private:
         inline Variable* addVariableInternal();
@@ -361,6 +367,40 @@ Solver::assignLiteral(
 }
 
 bool
+Solver::cleanAndAddClause(
+    Clause* clause )
+{
+    assert( clause != NULL );
+    
+    if( clause->removeDuplicatesAndFalseAndCheckIfTautological() )
+    {
+        releaseClause( clause );
+        return true;
+    }
+    
+    if( clause->size() == 0 )
+    {
+        conflictAtLevelZero = true;
+        releaseClause( clause );
+        return false;
+    }
+    
+    assert( clause->allUndefined() );
+    return addClause( clause );
+}
+
+bool
+Solver::addClause(
+    Literal literal )
+{
+    if( literal.isTrue() || propagateLiteralAsDeterministicConsequence( literal ) )
+        return true;
+    
+    conflictLiteral = literal;
+    return false;
+}
+
+bool
 Solver::addClause(
     Clause* clause )
 {
@@ -371,7 +411,6 @@ Solver::addClause(
     if( size > 1 )
     {
         statistics( onAddingClause( size ) );
-//        clause->attachClause();
         clause->attachClauseToAllLiterals();
         clause->setPositionInSolver( clauses.size() );
         clauses.push_back( clause );
@@ -380,22 +419,15 @@ Solver::addClause(
 
     if( size == 1 )
     {
-        Literal literal = clause->getAt( 0 );
-        if( !literal.isTrue() && !propagateLiteralAsDeterministicConsequence( literal ) )
-        {
-            conflictLiteral = literal;
-        }
-        else
+        if( addClause( clause->getAt( 0 ) ) )
         {
             releaseClause( clause );
-//            delete clause;
             return true;
         }
     }
 
     conflictAtLevelZero = true;
     releaseClause( clause );
-//    delete clause;
     return false;
 }
 

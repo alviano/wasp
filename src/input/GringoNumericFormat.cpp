@@ -57,23 +57,27 @@ GringoNumericFormat::parse(
                 break;
         }
         
-        if( !consistent )
+        if( solver.hasConflictAtLevelZero() )
             return;
     }
-
-    addSupportClauses();
 
     readAtomsTable( input );
     readTrueAtoms( input );
     readFalseAtoms( input );
     readErrorNumber( input );
+
+    computeSCCs();
     
-//    solver.computeStrongConnectedComponents();
-    
-    if( !solver.tight() )
-    {
-        programIsNotTight();
-    }
+//    if( !solver.tight() )
+//    {
+//        trace_msg( parser, 1, "Program is not tight" );
+//        programIsNotTight();
+//    }
+//    else
+//    {
+//        trace_msg( parser, 1, "Program is tight" );
+//    }
+    computeCompletion();
     
     //TODO: remove
 //    cout << inputVarId.size() << " " << auxVarId.size() << endl;
@@ -127,104 +131,77 @@ GringoNumericFormat::readNormalRule(
     unsigned head;
     input >> head;
 
-    Clause* body = readBody( input );
-    if( body == NULL )
+    if( head == 1 )
+        readConstraint( input );
+    else
+        readNormalRule( input, head );
+}
+
+void
+GringoNumericFormat::readNormalRule(
+    istream& input,
+    unsigned head )
+{
+    unsigned  bodySize, negativeSize, tmp;
+    input >> bodySize >> negativeSize;
+ 
+    if( bodySize < negativeSize )
+        ErrorMessage::errorDuringParsing( "Body size must be greater than or equal to negative size." );
+    
+    createStructures( head );
+    
+    if( bodySize == 0 )
     {
-        getLiteralForInputVar( head, POSITIVE );
+        addFact( head );
         return;
     }
-
-    if( head == 1 )
-        addConstraint( body );
-    else if( body->size() == 0 )
-        addFact( head, body );
-    else if( body->size() == 1 )
-    {
-        addNormalRule( head, body->getAt( 0 ) );
-        solver.releaseClause( body );
-    }
-    else
-        addNormalRule( head, getBodyLiteral( body ) );
-}
-
-void
-GringoNumericFormat::addConstraint(
-    Clause* body )
-{
-    consistent = solver.addClause( body );
-}
-
-
-void
-GringoNumericFormat::addFact(
-    unsigned head,
-    Clause* body )
-{
-    assert( body->size() == 0 );
-    body->addLiteral( getLiteralForInputVar( head, POSITIVE ) );
-    consistent = solver.addClause( body );
-    supportVectorInputVar[ head ]->free();
-    supportVectorInputVar[ head ]->addLiteral( getLiteralForInputVar( 1, NEGATIVE ) ); 
-}
-
-Literal
-GringoNumericFormat::getBodyLiteral(
-    Clause* body )
-{
-    assert( body->size() >= 2 );
-    assert( body->allUndefined() );
     
-    bodiesDictionary.startInsertion();
-    for( unsigned i = 0; i < body->size(); ++i )
+    normalRules.push_back( vector< int >() );
+    normalRules.back().push_back( head );
+
+    headOccurrences[ head ].push_back( normalRules.size() - 1 );
+    
+    bool remove = false;
+    while( negativeSize-- > 0 )
     {
-        bodiesDictionary.addElement( body->getAt( i ).getId() );
-    }
-    unsigned id = bodiesDictionary.endInsertion();
-    if( id < auxVarId.size() )
-        solver.releaseClause( body );
-    else
-    {
-        Literal lit = getLiteralForAuxVar( id, NEGATIVE );
-        
-        for( unsigned i = 0; i < body->size(); ++i )
+        input >> tmp;
+        createStructures( tmp );
+
+        if( solver.getVariable( tmp )->isTrue() )
+            remove = true;
+        else if( solver.getVariable( tmp )->isUndefined() )
         {
-            Clause* clause = solver.newClause();
-            clause->addLiteral( lit );
-            clause->addLiteral( body->getAt( i ).getOppositeLiteral() );
-            if( !solver.addClause( clause ) )
-                consistent = false;
+            normalRules.back().push_back( -tmp );
+            negOccurrences[ tmp ].push_back( normalRules.size() - 1 );
         }
-        
-        body->addLiteral( lit.getOppositeLiteral() );
-        if( !solver.addClause( body ) )
-            consistent = false;
-        assert( supportVectorAuxVar[ id ] == NULL );
-        supportVectorAuxVar[ id ] = body;
+
+        --bodySize;
     }
-    return getLiteralForAuxVar( id, NEGATIVE );
+    while( bodySize-- > 0 )
+    {
+        input >> tmp;
+        createStructures( tmp );
+
+        if( solver.getVariable( tmp )->isFalse() )
+            remove = true;
+        else
+        {
+            normalRules.back().push_back( tmp );
+            posOccurrences[ tmp ].push_back( normalRules.size() - 1 );
+        }
+    }
+    
+    if( remove )
+    {
+        normalRules.pop_back();
+        headOccurrences.pop_back();
+        return;
+    }
 }
 
 void
-GringoNumericFormat::addNormalRule(
-    unsigned head,
-    Literal body )
-{
-    Clause* clause = solver.newClause();
-    if( clause->addUndefinedLiteral( getLiteralForInputVar( head, POSITIVE ) ) && clause->addUndefinedLiteral( body ) )
-    {
-        if( !solver.addClause( clause ) )
-            consistent = false;
-    }
-    else
-    {
-        solver.releaseClause( clause );
-    }
-    
-    supportVectorInputVar[ head ]->addLiteral( body.getOppositeLiteral() );
-}
-
-Clause*
-GringoNumericFormat::readBody( istream& input )
+GringoNumericFormat::readConstraint(
+    istream& input )
 {
     unsigned  bodySize, negativeSize, tmp;
     input >> bodySize >> negativeSize;
@@ -237,91 +214,319 @@ GringoNumericFormat::readBody( istream& input )
     while( negativeSize-- > 0 )
     {
         input >> tmp;
-        if( !clause->addUndefinedLiteral( getLiteralForInputVar( tmp, POSITIVE ) ) )
+        if( !clause->addUndefinedLiteral( Literal( solver.getVariable( tmp ), POSITIVE ) ) )
             remove = true;
         --bodySize;
     }
     while( bodySize-- > 0 )
     {
         input >> tmp;
-        if( !clause->addUndefinedLiteral( getLiteralForInputVar( tmp, NEGATIVE ) ) )
+        if( !clause->addUndefinedLiteral( Literal( solver.getVariable( tmp ), NEGATIVE ) ) )
             remove = true;
     }
     
     if( remove )
-    {
         solver.releaseClause( clause );
-        return NULL;
+    else
+    {
+        solver.addClause( clause );
+        while( propagatedLiterals < solver.numberOfAssignedLiterals() )
+        {
+            propagate( solver.getAssignedVariable( propagatedLiterals++ ) );
+        }
     }
-    
-    return clause;
 }
 
-Literal
-GringoNumericFormat::getLiteralForInputVar( 
-    unsigned int id,
-    unsigned int sign )
-{
-    assert( id != 0 );
-    while( inputVarId.size() <= id )
-    {
-        solver.addVariable();
-        inputVarId.push_back( solver.numberOfVariables() );
-        supportVectorInputVar.push_back( solver.newClause() );
-    }
-    return Literal( solver.getVariable( inputVarId[ id ] ), sign );
-}
+//void
+//GringoNumericFormat::addConstraint(
+//    Clause* body )
+//{
+//    consistent = solver.addClause( body );
+//}
+//
 
-Literal
-GringoNumericFormat::getLiteralForAuxVar( 
-    unsigned int id, 
-    unsigned int sign )
+void
+GringoNumericFormat::propagate(
+    Variable* var )
 {
-    while( auxVarId.size() <= id )
+    return;
+    assert( !var->isUndefined() );
+    if( var->isFalse() )
     {
-        solver.addVariable();
-        auxVarId.push_back( solver.numberOfVariables() );
-        supportVectorAuxVar.push_back( NULL );
+        assert( var->getId() < headOccurrences.size() );
+        vector< unsigned >& ho = headOccurrences[ var->getId() ];
+        for( unsigned i = 0; i < ho.size(); ++i )
+        {
+            trace_msg( parser, 3, "Replacing " << ho[ i ] << " by a constraint" );
+            vector< int >& rule = normalRules[ ho[ i ] ];
+            Clause* clause = solver.newClause();
+            for( unsigned j = 1; j < rule.size(); ++j )
+                if( rule[ j ] > 0 )
+                    clause->addLiteral( Literal( solver.getVariable( rule[ j ] ), NEGATIVE ) );
+                else
+                    clause->addLiteral( Literal( solver.getVariable( -rule[ j ] ), POSITIVE ) );
+            solver.cleanAndAddClause( clause );
+            rule.clear();
+        }
+        ho.clear();
+        
+        assert( var->getId() < negOccurrences.size() );
+        vector< unsigned >& no = negOccurrences[ var->getId() ];
+        for( unsigned i = 0; i < no.size(); ++i )
+        {
+            trace_msg( parser, 3, "Shrinking rule " << no[ i ] );
+            vector< int >& rule = normalRules[ no[ i ] ];
+            unsigned k = 1;
+            for( unsigned j = 1; j < rule.size(); ++j )
+            {
+                if( rule[ j ] != -static_cast< int >( var->getId() ) )
+                    rule[ k++ ] = rule[ j ];
+            }
+            if( k > 1 )
+                rule.resize( k );
+            else 
+                facts[ rule[ 0 ] ] = true;
+        }
+        ho.clear();
     }
-    return Literal( solver.getVariable( auxVarId[ id ] ), sign );
+    else
+    {
+        
+    }
 }
 
 void
-GringoNumericFormat::addSupportClauses()
+GringoNumericFormat::addFact(
+    unsigned head )
 {
-    for( unsigned i = 1; i < inputVarId.size(); ++i )
-    {
-        Clause* clause = supportVectorInputVar[ i ];
-        if( clause->size() > 0 && clause->getAt( 0 ) == getLiteralForInputVar( 1, NEGATIVE ) )
-        {
-            solver.releaseClause( clause );
-            solver.addEdgeInDependencyGraph( inputVarId[ i ], 0 );
-            continue;
-        }
-        
-        for( unsigned j = 0; j < clause->size(); ++j )
-            if( clause->getAt( j ).isPositive() )
-                solver.addEdgeInDependencyGraph( inputVarId[ i ], clause->getAt( j ).getVariable()->getId() );
-            
-        if( !clause->addUndefinedLiteral( getLiteralForInputVar( i, NEGATIVE ) ) || clause->removeDuplicatesAndFalseAndCheckIfTautological() )
-        {
-            solver.releaseClause( clause );
-            continue;
-        }
-        
-        consistent = solver.addClause( clause );
-        if( !consistent )
-            return;
-    }
+    if( facts[ head ] )
+        return;
+
+    trace_msg( parser, 3, "Adding fact " << head );
+    facts[ head ] = true;
+
+    vector< unsigned > stack;
+    stack.push_back( head );
     
-    for( unsigned i = 1; i < auxVarId.size(); ++i )
-    {
-        Clause* clause = supportVectorAuxVar[ i ];
-        for( unsigned j = 0; j < clause->size(); ++j )
-            if( clause->getAt( j ).isNegative() )
-                solver.addEdgeInDependencyGraph( auxVarId[ i ], clause->getAt( j ).getVariable()->getId() );
-    }
+    do{
+        head = stack.back();
+        stack.pop_back();
+        solver.addClause( Literal( solver.getVariable( head ), POSITIVE ) );
+            
+        assert( head < headOccurrences.size() );
+        vector< unsigned >& ho = headOccurrences[ head ];
+        for( unsigned i = 0; i < ho.size(); ++i )
+        {
+            trace_msg( parser, 4, "Removing rule " << ho[ i ] );
+            assert( normalRules[ ho[ i ] ].size() >= 2 );
+            normalRules[ ho[ i ] ].clear();
+        }
+        ho.clear();
+        
+        assert( head < posOccurrences.size() );
+        vector< unsigned >& po = posOccurrences[ head ];
+        for( unsigned i = 0; i < po.size(); ++i )
+        {
+            trace_msg( parser, 4, "Shrinking rule " << po[ i ] );
+            assert( po[ i ] < normalRules.size() );
+            vector< int >& rule = normalRules[ po[ i ] ];
+            unsigned k = 1;
+            for( unsigned j = 1; j < rule.size(); ++j )
+            {
+                if( rule[ j ] != static_cast< int >( head ) )
+                    rule[ k++ ] = rule[ j ];
+            }
+            if( k == 1 )
+            {
+                if( !facts[ rule[ 0 ] ] )
+                {
+                    trace_msg( parser, 5, "New fact: " << rule[ 0 ] );
+                    facts[ rule[ 0 ] ] = true;
+                    stack.push_back( rule[ 0 ] );
+                }
+            }
+            else
+                rule.resize( k );
+        }
+        po.clear();
+        
+        assert( head < negOccurrences.size() );
+        vector< unsigned >& no = negOccurrences[ head ];
+        for( unsigned i = 0; i < no.size(); ++i )
+        {
+            trace_msg( parser, 4, "Shrinking rule " << po[ i ] );
+            assert( no[ i ] < normalRules.size() );
+            vector< int >& rule = normalRules[ no[ i ] ];
+            unsigned k = 1;
+            for( unsigned j = 1; j < rule.size(); ++j )
+            {
+                if( rule[ j ] != -static_cast< int >( head ) )
+                    rule[ k++ ] = rule[ j ];
+            }
+            if( k == 1 )
+            {
+                if( !facts[ rule[ 0 ] ] )
+                {
+                    trace_msg( parser, 5, "New fact: " << rule[ 0 ] );
+                    facts[ rule[ 0 ] ] = true;
+                    stack.push_back( rule[ 0 ] );
+                }
+            }
+            else
+                rule.resize( k );
+        }
+        no.clear();
+    }while( !stack.empty() );
 }
+
+//Literal
+//GringoNumericFormat::getBodyLiteral(
+//    Clause* body )
+//{
+//    assert( body->size() >= 2 );
+//    assert( body->allUndefined() );
+//    
+//    bodiesDictionary.startInsertion();
+//    for( unsigned i = 0; i < body->size(); ++i )
+//    {
+//        bodiesDictionary.addElement( body->getAt( i ).getId() );
+//    }
+//    unsigned id = bodiesDictionary.endInsertion();
+//    if( id < auxVarId.size() )
+//        solver.releaseClause( body );
+//    else
+//    {
+//        Literal lit = getLiteralForAuxVar( id, NEGATIVE );
+//        
+//        for( unsigned i = 0; i < body->size(); ++i )
+//        {
+//            Clause* clause = solver.newClause();
+//            clause->addLiteral( lit );
+//            clause->addLiteral( body->getAt( i ).getOppositeLiteral() );
+//            if( !solver.addClause( clause ) )
+//                consistent = false;
+//        }
+//        
+//        body->addLiteral( lit.getOppositeLiteral() );
+//        if( !solver.addClause( body ) )
+//            consistent = false;
+//        assert( supportVectorAuxVar[ id ] == NULL );
+//        supportVectorAuxVar[ id ] = body;
+//    }
+//    return getLiteralForAuxVar( id, NEGATIVE );
+//}
+//
+//void
+//GringoNumericFormat::addNormalRule(
+//    unsigned head,
+//    Literal body )
+//{
+//    Clause* clause = solver.newClause();
+//    if( clause->addUndefinedLiteral( getLiteralForInputVar( head, POSITIVE ) ) && clause->addUndefinedLiteral( body ) )
+//    {
+//        if( !solver.addClause( clause ) )
+//            consistent = false;
+//    }
+//    else
+//    {
+//        solver.releaseClause( clause );
+//    }
+//    
+//    supportVectorInputVar[ head ]->addLiteral( body.getOppositeLiteral() );
+//}
+//
+//Clause*
+//GringoNumericFormat::readBody( 
+//    istream& input,
+//    vector< Variable* >& truePositiveLiterals )
+//{
+//    unsigned  bodySize, negativeSize, tmp;
+//    input >> bodySize >> negativeSize;
+// 
+//    if( bodySize < negativeSize )
+//        ErrorMessage::errorDuringParsing( "Body size must be greater than or equal to negative size." );
+//   
+//    bool remove = false;
+//    Clause* clause = solver.newClause();
+//    while( negativeSize-- > 0 )
+//    {
+//        input >> tmp;
+//        if( !clause->addUndefinedLiteral( getLiteralForInputVar( tmp, POSITIVE ) ) )
+//            remove = true;
+//        --bodySize;
+//    }
+//    while( bodySize-- > 0 )
+//    {
+//        input >> tmp;
+//        if( !clause->addUndefinedLiteral( getLiteralForInputVar( tmp, NEGATIVE ) ) )
+//            remove = true;
+//        if( solver.getVariable( inputVarId[ tmp ] )->isTrue() )
+//            truePositiveLiterals.push_back( solver.getVariable( inputVarId[ tmp ] ) );
+//    }
+//    
+//    if( remove )
+//    {
+//        solver.releaseClause( clause );
+//        return NULL;
+//    }
+//    
+//    return clause;
+//}
+//
+//Literal
+//GringoNumericFormat::getLiteralForInputVar( 
+//    unsigned int id,
+//    unsigned int sign )
+//{
+//    assert( id != 0 );
+//    while( inputVarId.size() <= id )
+//    {
+//        solver.addVariable();
+//        inputVarId.push_back( solver.numberOfVariables() );
+//        supportVectorInputVar.push_back( solver.newClause() );
+//        trueVariablesRemovedFromSupportVectorInputVar.push_back( vector< Variable* >() );
+//    }
+//    return Literal( solver.getVariable( inputVarId[ id ] ), sign );
+//}
+//
+//Literal
+//GringoNumericFormat::getLiteralForAuxVar( 
+//    unsigned int id, 
+//    unsigned int sign )
+//{
+//    while( auxVarId.size() <= id )
+//    {
+//        solver.addVariable();
+//        auxVarId.push_back( solver.numberOfVariables() );
+//        supportVectorAuxVar.push_back( NULL );
+//        trueVariablesRemovedFromSupportVectorAuxVar.push_back( vector< Variable* >() );
+//    }
+//    return Literal( solver.getVariable( auxVarId[ id ] ), sign );
+//}
+//
+//void
+//GringoNumericFormat::addSupportClauses()
+//{
+//    for( unsigned i = 1; i < inputVarId.size(); ++i )
+//    {
+//        Clause* clause = supportVectorInputVar[ i ];
+//        if( clause->size() > 0 && clause->getAt( 0 ) == getLiteralForInputVar( 1, NEGATIVE ) )
+//        {
+//            solver.releaseClause( clause );
+//            continue;
+//        }
+//        
+//        if( !clause->addUndefinedLiteral( getLiteralForInputVar( i, NEGATIVE ) ) || clause->removeDuplicatesAndFalseAndCheckIfTautological() )
+//        {
+//            solver.releaseClause( clause );
+//            continue;
+//        }
+//        
+//        consistent = solver.addClause( clause );
+//        if( !consistent )
+//            return;
+//    }
+//}
 
 void
 GringoNumericFormat::readAtomsTable(
@@ -333,26 +538,38 @@ GringoNumericFormat::readAtomsTable(
     char name[ 1024 ];
     while( nextAtom != 0 )
     {
-        assert_msg( nextAtom < inputVarId.size(), "nextAtom = " << nextAtom << "; size = " << inputVarId.size() );
-        assert( inputVarId[ nextAtom ] > 1 );
+//        assert_msg( nextAtom < inputVarId.size(), "nextAtom = " << nextAtom << "; size = " << inputVarId.size() );
+//        assert( inputVarId[ nextAtom ] > 1 );
         
         input.getline( name, 1024 );
-        VariableNames::setName( solver.getVariable( inputVarId[ nextAtom ] ), name+1 );
+        VariableNames::setName( solver.getVariable( nextAtom ), name+1 );
         input >> nextAtom;
     }
     
-    #ifdef TRACE_ON
-    for( unsigned int i = 1; i <= solver.numberOfVariables(); i++ )
-    {
-        if( VariableNames::isHidden( solver.getVariable( i ) ) )
-        {
-            stringstream s;
-            s << "#hidden" << i;
-            string name = s.str();
-            VariableNames::setName( solver.getVariable( i ), name );
-        }
-    }
-    #endif
+//    #ifdef TRACE_ON
+//    for( unsigned i = 1; i < inputVarId.size(); ++i )
+//    {
+//        Variable* variable = solver.getVariable( inputVarId[ i ] );
+//        if( VariableNames::isHidden( variable ) )
+//        {
+//            stringstream s;
+//            s << "#hidden" << i;
+//            string name = s.str();
+//            VariableNames::setName( variable, name );
+//        }
+//    }
+//    for( unsigned i = 1; i < auxVarId.size(); ++i )
+//    {
+//        Variable* variable = solver.getVariable( auxVarId[ i ] );
+//        if( VariableNames::isHidden( variable ) )
+//        {
+//            stringstream s;
+//            s << "#aux" << i;
+//            string name = s.str();
+//            VariableNames::setName( variable, name );
+//        }
+//    }
+//    #endif
 }
 
 void
@@ -369,12 +586,7 @@ GringoNumericFormat::readTrueAtoms(
     
     while( nextAtom != 0 )
     {
-        Literal lit = getLiteralForInputVar( nextAtom, NEGATIVE );
-        Clause* clause = solver.newClause();
-        clause->addLiteral( lit );
-        consistent = solver.addClause( clause );
-        if( !consistent )
-            return;
+        solver.addClause( Literal( solver.getVariable( nextAtom ), NEGATIVE ) );
         input >> nextAtom;
     }
 }
@@ -390,15 +602,10 @@ GringoNumericFormat::readFalseAtoms(
     
     unsigned int nextAtom;
     input >> nextAtom;
-    
+
     while( nextAtom != 0 )
     {
-        Literal lit = getLiteralForInputVar( nextAtom, NEGATIVE );
-        Clause* clause = solver.newClause();
-        clause->addLiteral( lit );
-        consistent = solver.addClause( clause );
-        if( !consistent )
-            return;
+        solver.addClause( Literal( solver.getVariable( nextAtom ), NEGATIVE ) );
         input >> nextAtom;
     }
 }
@@ -412,7 +619,9 @@ GringoNumericFormat::readErrorNumber(
     
     if( errorNumber != 1 )
     {
-        cout << ERRORPARSING << endl;
+        stringstream ss;
+        ss << "read error message number " << errorNumber;
+        ErrorMessage::errorDuringParsing( ss.str() );
         exit( 0 );
     }
     else
@@ -420,11 +629,9 @@ GringoNumericFormat::readErrorNumber(
     }
 }
 
-void
-GringoNumericFormat::programIsNotTight()
-{
-//    unordered_map< Variable*, Component* > variableComponent;
-//    
+//void
+//GringoNumericFormat::programIsNotTight()
+//{
 //    //Add two fake positions
 //    solver.addGUSData( NULL );
 //    solver.addGUSData( NULL );
@@ -446,7 +653,6 @@ GringoNumericFormat::programIsNotTight()
 //            trace_msg( parser, 2, "Variable " << *solver.getVariable( varId ) << " is in the cyclic component " << i );
 //            Variable* currentVariable = solver.getVariable( varId );
 //            currentVariable->setComponent( component );
-//            variableComponent[ currentVariable ] = component;
 //            component->variableHasNoSourcePointer( currentVariable );
 //        }
 //        
@@ -457,41 +663,33 @@ GringoNumericFormat::programIsNotTight()
 //    
 //    for( unsigned int i = 2; i < supportVectorInputVar.size(); i++ )
 //    {
-//        unsigned int atomId = getIdInSolver( i, false );
-//        Variable* variable = getVariable( atomId );
+//        Variable* variable = solver.getVariable( inputVarId[ i ] );
 //
-//        if( !variable->isInCyclicComponent() || supportedVariables.find( variable ) != supportedVariables.end() )
-//            continue;
-//        
-//        Clause* lits = supportVector[ i ];
-//        if( lits->size() == 0 )
+//        Clause* lits = supportVectorInputVar[ i ];
+//        // skip acyclic variables, false variables and facts
+//        if( !variable->isInCyclicComponent() || lits->size() == 0 || lits->getAt( 0 ) == getLiteralForInputVar( 1, NEGATIVE ) )
 //            continue;
 //
 //        trace_msg( parser, 2, "Creating GUS data structures for variable " << *variable << " which has " << lits->size() << " supporting rules" );
 //        
-//        Component* component = variableComponent[ variable ];
+//        Component* component = variable->getComponent();
 //        assert( component != NULL );
 //        
 //        variable->setFrozen();
 //        
-//        unordered_set< Variable* > tmp;
 //        for( unsigned int j = 0; j < lits->size(); j++ )
 //        {
-//            if( !tmp.insert( lits->getAt( j ).getVariable() ).second )
-//                continue;
-//
 //            if( lits->getAt( j ).isPositive() && variable->inTheSameComponent( lits->getAt( j ).getVariable() ) )
 //            {
-//                trace_msg( parser, 3, "Adding " << lits[ j ] << " as internal rule for " << *variable );
+//                trace_msg( parser, 3, "Adding " << lits->getAt( j ) << " as internal rule for " << *variable );
 //                component->addInternalLiteralForVariable( variable->getId(), lits->getAt( j ) );
+//                component->addVariablePossiblySupportedByLiteral( variable, lits->getAt( j ) );
 //            }
 //            else
 //            {
-//                trace_msg( parser, 3, "Adding " << lits[ j ] << " as external rule for " << *variable );
+//                trace_msg( parser, 3, "Adding " << lits->getAt( j ) << " as external rule for " << *variable );
 //                component->addExternalLiteralForVariable( variable->getId(), lits->getAt( j ) );
 //            }
-//            
-//            component->addVariablePossiblySupportedByLiteral( variable, lits->getAt( j ) );
 //            
 //            unsigned int sign = lits->getAt( j ).getSign();
 //            if( literalsPostPropagator[ sign ][ lits->getAt( j ).getVariable() ].insert( component ).second )            
@@ -501,40 +699,132 @@ GringoNumericFormat::programIsNotTight()
 //        }
 //    }    
 //    
-//    for( unsigned int i = 1; i < supportVectorForAuxVariables.size(); i++ )
+//    for( unsigned int i = 1; i < supportVectorAuxVar.size(); i++ )
 //    {
-//        unsigned int atomId = getIdInSolver( i, true );
-//        Variable* variable = getVariable( atomId );
+//        Variable* variable = solver.getVariable( auxVarId[ i ] );
 //        
-//        if( !variable->isInCyclicComponent() || supportedVariables.find( variable ) != supportedVariables.end() )
+//        Clause* lits = supportVectorAuxVar[ i ];
+//        // skip acyclic variables, false variables and facts
+//        if( !variable->isInCyclicComponent() || lits->size() == 0 || lits->getAt( 0 ) == getLiteralForInputVar( 1, NEGATIVE ) )
 //            continue;
 //
-//        Clause* lits = supportVectorForAuxVariables[ i ];
-//        if( lits->size() == 0 )
-//            continue;
-//
-//        trace_msg( parser, 2, "Creating GUS data structures for variable " << *variable << " which has " << lits.size() << " supporting rules" );
+//        trace_msg( parser, 2, "Creating GUS data structures for variable " << *variable << " whose supporting rule has " << lits->size() << " literals" );
 //
 //        variable->setFrozen();
 //        
-//        Component* component = variableComponent[ variable ];
+//        Component* component = variable->getComponent();
 //        component->setAuxVariable( variable->getId() );
 //        
 //        assert( component != NULL );
 //
-//        unordered_set< Variable* > tmp;
 //        for( unsigned int j = 0; j < lits->size(); j++ )
 //        {
-//            if( !tmp.insert( lits->getAt( j ).getVariable() ).second )
-//                continue;
-//            trace_msg( parser, 3, "Adding " << lits->getAt( j ) << " as supporting rule for " << *variable );
-//            if( lits->getAt( j ).isPositive() && lits->getAt( j ).getVariable()->inTheSameComponent( variable ) )
+//            if( lits->getAt( j ).isNegative() && lits->getAt( j ).getVariable()->inTheSameComponent( variable ) )
 //            {
-//                component->addAuxVariableSupportedByLiteral( variable, lits->getAt( j ) );
-//                component->addInternalLiteralForVariable( variable->getId(), lits->getAt( j ) );
+//                Literal lit = lits->getAt( j ).getOppositeLiteral();
+//                trace_msg( parser, 3, "Adding " << lit << " to the supporting rule of " << *variable );
+//                component->addAuxVariableSupportedByLiteral( variable, lit );
+//                component->addInternalLiteralForVariable( variable->getId(), lit );
 //            }
 //            
 //            lits->getAt( j ).getVariable()->setFrozen();
 //        }
 //    }    
+//}
+
+void
+GringoNumericFormat::computeSCCs()
+{
+    for( unsigned i = 1; i < headOccurrences.size(); ++i )
+    {
+        vector< unsigned >& ho = headOccurrences[ i ];
+        if( ho.empty() )
+        {
+            solver.addEdgeInDependencyGraph( i, 0 );
+            continue;
+        }
+        
+        for( unsigned j = 0; j < ho.size(); ++j )
+            if( ho[ j ] > 0 )
+                solver.addEdgeInDependencyGraph( i, ho[ j ] );
+    }
+    
+    solver.computeStrongConnectedComponents();
+}
+
+void
+GringoNumericFormat::createStructures(
+    unsigned id )
+{
+    while( id >= headOccurrences.size() )
+    {
+        solver.addVariable();
+        facts.push_back( false );
+        headOccurrences.push_back( vector< unsigned >() );
+        posOccurrences.push_back( vector< unsigned >() );
+        negOccurrences.push_back( vector< unsigned >() );
+    }
+}
+
+void
+GringoNumericFormat::computeCompletion()
+{
+    for( unsigned i = 0; i < normalRules.size(); ++i )
+    {
+        solver.addVariable();
+        trace_msg( parser, 3, "Adding variable " << solver.numberOfVariables() << " for rule #" << i);
+        
+        vector< int >& rule = normalRules[ i ];
+        if( rule.empty() )
+            continue;
+        assert( rule.size() >= 2 );
+        
+        Clause* clause = solver.newClause();
+        clause->addLiteral( Literal( solver.getVariable( rule[ 0 ] ), POSITIVE ) );
+        clause->addLiteral( Literal( solver.getVariable( headOccurrences.size() + i ), NEGATIVE ) );
+        solver.cleanAndAddClause( clause );
+        trace_msg( parser, 4, "Adding clause " << *clause );
+        
+        clause = solver.newClause();
+        clause->addLiteral( Literal( solver.getVariable( headOccurrences.size() + i ), POSITIVE ) );
+        for( unsigned j = 1; j < rule.size(); ++j )
+        {
+            if( rule[ j ] > 0 )
+            {
+                clause->addLiteral( Literal( solver.getVariable( rule[ j ] ), NEGATIVE ) );
+                
+                Clause* binClause = solver.newClause();
+                binClause->addLiteral( Literal( solver.getVariable( headOccurrences.size() + i ), NEGATIVE ) );
+                binClause->addLiteral( Literal( solver.getVariable( rule[ j ] ), POSITIVE ) );
+                solver.cleanAndAddClause( binClause );
+                trace_msg( parser, 4, "Adding clause " << *binClause );
+            }
+            else
+            {
+                clause->addLiteral( Literal( solver.getVariable( -rule[ j ] ), POSITIVE ) );
+
+                Clause* binClause = solver.newClause();
+                binClause->addLiteral( Literal( solver.getVariable( headOccurrences.size() + i ), NEGATIVE ) );
+                binClause->addLiteral( Literal( solver.getVariable( -rule[ j ] ), NEGATIVE ) );
+                solver.cleanAndAddClause( binClause );
+                trace_msg( parser, 4, "Adding clause " << *binClause );
+            }
+        }
+        solver.cleanAndAddClause( clause );
+        trace_msg( parser, 4, "Adding clause " << *clause );
+    }
+    
+    for( unsigned i = 2; i < headOccurrences.size(); ++i )
+    {
+        if( facts[ i ] )
+            continue;
+        
+        vector< unsigned >& ho = headOccurrences[ i ];
+        Clause* clause = solver.newClause();
+        clause->addLiteral( Literal( solver.getVariable( i ), NEGATIVE ) );
+        for( unsigned j = 0; j < ho.size(); ++j )
+            clause->addLiteral( Literal( solver.getVariable( headOccurrences.size() + ho[ j ] ), POSITIVE ) );
+        solver.cleanAndAddClause( clause );
+        trace_msg( parser, 4, "Adding clause " << *clause );
+    }
 }

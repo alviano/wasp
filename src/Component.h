@@ -158,23 +158,21 @@ Component::iterationOnSupportedByThisExternal(
     unsigned int sign = lit.getSign();
     unsigned int varId = lit.getVariable()->getId();
 
-    bool add = false;
-//    WatchedList< Variable* >& wl = getGUSData( varId ).supportedByThisExternalRule[ sign ];
+    Vector< Variable* >& wl = getGUSData( varId ).supportedByThisExternalRule[ sign ];
 
-//    wl.startIteration();
-//    while( wl.hasNext() )
-//    {
-//        Variable* variable = wl.next();        
-//        trace_msg( unfoundedset, 3, "Considering variable " << *variable << " which is " << ( variable->isFalse() ? "false" : "true" ) << " and " << ( ( getGUSData( variable->getId() ).inQueue ) ? "in queue" : "not in queue" ) );
-//        if( !variable->isFalse() && !( getGUSData( variable->getId() ).inQueue ) )
-//        {
-//            variableHasNoSourcePointer( variable );
-//            add = true;
-//            wl.remove( variable );
-//        }
-//    }
-    
-    return add;
+    unsigned i = 0;
+    unsigned j = 0;
+    for( ; i < wl.size(); ++i )
+    {
+        Variable* variable = wl[ j ] = wl[ i ];
+        trace_msg( unfoundedset, 3, "Considering variable " << *variable << " which is " << ( variable->isFalse() ? "false" : "true" ) << " and " << ( ( getGUSData( variable->getId() ).inQueue ) ? "in queue" : "not in queue" ) );
+        if( !variable->isFalse() && !( getGUSData( variable->getId() ).inQueue ) )
+            variableHasNoSourcePointer( variable );
+        else
+            ++j;
+    }
+    wl.shrink( j );
+    return i != j;
 }
 
 bool
@@ -185,23 +183,21 @@ Component::iterationOnSupportedByThisInternal(
     unsigned int sign = lit.getSign();
     unsigned int varId = lit.getVariable()->getId();
 
-    bool add = false;
-    WatchedList< Variable* >& wl = getGUSData( varId ).supportedByThisInternalRule[ sign ];
+    Vector< Variable* >& wl = getGUSData( varId ).supportedByThisInternalRule[ sign ];
 
-//    wl.startIteration();
-//    while( wl.hasNext() )
-//    {
-//        Variable* variable = wl.next();
-//        trace_msg( unfoundedset, 3, "Considering variable " << *variable << " which is " << ( variable->isFalse() ? "false" : "true" ) << " and " << ( ( getGUSData( variable->getId() ).inQueue ) ? "in queue" : "not in queue" ) );
-//        if( !variable->isFalse() && !( getGUSData( variable->getId() ).inQueue ) )
-//        {
-//            variableHasNoSourcePointer( variable );
-//            add = true;
-//            wl.remove( variable );
-//        }
-//    }
-    
-    return add;
+    unsigned i = 0;
+    unsigned j = 0;
+    for( ; i < wl.size(); ++i )
+    {
+        Variable* variable = wl[ j ] = wl[ i ];
+        trace_msg( unfoundedset, 3, "Considering variable " << *variable << " which is " << ( variable->isFalse() ? "false" : "true" ) << " and " << ( ( getGUSData( variable->getId() ).inQueue ) ? "in queue" : "not in queue" ) );
+        if( !variable->isFalse() && !( getGUSData( variable->getId() ).inQueue ) )
+            variableHasNoSourcePointer( variable );
+        else
+            ++j;
+    }
+    wl.shrink( j );
+    return i != j;
 }
 
 void
@@ -328,9 +324,9 @@ Component::addVariableSupportedByLiteral(
 {
     Variable* tmp = literal.getVariable();
     if( tmp->inTheSameComponent( variable ) )
-        getGUSData( tmp->getId() ).supportedByThisInternalRule[ literal.getSign() ].add( variable );
+        getGUSData( tmp->getId() ).supportedByThisInternalRule[ literal.getSign() ].push_back( variable );
     else
-        getGUSData( tmp->getId() ).supportedByThisExternalRule[ literal.getSign() ].add( variable );        
+        getGUSData( tmp->getId() ).supportedByThisExternalRule[ literal.getSign() ].push_back( variable );        
 }
 
 void

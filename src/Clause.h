@@ -102,6 +102,7 @@ class Clause
         inline bool isLearned() const { return clauseData.learned == 1; }
         
         inline bool removeSatisfiedLiterals();
+        inline void removeDuplicates();
         inline bool removeDuplicatesAndCheckIfTautological();
         inline bool removeDuplicatesAndFalseAndCheckIfTautological();
         
@@ -636,6 +637,30 @@ Clause::containsAnyComplementOf(
 
 inline bool literalComparator( Literal l1, Literal l2 ){ return l1.getVariable() < l2.getVariable(); }
 
+void
+Clause::removeDuplicates()
+{
+    sort( literals.begin(), literals.end(), literalComparator );
+    
+    Literal previousLiteral = literals[ 0 ];
+    
+    unsigned int i = 1;
+    unsigned int j = 1;
+    while( i < literals.size() )
+    {
+        if( previousLiteral != literals[ i ] )
+            previousLiteral = literals[ j++ ] = literals[ i++ ];
+        else
+            ++i;
+    }
+
+    if( i != j )
+    {
+        literals.resize( j );
+        recomputeSignature();
+    }
+}
+
 bool
 Clause::removeDuplicatesAndCheckIfTautological()
 {
@@ -657,19 +682,18 @@ Clause::removeDuplicatesAndCheckIfTautological()
 			}
 			else
 			{
-                literals[ j ] = literals[ i ];
-         	   	++j;
-				previousLiteral = literals[ i ];
+               previousLiteral = literals[ j++ ] = literals[ i ];
 			}
         }
         
         ++i;
     }
 
-	literals.resize( j );
-    
     if( i != j )
+    {
+        literals.resize( j );
         recomputeSignature();
+    }
 
     return false;
 }
@@ -697,20 +721,19 @@ Clause::removeDuplicatesAndFalseAndCheckIfTautological()
 			}
 			else
 			{
-                literals[ j ] = literals[ i ];
-         	   	++j;
-				previousLiteral = literals[ i ];
+              previousLiteral = literals[ j++ ] = literals[ i ];
 			}
         }
         
         ++i;
     }
-
-	literals.resize( j );
     
     if( i != j )
+    {
+        literals.resize( j );
         recomputeSignature();
-
+    }
+    
     return false;
 }
 

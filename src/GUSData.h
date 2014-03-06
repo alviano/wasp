@@ -29,8 +29,8 @@ class GUSData
         
         vector< Literal > externalLiterals;
         vector< Literal > internalLiterals;
-        WatchedList< Variable* > supportedByThisExternalRule[ 2 ];
-        WatchedList< Variable* > supportedByThisInternalRule[ 2 ];
+        Vector< Variable* > supportedByThisExternalRule[ 2 ];
+        Vector< Variable* > supportedByThisInternalRule[ 2 ];
         vector< Variable* > auxVariablesSupportedByThis[ 2 ];
         vector< Variable* > possiblySupportedByThis[ 2 ];
         
