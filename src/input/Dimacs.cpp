@@ -58,7 +58,6 @@ Dimacs::readAllClauses(
     trace_msg( parser, 1, "Starting iteration on " << numberOfClauses << " clauses.");
     
     unsigned int numOfClauses = 0;
-//    for( unsigned int i = 0; i < numberOfClauses; i++ )
     while( readClause( input ) )
     {
         numOfClauses++; 
@@ -88,14 +87,13 @@ Dimacs::readClause(
 
     if( next == 0 )
     {
-        solver.foundEmptyClause();
+        solver.addClause( solver.newClause() );
         return false;
     }
 //        ErrorMessage::errorDuringParsing( "Empty clause are not allowed." );
 
     unordered_set< int > tempSet;    
     bool trivial = false;
-//    Clause* clause = new Clause();
     Clause* clause = solver.newClause();
 
     do
@@ -130,25 +128,8 @@ Dimacs::readClause(
     else
     {
         trace_msg( parser, 1, "Deleting clause " << *clause << " because is trivial" );
-//        delete clause;
         solver.releaseClause( clause );
     }
     
     return true;
-}
-
-void
-Dimacs::insertVariables(
-    unsigned int numberOfVariables )
-{
-    trace_msg( parser, 1, "Adding " << numberOfVariables << " variables." );
-    for( unsigned int i = 1; i <= numberOfVariables; i++ )
-    {
-        solver.addVariable();
-        #ifdef TRACE_ON
-        stringstream s;
-        s << i;
-        VariableNames::setName( solver.getLiteral( i ).getVariable(), s.str() );
-        #endif
-    }
 }

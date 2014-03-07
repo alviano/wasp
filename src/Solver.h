@@ -105,7 +105,6 @@ class Solver
         
         inline void setAChoice( Literal choice );        
         
-        inline void foundEmptyClause(){ conflictAtLevelZero = true; }
         inline bool analyzeConflict();
         inline void clearConflictStatus();
         inline void chooseLiteral();
@@ -191,8 +190,6 @@ class Solver
         
         inline Satelite* getSatelite() { return satelite; }
         
-        inline bool hasConflictAtLevelZero() const { return conflictAtLevelZero; }
-        
     private:
         inline Variable* addVariableInternal();
         
@@ -221,7 +218,6 @@ class Solver
         Restart* restart;
         Satelite* satelite;
         
-        bool conflictAtLevelZero;
         unsigned int getNumberOfUndefined() const;
         bool allClausesSatisfied() const;
         
@@ -275,7 +271,6 @@ Solver::Solver()
     learning( *this ),
     outputBuilder( NULL ),
     restart( NULL ),
-    conflictAtLevelZero( false ),
     assignedVariablesAtLevelZero( MAXUNSIGNEDINT ),
     nextValueOfPropagation( 0 ),
     literalsInClauses( 0 ),
@@ -380,7 +375,7 @@ Solver::cleanAndAddClause(
     
     if( clause->size() == 0 )
     {
-        conflictAtLevelZero = true;
+        conflictLiteral = Literal::conflict;
         releaseClause( clause );
         return false;
     }
@@ -396,7 +391,6 @@ Solver::addClause(
     if( literal.isTrue() || propagateLiteralAsDeterministicConsequence( literal ) )
         return true;
     
-    conflictAtLevelZero = true;
     conflictLiteral = literal;
     return false;
 }
@@ -427,7 +421,7 @@ Solver::addClause(
         }
     }
 
-    conflictAtLevelZero = true;
+    conflictLiteral = Literal::conflict;
     releaseClause( clause );
     return false;
 }
@@ -793,7 +787,7 @@ Solver::attachWatches()
 bool
 Solver::preprocessing()
 {
-    if( conflictDetected() || conflictAtLevelZero )
+    if( conflictDetected() )
     {
         trace( solving, 1, "Conflict at level 0.\n" );
         return false;

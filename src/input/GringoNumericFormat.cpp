@@ -57,7 +57,7 @@ GringoNumericFormat::parse(
                 break;
         }
         
-        if( solver.hasConflictAtLevelZero() )
+        if( solver.conflictDetected() )
             return;
 
         while( propagatedLiterals < solver.numberOfAssignedLiterals() )
@@ -71,6 +71,7 @@ GringoNumericFormat::parse(
     readFalseAtoms( input );
     readErrorNumber( input );
 
+    cout << "cc" << endl;
     computeCompletion();
     if( !solver.tight() )
     {
@@ -83,41 +84,7 @@ GringoNumericFormat::parse(
     }
     
     //TODO: remove
-//    cout << inputVarId.size() << " " << auxVarId.size() << endl;
-//    unsigned sizes[1024] = {0};
-//    unsigned occs[1024] = {0};
-//    unsigned occs_[1024] = {0};
-//    for( unsigned i = 0; i < auxVarId.size(); i++ )
-//        if( supportVectorAuxVar[i] != NULL  )
-//        {
-//            sizes[  supportVectorAuxVar[i]->size() ]++;
-//            
-//            Literal lit = solver.getLiteral( auxVarId[ i ]);
-//            lit.startIterationOverOccurrences();
-//            unsigned count = 0;
-//            while(lit.hasNextOccurrence())
-//            {
-//                Clause* c = lit.nextOccurence();
-//                count++;
-//                occs_[c->size()]++;
-//            }
-//            lit = lit.getOppositeLiteral();
-//            lit.startIterationOverOccurrences();
-//            while(lit.hasNextOccurrence())
-//            {
-//                Clause* c = lit.nextOccurence();
-//                count++;
-//                occs_[c->size()]++;
-//            }
-//            occs[count]++;
-//        }
-//    cout << "sizes\n";
-//    for( unsigned i = 1; i < 10; i++)
-//        cout << sizes[i] << endl;
-//    cout << "occs\n";
-//    for( unsigned i = 1; i < 10; i++)
-//        cout << occs[i] << " " << occs_[i] << endl;
-//        
+//    cout << solver.numberOfVariables() << endl;
 //    unsigned c[1024] = {0};
 //    for( unsigned i = 0; i < solver.numberOfClauses(); i++ )
 //        c[solver.clauseAt( i )->size()]++;
@@ -370,7 +337,7 @@ GringoNumericFormat::addFact(
         head = stack.back();
         stack.pop_back();
         solver.addClause( Literal( solver.getVariable( head ), POSITIVE ) );
-        assert( solver.getVariable( head )->isTrue() || solver.hasConflictAtLevelZero() );
+        assert( solver.getVariable( head )->isTrue() || solver.conflictDetected() );
             
         assert( head < headOccurrences.size() );
         vector< unsigned >& ho = headOccurrences[ head ];

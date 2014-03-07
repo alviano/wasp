@@ -36,6 +36,7 @@ class Literal
 
     public:
         static const Literal null;
+        static const Literal conflict;
 
         static inline Literal createFromAssignedVariable( Variable* );
         static inline Literal createOppositeFromAssignedVariable( Variable* );

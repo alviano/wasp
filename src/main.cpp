@@ -16,13 +16,6 @@
  *
  */
 
-/* 
- * File:   main.cpp
- * Author: Carmine Dodaro
- *
- * Created on 23 July 2013, 17.50
- */
-
 #include <cstdlib>
 
 #include "WaspFacade.h"
@@ -31,9 +24,6 @@ using namespace std;
 
 int EXIT_CODE = 0;
 
-/*
- * 
- */
 int main( int argc, char** argv )
 {
     wasp::Options::parse( argc, argv );    

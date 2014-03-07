@@ -44,8 +44,6 @@ class Dimacs
 
     private:
 
-        void insertVariables( unsigned int numberOfVariables );
-
         void readAllClauses( Istream& input );
 
         bool readClause( Istream& input );
