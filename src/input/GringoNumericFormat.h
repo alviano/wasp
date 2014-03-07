@@ -56,7 +56,7 @@ private:
 //    Literal getBodyLiteral( Clause* body );
     
 //    void addSupportClauses();
-//    void programIsNotTight();
+    void programIsNotTight();
     void computeSCCs();
     void computeCompletion();
     

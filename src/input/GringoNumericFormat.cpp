@@ -71,18 +71,16 @@ GringoNumericFormat::parse(
     readFalseAtoms( input );
     readErrorNumber( input );
 
-//    computeSCCs();
-    
-//    if( !solver.tight() )
-//    {
-//        trace_msg( parser, 1, "Program is not tight" );
-//        programIsNotTight();
-//    }
-//    else
-//    {
-//        trace_msg( parser, 1, "Program is tight" );
-//    }
     computeCompletion();
+    if( !solver.tight() )
+    {
+        trace_msg( parser, 1, "Program is not tight" );
+        programIsNotTight();
+    }
+    else
+    {
+        trace_msg( parser, 1, "Program is tight" );
+    }
     
     //TODO: remove
 //    cout << inputVarId.size() << " " << auxVarId.size() << endl;
@@ -696,127 +694,113 @@ GringoNumericFormat::readErrorNumber(
     }
 }
 
-//void
-//GringoNumericFormat::programIsNotTight()
-//{
-//    //Add two fake positions
-//    solver.addGUSData( NULL );
-//    solver.addGUSData( NULL );
-//    for( unsigned int i = 2; i <= solver.numberOfVariables(); i++ )
-//    {
-//        GUSData* gd = new GUSData();
-//        gd->variable = solver.getVariable( i );
-//        solver.addGUSData( gd );        
-//    }
-//    
-//    trace_msg( parser, 2, "Program is not tight. Number of cyclic components " << solver.getNumberOfCyclicComponents() );
-//    for( unsigned int i = 0; i < solver.getNumberOfCyclicComponents(); i++ )
-//    {
-//        Component* component = solver.getCyclicComponent( i );
-//        
-//        for( unsigned int j = 0; j < component->size(); j++ )
-//        {
-//            unsigned int varId = component->getVariable( j );
-//            trace_msg( parser, 2, "Variable " << *solver.getVariable( varId ) << " is in the cyclic component " << i );
-//            Variable* currentVariable = solver.getVariable( varId );
-//            currentVariable->setComponent( component );
-//            component->variableHasNoSourcePointer( currentVariable );
-//        }
-//        
-//        solver.addPostPropagator( component );
-//    }                
-//    
-//    unordered_map< Variable*, unordered_set< PostPropagator* > > literalsPostPropagator[ 2 ];    
-//    
-//    for( unsigned int i = 2; i < supportVectorInputVar.size(); i++ )
-//    {
-//        Variable* variable = solver.getVariable( inputVarId[ i ] );
-//
-//        Clause* lits = supportVectorInputVar[ i ];
-//        // skip acyclic variables, false variables and facts
-//        if( !variable->isInCyclicComponent() || lits->size() == 0 || lits->getAt( 0 ) == getLiteralForInputVar( 1, NEGATIVE ) )
-//            continue;
-//
-//        trace_msg( parser, 2, "Creating GUS data structures for variable " << *variable << " which has " << lits->size() << " supporting rules" );
-//        
-//        Component* component = variable->getComponent();
-//        assert( component != NULL );
-//        
-//        variable->setFrozen();
-//        
-//        for( unsigned int j = 0; j < lits->size(); j++ )
-//        {
-//            if( lits->getAt( j ).isPositive() && variable->inTheSameComponent( lits->getAt( j ).getVariable() ) )
-//            {
-//                trace_msg( parser, 3, "Adding " << lits->getAt( j ) << " as internal rule for " << *variable );
-//                component->addInternalLiteralForVariable( variable->getId(), lits->getAt( j ) );
-//                component->addVariablePossiblySupportedByLiteral( variable, lits->getAt( j ) );
-//            }
-//            else
-//            {
-//                trace_msg( parser, 3, "Adding " << lits->getAt( j ) << " as external rule for " << *variable );
-//                component->addExternalLiteralForVariable( variable->getId(), lits->getAt( j ) );
-//            }
-//            
-//            unsigned int sign = lits->getAt( j ).getSign();
-//            if( literalsPostPropagator[ sign ][ lits->getAt( j ).getVariable() ].insert( component ).second )            
-//                lits->getAt( j ).addPostPropagator( component );
-//            
-//            lits->getAt( j ).getVariable()->setFrozen();
-//        }
-//    }    
-//    
-//    for( unsigned int i = 1; i < supportVectorAuxVar.size(); i++ )
-//    {
-//        Variable* variable = solver.getVariable( auxVarId[ i ] );
-//        
-//        Clause* lits = supportVectorAuxVar[ i ];
-//        // skip acyclic variables, false variables and facts
-//        if( !variable->isInCyclicComponent() || lits->size() == 0 || lits->getAt( 0 ) == getLiteralForInputVar( 1, NEGATIVE ) )
-//            continue;
-//
-//        trace_msg( parser, 2, "Creating GUS data structures for variable " << *variable << " whose supporting rule has " << lits->size() << " literals" );
-//
-//        variable->setFrozen();
-//        
-//        Component* component = variable->getComponent();
-//        component->setAuxVariable( variable->getId() );
-//        
-//        assert( component != NULL );
-//
-//        for( unsigned int j = 0; j < lits->size(); j++ )
-//        {
-//            if( lits->getAt( j ).isNegative() && lits->getAt( j ).getVariable()->inTheSameComponent( variable ) )
-//            {
-//                Literal lit = lits->getAt( j ).getOppositeLiteral();
-//                trace_msg( parser, 3, "Adding " << lit << " to the supporting rule of " << *variable );
-//                component->addAuxVariableSupportedByLiteral( variable, lit );
-//                component->addInternalLiteralForVariable( variable->getId(), lit );
-//            }
-//            
-//            lits->getAt( j ).getVariable()->setFrozen();
-//        }
-//    }    
-//}
-
 void
-GringoNumericFormat::computeSCCs()
+GringoNumericFormat::programIsNotTight()
 {
-    for( unsigned i = 1; i < headOccurrences.size(); ++i )
+    //Add two fake positions
+    solver.addGUSData( NULL );
+    solver.addGUSData( NULL );
+    for( unsigned int i = 2; i <= solver.numberOfVariables(); i++ )
     {
-        vector< unsigned >& ho = headOccurrences[ i ];
-        if( ho.empty() )
-        {
-            solver.addEdgeInDependencyGraph( i, 0 );
-            continue;
-        }
-        
-        for( unsigned j = 0; j < ho.size(); ++j )
-            if( ho[ j ] > 0 )
-                solver.addEdgeInDependencyGraph( i, ho[ j ] );
+        GUSData* gd = new GUSData();
+        gd->variable = solver.getVariable( i );
+        solver.addGUSData( gd );        
     }
     
-    solver.computeStrongConnectedComponents();
+    trace_msg( parser, 2, "Program is not tight. Number of cyclic components " << solver.getNumberOfCyclicComponents() );
+    for( unsigned int i = 0; i < solver.getNumberOfCyclicComponents(); i++ )
+    {
+        Component* component = solver.getCyclicComponent( i );
+        
+        for( unsigned int j = 0; j < component->size(); j++ )
+        {
+            unsigned int varId = component->getVariable( j );
+            trace_msg( parser, 2, "Variable " << *solver.getVariable( varId ) << " is in the cyclic component " << i );
+            Variable* currentVariable = solver.getVariable( varId );
+            currentVariable->setComponent( component );
+            component->variableHasNoSourcePointer( currentVariable );
+        }
+        
+        solver.addPostPropagator( component );
+    }                
+    
+    unordered_map< Variable*, unordered_set< PostPropagator* > > literalsPostPropagator[ 2 ];    
+    
+    for( unsigned int i = 2; i < headOccurrences.size(); i++ )
+    {
+        Variable* variable = solver.getVariable( i );
+
+        vector< unsigned >& ho = headOccurrences[ i ];
+        // skip acyclic variables, false variables and facts
+        if( !variable->isInCyclicComponent() )
+            continue;
+
+        trace_msg( parser, 2, "Creating GUS data structures for variable " << *variable << ", which has " << ho.size() << " (or less) supporting rules" );
+        
+        Component* component = variable->getComponent();
+        assert( component != NULL );
+        
+        variable->setFrozen();
+        
+        for( unsigned int j = 0; j < ho.size(); j++ )
+        {
+            if( normalRules[ ho[ j ] ].empty() )
+                continue;
+            assert( normalRules[ ho[ j ] ].size() > 1 );
+            Variable* ruleVar = solver.getVariable( normalRules[ ho[ j ] ][ 0 ] );
+            if( variable->inTheSameComponent( ruleVar ) )
+            {
+                trace_msg( parser, 3, "Adding " << *ruleVar << " as internal rule for " << *variable );
+                component->addInternalLiteralForVariable( variable->getId(), Literal( ruleVar, POSITIVE ) );
+                component->addVariablePossiblySupportedByLiteral( variable, Literal( ruleVar, POSITIVE ) );
+            }
+            else
+            {
+                trace_msg( parser, 3, "Adding " << *ruleVar << " as external rule for " << *variable );
+                component->addExternalLiteralForVariable( variable->getId(), Literal( ruleVar, POSITIVE ) );
+            }
+            
+            if( literalsPostPropagator[ POSITIVE ][ ruleVar ].insert( component ).second )            
+                Literal( ruleVar, POSITIVE ).addPostPropagator( component );
+            
+            ruleVar->setFrozen();
+        }
+    }    
+    
+    for( unsigned int i = 0; i < normalRules.size(); i++ )
+    {
+        if( normalRules[ i ].empty() )
+            continue;
+        vector< int >& rule = normalRules[ i ];
+        assert( rule.size() > 1 );
+        Variable* variable = solver.getVariable( rule[ 0 ] );
+        
+        // skip acyclic variables, false variables and facts
+        if( !variable->isInCyclicComponent() )
+            continue;
+
+        trace_msg( parser, 2, "Creating GUS data structures for variable " << *variable << " whose supporting rule has " << rule.size()-1 << " literals" );
+
+        variable->setFrozen();
+        
+        Component* component = variable->getComponent();
+        component->setAuxVariable( variable->getId() );
+        
+        assert( component != NULL );
+
+        for( unsigned int j = 1; j < rule.size(); j++ )
+        {
+            if( rule[ j ] > 0 && solver.getVariable( rule[ j ] )->inTheSameComponent( variable ) )
+            {
+                Literal lit( solver.getVariable( rule[ j ] ), POSITIVE );
+                trace_msg( parser, 3, "Adding " << lit << " to the supporting rule of " << *variable );
+                component->addAuxVariableSupportedByLiteral( variable, lit );
+                component->addInternalLiteralForVariable( variable->getId(), lit );
+            }
+            
+            solver.getVariable( rule[ j ] )->setFrozen();
+        }
+    }    
 }
 
 void
@@ -855,6 +839,7 @@ GringoNumericFormat::computeCompletion()
         
         clause = solver.newClause();
         clause->addLiteral( Literal( solver.getVariable( solver.numberOfVariables() ), POSITIVE ) );
+        bool hasEdge = false;
         for( unsigned j = 1; j < rule.size(); ++j )
         {
             if( rule[ j ] > 0 )
@@ -867,6 +852,8 @@ GringoNumericFormat::computeCompletion()
                 trace_msg( parser, 4, "Adding clause " << *binClause );
                 solver.cleanAndAddClause( binClause );
                 trace_msg( parser, 5, "Actually added clause " << *binClause );
+                solver.addEdgeInDependencyGraph( solver.numberOfVariables(), rule[ j ] );
+                hasEdge = true;
             }
             else
             {
@@ -880,14 +867,16 @@ GringoNumericFormat::computeCompletion()
                 trace_msg( parser, 5, "Actually added clause " << *binClause );
             }
         }
+        if( !hasEdge )
+            solver.addEdgeInDependencyGraph( solver.numberOfVariables(), 0 );
         trace_msg( parser, 4, "Adding clause " << *clause );
         solver.cleanAndAddClause( clause );
         trace_msg( parser, 5, "Actually added clause " << *clause );
         
-        rule.clear();
-        rule.push_back( solver.numberOfVariables() );
+        rule[ 0 ] = solver.numberOfVariables();
     }
     
+    solver.addEdgeInDependencyGraph( 1, 0 );
     for( unsigned i = 2; i < headOccurrences.size(); ++i )
     {
         if( facts[ i ] || solver.getVariable( i )->isFalse() )
@@ -900,14 +889,21 @@ GringoNumericFormat::computeCompletion()
         vector< unsigned >& ho = headOccurrences[ i ];
         Clause* clause = solver.newClause();
         clause->addLiteral( Literal( solver.getVariable( i ), NEGATIVE ) );
+        bool hasEdge = false;
         for( unsigned j = 0; j < ho.size(); ++j )
         {
             if( normalRules[ ho[ j ] ].empty() )
                 continue;
             clause->addLiteral( Literal( solver.getVariable( normalRules[ ho[ j ] ][ 0 ] ), POSITIVE ) );
+            solver.addEdgeInDependencyGraph( i, normalRules[ ho[ j ] ][ 0 ] );
+            hasEdge = true;
         }
+        if( !hasEdge )
+            solver.addEdgeInDependencyGraph( i, 0 );
         trace_msg( parser, 4, "Adding clause " << *clause );
         solver.cleanAndAddClause( clause );
         trace_msg( parser, 5, "Actually added clause " << *clause );
     }
+    
+    solver.computeStrongConnectedComponents();
 }
