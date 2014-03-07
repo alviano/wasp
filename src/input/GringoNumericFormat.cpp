@@ -59,6 +59,11 @@ GringoNumericFormat::parse(
         
         if( solver.hasConflictAtLevelZero() )
             return;
+
+        while( propagatedLiterals < solver.numberOfAssignedLiterals() )
+        {
+            propagate( solver.getAssignedVariable( propagatedLiterals++ ) );
+        }
     }
 
     readAtomsTable( input );
@@ -66,7 +71,7 @@ GringoNumericFormat::parse(
     readFalseAtoms( input );
     readErrorNumber( input );
 
-    computeSCCs();
+//    computeSCCs();
     
 //    if( !solver.tight() )
 //    {
@@ -131,7 +136,9 @@ GringoNumericFormat::readNormalRule(
     unsigned head;
     input >> head;
 
-    if( head == 1 )
+    createStructures( head );
+
+    if( solver.getVariable( head )->isFalse() )
         readConstraint( input );
     else
         readNormalRule( input, head );
@@ -142,13 +149,14 @@ GringoNumericFormat::readNormalRule(
     istream& input,
     unsigned head )
 {
-    unsigned  bodySize, negativeSize, tmp;
+    assert( !solver.getVariable( head )->isFalse() );
+    
+    int bodySize, negativeSize;
+    unsigned tmp;
     input >> bodySize >> negativeSize;
  
     if( bodySize < negativeSize )
         ErrorMessage::errorDuringParsing( "Body size must be greater than or equal to negative size." );
-    
-    createStructures( head );
     
     if( bodySize == 0 )
     {
@@ -161,7 +169,7 @@ GringoNumericFormat::readNormalRule(
 
     headOccurrences[ head ].push_back( normalRules.size() - 1 );
     
-    bool remove = false;
+    bool remove = facts[ head ];
     while( negativeSize-- > 0 )
     {
         input >> tmp;
@@ -194,8 +202,15 @@ GringoNumericFormat::readNormalRule(
     if( remove )
     {
         normalRules.pop_back();
-        headOccurrences.pop_back();
+        headOccurrences[ head ].pop_back();
         return;
+    }
+
+    if( normalRules.back().size() == 1 )
+    {
+        normalRules.pop_back();
+        headOccurrences[ head ].pop_back();
+        addFact( head );
     }
 }
 
@@ -228,13 +243,7 @@ GringoNumericFormat::readConstraint(
     if( remove )
         solver.releaseClause( clause );
     else
-    {
         solver.addClause( clause );
-        while( propagatedLiterals < solver.numberOfAssignedLiterals() )
-        {
-            propagate( solver.getAssignedVariable( propagatedLiterals++ ) );
-        }
-    }
 }
 
 //void
@@ -249,8 +258,10 @@ void
 GringoNumericFormat::propagate(
     Variable* var )
 {
-    return;
     assert( !var->isUndefined() );
+    
+    vector< unsigned > facts;
+    
     if( var->isFalse() )
     {
         assert( var->getId() < headOccurrences.size() );
@@ -259,6 +270,8 @@ GringoNumericFormat::propagate(
         {
             trace_msg( parser, 3, "Replacing " << ho[ i ] << " by a constraint" );
             vector< int >& rule = normalRules[ ho[ i ] ];
+            if( rule.empty() )
+                continue;
             Clause* clause = solver.newClause();
             for( unsigned j = 1; j < rule.size(); ++j )
                 if( rule[ j ] > 0 )
@@ -270,12 +283,24 @@ GringoNumericFormat::propagate(
         }
         ho.clear();
         
+        assert( var->getId() < posOccurrences.size() );
+        vector< unsigned >& po = posOccurrences[ var->getId() ];
+        for( unsigned i = 0; i < po.size(); ++i )
+        {
+            trace_msg( parser, 3, "Removing rule " << po[ i ] );
+            vector< int >& rule = normalRules[ po[ i ] ];
+            rule.clear();
+        }
+        po.clear();
+
         assert( var->getId() < negOccurrences.size() );
         vector< unsigned >& no = negOccurrences[ var->getId() ];
         for( unsigned i = 0; i < no.size(); ++i )
         {
             trace_msg( parser, 3, "Shrinking rule " << no[ i ] );
             vector< int >& rule = normalRules[ no[ i ] ];
+            if( rule.empty() )
+                continue;
             unsigned k = 1;
             for( unsigned j = 1; j < rule.size(); ++j )
             {
@@ -284,14 +309,49 @@ GringoNumericFormat::propagate(
             }
             if( k > 1 )
                 rule.resize( k );
-            else 
-                facts[ rule[ 0 ] ] = true;
+            else
+                facts.push_back( rule[ 0 ] );
         }
-        ho.clear();
+        no.clear();
     }
     else
     {
-        
+        assert( var->getId() < posOccurrences.size() );
+        vector< unsigned >& po = posOccurrences[ var->getId() ];
+        for( unsigned i = 0; i < po.size(); ++i )
+        {
+            trace_msg( parser, 3, "Shrinking rule " << po[ i ] );
+            vector< int >& rule = normalRules[ po[ i ] ];
+            if( rule.empty() )
+                continue;
+            unsigned k = 1;
+            for( unsigned j = 1; j < rule.size(); ++j )
+            {
+                if( rule[ j ] != -static_cast< int >( var->getId() ) )
+                    rule[ k++ ] = rule[ j ];
+            }
+            if( k > 1 )
+                rule.resize( k );
+            else
+                facts.push_back( rule[ 0 ] );
+        }
+        po.clear();
+
+        assert( var->getId() < negOccurrences.size() );
+        vector< unsigned >& no = negOccurrences[ var->getId() ];
+        for( unsigned i = 0; i < no.size(); ++i )
+        {
+            trace_msg( parser, 3, "Removing rule " << no[ i ] );
+            vector< int >& rule = normalRules[ no[ i ] ];
+            rule.clear();
+        }
+        no.clear();
+    }
+    
+    while( !facts.empty() )
+    {
+        addFact( facts.back() );
+        facts.pop_back();
     }
 }
 
@@ -312,11 +372,14 @@ GringoNumericFormat::addFact(
         head = stack.back();
         stack.pop_back();
         solver.addClause( Literal( solver.getVariable( head ), POSITIVE ) );
+        assert( solver.getVariable( head )->isTrue() || solver.hasConflictAtLevelZero() );
             
         assert( head < headOccurrences.size() );
         vector< unsigned >& ho = headOccurrences[ head ];
         for( unsigned i = 0; i < ho.size(); ++i )
         {
+            if( normalRules[ ho[ i ] ].empty() )
+                continue;
             trace_msg( parser, 4, "Removing rule " << ho[ i ] );
             assert( normalRules[ ho[ i ] ].size() >= 2 );
             normalRules[ ho[ i ] ].clear();
@@ -330,6 +393,8 @@ GringoNumericFormat::addFact(
             trace_msg( parser, 4, "Shrinking rule " << po[ i ] );
             assert( po[ i ] < normalRules.size() );
             vector< int >& rule = normalRules[ po[ i ] ];
+            if( rule.empty() )
+                continue;
             unsigned k = 1;
             for( unsigned j = 1; j < rule.size(); ++j )
             {
@@ -354,9 +419,11 @@ GringoNumericFormat::addFact(
         vector< unsigned >& no = negOccurrences[ head ];
         for( unsigned i = 0; i < no.size(); ++i )
         {
-            trace_msg( parser, 4, "Shrinking rule " << po[ i ] );
+            trace_msg( parser, 4, "Shrinking rule " << no[ i ] );
             assert( no[ i ] < normalRules.size() );
             vector< int >& rule = normalRules[ no[ i ] ];
+            if( rule.empty() )
+                continue;
             unsigned k = 1;
             for( unsigned j = 1; j < rule.size(); ++j )
             {
@@ -771,22 +838,23 @@ GringoNumericFormat::computeCompletion()
 {
     for( unsigned i = 0; i < normalRules.size(); ++i )
     {
-        solver.addVariable();
-        trace_msg( parser, 3, "Adding variable " << solver.numberOfVariables() << " for rule #" << i);
-        
         vector< int >& rule = normalRules[ i ];
         if( rule.empty() )
             continue;
+        
         assert( rule.size() >= 2 );
+        solver.addVariable();
+        trace_msg( parser, 3, "Adding variable " << solver.numberOfVariables() << " for rule " << i );
         
         Clause* clause = solver.newClause();
         clause->addLiteral( Literal( solver.getVariable( rule[ 0 ] ), POSITIVE ) );
-        clause->addLiteral( Literal( solver.getVariable( headOccurrences.size() + i ), NEGATIVE ) );
-        solver.cleanAndAddClause( clause );
+        clause->addLiteral( Literal( solver.getVariable( solver.numberOfVariables() ), NEGATIVE ) );
         trace_msg( parser, 4, "Adding clause " << *clause );
+        solver.cleanAndAddClause( clause );
+        trace_msg( parser, 5, "Actually added clause " << *clause );
         
         clause = solver.newClause();
-        clause->addLiteral( Literal( solver.getVariable( headOccurrences.size() + i ), POSITIVE ) );
+        clause->addLiteral( Literal( solver.getVariable( solver.numberOfVariables() ), POSITIVE ) );
         for( unsigned j = 1; j < rule.size(); ++j )
         {
             if( rule[ j ] > 0 )
@@ -794,37 +862,52 @@ GringoNumericFormat::computeCompletion()
                 clause->addLiteral( Literal( solver.getVariable( rule[ j ] ), NEGATIVE ) );
                 
                 Clause* binClause = solver.newClause();
-                binClause->addLiteral( Literal( solver.getVariable( headOccurrences.size() + i ), NEGATIVE ) );
+                binClause->addLiteral( Literal( solver.getVariable( solver.numberOfVariables() ), NEGATIVE ) );
                 binClause->addLiteral( Literal( solver.getVariable( rule[ j ] ), POSITIVE ) );
-                solver.cleanAndAddClause( binClause );
                 trace_msg( parser, 4, "Adding clause " << *binClause );
+                solver.cleanAndAddClause( binClause );
+                trace_msg( parser, 5, "Actually added clause " << *binClause );
             }
             else
             {
                 clause->addLiteral( Literal( solver.getVariable( -rule[ j ] ), POSITIVE ) );
 
                 Clause* binClause = solver.newClause();
-                binClause->addLiteral( Literal( solver.getVariable( headOccurrences.size() + i ), NEGATIVE ) );
+                binClause->addLiteral( Literal( solver.getVariable( solver.numberOfVariables() ), NEGATIVE ) );
                 binClause->addLiteral( Literal( solver.getVariable( -rule[ j ] ), NEGATIVE ) );
-                solver.cleanAndAddClause( binClause );
                 trace_msg( parser, 4, "Adding clause " << *binClause );
+                solver.cleanAndAddClause( binClause );
+                trace_msg( parser, 5, "Actually added clause " << *binClause );
             }
         }
-        solver.cleanAndAddClause( clause );
         trace_msg( parser, 4, "Adding clause " << *clause );
+        solver.cleanAndAddClause( clause );
+        trace_msg( parser, 5, "Actually added clause " << *clause );
+        
+        rule.clear();
+        rule.push_back( solver.numberOfVariables() );
     }
     
     for( unsigned i = 2; i < headOccurrences.size(); ++i )
     {
-        if( facts[ i ] )
+        if( facts[ i ] || solver.getVariable( i )->isFalse() )
+        {
+            assert( !facts[ i ] || solver.getVariable( i )->isTrue() );
+            assert( !facts[ i ] || headOccurrences[ i ].empty() );
             continue;
+        }
         
         vector< unsigned >& ho = headOccurrences[ i ];
         Clause* clause = solver.newClause();
         clause->addLiteral( Literal( solver.getVariable( i ), NEGATIVE ) );
         for( unsigned j = 0; j < ho.size(); ++j )
-            clause->addLiteral( Literal( solver.getVariable( headOccurrences.size() + ho[ j ] ), POSITIVE ) );
-        solver.cleanAndAddClause( clause );
+        {
+            if( normalRules[ ho[ j ] ].empty() )
+                continue;
+            clause->addLiteral( Literal( solver.getVariable( normalRules[ ho[ j ] ][ 0 ] ), POSITIVE ) );
+        }
         trace_msg( parser, 4, "Adding clause " << *clause );
+        solver.cleanAndAddClause( clause );
+        trace_msg( parser, 5, "Actually added clause " << *clause );
     }
 }

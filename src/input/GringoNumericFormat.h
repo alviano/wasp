@@ -97,6 +97,8 @@ GringoNumericFormat::GringoNumericFormat(
     headOccurrences.push_back( vector< unsigned >() );
     posOccurrences.push_back( vector< unsigned >() );
     negOccurrences.push_back( vector< unsigned >() );
+    createStructures( 1 );
+    solver.addClause( Literal( solver.getVariable( 1 ), NEGATIVE ) );
 }
 
 GringoNumericFormat::~GringoNumericFormat()

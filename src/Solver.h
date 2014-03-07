@@ -396,6 +396,7 @@ Solver::addClause(
     if( literal.isTrue() || propagateLiteralAsDeterministicConsequence( literal ) )
         return true;
     
+    conflictAtLevelZero = true;
     conflictLiteral = literal;
     return false;
 }
