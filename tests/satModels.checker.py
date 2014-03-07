@@ -4,15 +4,14 @@ def decodeModels(string):
     for line in string.split("\n"):
         line = line.strip()
         if len(line) > 0 and line[0] == 'v':
-            models.append(sorted(line[2:].split(" ")))
+            models.append(set(line[2:].split(" ")))
             
-    return sorted(models)
+    return models
 
 def checkModel(model):
     global input
-    
     for clause in input.split("\n"):
-        if len(clause) > 0 and clause[0] != 'c' and clause[0] != 'p':
+        if clause and clause[0] != 'c' and clause[0] != 'p':
             sat = False
             for lit in clause.split(" "):
                 if lit != '0' and lit in model:
