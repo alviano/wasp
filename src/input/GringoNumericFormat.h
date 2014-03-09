@@ -69,6 +69,7 @@ private:
     
     void createStructures( unsigned id );
     
+    void propagate();
     void propagate( Variable* var );
     
 //    Literal getLiteralForInputVar( unsigned int id, unsigned int sign );

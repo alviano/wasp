@@ -60,10 +60,7 @@ GringoNumericFormat::parse(
         if( solver.conflictDetected() )
             return;
 
-        while( propagatedLiterals < solver.numberOfAssignedLiterals() )
-        {
-            propagate( solver.getAssignedVariable( propagatedLiterals++ ) );
-        }
+        propagate();
     }
 
     readAtomsTable( input );
@@ -218,6 +215,15 @@ GringoNumericFormat::readConstraint(
 //    consistent = solver.addClause( body );
 //}
 //
+
+void
+GringoNumericFormat::propagate()
+{
+    while( propagatedLiterals < solver.numberOfAssignedLiterals() )
+    {
+        propagate( solver.getAssignedVariable( propagatedLiterals++ ) );
+    }
+}
 
 void
 GringoNumericFormat::propagate(
@@ -792,19 +798,23 @@ GringoNumericFormat::computeCompletion()
         vector< int >& rule = normalRules[ i ];
         if( rule.empty() )
             continue;
-        
+            
         assert( rule.size() >= 2 );
         solver.addVariable();
         trace_msg( parser, 3, "Adding variable " << solver.numberOfVariables() << " for rule " << i );
         
-        Clause* clause = solver.newClause();
-        clause->addLiteral( Literal( solver.getVariable( rule[ 0 ] ), POSITIVE ) );
-        clause->addLiteral( Literal( solver.getVariable( solver.numberOfVariables() ), NEGATIVE ) );
-        trace_msg( parser, 4, "Adding clause " << *clause );
-        solver.cleanAndAddClause( clause );
-        trace_msg( parser, 5, "Actually added clause " << *clause );
+        assert( !solver.getVariable( rule[ 0 ] )->isFalse() );
+        if( solver.getVariable( rule[ 0 ] )->isUndefined() )
+        {
+            Clause* clause = solver.newClause();
+            clause->addLiteral( Literal( solver.getVariable( rule[ 0 ] ), POSITIVE ) );
+            clause->addLiteral( Literal( solver.getVariable( solver.numberOfVariables() ), NEGATIVE ) );
+            trace_msg( parser, 4, "Adding clause " << *clause );
+            solver.cleanAndAddClause( clause );
+            trace_msg( parser, 5, "Actually added clause " << *clause );
+        }
         
-        clause = solver.newClause();
+        Clause* clause = solver.newClause();
         clause->addLiteral( Literal( solver.getVariable( solver.numberOfVariables() ), POSITIVE ) );
         bool hasEdge = false;
         for( unsigned j = 1; j < rule.size(); ++j )
@@ -850,9 +860,10 @@ GringoNumericFormat::computeCompletion()
         {
             assert( !facts[ i ] || solver.getVariable( i )->isTrue() );
             assert( !facts[ i ] || headOccurrences[ i ].empty() );
+            solver.addEdgeInDependencyGraph( i, 0 );
             continue;
         }
-        
+
         vector< unsigned >& ho = headOccurrences[ i ];
         Clause* clause = solver.newClause();
         clause->addLiteral( Literal( solver.getVariable( i ), NEGATIVE ) );
