@@ -129,6 +129,7 @@ GringoNumericFormat::readNormalRule(
     normalRules.push_back( vector< int >() );
     normalRules.back().push_back( head );
 
+    numberOfHeadOccurrences[ head ]++;
     headOccurrences[ head ].push_back( normalRules.size() - 1 );
     
     bool remove = facts[ head ];
@@ -164,12 +165,14 @@ GringoNumericFormat::readNormalRule(
     if( remove )
     {
         normalRules.pop_back();
+        numberOfHeadOccurrences[ head ]--;
         headOccurrences[ head ].pop_back();
         return;
     }
 
     if( normalRules.back().size() == 1 )
     {
+        numberOfHeadOccurrences[ head ]--;
         normalRules.pop_back();
         headOccurrences[ head ].pop_back();
         addFact( head );
@@ -252,6 +255,7 @@ GringoNumericFormat::propagate(
             solver.cleanAndAddClause( clause );
             rule.clear();
         }
+        numberOfHeadOccurrences[ var->getId() ] = 0;
         ho.clear();
         
         assert( var->getId() < posOccurrences.size() );
@@ -260,7 +264,11 @@ GringoNumericFormat::propagate(
         {
             trace_msg( parser, 3, "Removing rule " << po[ i ] );
             vector< int >& rule = normalRules[ po[ i ] ];
-            rule.clear();
+            if( !rule.empty() )
+            {
+                numberOfHeadOccurrences[ rule[ 0 ] ]--;
+                rule.clear();
+            }
         }
         po.clear();
 
@@ -314,7 +322,11 @@ GringoNumericFormat::propagate(
         {
             trace_msg( parser, 3, "Removing rule " << no[ i ] );
             vector< int >& rule = normalRules[ no[ i ] ];
-            rule.clear();
+            if( !rule.empty() )
+            {
+                numberOfHeadOccurrences[ rule[ 0 ] ]--;
+                rule.clear();
+            }
         }
         no.clear();
     }
@@ -355,6 +367,7 @@ GringoNumericFormat::addFact(
             assert( normalRules[ ho[ i ] ].size() >= 2 );
             normalRules[ ho[ i ] ].clear();
         }
+        numberOfHeadOccurrences[ head ] = 0;
         ho.clear();
         
         assert( head < posOccurrences.size() );
@@ -581,6 +594,7 @@ GringoNumericFormat::readAtomsTable(
         
         input.getline( name, 1024 );
         VariableNames::setName( solver.getVariable( nextAtom ), name+1 );
+        trace_msg( parser, 6, "Set name " << name+1 << " for atom " << nextAtom );
         input >> nextAtom;
     }
     
@@ -617,13 +631,16 @@ GringoNumericFormat::readTrueAtoms(
     char b;
     
     input >> b;
+    assert( b == 'B' );
     input >> b;
+    assert( b == '+' );
     
     unsigned int nextAtom;
     input >> nextAtom;
     
     while( nextAtom != 0 )
     {
+        cout << nextAtom << endl;
         solver.addClause( Literal( solver.getVariable( nextAtom ), NEGATIVE ) );
         input >> nextAtom;
     }
@@ -688,6 +705,7 @@ GringoNumericFormat::programIsNotTight()
         for( unsigned int j = 0; j < component->size(); j++ )
         {
             unsigned int varId = component->getVariable( j );
+            assert( varId <= solver.numberOfVariables() );
             trace_msg( parser, 2, "Variable " << *solver.getVariable( varId ) << " is in the cyclic component " << i );
             Variable* currentVariable = solver.getVariable( varId );
             currentVariable->setComponent( component );
@@ -701,14 +719,15 @@ GringoNumericFormat::programIsNotTight()
     
     for( unsigned int i = 2; i < headOccurrences.size(); i++ )
     {
+        assert( i <= solver.numberOfVariables() );
         Variable* variable = solver.getVariable( i );
 
         vector< unsigned >& ho = headOccurrences[ i ];
         // skip acyclic variables, false variables and facts
-        if( !variable->isInCyclicComponent() )
+        if( !variable->isInCyclicComponent() || numberOfHeadOccurrences[ variable->getId() ] == 1 )
             continue;
 
-        trace_msg( parser, 2, "Creating GUS data structures for variable " << *variable << ", which has " << ho.size() << " (or less) supporting rules" );
+        trace_msg( parser, 2, "Creating GUS data structures for variable " << *variable << ", which has " << numberOfHeadOccurrences[ variable->getId() ] << " supporting rules" );
         
         Component* component = variable->getComponent();
         assert( component != NULL );
@@ -720,6 +739,7 @@ GringoNumericFormat::programIsNotTight()
             if( normalRules[ ho[ j ] ].empty() )
                 continue;
             assert( normalRules[ ho[ j ] ].size() > 1 );
+            assert( static_cast< unsigned >( normalRules[ ho[ j ] ][ 0 ]) <= solver.numberOfVariables() );
             Variable* ruleVar = solver.getVariable( normalRules[ ho[ j ] ][ 0 ] );
             if( variable->inTheSameComponent( ruleVar ) )
             {
@@ -746,6 +766,7 @@ GringoNumericFormat::programIsNotTight()
             continue;
         vector< int >& rule = normalRules[ i ];
         assert( rule.size() > 1 );
+        assert( static_cast< unsigned >( rule[ 0 ] ) <= solver.numberOfVariables() );
         Variable* variable = solver.getVariable( rule[ 0 ] );
         
         // skip acyclic variables, false variables and facts
@@ -763,15 +784,23 @@ GringoNumericFormat::programIsNotTight()
 
         for( unsigned int j = 1; j < rule.size(); j++ )
         {
-            if( rule[ j ] > 0 && solver.getVariable( rule[ j ] )->inTheSameComponent( variable ) )
+            if( rule[ j ] > 0 )
             {
-                Literal lit( solver.getVariable( rule[ j ] ), POSITIVE );
-                trace_msg( parser, 3, "Adding " << lit << " to the supporting rule of " << *variable );
-                component->addAuxVariableSupportedByLiteral( variable, lit );
-                component->addInternalLiteralForVariable( variable->getId(), lit );
+                assert( static_cast< unsigned >( rule[ j ] ) <= solver.numberOfVariables() );
+                if( solver.getVariable( rule[ j ] )->inTheSameComponent( variable ) )
+                {
+                    Literal lit( solver.getVariable( rule[ j ] ), POSITIVE );
+                    trace_msg( parser, 3, "Adding " << lit << " to the supporting rule of " << *variable );
+                    component->addAuxVariableSupportedByLiteral( variable, lit );
+                    component->addInternalLiteralForVariable( variable->getId(), lit );
+                    solver.getVariable( rule[ j ] )->setFrozen();
+                }
             }
-            
-            solver.getVariable( rule[ j ] )->setFrozen();
+            else
+            {
+                assert( static_cast< unsigned >( -rule[ j ] ) <= solver.numberOfVariables() );
+                solver.getVariable( -rule[ j ] )->setFrozen();
+            }
         }
     }    
 }
@@ -783,7 +812,9 @@ GringoNumericFormat::createStructures(
     while( id >= headOccurrences.size() )
     {
         solver.addVariable();
+        solver.addEdgeInDependencyGraph( solver.numberOfVariables(), 0 );
         facts.push_back( false );
+        numberOfHeadOccurrences.push_back( 0 );
         headOccurrences.push_back( vector< unsigned >() );
         posOccurrences.push_back( vector< unsigned >() );
         negOccurrences.push_back( vector< unsigned >() );
@@ -793,6 +824,27 @@ GringoNumericFormat::createStructures(
 void
 GringoNumericFormat::computeCompletion()
 {
+    bool simplify = true;
+    do{
+        simplify = false;
+        for( unsigned i = 2; i < headOccurrences.size(); ++i )
+        {
+            if( !facts[ i ] && !solver.getVariable( i )->isFalse() && numberOfHeadOccurrences[ i ] == 0 )
+            {
+                for( unsigned j = 0; i < headOccurrences[ i ].size(); ++j )
+                    if( !normalRules[ headOccurrences[ i ][j] ].empty() )
+                        exit(-1);
+                trace_msg( parser, 4, "Infer falsity of variable " << *solver.getVariable( i ) << " with no support" );
+                solver.addClause( Literal( solver.getVariable( i ), NEGATIVE ) );
+                assert( solver.getVariable( i )->isFalse() || solver.conflictDetected() );
+                simplify = true;
+                propagate();
+            }
+        }
+        if( solver.conflictDetected() )
+            return;
+    }while( simplify );
+    
     for( unsigned i = 0; i < normalRules.size(); ++i )
     {
         vector< int >& rule = normalRules[ i ];
@@ -800,23 +852,42 @@ GringoNumericFormat::computeCompletion()
             continue;
             
         assert( rule.size() >= 2 );
-        solver.addVariable();
-        trace_msg( parser, 3, "Adding variable " << solver.numberOfVariables() << " for rule " << i );
+        assert( numberOfHeadOccurrences[ rule[ 0 ] ] >= 1 );
         
-        assert( !solver.getVariable( rule[ 0 ] )->isFalse() );
-        if( solver.getVariable( rule[ 0 ] )->isUndefined() )
+        if( solver.getVariable( rule[ 0 ] )->isFalse() )
         {
             Clause* clause = solver.newClause();
-            clause->addLiteral( Literal( solver.getVariable( rule[ 0 ] ), POSITIVE ) );
-            clause->addLiteral( Literal( solver.getVariable( solver.numberOfVariables() ), NEGATIVE ) );
-            trace_msg( parser, 4, "Adding clause " << *clause );
+            for( unsigned j = 1; j < rule.size(); ++j )
+                if( rule[ j ] > 0 )
+                    clause->addLiteral( Literal( solver.getVariable( rule[ j ] ), NEGATIVE ) );
+                else
+                    clause->addLiteral( Literal( solver.getVariable( -rule[ j ] ), POSITIVE ) );
             solver.cleanAndAddClause( clause );
-            trace_msg( parser, 5, "Actually added clause " << *clause );
+            rule.clear();
+            continue;
+        }
+        
+        if( numberOfHeadOccurrences[ rule[ 0 ] ] > 1 )
+        {
+            solver.addVariable();
+            trace_msg( parser, 3, "Adding variable " << solver.numberOfVariables() << " for rule " << i );
+            
+            assert( !solver.getVariable( rule[ 0 ] )->isFalse() );
+            if( solver.getVariable( rule[ 0 ] )->isUndefined() )
+            {
+                Clause* clause = solver.newClause();
+                clause->addLiteral( Literal( solver.getVariable( rule[ 0 ] ), POSITIVE ) );
+                clause->addLiteral( Literal( solver.getVariable( solver.numberOfVariables() ), NEGATIVE ) );
+                trace_msg( parser, 4, "Adding clause " << *clause );
+                solver.cleanAndAddClause( clause );
+                trace_msg( parser, 5, "Actually added clause " << *clause );
+            }
+            solver.addEdgeInDependencyGraph( rule[ 0 ], solver.numberOfVariables() );
+            rule[ 0 ] = solver.numberOfVariables();
         }
         
         Clause* clause = solver.newClause();
-        clause->addLiteral( Literal( solver.getVariable( solver.numberOfVariables() ), POSITIVE ) );
-        bool hasEdge = false;
+        clause->addLiteral( Literal( solver.getVariable( rule[ 0 ] ), POSITIVE ) );
         for( unsigned j = 1; j < rule.size(); ++j )
         {
             if( rule[ j ] > 0 )
@@ -824,60 +895,54 @@ GringoNumericFormat::computeCompletion()
                 clause->addLiteral( Literal( solver.getVariable( rule[ j ] ), NEGATIVE ) );
                 
                 Clause* binClause = solver.newClause();
-                binClause->addLiteral( Literal( solver.getVariable( solver.numberOfVariables() ), NEGATIVE ) );
+                binClause->addLiteral( Literal( solver.getVariable( rule[ 0 ] ), NEGATIVE ) );
                 binClause->addLiteral( Literal( solver.getVariable( rule[ j ] ), POSITIVE ) );
                 trace_msg( parser, 4, "Adding clause " << *binClause );
                 solver.cleanAndAddClause( binClause );
                 trace_msg( parser, 5, "Actually added clause " << *binClause );
-                solver.addEdgeInDependencyGraph( solver.numberOfVariables(), rule[ j ] );
-                hasEdge = true;
+                solver.addEdgeInDependencyGraph( rule[ 0 ], rule[ j ] );
             }
             else
             {
                 clause->addLiteral( Literal( solver.getVariable( -rule[ j ] ), POSITIVE ) );
 
                 Clause* binClause = solver.newClause();
-                binClause->addLiteral( Literal( solver.getVariable( solver.numberOfVariables() ), NEGATIVE ) );
+                binClause->addLiteral( Literal( solver.getVariable( rule[ 0 ] ), NEGATIVE ) );
                 binClause->addLiteral( Literal( solver.getVariable( -rule[ j ] ), NEGATIVE ) );
                 trace_msg( parser, 4, "Adding clause " << *binClause );
                 solver.cleanAndAddClause( binClause );
                 trace_msg( parser, 5, "Actually added clause " << *binClause );
             }
         }
-        if( !hasEdge )
-            solver.addEdgeInDependencyGraph( solver.numberOfVariables(), 0 );
         trace_msg( parser, 4, "Adding clause " << *clause );
         solver.cleanAndAddClause( clause );
         trace_msg( parser, 5, "Actually added clause " << *clause );
-        
-        rule[ 0 ] = solver.numberOfVariables();
     }
     
-    solver.addEdgeInDependencyGraph( 1, 0 );
     for( unsigned i = 2; i < headOccurrences.size(); ++i )
     {
         if( facts[ i ] || solver.getVariable( i )->isFalse() )
         {
             assert( !facts[ i ] || solver.getVariable( i )->isTrue() );
             assert( !facts[ i ] || headOccurrences[ i ].empty() );
-            solver.addEdgeInDependencyGraph( i, 0 );
+            continue;
+        }
+        
+        assert( numberOfHeadOccurrences[ i ] > 0 );
+        if( numberOfHeadOccurrences[ i ] == 1 )
+        {
             continue;
         }
 
         vector< unsigned >& ho = headOccurrences[ i ];
         Clause* clause = solver.newClause();
         clause->addLiteral( Literal( solver.getVariable( i ), NEGATIVE ) );
-        bool hasEdge = false;
         for( unsigned j = 0; j < ho.size(); ++j )
         {
             if( normalRules[ ho[ j ] ].empty() )
                 continue;
             clause->addLiteral( Literal( solver.getVariable( normalRules[ ho[ j ] ][ 0 ] ), POSITIVE ) );
-            solver.addEdgeInDependencyGraph( i, normalRules[ ho[ j ] ][ 0 ] );
-            hasEdge = true;
         }
-        if( !hasEdge )
-            solver.addEdgeInDependencyGraph( i, 0 );
         trace_msg( parser, 4, "Adding clause " << *clause );
         solver.cleanAndAddClause( clause );
         trace_msg( parser, 5, "Actually added clause " << *clause );

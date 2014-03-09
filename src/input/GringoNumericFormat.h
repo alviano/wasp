@@ -85,6 +85,7 @@ private:
     unsigned propagatedLiterals;
     
     vector< bool > facts;
+    vector< unsigned > numberOfHeadOccurrences;
     vector< vector< int > > normalRules;
     vector< vector< unsigned > > headOccurrences;
     vector< vector< unsigned > > posOccurrences;
@@ -95,6 +96,7 @@ GringoNumericFormat::GringoNumericFormat(
     Solver& s ) : solver( s ), propagatedLiterals( 0 )
 {
     facts.push_back( false );
+    numberOfHeadOccurrences.push_back( 0 );
     headOccurrences.push_back( vector< unsigned >() );
     posOccurrences.push_back( vector< unsigned >() );
     negOccurrences.push_back( vector< unsigned >() );
