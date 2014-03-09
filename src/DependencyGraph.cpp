@@ -57,9 +57,8 @@ DependencyGraph::addEdge(
     unsigned int v1,
     unsigned int v2 )
 {
+    assert( v1 != v2 );
     boost::add_edge( v1, v2, g );
-    if( v1 == v2 )    
-        selfLoopVertex.insert( v1 );    
 }
 
 void
@@ -82,8 +81,6 @@ DependencyGraph::computeStrongConnectedComponents(
 			components[ currentComponentId ] = new Component( gd );
 	
         components[ currentComponentId ]->addVariable( i );
-		if( existSelfLoop( i ) )
-			components[ currentComponentId ]->setSelfLoop();
     }
 
     unsigned int id = 0;
@@ -100,11 +97,4 @@ DependencyGraph::computeStrongConnectedComponents(
 		else
 			delete currentComponent;
 	}
-}
-
-bool
-DependencyGraph::existSelfLoop(
-    unsigned int node )
-{
-    return ( selfLoopVertex.find( node ) != selfLoopVertex.end() );
 }

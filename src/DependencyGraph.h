@@ -42,9 +42,7 @@ class DependencyGraph
 
     private:		
         DependencyGraph( const DependencyGraph& orig );
-        bool existSelfLoop( unsigned int node );
 
-        unordered_set< unsigned int > selfLoopVertex;
 		vector< Component* > cyclicComponents;
 };
 

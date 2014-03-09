@@ -45,13 +45,12 @@ using namespace std;
 class Component : public PostPropagator
 {
 	public:
-		inline Component( vector< GUSData* >& gusData_ ) : PostPropagator(), gusData( gusData_ ), clauseToPropagate( NULL ), selfLoop( 0 ) {}
+		inline Component( vector< GUSData* >& gusData_ ) : PostPropagator(), gusData( gusData_ ), clauseToPropagate( NULL ) {}
 		inline ~Component() {}
         
         virtual bool onLiteralFalse( Literal lit );
 
-        inline bool isCyclic() const { return selfLoop || variablesInComponent.size() > 1; }
-		inline void setSelfLoop() { selfLoop = 1; }
+        inline bool isCyclic() const { return variablesInComponent.size() > 1; }
 		inline unsigned int size() const { return variablesInComponent.size(); }
 
 		inline void addVariable( unsigned int var ) { variablesInComponent.push_back( var ); }
@@ -82,8 +81,7 @@ class Component : public PostPropagator
         Vector< Variable* > unfoundedSet;
         Clause* clauseToPropagate;
         
-		unsigned int selfLoop : 1;
-        unsigned int id : 31;
+        unsigned int id;
         
         inline bool propagateFalseForGUS( Literal lit );
         inline void propagateLiteralLostSourcePointer( Literal lit );

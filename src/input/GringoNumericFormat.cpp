@@ -71,7 +71,7 @@ GringoNumericFormat::parse(
     readFalseAtoms( input );
     readErrorNumber( input );
 
-    cout << "cc" << endl;
+//    cout << "cc" << endl;
     computeCompletion();
     if( !solver.tight() )
     {
@@ -155,7 +155,7 @@ GringoNumericFormat::readNormalRule(
         input >> tmp;
         createStructures( tmp );
 
-        if( solver.getVariable( tmp )->isFalse() )
+        if( solver.getVariable( tmp )->isFalse() || tmp == head )
             remove = true;
         else
         {
