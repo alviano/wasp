@@ -178,7 +178,7 @@ class Solver
         inline void addPostPropagator( PostPropagator* postPropagator );
         inline void resetPostPropagators();
         
-        inline void addEdgeInDependencyGraph( unsigned int v1, unsigned int v2 ){ dependencyGraph.addEdge( v1, v2 ); }
+        inline void addEdgeInDependencyGraph( unsigned int v1, unsigned int v2 ){ trace_msg( parser, 10, "Add arc " << v1 << " -> " << v2 ); dependencyGraph.addEdge( v1, v2 ); }
         inline void computeStrongConnectedComponents(){ dependencyGraph.computeStrongConnectedComponents( gusDataVector ); }
         inline bool tight() const { return dependencyGraph.tight(); }
         inline unsigned int getNumberOfCyclicComponents(){ return dependencyGraph.numberOfCyclicComponents(); }
