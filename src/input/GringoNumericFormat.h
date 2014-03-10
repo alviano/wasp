@@ -44,11 +44,53 @@ public:
     * @param input The istream input.
     */
     void parse( istream& input );    
+
+    class NormalRule
+    {
+        friend ostream& operator<<( ostream& out, const NormalRule& rule );
+    public:
+        unsigned head;
+        vector< unsigned > negBody;
+        vector< unsigned > posBody;
+        vector< unsigned > posBodyTrue;
+        
+        inline NormalRule( unsigned head_ ) : head( head_ ) {}
+        
+        inline bool isRemoved() const { return head == 0; }
+        inline void remove() { head = 0; }
+        
+        inline bool isFact() const { return posBody.empty() && negBody.empty() && posBodyTrue.empty(); }
+        inline bool isFiring() const { return posBody.empty() && negBody.empty(); }
+        inline unsigned size() const { return negBody.size() + posBody.size() + posBodyTrue.size(); }
+        
+        inline void addNegativeLiteral( unsigned id ) { negBody.push_back( id ); }
+        inline void addPositiveLiteral( unsigned id ) { posBody.push_back( id ); }
+        inline void addPositiveTrueLiteral( unsigned id ) { posBodyTrue.push_back( id ); }
+    };
+    
+    class AtomData
+    {
+    public:
+        bool supported;
+        unsigned numberOfHeadOccurrences;
+        vector< NormalRule* > headOccurrences;
+        vector< NormalRule* > posOccurrences;
+        vector< NormalRule* > negOccurrences;
+        unsigned readNormalRule_negativeLiterals;
+        unsigned readNormalRule_positiveLiterals;
+        
+        inline AtomData( bool supported_ ) : supported( supported_ ), numberOfHeadOccurrences( 0 ), readNormalRule_negativeLiterals( 0 ), readNormalRule_positiveLiterals( 0 ) {}
+        
+        inline bool isSupported() const { return supported; }
+        inline void setSupported() { supported = true; }
+    };
     
 private:
     void readNormalRule( istream& input );
-    void readNormalRule( istream& input, unsigned head );
+    void readNormalRule( istream& input, unsigned head, int bodySize, int negativeSize );
     void readConstraint( istream& input );
+    void skipLiterals( istream& input, unsigned howMany );
+    void readBodySize( istream& input, int& bodySize, int& negativeSize );
     void addFact( unsigned head );
 //    void addNormalRule( unsigned head, Literal body );
 //    void addConstraint( Clause* body );
@@ -56,9 +98,12 @@ private:
 //    Literal getBodyLiteral( Clause* body );
     
 //    void addSupportClauses();
+    void processRecursivePositiveCrule( Clause* crule );
+    void processRecursiveNegativeCrule( Clause* crule );
     void programIsNotTight();
     void computeSCCs();
     void computeCompletion();
+    void simplify();
     
     void readAtomsTable( istream& input );
 
@@ -70,7 +115,10 @@ private:
     void createStructures( unsigned id );
     
     void propagate();
-    void propagate( Variable* var );
+    void propagateTrue( Variable* var );
+    void propagateFalse( Variable* var );
+    void propagateFact( Variable* var );
+
     
 //    Literal getLiteralForInputVar( unsigned int id, unsigned int sign );
 //    Literal getLiteralForAuxVar( unsigned int id, unsigned int sign );
@@ -84,28 +132,36 @@ private:
     
     unsigned propagatedLiterals;
     
-    vector< bool > facts;
-    vector< unsigned > numberOfHeadOccurrences;
-    vector< vector< int > > normalRules;
-    vector< vector< unsigned > > headOccurrences;
-    vector< vector< unsigned > > posOccurrences;
-    vector< vector< unsigned > > negOccurrences;
+    void add( NormalRule* rule );
+    void removeAndCheckSupport( NormalRule* rule );
+    bool shrinkPos( NormalRule* rule, unsigned lit );
+    void shrinkNeg( NormalRule* rule, unsigned lit );
+    void onShrinking( NormalRule* rule );
+    
+    void createCrule( Literal head, NormalRule* rule );
+
+    vector< NormalRule* > normalRules;
+    vector< AtomData > atomData;
+    vector< Clause* > crules;
+    
+    unsigned readNormalRule_numberOfCalls;
+    vector< unsigned > atomsWithoutSupport;
+    vector< unsigned > facts;
+    unordered_map< Variable*, unordered_set< PostPropagator* > > literalsPostPropagator[ 2 ];
 };
 
 GringoNumericFormat::GringoNumericFormat(
-    Solver& s ) : solver( s ), propagatedLiterals( 0 )
+    Solver& s ) : solver( s ), propagatedLiterals( 0 ), readNormalRule_numberOfCalls( 0 )
 {
-    facts.push_back( false );
-    numberOfHeadOccurrences.push_back( 0 );
-    headOccurrences.push_back( vector< unsigned >() );
-    posOccurrences.push_back( vector< unsigned >() );
-    negOccurrences.push_back( vector< unsigned >() );
+    atomData.push_back( AtomData( false ) );
     createStructures( 1 );
     solver.addClause( Literal( solver.getVariable( 1 ), NEGATIVE ) );
 }
 
 GringoNumericFormat::~GringoNumericFormat()
 {
+    for( unsigned i = 0; i < normalRules.size(); ++i )
+        delete normalRules[ i ];
 }
 
 #endif
