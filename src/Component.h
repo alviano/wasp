@@ -61,6 +61,7 @@ class Component : public PostPropagator
         
         virtual Clause* getClauseToPropagate( Learning& learning );
 
+        inline bool isAuxVariable( unsigned int varId ) { return getGUSData( varId ).aux; }
         inline void setAuxVariable( unsigned int varId ) { getGUSData( varId ).aux = true; }
         inline void addExternalLiteralForVariable( unsigned int varId, Literal lit ) { getGUSData( varId ).externalLiterals.push_back( lit ); }
         inline void addInternalLiteralForVariable( unsigned int varId, Literal lit ) { getGUSData( varId ).internalLiterals.push_back( lit ); }

@@ -100,7 +100,7 @@ private:
 //    void addSupportClauses();
     void processRecursivePositiveCrule( Clause* crule );
     void processRecursiveNegativeCrule( Clause* crule );
-    void programIsNotTight();
+    void computeGusStructures();
     void computeSCCs();
     void computeCompletion();
     void simplify();

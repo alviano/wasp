@@ -76,7 +76,7 @@ GringoNumericFormat::parse(
     if( !solver.tight() )
     {
         trace_msg( parser, 1, "Program is not tight" );
-        programIsNotTight();
+        computeGusStructures();
     } else
     {
         trace_msg( parser, 1, "Program is tight" );
@@ -91,7 +91,7 @@ GringoNumericFormat::parse(
 //    cout << "occs\n";
 //    for( unsigned i = 1; i < 10; i++)
 //        cout << c[i] << endl;
-//    cout << "Solving..." << endl;
+    cout << "Solving..." << endl;
 }
 
 void
@@ -571,7 +571,7 @@ GringoNumericFormat::processRecursiveNegativeCrule(
 }
 
 void
-GringoNumericFormat::programIsNotTight()
+GringoNumericFormat::computeGusStructures()
 {
     //Add two fake positions
     solver.addGUSData( NULL );
@@ -615,6 +615,25 @@ GringoNumericFormat::programIsNotTight()
         else
             processRecursiveNegativeCrule( crule );
     }
+    
+//    unsigned count = 0;
+//    for( unsigned int i = 0; i < solver.getNumberOfCyclicComponents(); i++ )
+//    {
+//        bool found = false;
+//        Component* component = solver.getCyclicComponent( i );
+//        for( unsigned int j = 0; j < component->size(); j++ )
+//        {
+//            unsigned int varId = component->getVariable( j );
+//            if( !component->isAuxVariable( varId ) )
+//            {
+//                cout << varId << endl;
+//                found = true;
+//                break;
+//            }
+//        }
+//        if( found ) count++;
+//    }
+//    cout << count << " " << solver.getNumberOfCyclicComponents() << endl;
 }
 
 void
@@ -687,17 +706,17 @@ GringoNumericFormat::computeSCCs()
             continue;
         assert( data.numberOfHeadOccurrences > 0 );
         
-        if( data.numberOfHeadOccurrences == 1 )
-        {
-            for( unsigned j = 0; j < data.headOccurrences.size(); ++j )
-            {
-                if( data.headOccurrences[ j ]->isRemoved() )
-                    continue;
-                createCrule( Literal( solver.getVariable( i ), POSITIVE ), data.headOccurrences[ j ] );
-                break;
-            }
-        }
-        else
+//        if( data.numberOfHeadOccurrences == 1 )
+//        {
+//            for( unsigned j = 0; j < data.headOccurrences.size(); ++j )
+//            {
+//                if( data.headOccurrences[ j ]->isRemoved() )
+//                    continue;
+//                createCrule( Literal( solver.getVariable( i ), POSITIVE ), data.headOccurrences[ j ] );
+//                break;
+//            }
+//        }
+//        else
         {
             Clause* crule = solver.newClause();
             crule->addLiteral( Literal( solver.getVariable( i ), NEGATIVE ) );
