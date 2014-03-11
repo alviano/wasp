@@ -280,6 +280,7 @@ void
 GringoNumericFormat::propagateTrue(
     Variable* var)
 {
+    assert( var != NULL );
     assert( var->isTrue() );
 
     assert( var->getId() < atomData.size() );
@@ -291,6 +292,7 @@ GringoNumericFormat::propagateTrue(
     for( unsigned i = 0; i < data.posOccurrences.size(); ++i )
     {
         NormalRule* rule = data.posOccurrences[ i ];
+        assert( rule != NULL );
         if( !shrinkPos( rule, var->getId() ) )
             data.posOccurrences[ j++ ] = data.posOccurrences[ i ];
     }
@@ -299,6 +301,7 @@ GringoNumericFormat::propagateTrue(
     for( unsigned i = 0; i < data.negOccurrences.size(); ++i )
     {
         NormalRule* rule = data.negOccurrences[ i ];
+        assert( rule != NULL );
         removeAndCheckSupport( rule );
     }
     data.negOccurrences.clear();
@@ -308,6 +311,7 @@ void
 GringoNumericFormat::propagateFalse(
     Variable* var )
 {
+    assert( var != NULL );
     assert( var->isFalse() );
 
     assert( var->getId() < atomData.size() );
@@ -318,6 +322,7 @@ GringoNumericFormat::propagateFalse(
     for( unsigned i = 0; i < data.headOccurrences.size(); ++i )
     {
         NormalRule* rule = data.headOccurrences[ i ];
+        assert( rule != NULL );
         if( rule->isRemoved() )
             continue;
         trace_msg( parser, 3, "Replacing " << *rule << " by a constraint" );
@@ -335,6 +340,7 @@ GringoNumericFormat::propagateFalse(
     for( unsigned i = 0; i < data.posOccurrences.size(); ++i )
     {
         NormalRule* rule = data.posOccurrences[ i ];
+        assert( rule != NULL );
         removeAndCheckSupport( rule );
     }
     data.posOccurrences.clear();
@@ -342,6 +348,7 @@ GringoNumericFormat::propagateFalse(
     for( unsigned i = 0; i < data.negOccurrences.size(); ++i )
     {
         NormalRule* rule = data.negOccurrences[ i ];
+        assert( rule != NULL );
         shrinkNeg( rule, var->getId() );
     }
     data.negOccurrences.clear();
@@ -359,6 +366,7 @@ GringoNumericFormat::propagateFact(
     for( unsigned i = 0; i < data.headOccurrences.size(); ++i )
     {
         NormalRule* rule = data.headOccurrences[ i ];
+        assert( rule != NULL );
         if( rule->isRemoved() )
             continue;
         trace_msg( parser, 3, "Removing rule " << *rule );
@@ -370,6 +378,7 @@ GringoNumericFormat::propagateFact(
     for( unsigned i = 0; i < data.posOccurrences.size(); ++i )
     {
         NormalRule* rule = data.posOccurrences[ i ];
+        assert( rule != NULL );
         shrinkPos( rule, var->getId() );
     }
     data.posOccurrences.clear();
@@ -498,6 +507,7 @@ void
 GringoNumericFormat::processRecursivePositiveCrule(
     Clause* crule )
 {
+    assert( crule != NULL );
     assert( crule->getAt( 0 ).isPositive() );
     Variable* variable = crule->getAt( 0 ).getVariable();
     assert( variable->isInCyclicComponent() );
@@ -529,6 +539,7 @@ void
 GringoNumericFormat::processRecursiveNegativeCrule(
     Clause* crule )
 {
+    assert( crule != NULL );
     assert( crule->getAt( 0 ).isNegative() );
     Variable* variable = crule->getAt( 0 ).getVariable();
     assert( variable->isInCyclicComponent() );
@@ -593,6 +604,7 @@ GringoNumericFormat::programIsNotTight()
     for( unsigned int i = 0; i < crules.size(); i++ )
     {
         Clause* crule = crules[ i ];
+        assert( crule != NULL );
 
         // skip acyclic variables
         if( !crule->getAt( 0 ).getVariable()->isInCyclicComponent() )
@@ -731,6 +743,7 @@ GringoNumericFormat::computeCompletion()
     for( unsigned i = 0; i < crules.size(); ++i )
     {
         Clause* crule = crules[ i ];
+        assert( crule != NULL );
         Literal lit = crule->getAt( 0 ).getOppositeLiteral();
         for( unsigned j = 1; j < crule->size(); ++j )
         {
@@ -757,9 +770,10 @@ void
 GringoNumericFormat::add(
     NormalRule* rule )
 {
+    assert( rule != NULL );
     assert( !rule->isFact() );
 
-    trace_msg( parser, 2, "Adding rule " << * rule );
+    trace_msg( parser, 2, "Adding rule " << *rule );
     normalRules.push_back( rule );
 
     AtomData& headData = atomData[ rule->head ];
@@ -770,13 +784,14 @@ GringoNumericFormat::add(
     for( unsigned i = 0; i < rule->posBody.size(); ++i )
         atomData[ rule->posBody[ i ] ].posOccurrences.push_back( rule );
     for( unsigned i = 0; i < rule->posBodyTrue.size(); ++i )
-        atomData[ rule->posBody[ i ] ].posOccurrences.push_back( rule );
+        atomData[ rule->posBodyTrue[ i ] ].posOccurrences.push_back( rule );
 }
 
 void
 GringoNumericFormat::removeAndCheckSupport(
     NormalRule* rule )
 {
+    assert( rule != NULL );
     if( rule->isRemoved() )
         return;
     trace_msg( parser, 3, "Removing rule " << *rule );
@@ -790,6 +805,7 @@ GringoNumericFormat::shrinkPos(
     NormalRule* rule, 
     unsigned lit )
 {
+    assert( rule != NULL );
     if( rule->isRemoved() )
         return true;
     trace_msg( parser, 3, "Shrinking rule " << *rule );
@@ -828,6 +844,7 @@ void
 GringoNumericFormat::onShrinking(
     NormalRule* rule )
 {
+    assert( rule != NULL );
     trace_msg( parser, 4, "After shrink: " << *rule );
     if( rule->isFact() )
     {
@@ -843,6 +860,7 @@ GringoNumericFormat::shrinkNeg(
     NormalRule* rule, 
     unsigned lit )
 {
+    assert( rule != NULL );
     if( rule->isRemoved() )
         return;
     trace_msg( parser, 3, "Shrinking rule " << *rule );
