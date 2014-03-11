@@ -180,10 +180,10 @@ using namespace std;
                 cyclicComponents.push_back( numberOfAtoms );
             }
             
-            inline static Statistics& inst(){ return statistics; }
+            inline static Statistics& inst(){ return instance; }
 
         private:
-            static Statistics statistics;
+            static Statistics instance;
             inline Statistics( const Statistics& ){ assert( 0 ); }
             
             string separator;
@@ -272,7 +272,7 @@ using namespace std;
 
             void printPartialStatistics()
             {
-                cerr << "Choices " << numberOfChoices << " - Learned " << numberOfLearnedClauses - numberOfDeletion << " - Restarts " << numberOfRestarts << endl;
+                cerr << "Choices " << numberOfChoices << " - Learned " << numberOfLearnedClauses + numberOfLearnedClausesFromPropagators - numberOfDeletion << " - Restarts " << numberOfRestarts << endl;
             }
     };
 

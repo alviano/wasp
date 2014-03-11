@@ -4,47 +4,47 @@
 # to compile different binaries
 BUILD = release
 cxxflags.debug = \
- -Wall -std=c++11
+ -Wall -Wextra -std=c++11
 linkflags.debug = \
  -lm
 cxxflags.trace = \
- -Wall -std=c++11 -DTRACE_ON
+ -Wall -Wextra -std=c++11 -DTRACE_ON
 linkflags.trace = \
  -lm
 cxxflags.release = \
- -Wall -std=c++11 -DNDEBUG -O3
+ -Wall -Wextra -std=c++11 -DNDEBUG -O3
 linkflags.release = \
  -lm
 cxxflags.gprof = \
- -Wall -std=c++11 -DNDEBUG -O3 -g -pg
+ -Wall -Wextra -std=c++11 -DNDEBUG -O3 -g -pg
 linkflags.gprof = \
  -lm -g -pg
 cxxflags.stats = \
- -Wall -std=c++11 -DNDEBUG -DSTATS_ON -O3
+ -Wall -Wextra -std=c++11 -DNDEBUG -DSTATS_ON -O3
 linkflags.stats = \
- -lm -g -pg
+ -lm
 
 # for g++ <= 4.6
 cxxflags.debug0x = \
- -Wall -std=c++0x
+ -Wall -Wextra -std=c++0x
 linkflags.debug0x = \
  -lm
 cxxflags.trace0x = \
- -Wall -std=c++0x -DTRACE_ON
+ -Wall -Wextra -std=c++0x -DTRACE_ON
 linkflags.trace = \
  -lm
 cxxflags.release0x = \
- -Wall -std=c++0x -DNDEBUG -O3
+ -Wall -Wextra -std=c++0x -DNDEBUG -O3
 linkflags.release0x = \
  -lm
 cxxflags.gprof0x = \
- -Wall -std=c++0x -DNDEBUG -O3 -g -pg 
+ -Wall -Wextra -std=c++0x -DNDEBUG -O3 -g -pg 
 linkflags.gprof0x = \
  -lm -g -pg
 cxxflags.stats0x = \
- -Wall -std=c++0x -DNDEBUG -DSTATS_ON -O3
+ -Wall -Wextra -std=c++0x -DNDEBUG -DSTATS_ON -O3
 linkflags.stats0x = \
- -lm -g -pg
+ -lm
 ####
 
 SOURCE_DIR = src

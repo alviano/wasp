@@ -69,6 +69,6 @@ namespace wasp
 
             static unsigned int timeLimit;            
     };
-};
+}
 
 #endif /* OPTIONS_H */

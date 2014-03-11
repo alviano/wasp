@@ -12,7 +12,7 @@ class Vector
 {
 	public:
 		inline Vector();
-		inline ~Vector();
+		inline virtual ~Vector();
 
 		inline unsigned int capacity() const { return capacity_; }
 		inline unsigned int size() const { return size_; }

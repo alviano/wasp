@@ -746,7 +746,6 @@ GringoNumericFormat::computeSCCs()
                     crule->addLiteral( Literal( solver.getVariable( solver.numberOfVariables() ), POSITIVE ) );
                     solver.addEdgeInDependencyGraph( i, solver.numberOfVariables() );
                     createCrule( Literal( solver.getVariable( solver.numberOfVariables() ), POSITIVE ), data.headOccurrences[ j ] );
-                    
                 }
             }
             crules.push_back( crule );

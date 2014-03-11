@@ -108,7 +108,7 @@ WaspFacade::solve()
 void
 WaspFacade::setDeletionPolicy(
     DELETION_POLICY deletionPolicy,
-    unsigned int deletionThreshold )
+    unsigned int /*deletionThreshold*/ )
 {
     switch( deletionPolicy )
     {
@@ -134,7 +134,7 @@ WaspFacade::setDeletionPolicy(
 void
 WaspFacade::setDecisionPolicy(
     DECISION_POLICY decisionPolicy,
-    unsigned int threshold )
+    unsigned int /*threshold*/ )
 {
     switch( decisionPolicy )
     {

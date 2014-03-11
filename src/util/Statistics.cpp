@@ -18,5 +18,5 @@
 #include "Statistics.h"
 
 #ifdef STATS_ON
-    Statistics Statistics::statistics;
+    Statistics Statistics::instance;
 #endif

@@ -174,7 +174,7 @@ Variables::hasNextAssignedVariable() const
 void
 Variables::startIterationOnAssignedVariable()
 {
-    assert( assignedVariablesSize >= 0 );
+    assert( assignedVariablesSize > 0 );
     iteratorOnAssignedVariables = assignedVariablesSize - 1;
 }
 
