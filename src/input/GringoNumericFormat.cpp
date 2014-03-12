@@ -826,7 +826,6 @@ GringoNumericFormat::computeCompletion()
             }
         }
         solver.cleanAndAddClause( crule );
-        assert( crule->size() >= 2 );
         assert( propagatedLiterals == solver.numberOfAssignedLiterals() );
     }
 }
