@@ -635,7 +635,7 @@ Clause::containsAnyComplementOf(
     return false;
 }
 
-inline bool literalComparator( Literal l1, Literal l2 ){ return l1.getVariable() < l2.getVariable(); }
+inline bool literalComparator( Literal l1, Literal l2 ){ return l1.getVariable()->getId() < l2.getVariable()->getId(); }
 
 void
 Clause::removeDuplicates()
