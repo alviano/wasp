@@ -286,7 +286,7 @@ Clause::onRemovingNoDelete(
             literals[ i ].findAndEraseClause( this );
     }
     
-    assert( literals.size() > 0 );
+    assert( !literals.empty() );
     literals.push_back( getAt( 0 ) );
     markAsDeleted();
 }

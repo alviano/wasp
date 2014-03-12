@@ -593,7 +593,7 @@ Satelite::simplificationsMinisat2()
 bool
 Satelite::backwardSubsumptionCheck()
 {
-    while( subsumptionQueue.size() > 0 )
+    while( !subsumptionQueue.empty() )
     {
         Clause* clause = subsumptionQueue.front();
         clause->resetInQueue();

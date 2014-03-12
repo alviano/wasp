@@ -30,7 +30,7 @@
 using namespace std;
 
 Dimacs::Dimacs(
-    Solver& s ) : solver( s )
+    Solver& s ) : solver( s ), numberOfClauses( 0 ), numberOfVariables( 0 )
 {
 }
 

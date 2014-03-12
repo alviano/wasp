@@ -45,7 +45,7 @@ using namespace std;
 class Component : public PostPropagator
 {
 	public:
-		inline Component( vector< GUSData* >& gusData_ ) : PostPropagator(), gusData( gusData_ ), clauseToPropagate( NULL ) {}
+		inline Component( vector< GUSData* >& gusData_ ) : PostPropagator(), gusData( gusData_ ), clauseToPropagate( NULL ), id( 0 ) {}
 		inline ~Component() {}
         
         virtual bool onLiteralFalse( Literal lit );

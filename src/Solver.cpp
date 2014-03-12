@@ -431,10 +431,10 @@ Solver::deleteClauses()
         else
         {
             *j = *i;
-            j++;
+            ++j;
         }
         
-        i++;
+        ++i;
     }
 
     finalizeDeletion( size - numberOfDeletions );

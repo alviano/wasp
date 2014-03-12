@@ -118,7 +118,7 @@ using namespace std;
                 }
             }
 
-            inline void onDeletion( unsigned int numberOfLearnedClauses, unsigned int del )
+            inline void onDeletion( unsigned int /*numberOfLearnedClauses*/, unsigned int del )
             {
                 numberOfDeletionInvokation++;
                 numberOfDeletion += del;

@@ -232,9 +232,11 @@ Variable::Variable(
     unsigned id_ ) :
     id( id_ ),
     decisionLevel( 0 ),
+    orderInThePropagation( 0 ),
     truthValue( UNDEFINED ),
     implicant( NULL ),
     act( 0.0 ),
+    handle( 0 ),
     inHeap( false ),
     visitedInLearning( 0 ),
     definition( NULL ),

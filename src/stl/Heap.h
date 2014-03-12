@@ -78,7 +78,7 @@ class Heap {
     Heap(){}
 
     int size() const { return heap.size(); }
-    bool empty() const { return heap.size() == 0; }
+    bool empty() const { return heap.empty(); }
     bool inHeap ( K* k ) const { return k->isInHeap(); }
     int  operator[]( int index ) const{ assert( index < heap.size() ); return heap[ index ]; }
 
