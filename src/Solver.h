@@ -171,7 +171,7 @@ class Solver
         inline void onEliminatingVariable( Variable* variable, unsigned int sign, Clause* definition );
         inline void completeModel();
         
-        inline Clause* newClause();
+        inline Clause* newClause( unsigned reserve = 8 );
         inline void releaseClause( Clause* clause );
         
         inline void addPostPropagator( PostPropagator* postPropagator );
@@ -925,13 +925,14 @@ Solver::completeModel()
 }
 
 Clause*
-Solver::newClause()
+Solver::newClause(
+    unsigned reserve )
 {
     if( poolOfClauses.empty() )
     {
         unsigned int bufferSize = 20;
         for( unsigned int i = 0; i < bufferSize; i++ )
-            poolOfClauses.push_back( new Clause() );       
+            poolOfClauses.push_back( new Clause( reserve ) );       
     }
     
     Clause* back = poolOfClauses.back();

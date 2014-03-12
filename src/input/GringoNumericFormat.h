@@ -145,7 +145,7 @@ private:
     vector< Clause* > crules;
     
     unsigned readNormalRule_numberOfCalls;
-    vector< unsigned > atomsWithoutSupport;
+    vector< unsigned > atomsWithSupportInference;
     vector< unsigned > facts;
     unordered_map< Variable*, unordered_set< PostPropagator* > > literalsPostPropagator[ 2 ];
 };

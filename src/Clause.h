@@ -46,7 +46,7 @@ class Clause
 
     public:        
         virtual ~Clause();
-        inline Clause();
+        inline Clause( unsigned reserve = 8 );
 
         inline Literal getAt( unsigned idx ) const { assert( idx < literals.size() ); return literals[ idx ]; }
         inline void flipLiteralAt( unsigned idx ) { assert( idx < literals.size() ); literals[ idx ] = literals[ idx ].getOppositeLiteral(); }
@@ -158,9 +158,10 @@ class Clause
         } clauseData;
 };
 
-Clause::Clause(): lastSwapIndex( 1 ), signature( 0 ), act( 0.0 )
+Clause::Clause(
+    unsigned reserve) : lastSwapIndex( 1 ), signature( 0 ), act( 0.0 )
 {
-    literals.reserve( 8 );
+    literals.reserve( reserve );
     clauseData.inQueue = 0;
     clauseData.learned = 0;    
     //free();

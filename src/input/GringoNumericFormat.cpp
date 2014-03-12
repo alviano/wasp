@@ -3,7 +3,6 @@
 #include "../util/Constants.h"
 #include "../util/ErrorMessage.h"
 #include "../Clause.h"
-//#include "../CRule.h"
 
 #include <cassert>
 #include <iostream>
@@ -71,6 +70,9 @@ GringoNumericFormat::parse(
 
     simplify();
 
+    if( solver.conflictDetected() )
+        return;
+        
 //    cout << "cc" << endl;
     computeSCCs();
     if( !solver.tight() )
@@ -225,7 +227,7 @@ GringoNumericFormat::readConstraint(
     if( bodySize < negativeSize )
         ErrorMessage::errorDuringParsing( "Body size must be greater than or equal to negative size." );
 
-    Clause* clause = solver.newClause();
+    Clause* clause = solver.newClause( bodySize );
     while( negativeSize-- > 0 )
     {
         --bodySize;
@@ -278,7 +280,7 @@ GringoNumericFormat::propagate()
 
 void
 GringoNumericFormat::propagateTrue(
-    Variable* var)
+    Variable* var )
 {
     assert( var != NULL );
     assert( var->isTrue() );
@@ -287,6 +289,9 @@ GringoNumericFormat::propagateTrue(
     AtomData& data = atomData[ var->getId() ];
 
     trace_msg( parser, 2, "Propagating " << *var << " as true" << ( data.isSupported() ? " (supported)" : "" ) );
+
+    if( data.numberOfHeadOccurrences == 1 )
+        atomsWithSupportInference.push_back( var->getId() );
 
     unsigned j = 0;
     for( unsigned i = 0; i < data.posOccurrences.size(); ++i )
@@ -326,7 +331,7 @@ GringoNumericFormat::propagateFalse(
         if( rule->isRemoved() )
             continue;
         trace_msg( parser, 3, "Replacing " << *rule << " by a constraint" );
-        Clause* clause = solver.newClause();
+        Clause* clause = solver.newClause( rule->size() );
         for( unsigned j = 0; j < rule->negBody.size(); ++j )
             clause->addLiteral( Literal( solver.getVariable( rule->negBody[ j ] ), POSITIVE ) );
         for( unsigned j = 0; j < rule->posBody.size(); ++j )
@@ -404,6 +409,8 @@ GringoNumericFormat::readAtomsTable(
     unsigned int nextAtom;
     input >> nextAtom;
 
+    createStructures( nextAtom );
+
     char name[ 1024 ];
     while( nextAtom != 0 )
     {
@@ -456,6 +463,8 @@ GringoNumericFormat::readTrueAtoms(
     unsigned int nextAtom;
     input >> nextAtom;
 
+    createStructures( nextAtom );
+
     while( nextAtom != 0 )
     {
         cout << nextAtom << endl;
@@ -477,6 +486,8 @@ GringoNumericFormat::readFalseAtoms(
 
     unsigned int nextAtom;
     input >> nextAtom;
+
+    createStructures( nextAtom );
 
     while( nextAtom != 0 )
     {
@@ -651,19 +662,51 @@ void
 GringoNumericFormat::simplify()
 {
     trace_msg( parser, 1, "Simplify" );
-    atomsWithoutSupport.clear();
+    atomsWithSupportInference.clear();
     for( unsigned i = 2; i < atomData.size(); ++i )
     {
-        if( !atomData[ i ].isSupported() && !solver.getVariable( i )->isFalse() && atomData[ i ].numberOfHeadOccurrences == 0 )
-            atomsWithoutSupport.push_back( i );
+        if( atomData[ i ].isSupported() || solver.getVariable( i )->isFalse() )
+            continue;
+        if( atomData[ i ].numberOfHeadOccurrences == 0 || ( atomData[ i ].numberOfHeadOccurrences == 1 && solver.getVariable( i )->isTrue() ) )
+            atomsWithSupportInference.push_back( i );
     }
     
-    while( !atomsWithoutSupport.empty() )
+    while( !atomsWithSupportInference.empty() )
     {
-        trace_msg( parser, 2, "Infer falsity of variable " << *solver.getVariable( atomsWithoutSupport.back() ) << " with no support" );
-        solver.addClause( Literal( solver.getVariable( atomsWithoutSupport.back() ), NEGATIVE ) );
-        assert( solver.getVariable( atomsWithoutSupport.back() )->isFalse() || solver.conflictDetected() );
-        atomsWithoutSupport.pop_back();
+        AtomData& data = atomData[ atomsWithSupportInference.back() ];
+        if( !data.isSupported() && !solver.getVariable( atomsWithSupportInference.back() )->isFalse() )
+        {
+            if( data.numberOfHeadOccurrences == 0 )
+            {
+                trace_msg( parser, 2, "Infer falsity of variable " << *solver.getVariable( atomsWithSupportInference.back() ) << " with no support" );
+                solver.addClause( Literal( solver.getVariable( atomsWithSupportInference.back() ), NEGATIVE ) );
+                assert( solver.getVariable( atomsWithSupportInference.back() )->isFalse() || solver.conflictDetected() );
+            }
+            else
+            {
+                assert( data.numberOfHeadOccurrences == 1 );
+                assert( solver.getVariable( atomsWithSupportInference.back() )->isTrue() );
+                assert( !data.isSupported() );
+                
+                for( unsigned i = 0; i < data.headOccurrences.size(); ++i )
+                {
+                    if( !data.headOccurrences[ i ]->isRemoved() )
+                    {
+                        data.headOccurrences[ 0 ] = data.headOccurrences[ i ];
+                        break;
+                    }
+                }
+                data.headOccurrences.resize( 1 );
+                NormalRule* rule = data.headOccurrences[ 0 ];
+                assert( !rule->isRemoved() );
+                trace_msg( parser, 2, "Infer truth of the body of " << *rule << " (unique support of true head)" );
+                for( unsigned i = 0; i < rule->posBody.size(); ++i )
+                    solver.addClause( Literal( solver.getVariable( rule->posBody[ i ] ), POSITIVE ) );
+                for( unsigned i = 0; i < rule->negBody.size(); ++i )
+                    solver.addClause( Literal( solver.getVariable( rule->negBody[ i ] ), NEGATIVE ) );
+            }
+        }
+        atomsWithSupportInference.pop_back();
         propagate();
         if( solver.conflictDetected() )
             return;
@@ -676,7 +719,7 @@ GringoNumericFormat::createCrule(
     NormalRule* rule )
 {
     assert( head.isPositive() );
-    Clause* crule = solver.newClause();
+    Clause* crule = solver.newClause( rule->size() + 1 );
     crule->addLiteral( head );
     for( unsigned k = 0; k < rule->negBody.size(); ++k )
         crule->addLiteral( Literal( solver.getVariable( rule->negBody[ k ] ), POSITIVE ) );
@@ -697,6 +740,7 @@ void
 GringoNumericFormat::computeSCCs()
 {
     trace_msg( parser, 1, "Computing crules and SCCs" );
+    assert( propagatedLiterals == solver.numberOfAssignedLiterals() );
 
     for( unsigned i = 2; i < atomData.size(); ++i )
     {
@@ -706,19 +750,19 @@ GringoNumericFormat::computeSCCs()
             continue;
         assert( data.numberOfHeadOccurrences > 0 );
         
-//        if( data.numberOfHeadOccurrences == 1 )
-//        {
-//            for( unsigned j = 0; j < data.headOccurrences.size(); ++j )
-//            {
-//                if( data.headOccurrences[ j ]->isRemoved() )
-//                    continue;
-//                createCrule( Literal( solver.getVariable( i ), POSITIVE ), data.headOccurrences[ j ] );
-//                break;
-//            }
-//        }
-//        else
+        if( data.numberOfHeadOccurrences == 1 )
         {
-            Clause* crule = solver.newClause();
+            for( unsigned j = 0; j < data.headOccurrences.size(); ++j )
+            {
+                if( data.headOccurrences[ j ]->isRemoved() )
+                    continue;
+                createCrule( Literal( solver.getVariable( i ), POSITIVE ), data.headOccurrences[ j ] );
+                break;
+            }
+        }
+        else
+        {
+            Clause* crule = solver.newClause( data.numberOfHeadOccurrences + 1 );
             crule->addLiteral( Literal( solver.getVariable( i ), NEGATIVE ) );
             for( unsigned j = 0; j < data.headOccurrences.size(); ++j )
             {
@@ -758,29 +802,32 @@ GringoNumericFormat::computeSCCs()
 void
 GringoNumericFormat::computeCompletion()
 {
+    assert( propagatedLiterals == solver.numberOfAssignedLiterals() );
     for( unsigned i = 0; i < crules.size(); ++i )
     {
         Clause* crule = crules[ i ];
         assert( crule != NULL );
         Literal lit = crule->getAt( 0 ).getOppositeLiteral();
-        for( unsigned j = 1; j < crule->size(); ++j )
+        if( !lit.isTrue() )
         {
-            if( lit.isTrue() )
-                break;
-                
-            Literal lit2 = crule->getAt( j ).getOppositeLiteral();
-            if( lit2.isTrue() )
-                continue;
-                
-            Clause* bin = solver.newClause();
-            if( lit.isUndefined() )
+            for( unsigned j = 1; j < crule->size(); ++j )
+            {
+                Literal lit2 = crule->getAt( j ).getOppositeLiteral();
+                if( lit2.isTrue() )
+                    continue;
+                assert( lit.isUndefined() );
+                assert( lit2.isUndefined() );
+                    
+                Clause* bin = solver.newClause();
                 bin->addLiteral( lit );
-            if( lit2.isUndefined() )
                 bin->addLiteral( lit2 );
-            assert( bin->size() >= 1 );
-            solver.addClause( bin );
+                solver.addClause( bin );
+                assert( propagatedLiterals == solver.numberOfAssignedLiterals() );
+            }
         }
         solver.cleanAndAddClause( crule );
+        assert( crule->size() >= 2 );
+        assert( propagatedLiterals == solver.numberOfAssignedLiterals() );
     }
 }
 
@@ -813,8 +860,9 @@ GringoNumericFormat::removeAndCheckSupport(
     if( rule->isRemoved() )
         return;
     trace_msg( parser, 3, "Removing rule " << *rule );
-    if( --atomData[ rule->head ].numberOfHeadOccurrences == 0 )
-        atomsWithoutSupport.push_back( rule->head );
+    assert( atomData[ rule->head ].numberOfHeadOccurrences > 0 );
+    if( --atomData[ rule->head ].numberOfHeadOccurrences == 0 || ( atomData[ rule->head ].numberOfHeadOccurrences == 1 && solver.getVariable( rule->head )->isTrue() ) )
+        atomsWithSupportInference.push_back( rule->head );
     rule->remove();    
 }
 
