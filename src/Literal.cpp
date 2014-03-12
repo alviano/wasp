@@ -18,7 +18,6 @@
 
 #include "Literal.h"
 #include "Clause.h"
-#include "WaspRule.h"
 
 #include <cassert>
 

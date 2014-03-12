@@ -29,7 +29,6 @@ using namespace std;
 #include "Literal.h"
 #include "util/Options.h"
 #include "util/Trace.h"
-#include "WaspRule.h"
 #include "stl/List.h"
 #include "stl/UnorderedSet.h"
 #include "Learning.h"

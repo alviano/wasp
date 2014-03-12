@@ -25,7 +25,6 @@ using namespace std;
 #include "util/Constants.h"
 #include "Solver.h"
 #include "input/Dimacs.h"
-#include "inputBuilders/SATFormulaBuilder.h"
 
 class WaspFacade
 {

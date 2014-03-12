@@ -12,7 +12,11 @@ class Vector
 {
 	public:
 		inline Vector();
-		inline ~Vector();
+		virtual ~Vector()
+        {
+            if( vector )
+                delete [] vector;
+        }
 
 		inline unsigned int capacity() const { return capacity_; }
 		inline unsigned int size() const { return size_; }
@@ -29,7 +33,7 @@ class Vector
 		inline const T& operator[] ( unsigned int index ) const { assert( index < size_ ); return vector[ index ]; }
 		inline T& operator[] ( unsigned int index ) { assert( index < size_ ); return vector[ index ]; }
 
-		inline void swap( Vector< T* >& other ) { T* tmp = other.vector; other.vector = vector; vector = tmp; }
+		inline void swap( Vector< T >& other );
         
         inline bool existElement( T );
         inline unsigned int findElement( T );
@@ -48,13 +52,6 @@ class Vector
 template< class T >
 Vector< T >::Vector() : vector( NULL ), size_( 0 ), capacity_( 0 )
 {
-}
-
-template< class T >
-Vector< T >::~Vector()
-{
-	if( vector )
-		delete [] vector;
 }
 
 template< class T >
@@ -89,20 +86,32 @@ Vector< T >::resetCapacity(
 
 template< class T >
 bool
-Vector< T >::existElement( T elem )
+Vector< T >::existElement(
+    T elem )
 {
     return findElement( elem ) != MAXUNSIGNEDINT;
 }
 
 template< class T >
 unsigned int
-Vector< T >::findElement( T elem )
+Vector< T >::findElement(
+    T elem )
 {
     for( unsigned int i = 0; i < size_; ++i )    
         if( elem == vector[ i ] )
             return i;
     
     return MAXUNSIGNEDINT;
+}
+
+template< class T >
+void
+Vector< T >::swap(
+    Vector< T >& other )
+{
+    T* tmp = other.vector; other.vector = vector; vector = tmp;    
+    unsigned int tmpSize = other.size_; other.size_ = size_; size_ = tmpSize;        
+    unsigned int tmpCapacity = other.capacity_; other.capacity_ = capacity_; capacity_ = tmpCapacity;
 }
 
 #endif

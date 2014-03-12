@@ -182,7 +182,7 @@ class Variable
         /**
          * This variable represents the order in which the literal has been propagated.
          */
-        unsigned int orderInThePropagation;
+//        unsigned int orderInThePropagation;
         
         /**
          * The truth value of the literal. It can assume three values: UNDEFINED, TRUE or FALSE.
