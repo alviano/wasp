@@ -17,7 +17,7 @@
  */
 
 #ifndef _DEPENDENCYGRAPH_H
-#define	_DEPENDENCYGRAPH_H
+#define    _DEPENDENCYGRAPH_H
 
 #include <unordered_set>
 #include <vector>
@@ -25,25 +25,27 @@
 
 using namespace std;
 
+class AdjacencyList;
+
 class DependencyGraph 
 {
-
     public:
         DependencyGraph();    
-        ~DependencyGraph();	
+        ~DependencyGraph();    
 
         void addEdge( unsigned int v1, unsigned int v2 );
         void computeStrongConnectedComponents( vector< GUSData* >& gd );        
 
-		Component* getCyclicComponent( unsigned int pos ){ assert( pos < cyclicComponents.size() ); return cyclicComponents[ pos ]; }
-		unsigned int numberOfCyclicComponents() const{ return cyclicComponents.size(); }
+        Component* getCyclicComponent( unsigned int pos ){ assert( pos < cyclicComponents.size() ); return cyclicComponents[ pos ]; }
+        unsigned int numberOfCyclicComponents() const{ return cyclicComponents.size(); }
         
         bool tight() const { return numberOfCyclicComponents() == 0; }
 
-    private:		
+    private:        
         DependencyGraph( const DependencyGraph& orig );
 
-		vector< Component* > cyclicComponents;
+        vector< Component* > cyclicComponents;
+        AdjacencyList& graph;
 };
 
 #endif
