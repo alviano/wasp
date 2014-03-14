@@ -318,22 +318,7 @@ Solver::unitPropagation(
     assert( "Variable to propagate has not been set." && variable != NULL );
     trace_msg( solving, 2, "Propagating: " << *variable << " as " << ( variable->isTrue() ? "true" : "false" ) );
     
-    Literal complement = Literal::createOppositeFromAssignedVariable( variable );
-    
-    variable->unitPropagationStart();
-    assert( !conflictDetected() );
-    while( variable->unitPropagationHasNext() && !conflictDetected() )
-    {
-        Clause* clause = variable->unitPropagationNext();
-        assert( "Next clause to propagate is null." && clause != NULL );
-        trace( solving, 5, "Considering clause %s.\n", toString( *clause ).c_str() );
-        if( clause->onLiteralFalse( complement ) )
-        {
-            assignLiteral( clause );
-        }
-        else
-            assert( !conflictDetected() );
-    }
+    variable->unitPropagation( *this );
 }
 
 void
@@ -345,19 +330,7 @@ Solver::postPropagation(
     if( conflictDetected() )
         return;
     
-    Literal complement = Literal::createOppositeFromAssignedVariable( variable );    
-    
-    variable->postPropagationStart();    
-
-    while( variable->postPropagationHasNext() && !conflictDetected() )
-    {
-        PostPropagator* postPropagator = variable->postPropagationNext();
-        assert( "Post propagator is null." && postPropagator != NULL );
-        bool res = postPropagator->onLiteralFalse( complement );
-        
-        if( res )
-            addPostPropagator( postPropagator );
-    }
+    variable->postPropagation( *this );
     
     assert( !conflictDetected() );
 }
@@ -367,44 +340,7 @@ Solver::propagateAtLevelZero(
     Variable* variable )
 {
     assert( "Variable to propagate has not been set." && variable != NULL );    
-    Literal literal = Literal::createFromAssignedVariable( variable );
-    trace_msg( solving, 2, "Propagating " << literal << " as true at level 0" );
-    literal.startIterationOverOccurrences();
-
-    while( literal.hasNextOccurrence() )
-    {
-        Clause* clause = literal.nextOccurence();
-        trace_msg( solving, 5, "Considering clause " << *clause );
-        clause->detachClauseToAllLiterals( literal );
-        deleteClause( clause );
-    }
-
-    assert( !conflictDetected() );
-    Literal complement = Literal::createOppositeFromAssignedVariable( variable );
-    trace_msg( solving, 2, "Propagating " << complement << " as false at level 0" );
-    complement.startIterationOverOccurrences();
-
-    while( complement.hasNextOccurrence() && !conflictDetected() )
-    {
-        Clause* clause = complement.nextOccurence();
-        assert( "Next clause to propagate is null." && clause != NULL );
-        trace( solving, 5, "Considering clause %s.\n", toString( *clause ).c_str() );
-        
-        clause->removeLiteral( complement );
-        if( clause->size() == 1 )
-        {
-            if( !clause->getAt( 0 ).isTrue() )
-            {
-                trace_msg( solving, 5, "Assigning literal " << clause->getAt( 0 ) << " as true" );
-                assignLiteral( clause->getAt( 0 ) );
-            }
-            clause->detachClauseToAllLiterals( Literal::null );
-            deleteClause( clause );
-        }
-        else
-            assert( !conflictDetected() );
-    }
-    
+    variable->propagateAtLevelZero( *this );    
     postPropagation( variable );
 }
 
@@ -416,46 +352,7 @@ Solver::propagateAtLevelZeroSatelite(
         return;
     
     assert( "Variable to propagate has not been set." && variable != NULL );    
-    Literal literal = Literal::createFromAssignedVariable( variable );
-    trace_msg( solving, 2, "Propagating " << literal << " as true at level 0" );
-    literal.startIterationOverOccurrences();
-
-    while( literal.hasNextOccurrence() )
-    {
-        Clause* clause = literal.nextOccurence();
-        trace_msg( solving, 5, "Considering clause " << *clause );
-        clause->detachClauseToAllLiterals( literal );
-        markClauseForDeletion( clause );
-    }
-
-    assert( !conflictDetected() );
-    Literal complement = Literal::createOppositeFromAssignedVariable( variable );
-    trace_msg( solving, 2, "Propagating " << complement << " as false at level 0" );
-    complement.startIterationOverOccurrences();
-
-    while( complement.hasNextOccurrence() && !conflictDetected() )
-    {
-        Clause* clause = complement.nextOccurence();
-        assert( "Next clause to propagate is null." && clause != NULL );
-        trace( solving, 5, "Considering clause %s.\n", toString( *clause ).c_str() );
-        
-        clause->removeLiteral( complement );
-        if( clause->size() == 1 )
-        {
-            if( !clause->getAt( 0 ).isTrue() )
-            {
-                trace_msg( solving, 5, "Assigning literal " << clause->getAt( 0 ) << " as true" );
-                assignLiteral( clause->getAt( 0 ) );
-            }
-            clause->detachClauseToAllLiterals( Literal::null );
-            markClauseForDeletion( clause );
-        }
-        else
-        {
-            satelite->onStrengtheningClause( clause );
-            assert( !conflictDetected() );
-        }
-    }    
+    variable->propagateAtLevelZeroSatelite( *this );
 }
 
 void
@@ -464,6 +361,16 @@ Solver::printProgram() const
     for( ConstClauseIterator it = clauses.begin(); it != clauses.end(); ++it )
     {
         cout << *( *it ) << endl;
+    }
+}
+
+void
+Solver::printDimacs() const
+{
+    cout << "p cnf " << numberOfClauses() << " " << numberOfVariables() << endl;
+    for( ConstClauseIterator it = clauses.begin(); it != clauses.end(); ++it )
+    {
+        (**it).printDimacs();
     }
 }
 
@@ -490,7 +397,10 @@ Solver::allClausesSatisfied() const
     {
         Clause& clause = *( *it );
         if( !clause.isSatisfied() )
+        {
+//            cout << clause << endl;
             return false;
+        }
     }
 
     return true;
@@ -521,10 +431,10 @@ Solver::deleteClauses()
         else
         {
             *j = *i;
-            j++;
+            ++j;
         }
         
-        i++;
+        ++i;
     }
 
     finalizeDeletion( size - numberOfDeletions );
@@ -679,4 +589,26 @@ Solver::removeSatisfied(
                 literalsInClauses -= size;
         }
     }
+}
+
+bool
+Solver::checkVariablesState() const
+{
+    assert( currentDecisionLevel == 0 );
+    for( unsigned i = 0; i < clauses.size(); i++ )
+    {
+        Clause* clause = clauses[ i ];
+        for( unsigned j = 0; j < clause->size(); j++ )
+            if( !clause->getAt( j ).isUndefined() )
+            {
+                cout << j << " " << clause->getAt( j ).isTrue() << endl;
+                cout << clause->getAt( j ).numberOfOccurrences() << endl;
+                for( unsigned k = 0; k < clause->getAt( j ).numberOfOccurrences(); k++)
+                    cout << *clause->getAt(j).getOccurrence(k) << endl;
+                cout << *clause << endl;
+                return false;                
+            }
+    }
+    
+    return true;
 }

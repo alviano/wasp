@@ -21,7 +21,8 @@
 
 #include <cassert>
 
-const Literal Literal::null( NULL );
+const Literal Literal::null( NULL, POSITIVE );
+const Literal Literal::conflict( NULL, NEGATIVE );
 
 ostream&
 operator<<( 

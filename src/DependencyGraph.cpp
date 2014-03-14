@@ -23,30 +23,20 @@
 
 #include "util/Statistics.h"
 
-/**
- * The dependency graph.
- */
-static boost::adjacency_list <> g;
-
-#ifndef NDEBUG
-static unsigned numOfInstances = 0;
-#endif
+class AdjacencyList: public boost::adjacency_list<>
+{
+};
 
 DependencyGraph::DependencyGraph()
+: graph( *new AdjacencyList() )
 {
-    // Check that DependencyGraph is instantiated just one time!
-    // This for ensuring that variable g is used exactly by one instance.
-    // If more than one instance is needed, this should be changed, maybe by 
-    // introducing some vector of adjacency_list.
-	// This check is performed only in debug mode.
-    assert( numOfInstances++ == 0 );
 }
 
 DependencyGraph::~DependencyGraph()
 {
-    assert( numOfInstances-- == 1 );
-    g.clear();
-    assert( g.vertex_set().empty() );
+    graph.clear();
+    assert( graph.vertex_set().empty() );
+    delete &graph;
 
     for( unsigned int i = 0; i < cyclicComponents.size(); i++ )
         delete cyclicComponents[ i ];
@@ -57,19 +47,18 @@ DependencyGraph::addEdge(
     unsigned int v1,
     unsigned int v2 )
 {
-    boost::add_edge( v1, v2, g );
-    if( v1 == v2 )    
-        selfLoopVertex.insert( v1 );    
+    assert( v1 != v2 );
+    boost::add_edge( v1, v2, graph );
 }
 
 void
 DependencyGraph::computeStrongConnectedComponents(
     vector< GUSData* >& gd )
 {
-    vector< unsigned int > strongConnectedComponents( boost::num_vertices( g ) ), discover_time( boost::num_vertices( g ) );
-    vector< boost::default_color_type > color( boost::num_vertices( g ) );
-    vector< boost::graph_traits< boost::adjacency_list< > >::vertex_descriptor > root( boost::num_vertices( g ) );
-    unsigned int numberOfStrongConnectedComponents = boost::strong_components( g, &strongConnectedComponents[ 0 ] , boost::root_map( &root[ 0 ] ).color_map( &color[ 0 ] ).discover_time_map( &discover_time[ 0 ] ) );
+    vector< unsigned int > strongConnectedComponents( boost::num_vertices( graph ) ), discover_time( boost::num_vertices( graph ) );
+    vector< boost::default_color_type > color( boost::num_vertices( graph ) );
+    vector< boost::graph_traits< boost::adjacency_list< > >::vertex_descriptor > root( boost::num_vertices( graph ) );
+    unsigned int numberOfStrongConnectedComponents = boost::strong_components( graph, &strongConnectedComponents[ 0 ] , boost::root_map( &root[ 0 ] ).color_map( &color[ 0 ] ).discover_time_map( &discover_time[ 0 ] ) );
 
     assert( numberOfStrongConnectedComponents > 0 );
     vector< Component* > components( numberOfStrongConnectedComponents, NULL );
@@ -82,8 +71,6 @@ DependencyGraph::computeStrongConnectedComponents(
 			components[ currentComponentId ] = new Component( gd );
 	
         components[ currentComponentId ]->addVariable( i );
-		if( existSelfLoop( i ) )
-			components[ currentComponentId ]->setSelfLoop();
     }
 
     unsigned int id = 0;
@@ -100,11 +87,4 @@ DependencyGraph::computeStrongConnectedComponents(
 		else
 			delete currentComponent;
 	}
-}
-
-bool
-DependencyGraph::existSelfLoop(
-    unsigned int node )
-{
-    return ( selfLoopVertex.find( node ) != selfLoopVertex.end() );
 }

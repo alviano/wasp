@@ -16,9 +16,8 @@
  *
  */
 
-
-#ifndef _GRINGONUMERICFORMAT_H
-#define	_GRINGONUMERICFORMAT_H
+#ifndef GRINGONUMERICFORMAT_H
+#define GRINGONUMERICFORMAT_H
 
 #include "../Solver.h"
 #include "../stl/Trie.h"
@@ -26,138 +25,143 @@
 
 using namespace std;
 
-// TODO: the program has to be built in this class! No need of a separate builder. Revise this class.
 class GringoNumericFormat
 {
+public:
+    inline GringoNumericFormat( Solver& s );
+    inline ~GringoNumericFormat();
+
+    /**
+    * This function read instruction from standard input and
+    * build the program.
+    */
+    void parse();
+
+    /**
+    * This function read instruction from input and
+    * build the program.
+    *
+    * @param input The istream input.
+    */
+    void parse( istream& input );    
+
+    class NormalRule
+    {
+        friend ostream& operator<<( ostream& out, const NormalRule& rule );
     public:
-
-        inline GringoNumericFormat( Solver& s );
-        ~GringoNumericFormat();
-
-        /**
-        * This function read instruction from standard input and
-        * build the program.
-        */
-        void parse();
-
-        /**
-        * This function read instruction from input and
-        * build the program.
-        *
-        * @param input The istream input.
-        */
-        void parse( istream& input );
-
-    private:
-        void dealWithSupport();
-        void readAtomsTable( istream& input );
-        void readNormalRule( istream& input );
-        void readDisjunctiveRule( istream& input );
-        void readChoiceRule( istream& input );
-        void readConstraintRule( istream& input );
-
-        void readTrueAtoms( istream& input );
-        void readFalseAtoms( istream& input );
-
-        void readErrorNumber( istream& input );
-
-        void postprocessing();
-
-        void addNewVariable( unsigned int variable );
-        void addNewAuxVariable( unsigned int auxVariable );
-        bool existsAuxVariable( unsigned int auxVariable ) const;
-
-        Literal readBody( istream& input );
-        void readConstraint( istream& input );
-
-        inline unsigned int getIdInSolver( int id, bool isAux );
-        inline Literal getLiteral( int id );
-        inline Variable* getVariable( unsigned int id );
+        unsigned head;
+        vector< unsigned > negBody;
+        vector< unsigned > posBody;
+        vector< unsigned > posBodyTrue;
         
-        inline void addTrueLiteralInSolver( int id );
+        inline NormalRule( unsigned head_ ) : head( head_ ) {}
         
-        inline bool addLiteralInClause( Literal literal, Clause* clause );
+        inline bool isRemoved() const { return head == 0; }
+        inline void remove() { head = 0; }
         
-        void programIsNotTight();
+        inline bool isFact() const { return posBody.empty() && negBody.empty() && posBodyTrue.empty(); }
+        inline bool isFiring() const { return posBody.empty() && negBody.empty(); }
+        inline unsigned size() const { return negBody.size() + posBody.size() + posBodyTrue.size(); }
         
-        Solver& solver;
-        unsigned int numberOfAddedVariables;
-        unsigned int numberOfAddedAuxVariables;
+        inline void addNegativeLiteral( unsigned id ) { negBody.push_back( id ); }
+        inline void addPositiveLiteral( unsigned id ) { posBody.push_back( id ); }
+        inline void addPositiveTrueLiteral( unsigned id ) { posBodyTrue.push_back( id ); }
+    };
+    
+    class AtomData
+    {
+    public:
+        bool supported;
+        unsigned numberOfHeadOccurrences;
+        vector< NormalRule* > headOccurrences;
+        vector< NormalRule* > posOccurrences;
+        vector< NormalRule* > negOccurrences;
+        unsigned readNormalRule_negativeLiterals;
+        unsigned readNormalRule_positiveLiterals;
+        
+        inline AtomData( bool supported_ ) : supported( supported_ ), numberOfHeadOccurrences( 0 ), readNormalRule_negativeLiterals( 0 ), readNormalRule_positiveLiterals( 0 ) {}
+        
+        inline bool isSupported() const { return supported; }
+        inline void setSupported() { supported = true; }
+    };
+    
+private:
+    void readNormalRule( istream& input );
+    void readNormalRule( istream& input, unsigned head, int bodySize, int negativeSize );
+    void readConstraint( istream& input );
+    void skipLiterals( istream& input, unsigned howMany );
+    void readBodySize( istream& input, int& bodySize, int& negativeSize );
+    void addFact( unsigned head );
+//    void addNormalRule( unsigned head, Literal body );
+//    void addConstraint( Clause* body );
+//    Clause* readBody( istream& input, vector< Variable* >& truePositiveLiterals );
+//    Literal getBodyLiteral( Clause* body );
+    
+//    void addSupportClauses();
+    void processRecursivePositiveCrule( Clause* crule );
+    void processRecursiveNegativeCrule( Clause* crule );
+    void computeGusStructures();
+    void computeSCCs();
+    void computeCompletion();
+    void simplify();
+    
+    void readAtomsTable( istream& input );
 
-        vector< vector< Literal > > supportVector;
-        vector< vector< Literal > > supportVectorForAuxVariables;
-        unordered_set< Variable* > supportedVariables;
+    void readTrueAtoms( istream& input );
+    void readFalseAtoms( istream& input );
 
-        unordered_set< int > addedLiterals;
-        unordered_map< int, unsigned int > gringoIdToSolverId;        
-        Trie bodiesDictionary;
-        
-        bool ok;
+    void readErrorNumber( istream& input );
+    
+    void createStructures( unsigned id );
+    
+    void propagate();
+    void propagateTrue( Variable* var );
+    void propagateFalse( Variable* var );
+    void propagateFact( Variable* var );
+
+    
+//    Literal getLiteralForInputVar( unsigned int id, unsigned int sign );
+//    Literal getLiteralForAuxVar( unsigned int id, unsigned int sign );
+
+    Solver& solver;
+    
+//    Trie bodiesDictionary;
+    
+//    vector< unsigned int > inputVarId;
+//    vector< unsigned int > auxVarId;
+    
+    unsigned propagatedLiterals;
+    
+    void add( NormalRule* rule );
+    void removeAndCheckSupport( NormalRule* rule );
+    bool shrinkPos( NormalRule* rule, unsigned lit );
+    void shrinkNeg( NormalRule* rule, unsigned lit );
+    void onShrinking( NormalRule* rule );
+    
+    void createCrule( Literal head, NormalRule* rule );
+
+    vector< NormalRule* > normalRules;
+    vector< AtomData > atomData;
+    vector< Clause* > crules;
+    
+    unsigned readNormalRule_numberOfCalls;
+    vector< unsigned > atomsWithSupportInference;
+    vector< unsigned > facts;
+    unordered_map< Variable*, unordered_set< PostPropagator* > > literalsPostPropagator[ 2 ];
 };
 
 GringoNumericFormat::GringoNumericFormat(
-    Solver& s ) : solver( s ), numberOfAddedVariables( 0 ), numberOfAddedAuxVariables( 0 ), ok( true )
+    Solver& s ) : solver( s ), propagatedLiterals( 0 ), readNormalRule_numberOfCalls( 0 )
 {
-    //push an empty position
-    supportVector.push_back( vector< Literal >() );
-    supportVectorForAuxVariables.push_back( vector< Literal >() );
+    atomData.push_back( AtomData( false ) );
+    createStructures( 1 );
+    solver.addClause( Literal( solver.getVariable( 1 ), NEGATIVE ) );
 }
 
-unsigned int
-GringoNumericFormat::getIdInSolver(
-    int id,
-    bool isAux )
+GringoNumericFormat::~GringoNumericFormat()
 {
-    assert_msg( id > 0, "Id must be positive and greater than 0. Current value " << id );
-    assert_msg( gringoIdToSolverId.find( isAux ? -id : id ) != gringoIdToSolverId.end(), "Cannot obtain solver id of " << ( isAux ? "aux" : "normal" ) << " variable with internal id " << id );
-    return isAux ? gringoIdToSolverId[ -id ] : gringoIdToSolverId[ id ];
+    for( unsigned i = 0; i < normalRules.size(); ++i )
+        delete normalRules[ i ];
 }
 
-Literal
-GringoNumericFormat::getLiteral(
-    int id )
-{
-    assert_msg( id != 0, "Literal with id 0 is not used" );
-    return solver.getLiteral( id );
-}
-
-Variable*
-GringoNumericFormat::getVariable(
-    unsigned int id )
-{
-    assert_msg( id != 0, "Variable with id 0 is not used" );
-    return solver.getLiteral( id ).getVariable();
-}
-
-void
-GringoNumericFormat::addTrueLiteralInSolver(
-    int id )
-{
-    if( addedLiterals.insert( id ).second )
-    {
-        Clause* clause = solver.newClause();
-        clause->addLiteral( getLiteral( id ) );
-        solver.addClause( clause );
-        //solver.addTrueLiteral( getLiteral( id ) );
-    }
-}
-
-bool
-GringoNumericFormat::addLiteralInClause(
-    Literal literal,
-    Clause* clause )
-{
-    if( clause->contains( literal ) )
-        return true;
-    if( literal.isUndefined() )
-        clause->addLiteral( literal );
-    else if( literal.isTrue() )
-    {
-        solver.releaseClause( clause );
-        return false;
-    }
-    
-    return true;
-}
-
-#endif	/* _GRINGONUMERICFORMAT_H */
+#endif

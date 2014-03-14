@@ -105,7 +105,7 @@ class Learning
         unsigned int maxPosition;
 };
 
-Learning::Learning( Solver& s ) : solver( s ), decisionLevel( 0 ), learnedClause( NULL ), pendingVisitedVariables( 0 ), numberOfCalls( 0 ), maxDecisionLevel( 0 )
+Learning::Learning( Solver& s ) : solver( s ), decisionLevel( 0 ), learnedClause( NULL ), pendingVisitedVariables( 0 ), numberOfCalls( 0 ), maxDecisionLevel( 0 ), maxPosition( 0 )
 {
     // variable 0 is not used
 //    visitedVariables.push_back( 0 );

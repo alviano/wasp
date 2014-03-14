@@ -107,3 +107,19 @@ Clause::isSatisfied() const
     return false;
 }
 
+void
+Clause::printDimacs() const
+{
+    for( unsigned i = 0; i < literals.size(); i++ )
+        cout << ( literals[ i ].isPositive() ? "" : "-" ) << literals[ i ].getVariable()->getId() << " ";
+    cout << "0" << endl;
+}
+
+bool
+Clause::allUndefined() const
+{
+    for( unsigned i = 0; i < size(); ++i )
+        if( !getAt( i ).isUndefined() )
+            return false;
+    return true;
+}

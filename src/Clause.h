@@ -46,13 +46,14 @@ class Clause
 
     public:        
         virtual ~Clause();
-        inline Clause();
+        inline Clause( unsigned reserve = 8 );
 
         inline Literal getAt( unsigned idx ) const { assert( idx < literals.size() ); return literals[ idx ]; }
         inline void flipLiteralAt( unsigned idx ) { assert( idx < literals.size() ); literals[ idx ] = literals[ idx ].getOppositeLiteral(); }
         inline void markAsDeleted() { literals[ 0 ] = Literal::null; }
         inline bool hasBeenDeleted() const { assert( !literals.empty() ); return literals[ 0 ] == Literal::null; }
         inline void addLiteral( Literal literal );
+        inline bool addUndefinedLiteral( Literal literal );
 
         inline bool contains( Literal literal );
         inline bool containsAnyComplementOf( Clause* clause );
@@ -61,9 +62,9 @@ class Clause
         inline void attachClause( unsigned int firstWatch, unsigned int secondWatch );
         inline void attachClauseToAllLiterals();
         inline void detachClause();
-        inline void detachClauseToAllLiterals( Literal literal );        
+        inline void detachClauseFromAllLiterals();        
+        inline void detachClauseFromAllLiterals( Literal literal );        
         inline void removeLiteral( Literal literal );
-        inline void removeLiteralInLastPosition( bool currentLiteral );
         inline void removeLastLiteralNoWatches(){ literals.pop_back(); }
         
         inline void onLearning( Learning* strategy );
@@ -101,7 +102,9 @@ class Clause
         inline bool isLearned() const { return clauseData.learned == 1; }
         
         inline bool removeSatisfiedLiterals();
+        inline void removeDuplicates();
         inline bool removeDuplicatesAndCheckIfTautological();
+        inline bool removeDuplicatesAndFalseAndCheckIfTautological();
         
         inline void free();
         inline SubsumptionData subsumes( Clause& other );        
@@ -113,6 +116,12 @@ class Clause
         inline void copyLiterals( const Clause& c );
         
         inline void swapLiterals( unsigned int pos1, unsigned int pos2 );
+        
+        inline void recomputeSignature();
+        
+        void printDimacs() const;
+        
+        bool allUndefined() const;
         
     protected:
         vector< Literal > literals;
@@ -131,12 +140,9 @@ class Clause
         
         inline void attachFirstWatch();
         inline void attachSecondWatch();        
-        inline void detachSecondWatch();
         
         inline bool updateWatch();
         void notifyImplication( Solver& solver );        
-        
-        inline void recomputeSignature();
         
         uint64_t signature;
 //        unsigned int positionInSolver;
@@ -152,9 +158,10 @@ class Clause
         } clauseData;
 };
 
-Clause::Clause(): lastSwapIndex( 1 ), signature( 0 ), act( 0.0 )
+Clause::Clause(
+    unsigned reserve) : lastSwapIndex( 1 ), signature( 0 ), act( 0.0 )
 {
-    literals.reserve( 8 );
+    literals.reserve( reserve );
     clauseData.inQueue = 0;
     clauseData.learned = 0;    
     //free();
@@ -174,6 +181,19 @@ Clause::addLiteral(
     signature |= literal.getVariable()->getSignature();
 }
 
+bool
+Clause::addUndefinedLiteral(
+    Literal literal )
+{
+    if( literal.isTrue() )
+        return false;
+    if( literal.isUndefined() )
+    {
+        addLiteral( literal );
+    }
+    return true;
+}
+
 void
 Clause::attachFirstWatch()
 {
@@ -186,13 +206,6 @@ Clause::attachSecondWatch()
 {
     assert( "Unary clause must be removed." && literals.size() > 1 );
     literals[ 1 ].addWatchedClause( this );
-}
-
-void
-Clause::detachSecondWatch()
-{
-    assert( "The watchToDetach points to a NULL literal." && literals[ 1 ].getVariable() != NULL );
-    literals[ 1 ].eraseWatchedClause( this );
 }
 
 void
@@ -245,15 +258,22 @@ Clause::detachClause()
 }
 
 void
-Clause::detachClauseToAllLiterals(
+Clause::detachClauseFromAllLiterals(
     Literal literal )
 {
     for( unsigned int i = 0; i < literals.size(); ++i )
     {
-        if( literals[ i ] == literal )
-            literals[ i ].eraseClause( this );
-        else
+        if( literals[ i ] != literal )
             literals[ i ].findAndEraseClause( this );
+    }    
+}
+
+void
+Clause::detachClauseFromAllLiterals()
+{
+    for( unsigned int i = 0; i < literals.size(); ++i )
+    {
+        literals[ i ].findAndEraseClause( this );
     }    
 }
 
@@ -267,7 +287,7 @@ Clause::onRemovingNoDelete(
             literals[ i ].findAndEraseClause( this );
     }
     
-    assert( literals.size() > 0 );
+    assert( !literals.empty() );
     literals.push_back( getAt( 0 ) );
     markAsDeleted();
 }
@@ -287,22 +307,9 @@ Clause::removeLiteral(
         }
     }
 
-    literal.eraseClause( this );
     assert( literals.back() == literal || literals.back() == literals[ i ] );
     literals.pop_back();
     
-    recomputeSignature();
-}
-
-void
-Clause::removeLiteralInLastPosition(
-    bool currentLiteral )
-{
-    if( currentLiteral )
-        literals.back().eraseClause( this );
-    else
-        literals.back().findAndEraseClause( this );
-    literals.pop_back();
     recomputeSignature();
 }
 
@@ -358,7 +365,8 @@ Clause::onLearning(
     assert( "LearningStrategy is not initialized." && strategy != NULL );
 
     //Navigating all literals in the clause.
-    assert_msg( literals[ 0 ].getDecisionLevel() != 0, "Literal " << literals[ 0 ] << " is in position 0 and it has been inferred at level 0. Clause: " << *this );
+    assert_msg( literals[ 0 ].getDecisionLevel() != 0, "Literal " << literals[ 0 ] << " is in position 0 and it has been inferred " << ( literals[ 0 ].isTrue() ? "TRUE" : "FALSE" ) << " at level 0. Clause: " << *this );
+    
     strategy->onNavigatingLiteral( literals[ 0 ] );
 
     assert_msg( literals[ 1 ].getDecisionLevel() != 0, "Literal " << literals[ 1 ] << " is in position 1 and it has been inferred at level 0. Clause: " << *this );
@@ -460,9 +468,6 @@ Clause::updateWatch()
     {
         if( !literals[ i ].isFalse() )
         {
-            //Detach the old watch
-            detachSecondWatch();
-
             lastSwapIndex = i;
             //Swap the two literals
             swapLiterals( 1, lastSwapIndex );
@@ -475,12 +480,9 @@ Clause::updateWatch()
     
     for( unsigned i = 2; i <= lastSwapIndex; ++i )
     {
-		assert( i < literals.size() );
+        assert( i < literals.size() );
         if( !literals[ i ].isFalse() )
         {
-            //Detach the old watch
-            detachSecondWatch();
-
             lastSwapIndex = i;
             //Swap the two literals
             swapLiterals( 1, lastSwapIndex );
@@ -545,13 +547,14 @@ Variable*
 Clause::getVariableWithMinOccurrences()
 {
     assert( literals.size() > 1 );
+    assert( !hasBeenDeleted() );
     Variable* minVariable = literals[ 0 ].getVariable();
-    assert( minVariable->numberOfOccurrences() > 0 );
+    assert_msg( minVariable->numberOfOccurrences() > 0, "Variable " << *minVariable << " does not know to occur in " << *this );
 
     unsigned int i = 1;
     do
     {
-        assert( literals[ i ].getVariable()->numberOfOccurrences() > 0 );
+        assert_msg( literals[ i ].getVariable()->numberOfOccurrences() > 0, "Variable " << *literals[ i ].getVariable() << " does not know to occur in " << *this );
         if( literals[ i ].getVariable()->numberOfOccurrences() < minVariable->numberOfOccurrences() )
         {
             minVariable = literals[ i ].getVariable();
@@ -635,6 +638,30 @@ Clause::containsAnyComplementOf(
 
 inline bool literalComparator( Literal l1, Literal l2 ){ return l1.getVariable()->getId() < l2.getVariable()->getId(); }
 
+void
+Clause::removeDuplicates()
+{
+    sort( literals.begin(), literals.end(), literalComparator );
+    
+    Literal previousLiteral = literals[ 0 ];
+    
+    unsigned int i = 1;
+    unsigned int j = 1;
+    while( i < literals.size() )
+    {
+        if( previousLiteral != literals[ i ] )
+            previousLiteral = literals[ j++ ] = literals[ i++ ];
+        else
+            ++i;
+    }
+
+    if( i != j )
+    {
+        literals.resize( j );
+        recomputeSignature();
+    }
+}
+
 bool
 Clause::removeDuplicatesAndCheckIfTautological()
 {
@@ -656,20 +683,58 @@ Clause::removeDuplicatesAndCheckIfTautological()
 			}
 			else
 			{
-                literals[ j ] = literals[ i ];
-         	   	++j;
-				previousLiteral = literals[ i ];
+               previousLiteral = literals[ j++ ] = literals[ i ];
 			}
         }
         
         ++i;
     }
 
-	literals.resize( j );
+    if( i != j )
+    {
+        literals.resize( j );
+        recomputeSignature();
+    }
+
+    return false;
+}
+
+bool
+Clause::removeDuplicatesAndFalseAndCheckIfTautological()
+{
+    sort( literals.begin(), literals.end(), literalComparator ); 
+    
+    Literal previousLiteral = Literal::null;
+    
+    unsigned int i = 0;
+    unsigned int j = 0;
+    while( i < literals.size() )
+    {
+        if( literals[ i ].isTrue() )
+            return true;
+        if( !literals[ i ].isFalse() && previousLiteral != literals[ i ] )
+        {
+            //The same variable with two different polarities: clause is tautological
+            if( previousLiteral.getVariable() == literals[ i ].getVariable() )
+            {
+                //TAUTOLOGICAL
+	            return true;
+			}
+			else
+			{
+              previousLiteral = literals[ j++ ] = literals[ i ];
+			}
+        }
+        
+        ++i;
+    }
     
     if( i != j )
+    {
+        literals.resize( j );
         recomputeSignature();
-
+    }
+    
     return false;
 }
 

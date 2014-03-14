@@ -36,6 +36,7 @@ class Literal
 
     public:
         static const Literal null;
+        static const Literal conflict;
 
         static inline Literal createFromAssignedVariable( Variable* );
         static inline Literal createOppositeFromAssignedVariable( Variable* );
@@ -44,6 +45,8 @@ class Literal
         
         inline Literal( const Literal& );
         inline ~Literal();
+
+        inline int getId() const { return isPositive() ? getVariable()->getId() : -getVariable()->getId(); }
 
         inline bool isTrue() const;
         inline bool isFalse() const;
@@ -55,11 +58,9 @@ class Literal
         inline bool operator!=( const Literal& ) const;
 
 		inline void addWatchedClause( Clause* clause );
-        inline void eraseWatchedClause( Clause* clause );
         inline void findAndEraseWatchedClause( Clause* clauses );
 
         inline void addClause( Clause* clause );
-        inline void eraseClause( Clause* clause );
         inline void findAndEraseClause( Clause* clauses );   
         
         inline void addPostPropagator( PostPropagator* p );
@@ -85,13 +86,12 @@ class Literal
         
         inline Literal getOppositeLiteral();
         
-        inline void startIterationOverOccurrences();
-        inline bool hasNextOccurrence();
-        inline Clause* nextOccurence();
-
         inline Clause* getOccurrence( unsigned int idx ) { return getVariable()->getOccurrence( idx, getSign() ); }
         
         inline bool isPositive() const;
+        inline bool isNegative() const { return !isPositive(); }
+        
+        inline void checkSubsumptionForClause( Solver& solver, Clause* clause ) { getVariable()->checkSubsumptionForClause( solver, clause, getSign() ); }
 
 	private:
         
@@ -236,14 +236,6 @@ Literal::onLearning(
     getVariable()->onLearning( strategy );
 }
 
-void
-Literal::onAging( 
-    unsigned int value )
-{
-    assert( "Variable has not been set." && getVariable() != NULL );
-    getVariable()->onAging( value, getSign() );
-}
-
 Literal
 Literal::getOppositeLiteral()
 {
@@ -273,14 +265,6 @@ Literal::addWatchedClause(
 }
 
 void
-Literal::eraseWatchedClause(
-    Clause* clause )
-{
-    assert( "Variable has not been set." && getVariable() != NULL );
-    getVariable()->eraseWatchedClause( clause, getSign() );
-}
-
-void
 Literal::findAndEraseWatchedClause(
     Clause* clause )
 {
@@ -297,14 +281,6 @@ Literal::addClause(
 }
 
 void
-Literal::eraseClause(
-    Clause* clause )
-{
-    assert( "Variable has not been set." && getVariable() != NULL );
-    getVariable()->eraseClause( clause, getSign() );
-}
-
-void
 Literal::addPostPropagator(
     PostPropagator* p )
 {
@@ -318,24 +294,6 @@ Literal::findAndEraseClause(
 {
     assert( "Variable has not been set." && getVariable() != NULL );
     getVariable()->findAndEraseClause( clause, getSign() );
-}
-
-void
-Literal::startIterationOverOccurrences()
-{
-    getVariable()->startIterationOverOccurrences( getSign() );
-}
-
-bool
-Literal::hasNextOccurrence()
-{
-    return getVariable()->hasNextOccurrence( getSign() );
-}
-
-Clause*
-Literal::nextOccurence()
-{
-    return getVariable()->nextOccurence( getSign() );
 }
 
 #endif	/* LITERAL_H */

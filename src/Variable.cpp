@@ -23,6 +23,7 @@
 #include "Clause.h"
 #include "Literal.h"
 #include "util/VariableNames.h"
+#include "Solver.h"
 
 ostream& operator<<( 
     ostream& out,
@@ -50,10 +51,10 @@ Variable::~Variable()
     if( signOfEliminatedVariable == ELIMINATED_BY_DISTRIBUTION )
     {
         for( unsigned int i = 0; i < numberOfOccurrences( POSITIVE ); i++ )
-            delete getOccurrence( i, POSITIVE );
+            delete allOccurrences[ POSITIVE ][ i ];
         
         for( unsigned int i = 0; i < numberOfOccurrences( NEGATIVE ); i++ )
-            delete getOccurrence( i, NEGATIVE );
+            delete allOccurrences[ NEGATIVE ][ i ];
     }
 }
 
@@ -82,4 +83,308 @@ Variable::onLearningForUnfounded(
 {
     assert( component != NULL );
     component->onLearningForUnfounded( id, learning );
+}
+
+void
+Variable::unitPropagation(
+    Solver& solver )
+{
+    assert( !solver.conflictDetected() );
+    assert_msg( !this->isUndefined(), "Propagating variable " << *this << ", the truth value is Undefined." );
+
+    assert( FALSE == 1 && TRUE == 2 );
+
+    #ifndef NDEBUG
+    unsigned int sign = ( getTruthValue() >> 1 );
+    assert( sign <= 1 );
+    assert( getTruthValue() == TRUE ? sign == NEGATIVE : sign == POSITIVE );
+    #endif
+    
+    WatchedList< Clause* >& wl = watchedLists[ ( getTruthValue() >> 1 ) ];
+
+    Literal complement = Literal::createOppositeFromAssignedVariable( this );
+
+    unsigned j = 0;
+    for( unsigned i = 0; i < wl.size(); ++i )
+    {
+        Clause* clause = wl[ j ] = wl[ i ];
+        assert( "Next clause to propagate is null." && clause != NULL );
+        trace( solving, 5, "Considering clause %s.\n", toString( *clause ).c_str() );
+        if( clause->onLiteralFalse( complement ) )
+        {
+            solver.assignLiteral( clause );
+            if( solver.conflictDetected() )
+            {
+                while( i < wl.size() )
+                    wl[ j++ ] = wl[ i++ ];
+                break;
+            }
+            ++j;
+        }
+        else if( clause->getAt( 1 ) == complement )
+        {
+            assert( !solver.conflictDetected() );
+            ++j;
+        }
+        else
+            assert( !solver.conflictDetected() );
+    }
+    wl.shrink( j );
+}
+
+void
+Variable::postPropagation(
+    Solver& solver )
+{
+    assert( !solver.conflictDetected() );
+    assert_msg( !this->isUndefined(), "Propagating variable " << *this << ", the truth value is Undefined." );
+
+    assert( FALSE == 1 && TRUE == 2 );
+
+    #ifndef NDEBUG
+    unsigned int sign = ( getTruthValue() >> 1 );
+    assert( sign <= 1 );
+    assert( getTruthValue() == TRUE ? sign == NEGATIVE : sign == POSITIVE );
+    #endif
+    
+    Vector< PostPropagator* >& wl = postPropagators[ ( getTruthValue() >> 1 ) ];
+
+    Literal complement = Literal::createOppositeFromAssignedVariable( this );    
+    
+    for( unsigned i = 0; i < wl.size(); ++i )
+    {
+        PostPropagator* postPropagator =  wl[ i ];
+        assert( "Post propagator is null." && postPropagator != NULL );
+        bool res = postPropagator->onLiteralFalse( complement );
+        
+        if( res )
+            solver.addPostPropagator( postPropagator );
+    }
+}
+
+void
+Variable::propagateAtLevelZero(
+    Solver& solver )
+{
+    assert( !solver.conflictDetected() );
+    assert_msg( !this->isUndefined(), "Propagating variable " << *this << ", the truth value is Undefined." );
+
+    assert( FALSE == 1 && TRUE == 2 );
+
+    #ifndef NDEBUG
+    unsigned int sign = ( getTruthValue() >> 1 );
+    assert( sign <= 1 );
+    assert( getTruthValue() == TRUE ? sign == NEGATIVE : sign == POSITIVE );
+    #endif
+    
+    {
+        trace_msg( solving, 2, "Propagating " << Literal::createFromAssignedVariable( this ) << " as true at level 0" );
+        Vector< Clause* >& wl = allOccurrences[ 1 - ( getTruthValue() >> 1 ) ];
+        Literal literal = Literal::createFromAssignedVariable( this );
+        
+        for( unsigned i = 0; i < wl.size(); ++i )
+        {
+            Clause* clause = wl[ i ];
+            trace_msg( solving, 5, "Considering clause " << *clause );
+            clause->detachClauseFromAllLiterals( literal );
+            solver.deleteClause( clause );
+        }
+        wl.clearAndDelete();
+    }
+    
+    {
+        assert( !solver.conflictDetected() );
+        trace_msg( solving, 2, "Propagating " << Literal::createOppositeFromAssignedVariable( this ) << " as false at level 0" );
+        Vector< Clause* >& wl = allOccurrences[ ( getTruthValue() >> 1 ) ];
+        Literal complement = Literal::createOppositeFromAssignedVariable( this );
+        
+        for( unsigned i = 0; i < wl.size(); ++i )
+        {
+            Clause* clause = wl[ i ];
+            assert( "Next clause to propagate is null." && clause != NULL );
+            trace( solving, 5, "Considering clause %s.\n", toString( *clause ).c_str() );
+            clause->removeLiteral( complement );
+            if( clause->size() == 1 )
+            {
+                if( !clause->getAt( 0 ).isTrue() )
+                {
+                    trace_msg( solving, 5, "Assigning literal " << clause->getAt( 0 ) << " as true" );
+                    solver.assignLiteral( clause->getAt( 0 ) );
+                    if( solver.conflictDetected() )
+                        break;
+                }
+                clause->detachClauseFromAllLiterals();
+                solver.deleteClause( clause );
+                
+            }
+            else
+                assert( !solver.conflictDetected() );
+        }
+        wl.clearAndDelete();
+    }
+
+    assert( allOccurrences[ POSITIVE ].size() == 0 );
+    assert( allOccurrences[ NEGATIVE ].size() == 0 );
+}
+
+void
+Variable::propagateAtLevelZeroSatelite(
+    Solver& solver )
+{
+    assert( !solver.conflictDetected() );
+    assert( FALSE == 1 && TRUE == 2 );
+
+    #ifndef NDEBUG
+    unsigned int sign = ( getTruthValue() >> 1 );
+    assert( sign <= 1 );
+    assert( getTruthValue() == TRUE ? sign == NEGATIVE : sign == POSITIVE );
+    #endif    
+    
+    {
+        Vector< Clause* >& wl = allOccurrences[ 1 - ( getTruthValue() >> 1 ) ];
+        Literal literal = Literal::createFromAssignedVariable( this );
+        
+        for( unsigned i = 0; i < wl.size(); ++i )
+        {
+            Clause* clause = wl[ i ];
+            assert( !clause->hasBeenDeleted() );
+            trace_msg( solving, 5, "Considering clause " << *clause );
+            clause->detachClauseFromAllLiterals( literal );
+            solver.markClauseForDeletion( clause );
+        }
+        wl.clearAndDelete();
+    }
+    
+    {
+        assert( !solver.conflictDetected() );
+        trace_msg( solving, 2, "Propagating " << Literal::createOppositeFromAssignedVariable( this ) << " as false at level 0" );
+        Vector< Clause* >& wl = allOccurrences[ ( getTruthValue() >> 1 ) ];
+        Literal complement = Literal::createOppositeFromAssignedVariable( this );
+        
+        for( unsigned i = 0; i < wl.size(); ++i )
+        {
+            Clause* clause = wl[ i ];
+            assert( "Next clause to propagate is null." && clause != NULL );
+            trace( solving, 5, "Considering clause %s.\n", toString( *clause ).c_str() );
+            clause->removeLiteral( complement );
+            if( clause->size() == 1 )
+            {
+                if( !clause->getAt( 0 ).isTrue() )
+                {
+                    trace_msg( solving, 5, "Assigning literal " << clause->getAt( 0 ) << " as true" );
+                    solver.assignLiteral( clause->getAt( 0 ) );
+                }
+                clause->detachClauseFromAllLiterals();
+                solver.markClauseForDeletion( clause );
+            }
+            else
+            {
+                solver.onStrengtheningClause( clause );
+                assert( !solver.conflictDetected() );
+            }
+        }
+        wl.clearAndDelete();
+    }
+}
+
+void 
+Variable::removeAllClauses(
+    Solver& solver )
+{
+    for( unsigned i = 0; i < allOccurrences[ POSITIVE ].size(); ++i )
+    {
+        Clause* clause = allOccurrences[ POSITIVE ][ i ];
+        solver.removeClauseNoDeletion( clause );
+        clause->onRemovingNoDelete( Literal( this, POSITIVE ) );
+    }
+    allOccurrences[ POSITIVE ].clearAndDelete();
+
+    for( unsigned i = 0; i < allOccurrences[ NEGATIVE ].size(); ++i )
+    {
+        Clause* clause = allOccurrences[ NEGATIVE ][ i ];
+        solver.removeClauseNoDeletion( clause );
+        clause->onRemovingNoDelete( Literal( this, NEGATIVE ) );
+    }
+    allOccurrences[ NEGATIVE ].clearAndDelete();
+}
+
+void 
+Variable::markAllClauses(
+    Solver& solver )
+{
+    for( unsigned i = 0; i < allOccurrences[ POSITIVE ].size(); ++i )
+    {
+        Clause* clause = allOccurrences[ POSITIVE ][ i ];
+        clause->detachClauseFromAllLiterals( Literal( this, POSITIVE ) );
+        solver.markClauseForDeletion( clause );
+    }
+    allOccurrences[ POSITIVE ].clearAndDelete();
+
+    for( unsigned i = 0; i < allOccurrences[ NEGATIVE ].size(); ++i )
+    {
+        Clause* clause = allOccurrences[ NEGATIVE ][ i ];
+        clause->detachClauseFromAllLiterals( Literal( this, NEGATIVE ) );
+        solver.markClauseForDeletion( clause );
+    }
+    allOccurrences[ NEGATIVE ].clearAndDelete();
+}
+
+void
+Variable::checkSubsumptionForClause(
+    Solver& solver,
+    Clause* clause,
+    unsigned sign )
+{
+    Vector< Clause* >& wl = allOccurrences[ sign ];
+    unsigned j = 0;
+    for( unsigned i = 0; i < wl.size(); ++i )
+    {
+        Clause* current = wl[ j ] = wl[ i ];
+        assert( !current->hasBeenDeleted() );
+        trace_msg( satelite, 2, "Considering clause " << *current );
+        if( clause != current && current->size() < solver.getSatelite()->getSubsumptionLimit() )
+        {
+            SubsumptionData data = clause->subsumes( *current );
+            if( data == SUBSUMPTION )
+            {
+                trace_msg( satelite, 1, "Clause " << *clause << " subsumes clause " << *current );
+                current->detachClauseFromAllLiterals( Literal( this, sign ) );
+                solver.markClauseForDeletion( current );
+            }
+            else if( data == SELFSUBSUMPTION )
+            {
+                if( current->getAt( current->size() - 1 ) != Literal( this, sign ) )
+                {
+                    if( current->size() > 2 )
+                        ++j;
+                    else
+                        assert( current->getAt( 0 ) == Literal( this, sign ) );
+                    current->getAt( current->size() -  1 ).findAndEraseClause( current );
+                }
+                current->removeLastLiteralNoWatches();
+                if( current->size() == 1 )
+                {
+                    solver.getSatelite()->addTrueLiteral( current->getAt( 0 ) );
+                    if( current->getAt( 0 ) != Literal( this, sign ) )
+                        current->detachClauseFromAllLiterals();
+                    solver.markClauseForDeletion( current );
+                }
+                else
+                {
+                    current->recomputeSignature();
+                    solver.onStrengtheningClause( current );
+                    trace_msg( satelite, 2, "Clause after removing literal is: " << *current );
+                }
+            }
+            else
+            {
+                ++j;
+            }
+        }
+        else
+        {
+            ++j;
+        }
+    }    
+    wl.shrink( j );
 }

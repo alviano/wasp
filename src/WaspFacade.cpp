@@ -20,6 +20,8 @@
 
 #include "Restart.h"
 
+#include "input/GringoNumericFormat.h"
+
 #include "outputBuilders/WaspOutputBuilder.h"
 #include "outputBuilders/SilentOutputBuilder.h"
 #include "outputBuilders/ThirdCompetitionOutputBuilder.h"
@@ -27,20 +29,38 @@
 #include "outputBuilders/DimacsOutputBuilder.h"
 
 #include "MinisatHeuristic.h"
-#include "input/InputFacade.h"
 
 void
 WaspFacade::readInput()
 {
-    InputFacade inputFacade( solver );
-    inputFacade.parse();
-    
-    if( inputFacade.isInstanceOfSAT() )
-        solver.setOutputBuilder( new DimacsOutputBuilder() );
-    else if( !inputFacade.isInstanceOfASP() )
-        ErrorMessage::errorDuringParsing( "Error while reading input file." );    
-//    else    
-//        solver.setOutputBuilder( new WaspOutputBuilder() );
+    char tmp;
+    cin >> tmp;
+
+    if( !cin.good() && !cin.eof() )
+    {   
+        ErrorMessage::errorDuringParsing( "Unexpected symbol." );
+    }    
+
+    cin.putback( tmp );
+    switch ( tmp )
+    {
+        case COMMENT_DIMACS:
+        case FORMULA_INFO_DIMACS:
+        {
+            Dimacs dimacs( solver );
+            dimacs.parse();
+            solver.setOutputBuilder( new DimacsOutputBuilder() );
+            break;
+        }
+
+        default:
+        {
+            GringoNumericFormat gringo( solver );
+            gringo.parse( cin );
+//            solver.setOutputBuilder( new WaspOutputBuilder() );
+            break;
+        }
+    }
 }
 
 void
@@ -56,6 +76,11 @@ WaspFacade::solve()
     
     if( solver.preprocessing() )
     {
+        if( printDimacs )
+        {
+            solver.printDimacs();
+            return;
+        }
         while( solveInternal() )
         {
             solver.printAnswerSet();
@@ -83,7 +108,7 @@ WaspFacade::solve()
 void
 WaspFacade::setDeletionPolicy(
     DELETION_POLICY deletionPolicy,
-    unsigned int deletionThreshold )
+    unsigned int /*deletionThreshold*/ )
 {
     switch( deletionPolicy )
     {
@@ -109,7 +134,7 @@ WaspFacade::setDeletionPolicy(
 void
 WaspFacade::setDecisionPolicy(
     DECISION_POLICY decisionPolicy,
-    unsigned int threshold )
+    unsigned int /*threshold*/ )
 {
     switch( decisionPolicy )
     {

@@ -52,6 +52,8 @@ class Variables
         inline unsigned numberOfAssignedLiterals() const { return assignedVariablesSize; }
         inline unsigned numberOfVariables() const { assert( variables[ 0 ] == NULL ); return variables.size() - 1; }
         
+        inline Variable* getAssignedVariable( unsigned idx ) { assert( idx < assignedVariables.size() ); return assignedVariables[ idx ]; }
+        
         inline Variable* getFirstUndefined();
         inline Variable* getNextUndefined( Variable* v );
         
@@ -172,7 +174,7 @@ Variables::hasNextAssignedVariable() const
 void
 Variables::startIterationOnAssignedVariable()
 {
-    assert( assignedVariablesSize >= 0 );
+    assert( assignedVariablesSize > 0 );
     iteratorOnAssignedVariables = assignedVariablesSize - 1;
 }
 

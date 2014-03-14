@@ -527,24 +527,7 @@ Satelite::tryToEliminateByDistribution(
         }
     }
 
-    // DONE: substitute
-    Literal positiveLiteral( variable, POSITIVE );
-    positiveLiteral.startIterationOverOccurrences();
-    while( positiveLiteral.hasNextOccurrence() )
-    {
-        Clause* clause = positiveLiteral.nextOccurence();
-        solver.removeClauseNoDeletion( clause );
-        clause->onRemovingNoDelete( positiveLiteral );        
-    }
-    
-    Literal negativeLiteral( variable, NEGATIVE );
-    negativeLiteral.startIterationOverOccurrences();
-    while( negativeLiteral.hasNextOccurrence() )
-    {
-        Clause* clause = negativeLiteral.nextOccurence();
-        solver.removeClauseNoDeletion( clause );        
-        clause->onRemovingNoDelete( negativeLiteral );
-    }
+    variable->removeAllClauses( solver );
     
     for( unsigned int i = 0; i < newClauses.size(); i++ )
     {
@@ -566,24 +549,7 @@ Satelite::substitute(
     Variable* variable,
     vector< Clause* >& newClauses )
 {
-    // DONE: substitute
-    Literal positiveLiteral( variable, POSITIVE );
-    positiveLiteral.startIterationOverOccurrences();
-    while( positiveLiteral.hasNextOccurrence() )
-    {
-        Clause* clause = positiveLiteral.nextOccurence();
-        clause->detachClauseToAllLiterals( positiveLiteral );
-        solver.markClauseForDeletion( clause );
-    }
-    
-    Literal negativeLiteral( variable, NEGATIVE );
-    negativeLiteral.startIterationOverOccurrences();
-    while( negativeLiteral.hasNextOccurrence() )
-    {
-        Clause* clause = negativeLiteral.nextOccurence();
-        clause->detachClauseToAllLiterals( negativeLiteral );
-        solver.markClauseForDeletion( clause );
-    }
+    variable->markAllClauses( solver );
     
     for( unsigned int i = 0; i < newClauses.size(); i++ )
     {
@@ -627,7 +593,7 @@ Satelite::simplificationsMinisat2()
 bool
 Satelite::backwardSubsumptionCheck()
 {
-    while( subsumptionQueue.size() > 0 )
+    while( !subsumptionQueue.empty() )
     {
         Clause* clause = subsumptionQueue.front();
         clause->resetInQueue();
@@ -691,38 +657,5 @@ Satelite::checkSubsumptionForClause(
     Clause* clause,
     Literal bestLiteral )
 {
-    bestLiteral.startIterationOverOccurrences();
-
-    while( bestLiteral.hasNextOccurrence() )
-    {
-        Clause* current = bestLiteral.nextOccurence();            
-        assert( !current->hasBeenDeleted() );
-        trace_msg( satelite, 2, "Considering clause " << *current );
-        if( clause != current && current->size() < subsumptionLimit )
-        {
-            SubsumptionData data = clause->subsumes( *current );
-            if( data == SUBSUMPTION )
-            {
-                trace_msg( satelite, 1, "Clause " << *clause << " subsumes clause " << *current );
-                current->detachClauseToAllLiterals( bestLiteral );
-                solver.markClauseForDeletion( current );
-            }
-            else if( data == SELFSUBSUMPTION )
-            {
-                bool isCurrentLiteral = current->getAt( current->size() - 1 ) == bestLiteral;
-                current->removeLiteralInLastPosition( isCurrentLiteral );
-                if( current->size() == 1 )
-                {
-                    trueLiterals.push_back( current->getAt( 0 ) );
-                    current->detachClauseToAllLiterals( Literal::null );
-                    solver.markClauseForDeletion( current );
-                }
-                else
-                {
-                    this->onStrengtheningClause( current );
-                    trace_msg( satelite, 2, "Clause after removing literal is: " << *current );
-                }
-            }
-        }
-    }
+    bestLiteral.checkSubsumptionForClause( solver, clause );
 }

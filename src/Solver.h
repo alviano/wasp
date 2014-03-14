@@ -17,7 +17,7 @@
  */
 
 #ifndef SOLVER_H
-#define	SOLVER_H
+#define SOLVER_H
 
 #include <cassert>
 #include <vector>
@@ -64,6 +64,8 @@ class Solver
         inline void addVariable( const string& name );
         inline void addVariable();        
         
+        inline bool cleanAndAddClause( Clause* clause );
+        inline bool addClause( Literal literal );
         inline bool addClause( Clause* clause );
         inline bool addClauseFromModel( Clause* clause );
         inline void addLearnedClause( Clause* learnedClause );
@@ -92,15 +94,16 @@ class Solver
         inline void onLearningUnaryClause( Literal literalToPropagate, Clause* learnedClause );        
         inline void doRestart();        
         
-        inline unsigned int numberOfClauses();
-        inline unsigned int numberOfLearnedClauses();        
-        inline unsigned int numberOfAssignedLiterals();
-        inline unsigned int numberOfVariables();
-        inline unsigned int numberOfAuxVariables();
+        inline unsigned int numberOfClauses() const { return clauses.size(); }
+        inline unsigned int numberOfLearnedClauses() const;         
+        inline unsigned int numberOfAssignedLiterals() const;
+        inline unsigned int numberOfVariables() const;
+        inline unsigned int numberOfAuxVariables() const;
+        
+        inline Variable* getAssignedVariable( unsigned idx ) { return variables.getAssignedVariable( idx ); }
         
         inline void setAChoice( Literal choice );        
         
-        inline void foundEmptyClause(){ conflictAtLevelZero = true; }
         inline bool analyzeConflict();
         inline void clearConflictStatus();
         inline void chooseLiteral();
@@ -123,7 +126,6 @@ class Solver
         typedef vector< Clause* >::const_iterator ConstClauseIterator;
         typedef vector< Clause* >::const_reverse_iterator ConstClauseReverseIterator;
         
-        inline unsigned int numberOfClauses() const { return clauses.size(); }
         inline Clause* clauseAt( unsigned int i ) { assert( i < numberOfClauses() ); return clauses[ i ]; }
         
         inline ClauseIterator clauses_begin() { return clauses.begin(); }
@@ -154,6 +156,7 @@ class Solver
         inline void markClauseForDeletion( Clause* clause ){ satelite->onDeletingClause( clause ); clause->markAsDeleted(); }
         
         void printProgram() const;
+        void printDimacs() const;
         
 //        inline void initClauseData( Clause* clause ) { assert( heuristic != NULL ); heuristic->initClauseData( clause ); }
 //        inline Heuristic* getHeuristic() { return heuristic; }
@@ -168,13 +171,13 @@ class Solver
         inline void onEliminatingVariable( Variable* variable, unsigned int sign, Clause* definition );
         inline void completeModel();
         
-        inline Clause* newClause();
+        inline Clause* newClause( unsigned reserve = 8 );
         inline void releaseClause( Clause* clause );
         
         inline void addPostPropagator( PostPropagator* postPropagator );
         inline void resetPostPropagators();
         
-        inline void addEdgeInDependencyGraph( unsigned int v1, unsigned int v2 ){ dependencyGraph.addEdge( v1, v2 ); }
+        inline void addEdgeInDependencyGraph( unsigned int v1, unsigned int v2 ){ trace_msg( parser, 10, "Add arc " << v1 << " -> " << v2 ); dependencyGraph.addEdge( v1, v2 ); }
         inline void computeStrongConnectedComponents(){ dependencyGraph.computeStrongConnectedComponents( gusDataVector ); }
         inline bool tight() const { return dependencyGraph.tight(); }
         inline unsigned int getNumberOfCyclicComponents(){ return dependencyGraph.numberOfCyclicComponents(); }
@@ -182,8 +185,14 @@ class Solver
         
         inline void addGUSData( GUSData* gd ) { gusDataVector.push_back( gd ); }        
         
+        inline void onStrengtheningClause( Clause* clause ) { satelite->onStrengtheningClause( clause ); }
+        
+        inline Satelite* getSatelite() { return satelite; }
+        
     private:
         inline Variable* addVariableInternal();
+        
+        bool checkVariablesState() const;
         
         Solver( const Solver& ) : learning( *this )
         {
@@ -208,7 +217,6 @@ class Solver
         Restart* restart;
         Satelite* satelite;
         
-        bool conflictAtLevelZero;
         unsigned int getNumberOfUndefined() const;
         bool allClausesSatisfied() const;
         
@@ -262,7 +270,6 @@ Solver::Solver()
     learning( *this ),
     outputBuilder( NULL ),
     restart( NULL ),
-    conflictAtLevelZero( false ),
     assignedVariablesAtLevelZero( MAXUNSIGNEDINT ),
     nextValueOfPropagation( 0 ),
     literalsInClauses( 0 ),
@@ -354,15 +361,50 @@ Solver::assignLiteral(
 }
 
 bool
+Solver::cleanAndAddClause(
+    Clause* clause )
+{
+    assert( clause != NULL );
+    
+    if( clause->removeDuplicatesAndFalseAndCheckIfTautological() )
+    {
+        releaseClause( clause );
+        return true;
+    }
+    
+    if( clause->size() == 0 )
+    {
+        conflictLiteral = Literal::conflict;
+        releaseClause( clause );
+        return false;
+    }
+    
+    assert( clause->allUndefined() );
+    return addClause( clause );
+}
+
+bool
+Solver::addClause(
+    Literal literal )
+{
+    if( literal.isTrue() || propagateLiteralAsDeterministicConsequence( literal ) )
+        return true;
+    
+    conflictLiteral = literal;
+    return false;
+}
+
+bool
 Solver::addClause(
     Clause* clause )
 {
     assert( clause != NULL );
+    assert( clause->allUndefined() );
+    
     unsigned int size = clause->size();    
     if( size > 1 )
     {
         statistics( onAddingClause( size ) );
-//        clause->attachClause();
         clause->attachClauseToAllLiterals();
         clause->setPositionInSolver( clauses.size() );
         clauses.push_back( clause );
@@ -371,22 +413,15 @@ Solver::addClause(
 
     if( size == 1 )
     {
-        Literal literal = clause->getAt( 0 );
-        if( !literal.isTrue() && !propagateLiteralAsDeterministicConsequence( literal ) )
-        {
-            conflictLiteral = literal;
-        }
-        else
+        if( addClause( clause->getAt( 0 ) ) )
         {
             releaseClause( clause );
-//            delete clause;
             return true;
         }
     }
 
-    conflictAtLevelZero = true;
+    conflictLiteral = Literal::conflict;
     releaseClause( clause );
-//    delete clause;
     return false;
 }
 
@@ -532,13 +567,7 @@ Solver::removeClauseNoDeletion(
 }
 
 unsigned int
-Solver::numberOfClauses()
-{
-    return clauses.size();
-}
-
-unsigned int
-Solver::numberOfLearnedClauses()
+Solver::numberOfLearnedClauses() const
 {
     return learnedClauses.size();
 }
@@ -587,6 +616,7 @@ Solver::analyzeConflict()
     {
         doRestart();
         assignLiteral( learnedClause->getAt( 0 ) );
+        assert( learnedClause->getAt( 0 ).isTrue() );
 //        delete learnedClause;
         releaseClause( learnedClause );
 
@@ -595,7 +625,9 @@ Solver::analyzeConflict()
         {
             nextValueOfPropagation--;            
             Variable* variableToPropagate = getNextVariableToPropagate();
-            propagateWithPropagators( variableToPropagate );
+            unitPropagation( variableToPropagate );
+            if( !tight() )
+                postPropagation( variableToPropagate );
 
             if( conflictDetected() )
                 return false;
@@ -651,13 +683,13 @@ Solver::clearConflictStatus()
 }
 
 unsigned int
-Solver::numberOfAssignedLiterals()
+Solver::numberOfAssignedLiterals() const
 {
     return variables.numberOfAssignedLiterals();
 }
 
 unsigned int
-Solver::numberOfVariables()
+Solver::numberOfVariables() const
 {
     return variables.numberOfVariables();
 }
@@ -754,14 +786,15 @@ Solver::attachWatches()
 bool
 Solver::preprocessing()
 {
-    if( conflictDetected() || conflictAtLevelZero )
+    if( conflictDetected() )
     {
         trace( solving, 1, "Conflict at level 0.\n" );
         return false;
     }    
 
     statistics( beforePreprocessing( numberOfVariables() - numberOfAssignedLiterals(), numberOfClauses() ) );
-    assert( satelite != NULL );        
+    assert( satelite != NULL );
+    assert( checkVariablesState() );
     if( !satelite->simplify() )
         return false;
 
@@ -831,10 +864,9 @@ Solver::completeModel()
             trace_msg( satelite, 5, "Eliminated by distribution " << *back );
             bool found = false;            
             Literal positiveLiteral( back, POSITIVE );
-            positiveLiteral.startIterationOverOccurrences();
-            while( positiveLiteral.hasNextOccurrence() )
+            for( unsigned j = 0; j < positiveLiteral.numberOfOccurrences(); ++j )
             {
-                Clause* clause = positiveLiteral.nextOccurence();
+                Clause* clause = positiveLiteral.getOccurrence( j );
                 assert( clause->hasBeenDeleted() );
                 if( !clause->isSatisfied() )
                 {
@@ -853,10 +885,9 @@ Solver::completeModel()
             if( !found )
             {
                 Literal negativeLiteral( back, NEGATIVE );
-                negativeLiteral.startIterationOverOccurrences();
-                while( negativeLiteral.hasNextOccurrence() )
+                for( unsigned j = 0; j < negativeLiteral.numberOfOccurrences(); ++j )
                 {
-                    Clause* clause = negativeLiteral.nextOccurence();                    
+                    Clause* clause = negativeLiteral.getOccurrence( j );                    
                     assert( clause->hasBeenDeleted() );
                     if( !clause->isSatisfied() )                        
                     {
@@ -894,13 +925,14 @@ Solver::completeModel()
 }
 
 Clause*
-Solver::newClause()
+Solver::newClause(
+    unsigned reserve )
 {
     if( poolOfClauses.empty() )
     {
         unsigned int bufferSize = 20;
         for( unsigned int i = 0; i < bufferSize; i++ )
-            poolOfClauses.push_back( new Clause() );       
+            poolOfClauses.push_back( new Clause( reserve ) );       
     }
     
     Clause* back = poolOfClauses.back();

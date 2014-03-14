@@ -45,13 +45,12 @@ using namespace std;
 class Component : public PostPropagator
 {
 	public:
-		inline Component( vector< GUSData* >& gusData_ ) : PostPropagator(), gusData( gusData_ ), clauseToPropagate( NULL ), selfLoop( 0 ) {}
+		inline Component( vector< GUSData* >& gusData_ ) : PostPropagator(), gusData( gusData_ ), clauseToPropagate( NULL ), id( 0 ) {}
 		inline ~Component() {}
         
         virtual bool onLiteralFalse( Literal lit );
 
-        inline bool isCyclic() const { return selfLoop || variablesInComponent.size() > 1; }
-		inline void setSelfLoop() { selfLoop = 1; }
+        inline bool isCyclic() const { return variablesInComponent.size() > 1; }
 		inline unsigned int size() const { return variablesInComponent.size(); }
 
 		inline void addVariable( unsigned int var ) { variablesInComponent.push_back( var ); }
@@ -62,6 +61,7 @@ class Component : public PostPropagator
         
         virtual Clause* getClauseToPropagate( Learning& learning );
 
+        inline bool isAuxVariable( unsigned int varId ) { return getGUSData( varId ).aux; }
         inline void setAuxVariable( unsigned int varId ) { getGUSData( varId ).aux = true; }
         inline void addExternalLiteralForVariable( unsigned int varId, Literal lit ) { getGUSData( varId ).externalLiterals.push_back( lit ); }
         inline void addInternalLiteralForVariable( unsigned int varId, Literal lit ) { getGUSData( varId ).internalLiterals.push_back( lit ); }
@@ -82,8 +82,7 @@ class Component : public PostPropagator
         Vector< Variable* > unfoundedSet;
         Clause* clauseToPropagate;
         
-		unsigned int selfLoop : 1;
-        unsigned int id : 31;
+        unsigned int id;
         
         inline bool propagateFalseForGUS( Literal lit );
         inline void propagateLiteralLostSourcePointer( Literal lit );
@@ -158,23 +157,21 @@ Component::iterationOnSupportedByThisExternal(
     unsigned int sign = lit.getSign();
     unsigned int varId = lit.getVariable()->getId();
 
-    bool add = false;
-    WatchedList< Variable* >& wl = getGUSData( varId ).supportedByThisExternalRule[ sign ];
+    Vector< Variable* >& wl = getGUSData( varId ).supportedByThisExternalRule[ sign ];
 
-    wl.startIteration();
-    while( wl.hasNext() )
+    unsigned i = 0;
+    unsigned j = 0;
+    for( ; i < wl.size(); ++i )
     {
-        Variable* variable = wl.next();        
+        Variable* variable = wl[ j ] = wl[ i ];
         trace_msg( unfoundedset, 3, "Considering variable " << *variable << " which is " << ( variable->isFalse() ? "false" : "true" ) << " and " << ( ( getGUSData( variable->getId() ).inQueue ) ? "in queue" : "not in queue" ) );
         if( !variable->isFalse() && !( getGUSData( variable->getId() ).inQueue ) )
-        {
             variableHasNoSourcePointer( variable );
-            add = true;
-            wl.remove( variable );
-        }
+        else
+            ++j;
     }
-    
-    return add;
+    wl.shrink( j );
+    return i != j;
 }
 
 bool
@@ -185,23 +182,21 @@ Component::iterationOnSupportedByThisInternal(
     unsigned int sign = lit.getSign();
     unsigned int varId = lit.getVariable()->getId();
 
-    bool add = false;
-    WatchedList< Variable* >& wl = getGUSData( varId ).supportedByThisInternalRule[ sign ];
+    Vector< Variable* >& wl = getGUSData( varId ).supportedByThisInternalRule[ sign ];
 
-    wl.startIteration();
-    while( wl.hasNext() )
+    unsigned i = 0;
+    unsigned j = 0;
+    for( ; i < wl.size(); ++i )
     {
-        Variable* variable = wl.next();
+        Variable* variable = wl[ j ] = wl[ i ];
         trace_msg( unfoundedset, 3, "Considering variable " << *variable << " which is " << ( variable->isFalse() ? "false" : "true" ) << " and " << ( ( getGUSData( variable->getId() ).inQueue ) ? "in queue" : "not in queue" ) );
         if( !variable->isFalse() && !( getGUSData( variable->getId() ).inQueue ) )
-        {
             variableHasNoSourcePointer( variable );
-            add = true;
-            wl.remove( variable );
-        }
+        else
+            ++j;
     }
-    
-    return add;
+    wl.shrink( j );
+    return i != j;
 }
 
 void
@@ -328,9 +323,9 @@ Component::addVariableSupportedByLiteral(
 {
     Variable* tmp = literal.getVariable();
     if( tmp->inTheSameComponent( variable ) )
-        getGUSData( tmp->getId() ).supportedByThisInternalRule[ literal.getSign() ].add( variable );
+        getGUSData( tmp->getId() ).supportedByThisInternalRule[ literal.getSign() ].push_back( variable );
     else
-        getGUSData( tmp->getId() ).supportedByThisExternalRule[ literal.getSign() ].add( variable );        
+        getGUSData( tmp->getId() ).supportedByThisExternalRule[ literal.getSign() ].push_back( variable );        
 }
 
 void

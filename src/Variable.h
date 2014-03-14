@@ -38,6 +38,7 @@ class Component;
 class PostPropagator;
 
 class Variable;
+class Solver;
 
 class Comparator
 {
@@ -64,19 +65,12 @@ class Variable
     public:
         
         inline Variable( unsigned id );
-//        inline Variable( unsigned id, const string& name );
         ~Variable();
 
         inline unsigned getId() const { return id; }
-
-//        inline bool isHidden() const;
-//        inline void setName( string& name );
         
         inline bool isTrue() const;
-        inline bool isFalse() const;
-        
-//        inline bool setFalse();
-//        inline bool setTrue();
+        inline bool isFalse() const;        
         
         inline bool setTruthValue( TruthValue truth );
 
@@ -92,27 +86,20 @@ class Variable
         inline unsigned int getDecisionLevel() const;
         inline void setDecisionLevel( unsigned int decisionLevel );
 
-//        inline unsigned int getOrderInThePropagation() const;
-//        inline void setOrderInThePropagation( unsigned int order );
-
         inline TruthValue getTruthValue() const;
         inline TruthValue getCachedTruthValue() const;
 
         void onLearning( Learning* strategy );
         
         inline void addWatchedClause( Clause* clause, unsigned int sign );        
-        inline void eraseWatchedClause( Clause* clause, unsigned int sign );
         inline void findAndEraseWatchedClause( Clause* clause, unsigned int sign );
         
         inline void addClause( Clause* clause, unsigned int sign );
-        inline void eraseClause( Clause* clause, unsigned int sign );
         inline void findAndEraseClause( Clause* clause, unsigned int sign );
         
         void setHeuristicCounterForLiterals( HeuristicCounterFactoryForLiteral* heuristicCounterFactoryForLiteral );
         inline const HeuristicCounterForLiteral* getPositiveHeuristicCounter() const;
         inline const HeuristicCounterForLiteral* getNegativeHeuristicCounter() const;
-        
-        inline void onAging( unsigned int value, unsigned int sign );
         
         inline unsigned int numberOfNegativeWatchedClauses() const;
         inline unsigned int numberOfPositiveWatchedClauses() const;
@@ -120,19 +107,8 @@ class Variable
         inline unsigned int numberOfOccurrences( unsigned int sign ) const;
         inline unsigned int numberOfOccurrences() const;
         
-        inline void unitPropagationStart();
-        inline bool unitPropagationHasNext();
-        inline Clause* unitPropagationNext();        
-
-        inline void postPropagationStart();
-        inline bool postPropagationHasNext();
-        inline PostPropagator* postPropagationNext();
+        inline Clause* getOccurrence( unsigned index, unsigned sign ) { return allOccurrences[ sign ][ index ]; }
         
-        inline void startIterationOverOccurrences( unsigned int sign );
-        inline bool hasNextOccurrence( unsigned int sign );
-        inline Clause* nextOccurence( unsigned int sign );
-        inline Clause* getOccurrence( unsigned int idx, unsigned int sign ) { return allOccurrences[ sign ][ idx ]; }
-
         inline uint64_t getSignature() const { return signature; }
         inline Activity& activity() { return act; }
         inline const Activity& activity() const { return act; }
@@ -144,7 +120,7 @@ class Variable
         inline bool isInHeap(){ return inHeap; }
         
         inline unsigned int& visited(){ return visitedInLearning; }
-        inline const unsigned int& visited() const{ return visitedInLearning; }
+        inline unsigned int visited() const{ return visitedInLearning; }
         
         inline const Clause* getDefinition() const { return definition; }     
         inline void setEliminated( unsigned int sign, Clause* definition );
@@ -158,10 +134,21 @@ class Variable
         inline Component* getComponent() { return component; }
         
         void onLearningForUnfounded( Learning& learning );        
-        inline void addPostPropagator( PostPropagator* p, unsigned int sign ) { postPropagators[ sign ].add( p ); }
+        inline void addPostPropagator( PostPropagator* p, unsigned int sign ) { postPropagators[ sign ].push_back( p ); }
         
         bool isFrozen() const { return frozen; }
         void setFrozen() { frozen = true; }
+        
+        void unitPropagation( Solver& solver );
+        void postPropagation( Solver& solver );
+        
+        void propagateAtLevelZero( Solver& solver );
+        void propagateAtLevelZeroSatelite( Solver& solver );
+        
+        void removeAllClauses( Solver& solver );
+        void markAllClauses( Solver& solver );
+        
+        void checkSubsumptionForClause( Solver& solver, Clause* clause, unsigned sign );
         
     private:
 
@@ -173,16 +160,6 @@ class Variable
          * The level in the backtracking tree in which this literal has been derived.  
          */        
         unsigned int decisionLevel;
-
-        /**
-         * The name associated to the literal.
-         */
-//        string name;
-
-        /**
-         * This variable represents the order in which the literal has been propagated.
-         */
-//        unsigned int orderInThePropagation;
         
         /**
          * The truth value of the literal. It can assume three values: UNDEFINED, TRUE or FALSE.
@@ -204,13 +181,13 @@ class Variable
          * Position POSITIVE of this vector contains the occurrences of the positive literal associated with this variable.
          * Position NEGATIVE of this vector contains the occurrences of the negative literal associated with this variable.
          */        
-        WatchedList< Clause* > allOccurrences[ 2 ];
+        Vector< Clause* > allOccurrences[ 2 ];
         
         /**
          * Position POSITIVE of this vector contains the occurrences of the positive literal associated with this variable.
          * Position NEGATIVE of this vector contains the occurrences of the negative literal associated with this variable.
          */        
-        WatchedList< PostPropagator* > postPropagators[ 2 ];
+        Vector< PostPropagator* > postPropagators[ 2 ];
         
         uint64_t signature;
         
@@ -238,6 +215,7 @@ Variable::Variable(
     truthValue( UNDEFINED ),
     implicant( NULL ),
     act( 0.0 ),
+    handle( 0 ),
     inHeap( false ),
     visitedInLearning( 0 ),
     definition( NULL ),
@@ -255,15 +233,6 @@ Variable::Variable(
     assert( 0 );
 }
 
-//bool
-//Variable::setFalse()
-//{
-//    if( truthValue == TRUE )
-//        return false;
-//    truthValue = FALSE;
-//    return true;
-//}
-
 bool
 Variable::isTrue() const
 {
@@ -275,15 +244,6 @@ Variable::isFalse() const
 {
     return getTruthValue() == FALSE;
 }
-
-//bool
-//Variable::setTrue()
-//{
-//    if( truthValue == FALSE )
-//        return false;
-//    truthValue = TRUE;
-//    return true;
-//}
 
 bool
 Variable::setTruthValue(
@@ -348,7 +308,6 @@ Variable::setImplicant(
 unsigned int
 Variable::getDecisionLevel() const
 {
-//    assert( "Undefined literals have no decision level." && !isUndefined() );
     return decisionLevel;
 }
 
@@ -358,20 +317,6 @@ Variable::setDecisionLevel(
 {
     decisionLevel = dl;
 }
-
-//unsigned int
-//Variable::getOrderInThePropagation() const
-//{
-//    assert( "Undefined literals have not been propagated." && !isUndefined() );
-//    return orderInThePropagation;
-//}
-//
-//void
-//Variable::setOrderInThePropagation(
-//    unsigned int order )
-//{
-//    orderInThePropagation = order;
-//}
 
 TruthValue
 Variable::getTruthValue() const
@@ -395,15 +340,6 @@ Variable::addWatchedClause(
 }
 
 void
-Variable::eraseWatchedClause( 
-    Clause* clause,
-    unsigned int sign )
-{
-    assert_msg( sign <= 1, "The sign must be 0 or 1. Found value " << sign );
-    watchedLists[ sign ].remove( clause );
-}
-
-void
 Variable::findAndEraseWatchedClause( 
     Clause* clause,
     unsigned int sign )
@@ -419,16 +355,7 @@ Variable::addClause(
     unsigned int sign )
 {
     assert_msg( sign <= 1, "The sign must be 0 or 1. Found value " << sign );
-    allOccurrences[ sign ].add( clause );
-}
-
-void
-Variable::eraseClause( 
-    Clause* clause,
-    unsigned int sign )
-{
-    assert_msg( sign <= 1, "The sign must be 0 or 1. Found value " << sign );
-    allOccurrences[ sign ].remove( clause );
+    allOccurrences[ sign ].push_back( clause );
 }
 
 void
@@ -472,128 +399,6 @@ unsigned int
 Variable::numberOfOccurrences() const
 {
     return allOccurrences[ NEGATIVE ].size() + allOccurrences[ POSITIVE ].size();
-}
-
-void
-Variable::onAging(
-    unsigned int value,
-    unsigned int sign )
-{
-    //getHeuristicCounterInternal( sign )->onAging( value );
-}
-
-void
-Variable::unitPropagationStart()
-{
-    assert_msg( !this->isUndefined(), "Propagating variable " << *this << ", the truth value is Undefined." );
-    assert( FALSE == 1 && TRUE == 2 );
-
-    #ifndef NDEBUG
-    unsigned int sign = ( getTruthValue() >> 1 );
-    assert( sign <= 1 );
-    assert( getTruthValue() == TRUE ? sign == NEGATIVE : sign == POSITIVE );
-    #endif
-    
-    watchedLists[ ( getTruthValue() >> 1 ) ].startIteration();
-}
-
-bool
-Variable::unitPropagationHasNext()
-{
-    assert_msg( !this->isUndefined(), "Propagating variable " << *this << ", the truth value is Undefined." );
-    assert( FALSE == 1 && TRUE == 2 );
-
-    #ifndef NDEBUG
-    unsigned int sign = ( getTruthValue() >> 1 );
-    assert( sign <= 1 );
-    assert( getTruthValue() == TRUE ? sign == NEGATIVE : sign == POSITIVE );
-    #endif
-    
-    return watchedLists[ ( getTruthValue() >> 1 ) ].hasNext();
-}
-
-Clause*
-Variable::unitPropagationNext()
-{
-    assert_msg( !this->isUndefined(), "Propagating variable " << *this << ", the truth value is Undefined." );
-    assert( FALSE == 1 && TRUE == 2 );
-
-    #ifndef NDEBUG
-    unsigned int sign = ( getTruthValue() >> 1 );
-    assert( sign <= 1 );
-    assert( getTruthValue() == TRUE ? sign == NEGATIVE : sign == POSITIVE );
-    #endif
-    
-    return watchedLists[ ( getTruthValue() >> 1 ) ].next();
-}
-
-void
-Variable::postPropagationStart()
-{
-    assert_msg( !this->isUndefined(), "Propagating variable " << *this << ", the truth value is Undefined." );
-    assert( FALSE == 1 && TRUE == 2 );
-
-    #ifndef NDEBUG
-    unsigned int sign = ( getTruthValue() >> 1 );
-    assert( sign <= 1 );
-    assert( getTruthValue() == TRUE ? sign == NEGATIVE : sign == POSITIVE );
-    #endif
-    
-    postPropagators[ ( getTruthValue() >> 1 ) ].startIteration();
-}
-
-bool
-Variable::postPropagationHasNext()
-{
-    assert_msg( !this->isUndefined(), "Propagating variable " << *this << ", the truth value is Undefined." );
-    assert( FALSE == 1 && TRUE == 2 );
-
-    #ifndef NDEBUG
-    unsigned int sign = ( getTruthValue() >> 1 );
-    assert( sign <= 1 );
-    assert( getTruthValue() == TRUE ? sign == NEGATIVE : sign == POSITIVE );
-    #endif
-    
-    return postPropagators[ ( getTruthValue() >> 1 ) ].hasNext();
-}
-
-PostPropagator*
-Variable::postPropagationNext()
-{
-    assert_msg( !this->isUndefined(), "Propagating variable " << *this << ", the truth value is Undefined." );
-    assert( FALSE == 1 && TRUE == 2 );
-
-    #ifndef NDEBUG
-    unsigned int sign = ( getTruthValue() >> 1 );
-    assert( sign <= 1 );
-    assert( getTruthValue() == TRUE ? sign == NEGATIVE : sign == POSITIVE );
-    #endif
-    
-    return postPropagators[ ( getTruthValue() >> 1 ) ].next();
-}
-
-void
-Variable::startIterationOverOccurrences(
-    unsigned int sign )
-{
-    assert_msg( sign <= 1, "The sign must be 0 or 1. Found value " << sign );
-    allOccurrences[ sign ].startIteration();
-}
-
-bool
-Variable::hasNextOccurrence(
-    unsigned int sign )
-{
-    assert_msg( sign <= 1, "The sign must be 0 or 1. Found value " << sign );
-    return allOccurrences[ sign ].hasNext();
-}
-
-Clause*
-Variable::nextOccurence(
-    unsigned int sign )
-{
-    assert_msg( sign <= 1, "The sign must be 0 or 1. Found value " << sign );
-    return allOccurrences[ sign ].next();
 }
 
 void

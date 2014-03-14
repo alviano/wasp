@@ -36,22 +36,19 @@ class WatchedList : private Vector< T >
 	public:
 	    inline WatchedList();
 
-	    using Vector< T >::size;
+        using Vector< T >::size;
         using Vector< T >::empty;
         using Vector< T >::operator[];
+        using Vector< T >::shrink;
+        using Vector< T >::clearAndDelete;
+        using Vector< T >::findAndRemove;
         
         inline void add( T element );
-        inline void remove( T element );
-        inline void findAndRemove( T element );
+        inline void remove( unsigned index );
         
-        inline bool hasNext();
-        inline T next();
-        inline void startIteration();
-	    
 	private:
 	    WatchedList( const WatchedList& );
 	    WatchedList& operator=( const WatchedList& );
-        unsigned nextIndex;
 };
 
 template< class T >
@@ -88,49 +85,11 @@ WatchedList< T >::add(
 template< class T >
 void
 WatchedList< T >::remove(
-    T element )
+    unsigned index )
 {
-    assert( nextIndex > 0 && nextIndex <= size() && Vector< T >::operator[]( nextIndex - 1 ) == element );
-    Vector< T >::operator[]( --nextIndex ) = Vector< T >::back();
+    assert( index < size() );
+    Vector< T >::operator[]( index ) = Vector< T >::back();
     Vector< T >::pop_back();
-}
-
-template< class T >
-void
-WatchedList< T >::findAndRemove(
-    T element )
-{
-//    typename vector< T >::iterator it = find( vector< T >::begin(), vector< T >::end(), element );
-//    assert( it != vector< T >::end() );
-//    *it = vector< T >::back();
-//    vector< T >::pop_back();
-    assert( Vector< T >::existElement( element ) );
-    unsigned int position = Vector< T >::findElement( element );
-    assert( position < Vector< T >::size() );
-    Vector< T >::operator[]( position ) = Vector< T >::back();
-    Vector< T >::pop_back();
-}
-
-template< class T >
-bool
-WatchedList< T >::hasNext()
-{
-    return nextIndex < size();
-}
-
-template< class T >
-T
-WatchedList< T >::next()
-{    
-    return Vector< T >::operator[]( nextIndex++ );
-}
-
-template< class T >
-void
-WatchedList< T >::startIteration()
-{
-    nextIndex = 0;
-    
 }
 
 #endif	/* WATCHEDLIST_H */
