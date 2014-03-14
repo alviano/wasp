@@ -17,7 +17,7 @@
  */
 
 #ifndef MINISATHEURISTIC_H
-#define	MINISATHEURISTIC_H
+#define MINISATHEURISTIC_H
 
 #include "util/Options.h"
 #include "util/Trace.h"
@@ -66,8 +66,8 @@ MinisatHeuristic::variableBumpActivity(
     Variable* variable )
 {
     trace( heuristic, 1, "Bumping activity for variable %s.\n", toString( *variable ).c_str() );    
-	if( bumpActivity( variable ) )
-		rescaleActivity();
+    if( bumpActivity( variable ) )
+        rescaleActivity();
     
     if( variable->isInHeap() )
         heap.decrease( variable );    
@@ -80,7 +80,7 @@ MinisatHeuristic::rescaleActivity()
     unsigned int size = variables.size();
     for( unsigned int i = 0; i < size; ++i )
         variables[ i ]->activity() *= 1e-100;
-	variableIncrement *= 1e-100;
+    variableIncrement *= 1e-100;
 }
 
 void
@@ -123,5 +123,5 @@ MinisatHeuristic::onUnrollingVariable(
     heap.push( variable );
 }
 
-#endif	/* MINISATHEURISTIC_H */
+#endif
 

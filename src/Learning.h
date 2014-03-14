@@ -17,7 +17,7 @@
  */
 
 #ifndef LEARNING_H
-#define	LEARNING_H
+#define LEARNING_H
 
 #include <cassert>
 #include <iostream>
@@ -133,5 +133,5 @@ Learning::onNewVariable()
 //    visitedVariables.push_back( 0 );
 }
 
-#endif	/* LEARNING_H */
+#endif
 

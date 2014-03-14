@@ -135,7 +135,7 @@ class Clause
             assert( "The copy constructor has been disabled." && 0 );
         }
         
-		inline void resetLastSwapIndex() { lastSwapIndex = 1; }
+        inline void resetLastSwapIndex() { lastSwapIndex = 1; }
         inline void setWatchesInRandomPositions();
         
         inline void attachFirstWatch();
@@ -386,8 +386,8 @@ Clause::onLearning(
             swapUnwatchedLiterals( i, literals.size() - 1 );
             literals.pop_back();
 
-			if( lastSwapIndex >= literals.size() )
-				resetLastSwapIndex();
+            if( lastSwapIndex >= literals.size() )
+                resetLastSwapIndex();
         }
     }
 }
@@ -610,8 +610,8 @@ Clause::removeSatisfiedLiterals()
         }        
     }
 
-	if( lastSwapIndex >= literals.size() )
-		resetLastSwapIndex();
+    if( lastSwapIndex >= literals.size() )
+        resetLastSwapIndex();
         
     return false;
 }
@@ -679,12 +679,12 @@ Clause::removeDuplicatesAndCheckIfTautological()
             if( previousLiteral.getVariable() == literals[ i ].getVariable() )
             {
                 //TAUTOLOGICAL
-	            return true;
-			}
-			else
-			{
+                return true;
+            }
+            else
+            {
                previousLiteral = literals[ j++ ] = literals[ i ];
-			}
+            }
         }
         
         ++i;
@@ -718,12 +718,12 @@ Clause::removeDuplicatesAndFalseAndCheckIfTautological()
             if( previousLiteral.getVariable() == literals[ i ].getVariable() )
             {
                 //TAUTOLOGICAL
-	            return true;
-			}
-			else
-			{
+                return true;
+            }
+            else
+            {
               previousLiteral = literals[ j++ ] = literals[ i ];
-			}
+            }
         }
         
         ++i;

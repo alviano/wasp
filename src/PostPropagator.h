@@ -17,7 +17,7 @@
  */
 
 #ifndef _POSTPROPAGATOR_H
-#define	_POSTPROPAGATOR_H
+#define _POSTPROPAGATOR_H
 
 class Clause;
 class Learning;

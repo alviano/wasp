@@ -17,7 +17,7 @@
  */
 
 #ifndef WASPFACADE_H
-#define	WASPFACADE_H
+#define WASPFACADE_H
 
 #include <cassert>
 using namespace std;
@@ -71,4 +71,4 @@ WaspFacade::solveInternal()
 }
         
 
-#endif	/* WASPFACADE_H */
+#endif

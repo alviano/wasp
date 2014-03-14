@@ -108,8 +108,8 @@ class Heap {
     void pushNoCheck( K* k )
     {
         assert( !k->isInHeap() );
-		k->setInHeap( true );
-		k->setHandle( heap.size() );
+        k->setInHeap( true );
+        k->setHandle( heap.size() );
         heap.push_back( k );
         percolateUp( k->getHandle() );
     }
@@ -124,7 +124,7 @@ class Heap {
         if( k_pos < heap.size() - 1 )
         {
             heap[ k_pos ] = heap.back();
-			heap[ k_pos ]->setHandle( k_pos );
+            heap[ k_pos ]->setHandle( k_pos );
             heap.pop_back();
             percolateDown( k_pos );
         }

@@ -70,7 +70,7 @@ class Variables
         
     private:
         //Variable** assignedVariables;
-		vector< Variable* > assignedVariables;
+        vector< Variable* > assignedVariables;
         unsigned assignedVariablesSize;
         int iteratorOnAssignedVariables;
 //        unsigned iteratorOnUndefinedVariables;
@@ -121,7 +121,7 @@ void
 Variables::init()
 {
     //assert( assignedVariables == NULL );
-	//assignedVariables = new Variable*[ variables.size() * 120 / 100 ];
+    //assignedVariables = new Variable*[ variables.size() * 120 / 100 ];
 //    assert( noUndefinedBefore == 1 );
     assert( variables.size() >= 2 );
     assert( variables[ 1 ] != NULL );
@@ -134,7 +134,7 @@ Variables::push_back(
     assert( v != NULL );
 //    assert( assignedVariables == NULL );
     variables.push_back( v );
-	assignedVariables.push_back( NULL );	
+    assignedVariables.push_back( NULL );    
 }
 
 Variable*

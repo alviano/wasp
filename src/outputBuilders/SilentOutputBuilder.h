@@ -23,7 +23,7 @@
 
 class SilentOutputBuilder : public WaspOutputBuilder
 {
-	public:
+    public:
         inline SilentOutputBuilder();
         virtual void onProgramIncoherent();
 };
@@ -32,4 +32,4 @@ SilentOutputBuilder::SilentOutputBuilder()
 {
 }
 
-#endif /* SILENTOUTPUTBUILDER_H */
+#endif

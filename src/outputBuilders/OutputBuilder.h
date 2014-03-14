@@ -29,8 +29,8 @@ class Variable;
 
 class OutputBuilder
 {
-	public:
-	    virtual ~OutputBuilder() {}
+    public:
+        virtual ~OutputBuilder() {}
         virtual void startModel() = 0;
         virtual void printVariable( const Variable* ) = 0;
         virtual void endModel() = 0;
@@ -39,4 +39,4 @@ class OutputBuilder
 //        virtual void onAnswerSetFoundWithWeakConstraint( Interpretation&, Program& );
 };
 
-#endif /* OUTPUTBUILDER_H */
+#endif

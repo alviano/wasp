@@ -17,7 +17,7 @@
  */
 
 #ifndef STATISTICS_H
-#define	STATISTICS_H
+#define STATISTICS_H
 
 #include <cassert>
 #include <string>
@@ -280,4 +280,4 @@ using namespace std;
     #define statistics( METHOD )
 #endif
 
-#endif	/* _STATISTICS_H */
+#endif

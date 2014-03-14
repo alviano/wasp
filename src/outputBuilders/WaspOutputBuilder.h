@@ -23,7 +23,7 @@
 
 class WaspOutputBuilder : public OutputBuilder
 {
-	public:
+    public:
         inline WaspOutputBuilder();
         virtual void startModel();
         virtual void printVariable( const Variable* );
@@ -38,4 +38,4 @@ WaspOutputBuilder::WaspOutputBuilder() : first( true )
 {
 }
 
-#endif /* WASPOUTPUTBUILDER_H */
+#endif

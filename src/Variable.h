@@ -17,7 +17,7 @@
  */
 
 #ifndef VARIABLE_H
-#define	VARIABLE_H
+#define VARIABLE_H
 
 #include <cassert>
 #include <iostream>

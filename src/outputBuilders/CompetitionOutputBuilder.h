@@ -23,7 +23,7 @@
 
 class CompetitionOutputBuilder : public OutputBuilder
 {
-	public:
+    public:
         inline CompetitionOutputBuilder();
         virtual void startModel();
         virtual void printVariable( const Variable* );
@@ -35,4 +35,4 @@ CompetitionOutputBuilder::CompetitionOutputBuilder()
 {
 }
 
-#endif /* COMPETITIONOUTPUTBUILDER_H */
+#endif

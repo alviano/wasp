@@ -17,7 +17,7 @@
  */
 
 #ifndef DIMACS_H
-#define	DIMACS_H
+#define DIMACS_H
 
 #include "../util/ErrorMessage.h"
 #include "../util/Istream.h"

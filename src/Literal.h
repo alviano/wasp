@@ -54,10 +54,10 @@ class Literal
 
         inline bool setTrue();
 
-		 inline bool operator==( const Literal& ) const;
+        inline bool operator==( const Literal& ) const;
         inline bool operator!=( const Literal& ) const;
 
-		inline void addWatchedClause( Clause* clause );
+        inline void addWatchedClause( Clause* clause );
         inline void findAndEraseWatchedClause( Clause* clauses );
 
         inline void addClause( Clause* clause );
@@ -93,7 +93,7 @@ class Literal
         
         inline void checkSubsumptionForClause( Solver& solver, Clause* clause ) { getVariable()->checkSubsumptionForClause( solver, clause, getSign() ); }
 
-	private:
+    private:
         
         /**
          * This function returns 1 if the literal is positive, 0 otherwise.
@@ -148,7 +148,7 @@ unsigned int
 Literal::getSign() const
 {
     assert( "Variable has not been set." && signedVariable != 0 );
-	return signedVariable & 1;
+    return signedVariable & 1;
 }
 
 unsigned int
@@ -296,4 +296,4 @@ Literal::findAndEraseClause(
     getVariable()->findAndEraseClause( clause, getSign() );
 }
 
-#endif	/* LITERAL_H */
+#endif

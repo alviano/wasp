@@ -23,7 +23,7 @@
 
 class DimacsOutputBuilder : public OutputBuilder
 {
-	public:
+    public:
         inline DimacsOutputBuilder();
         virtual void startModel();
         virtual void printVariable( const Variable* );
@@ -38,4 +38,4 @@ DimacsOutputBuilder::DimacsOutputBuilder() : numberOfModels( 0 )
 {
 }
 
-#endif /* DIMACSOUTPUTBUILDER_H */
+#endif

@@ -17,7 +17,7 @@
  */
 
 #ifndef CONSTANTS_H
-#define	CONSTANTS_H
+#define CONSTANTS_H
 
 #include <climits>
 //enum TruthValue { UNDEFINED = 0, FALSE = 1, TRUE = 2 };
@@ -121,5 +121,5 @@ std::string toString( const T& t )
 #endif
 
 
-#endif	/* CONSTANTS_H */
+#endif
 

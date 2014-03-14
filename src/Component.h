@@ -17,7 +17,7 @@
 */
 
 #ifndef _COMPONENT_H
-#define	_COMPONENT_H
+#define _COMPONENT_H
 
 #include <vector>
 #include <cassert>
@@ -44,17 +44,17 @@ using namespace std;
 
 class Component : public PostPropagator
 {
-	public:
-		inline Component( vector< GUSData* >& gusData_ ) : PostPropagator(), gusData( gusData_ ), clauseToPropagate( NULL ), id( 0 ) {}
-		inline ~Component() {}
+    public:
+        inline Component( vector< GUSData* >& gusData_ ) : PostPropagator(), gusData( gusData_ ), clauseToPropagate( NULL ), id( 0 ) {}
+        inline ~Component() {}
         
         virtual bool onLiteralFalse( Literal lit );
 
         inline bool isCyclic() const { return variablesInComponent.size() > 1; }
-		inline unsigned int size() const { return variablesInComponent.size(); }
+        inline unsigned int size() const { return variablesInComponent.size(); }
 
-		inline void addVariable( unsigned int var ) { variablesInComponent.push_back( var ); }
-		inline unsigned int getVariable( unsigned int i ){ assert( i < variablesInComponent.size() ); return variablesInComponent[ i ]; }
+        inline void addVariable( unsigned int var ) { variablesInComponent.push_back( var ); }
+        inline unsigned int getVariable( unsigned int i ){ assert( i < variablesInComponent.size() ); return variablesInComponent[ i ]; }
 
         inline void setId( unsigned int id ) { this->id = id; }
         inline unsigned int getId() const { return id; }
@@ -74,9 +74,9 @@ class Component : public PostPropagator
     protected:
         virtual void reset();
 
-	private:
-		inline Component( const Component& orig );
-		vector< unsigned int > variablesInComponent;
+    private:
+        inline Component( const Component& orig );
+        vector< unsigned int > variablesInComponent;
         vector< GUSData* >& gusData;
         Vector< Variable* > variablesWithoutSourcePointer;
         Vector< Variable* > unfoundedSet;

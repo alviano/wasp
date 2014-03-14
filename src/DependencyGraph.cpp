@@ -65,26 +65,26 @@ DependencyGraph::computeStrongConnectedComponents(
 
     for( vector< int >::size_type i = 0; i != strongConnectedComponents.size(); ++i )
     {
-		unsigned int currentComponentId = strongConnectedComponents[ i ];
-		assert( currentComponentId < components.size() );
-		if( components[ currentComponentId ] == NULL )
-			components[ currentComponentId ] = new Component( gd );
-	
+        unsigned int currentComponentId = strongConnectedComponents[ i ];
+        assert( currentComponentId < components.size() );
+        if( components[ currentComponentId ] == NULL )
+            components[ currentComponentId ] = new Component( gd );
+    
         components[ currentComponentId ]->addVariable( i );
     }
 
     unsigned int id = 0;
-	for( unsigned int i = 0; i < components.size(); i++ )
-	{
-		Component* currentComponent = components[ i ];
-		assert( currentComponent != NULL );
-		if( currentComponent->isCyclic() )
+    for( unsigned int i = 0; i < components.size(); i++ )
+    {
+        Component* currentComponent = components[ i ];
+        assert( currentComponent != NULL );
+        if( currentComponent->isCyclic() )
         {
             statistics( addCyclicComponent( currentComponent->size() ) );
-			cyclicComponents.push_back( currentComponent );
+            cyclicComponents.push_back( currentComponent );
             currentComponent->setId( id++ );
         }
-		else
-			delete currentComponent;
-	}
+        else
+            delete currentComponent;
+    }
 }

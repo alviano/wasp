@@ -17,7 +17,7 @@
  */
 
 #ifndef WATCHEDLIST_H
-#define	WATCHEDLIST_H
+#define    WATCHEDLIST_H
 
 #include <algorithm>
 #include <cassert>
@@ -33,8 +33,8 @@ using namespace std;
 template< class T >
 class WatchedList : private Vector< T >
 {
-	public:
-	    inline WatchedList();
+    public:
+        inline WatchedList();
 
         using Vector< T >::size;
         using Vector< T >::empty;
@@ -46,9 +46,9 @@ class WatchedList : private Vector< T >
         inline void add( T element );
         inline void remove( unsigned index );
         
-	private:
-	    WatchedList( const WatchedList& );
-	    WatchedList& operator=( const WatchedList& );
+    private:
+        WatchedList( const WatchedList& );
+        WatchedList& operator=( const WatchedList& );
 };
 
 template< class T >
@@ -92,4 +92,4 @@ WatchedList< T >::remove(
     Vector< T >::pop_back();
 }
 
-#endif	/* WATCHEDLIST_H */
+#endif    /* WATCHEDLIST_H */

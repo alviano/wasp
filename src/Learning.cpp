@@ -68,7 +68,7 @@ Learning::onConflict(
     
     //If there is only one element, this element is the first UIP.
     while( pendingVisitedVariables > 1 )
-	{
+    {
         //Get next literal.
         Literal currentLiteral = getNextLiteralToNavigate();
         trace( learning, 3, "Navigating %s for calculating UIP.\n", toString( currentLiteral ).c_str() );
@@ -81,7 +81,7 @@ Learning::onConflict(
                 solver.updateActivity( implicant );
             implicant->onLearning( this );
         }
-	}
+    }
 
     Literal firstUIP = getNextLiteralToNavigate();
     trace( learning, 2, "First UIP: %s.\n", toString( firstUIP ).c_str() );
@@ -89,7 +89,7 @@ Learning::onConflict(
     if( learnedClause->size() > 1 )
         simplifyLearnedClause( learnedClause );
 
-	learnedClause->addLiteral( firstUIP );    
+    learnedClause->addLiteral( firstUIP );    
     
     assert( learnedClause->size() > 0 );
     
@@ -300,7 +300,7 @@ Learning::learnClausesFromUnfoundedSet(
     if( learnedClause->size() > 1 )
         simplifyLearnedClause( learnedClause );
 
-	if( learnedClause->size() >= 2 )
+    if( learnedClause->size() >= 2 )
         learnedClause->swapLiterals( 0, maxPosition );
     
     trace( learning, 1, "Learned Clause: %s.\n", toString( *learnedClause ).c_str() );

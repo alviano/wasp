@@ -17,7 +17,7 @@
  */
 
 #ifndef _TRIE_H
-#define	_TRIE_H
+#define _TRIE_H
 
 #include <cassert>
 #include <climits>
@@ -28,91 +28,91 @@ using namespace std;
 
 class Node {
 
-	public:
-		inline Node( int content_for_node ) : content( content_for_node ), label( UINT_MAX ){}
-		~Node() 
-		{ 
-			for( unordered_map< int, Node* >::iterator it = childrenMap.begin(); it != childrenMap.end(); ++it )
-			{
-				assert( it->second );
-				delete it->second;
-			}
-		}
+    public:
+        inline Node( int content_for_node ) : content( content_for_node ), label( UINT_MAX ){}
+        ~Node() 
+        { 
+            for( unordered_map< int, Node* >::iterator it = childrenMap.begin(); it != childrenMap.end(); ++it )
+            {
+                assert( it->second );
+                delete it->second;
+            }
+        }
 
-		inline int getContent() const { return content; }		
-		inline bool hasLabel() const { return label != UINT_MAX; }
+        inline int getContent() const { return content; }        
+        inline bool hasLabel() const { return label != UINT_MAX; }
         inline unsigned int getLabel() const { return label; }
-		inline void setLabel( unsigned int l ) { label = l; }
+        inline void setLabel( unsigned int l ) { label = l; }
 
-		Node* findChild( int c )
-		{ 
-			if( childrenMap.find( c ) != childrenMap.end() )
-			{ 
-				return childrenMap[ c ]; 
-			}
-			return NULL;
-		}
+        Node* findChild( int c )
+        { 
+            if( childrenMap.find( c ) != childrenMap.end() )
+            { 
+                return childrenMap[ c ]; 
+            }
+            return NULL;
+        }
 
-		inline void addChild( Node* child )
-		{
-			assert( childrenMap.find( child->getContent() ) == childrenMap.end() );
-			childrenMap[ child->getContent() ] = child;
-		}
+        inline void addChild( Node* child )
+        {
+            assert( childrenMap.find( child->getContent() ) == childrenMap.end() );
+            childrenMap[ child->getContent() ] = child;
+        }
 
-	private:
-		int content;
-		unsigned int label;
-		unordered_map< int, Node* > childrenMap;
+    private:
+        int content;
+        unsigned int label;
+        unordered_map< int, Node* > childrenMap;
 };
 
 class Trie {
-	public:
-		Trie() : current( NULL ), numberOfLabels( 0 ){ root = new Node( UINT_MAX ); }
+    public:
+        Trie() : current( NULL ), numberOfLabels( 0 ){ root = new Node( UINT_MAX ); }
 
-		~Trie()
+        ~Trie()
         { 
-			assert( root != NULL );
-			delete root;
-		}
+            assert( root != NULL );
+            delete root;
+        }
         
-		void startInsertion()
+        void startInsertion()
         {
             assert( current == NULL );
             current = root;
         }
-		inline void addElement( int );		
-		inline unsigned int endInsertion();
+        inline void addElement( int );        
+        inline unsigned int endInsertion();
 
-		inline unsigned int addElements( const vector< int >& );
-	private:
-		Node* root;
-		Node* current;
+        inline unsigned int addElements( const vector< int >& );
+    private:
+        Node* root;
+        Node* current;
         unsigned int numberOfLabels;
 };
 
 void
 Trie::addElement(
-	int element )
+    int element )
 {
-	Node* node = current->findChild( element );
-	if( node == NULL )
-	{
-		node = new Node( element );
-		current->addChild( node );
-	}
-	assert( node != NULL );
-	current = node;	
+    Node* node = current->findChild( element );
+    if( node == NULL )
+    {
+        node = new Node( element );
+        current->addChild( node );
+    }
+    assert( node != NULL );
+    current = node;    
 }
 
 unsigned int
 Trie::endInsertion()
 {
-	assert( current != NULL );
+    assert( current != NULL );
     
     if( !current->hasLabel() )
-	{
-		current->setLabel( ++numberOfLabels );        
-	}
+    {
+        current->setLabel( ++numberOfLabels );        
+    }
     
     unsigned int value = current->getLabel();
     
@@ -122,14 +122,14 @@ Trie::endInsertion()
 
 unsigned int
 Trie::addElements(
-	const vector< int >& elements )
+    const vector< int >& elements )
 {
-	startInsertion();
-	for( unsigned int i = 0; i < elements.size(); i++ )
-	{
-		addElement( elements[ i ] );
-	}
-	return endInsertion();
+    startInsertion();
+    for( unsigned int i = 0; i < elements.size(); i++ )
+    {
+        addElement( elements[ i ] );
+    }
+    return endInsertion();
 }
 
-#endif	/* _TRIE_H */
+#endif

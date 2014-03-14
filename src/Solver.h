@@ -29,7 +29,6 @@ using namespace std;
 #include "Literal.h"
 #include "util/Options.h"
 #include "util/Trace.h"
-#include "stl/List.h"
 #include "stl/UnorderedSet.h"
 #include "Learning.h"
 #include "outputBuilders/OutputBuilder.h"
@@ -978,5 +977,5 @@ Solver::propagateWithPropagators(
     postPropagation( variable );
 }
 
-#endif	/* SOLVER_H */
+#endif
 

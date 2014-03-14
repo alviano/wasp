@@ -17,7 +17,7 @@
  */
 
 #ifndef UNORDEREDSET_H
-#define	UNORDEREDSET_H
+#define UNORDEREDSET_H
 
 #include <cassert>
 #include <iostream>
@@ -179,5 +179,5 @@ UnorderedSet< T >::size() const
     return data.size();
 }
 
-#endif	/* UNORDEREDSET_H */
+#endif
 

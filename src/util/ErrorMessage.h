@@ -17,7 +17,7 @@
  */
 
 #ifndef ERRORMESSAGE_H
-#define	ERRORMESSAGE_H
+#define ERRORMESSAGE_H
 
 #include <string>
 #include <iostream>
@@ -51,5 +51,5 @@ class ErrorMessage
         }
 };
 
-#endif	/* ERRORMESSAGE_H */
+#endif
 
