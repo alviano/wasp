@@ -53,19 +53,21 @@ public:
         vector< unsigned > negBody;
         vector< unsigned > posBody;
         vector< unsigned > posBodyTrue;
+        vector< unsigned > doubleNegBody;
         
         inline NormalRule( unsigned head_ ) : head( head_ ) {}
         
         inline bool isRemoved() const { return head == 0; }
         inline void remove() { head = 0; }
         
-        inline bool isFact() const { return posBody.empty() && negBody.empty() && posBodyTrue.empty(); }
-        inline bool isFiring() const { return posBody.empty() && negBody.empty(); }
-        inline unsigned size() const { return negBody.size() + posBody.size() + posBodyTrue.size(); }
+        inline bool isFact() const { return posBody.empty() && negBody.empty() && posBodyTrue.empty() && doubleNegBody.empty(); }
+        inline bool isFiring() const { return posBody.empty() && negBody.empty() && doubleNegBody.empty(); }
+        inline unsigned size() const { return negBody.size() + posBody.size() + posBodyTrue.size() + doubleNegBody.size(); }
         
         inline void addNegativeLiteral( unsigned id ) { negBody.push_back( id ); }
         inline void addPositiveLiteral( unsigned id ) { posBody.push_back( id ); }
         inline void addPositiveTrueLiteral( unsigned id ) { posBodyTrue.push_back( id ); }
+        inline void addDoubleNegLiteral( unsigned id ) { doubleNegBody.push_back( id ); }
     };
     
     class AtomData
@@ -76,6 +78,8 @@ public:
         vector< NormalRule* > headOccurrences;
         vector< NormalRule* > posOccurrences;
         vector< NormalRule* > negOccurrences;
+        vector< NormalRule* > doubleNegOccurrences;
+        
         unsigned readNormalRule_negativeLiterals;
         unsigned readNormalRule_positiveLiterals;
         
@@ -86,6 +90,7 @@ public:
     };
     
 private:
+    void readChoiceRule( istream& input );
     void readNormalRule( istream& input );
     void readNormalRule( istream& input, unsigned head, int bodySize, int negativeSize );
     void readConstraint( istream& input );
