@@ -122,6 +122,7 @@ class Clause
         void printDimacs() const;
         
         bool allUndefined() const;
+        bool isTautology() const;
         
     protected:
         vector< Literal > literals;

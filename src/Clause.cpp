@@ -123,3 +123,13 @@ Clause::allUndefined() const
             return false;
     return true;
 }
+
+bool
+Clause::isTautology() const
+{
+    for( unsigned i = 0; i < size(); ++i )
+        for( unsigned j = i+1; j < size(); ++j )
+            if( getAt( i ) == getAt( j ).getOppositeLiteral() )
+                return true;
+    return false;
+}

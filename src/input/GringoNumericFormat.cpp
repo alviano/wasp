@@ -895,7 +895,7 @@ GringoNumericFormat::computeCompletion()
             for( unsigned j = 1; j < crule->size(); ++j )
             {
                 Literal lit2 = crule->getAt( j ).getOppositeLiteral();
-                if( lit2.isTrue() )
+                if( lit2.isTrue() || crule->getAt( j ) == lit )
                     continue;
                 assert( lit.isUndefined() );
                 assert( lit2.isUndefined() );
