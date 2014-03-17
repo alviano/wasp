@@ -821,7 +821,7 @@ GringoNumericFormat::simplify()
                 for( unsigned i = 0; i < rule->negBody.size(); ++i )
                     solver.addClause( Literal( solver.getVariable( rule->negBody[ i ] ), NEGATIVE ) );
                 for( unsigned i = 0; i < rule->doubleNegBody.size(); ++i )
-                    solver.addClause( Literal( solver.getVariable( rule->doubleNegBody[ i ], POSITIVE ) ) );
+                    solver.addClause( Literal( solver.getVariable( rule->doubleNegBody[ i ] ), POSITIVE ) );
             }
         }
         atomsWithSupportInference.pop_back();
