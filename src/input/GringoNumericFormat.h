@@ -123,6 +123,8 @@ private:
     void propagateTrue( Variable* var );
     void propagateFalse( Variable* var );
     void propagateFact( Variable* var );
+    
+    void bodyToConstraint( NormalRule* rule );
 
     
 //    Literal getLiteralForInputVar( unsigned int id, unsigned int sign );
@@ -141,6 +143,7 @@ private:
     void removeAndCheckSupport( NormalRule* rule );
     bool shrinkPos( NormalRule* rule, unsigned lit );
     void shrinkNeg( NormalRule* rule, unsigned lit );
+    void shrinkDoubleNeg( NormalRule* rule, unsigned lit );
     void onShrinking( NormalRule* rule );
     
     void createCrule( Literal head, NormalRule* rule );
