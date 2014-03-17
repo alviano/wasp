@@ -651,7 +651,7 @@ GringoNumericFormat::processRecursivePositiveCrule(
         crule->getAt( j ).getVariable()->setFrozen();
         if( crule->getAt( j ).isNegative() )
         {
-            if( crule->getAt( j ).getVariable()->inTheSameComponent( variable ) )
+            if( crule->getAt( j ).getVariable()->inTheSameComponent( variable ) && variable != crule->getAt( j ).getVariable() /* FIXME: variable == ruleVar if it is a double negated literal. Clauses lack this information */ )
             {
                 Literal lit = crule->getAt( j ).getOppositeLiteral();
                 trace_msg( parser, 3, "Adding " << lit << " to the supporting rule of " << *variable );
@@ -683,7 +683,7 @@ GringoNumericFormat::processRecursiveNegativeCrule(
         if( literalsPostPropagator[ crule->getAt( j ).getSign() ][ ruleVar ].insert( component ).second )
             Literal( ruleVar, crule->getAt( j ).getSign() ).addPostPropagator( component );
 
-        if( crule->getAt( j ).isPositive() && variable->inTheSameComponent( ruleVar ) )
+        if( crule->getAt( j ).isPositive() && variable->inTheSameComponent( ruleVar ) && variable != ruleVar /* FIXME: variable == ruleVar if it is a double negated literal. Clauses lack this information */ )
         {
             trace_msg( parser, 3, "Adding " << *ruleVar << " as internal rule for " << *variable );
             component->addInternalLiteralForVariable( variable->getId(), Literal( ruleVar, POSITIVE ) );
