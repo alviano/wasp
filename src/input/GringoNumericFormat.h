@@ -53,19 +53,21 @@ public:
         vector< unsigned > negBody;
         vector< unsigned > posBody;
         vector< unsigned > posBodyTrue;
+        vector< unsigned > doubleNegBody;
         
         inline NormalRule( unsigned head_ ) : head( head_ ) {}
         
         inline bool isRemoved() const { return head == 0; }
         inline void remove() { head = 0; }
         
-        inline bool isFact() const { return posBody.empty() && negBody.empty() && posBodyTrue.empty(); }
-        inline bool isFiring() const { return posBody.empty() && negBody.empty(); }
-        inline unsigned size() const { return negBody.size() + posBody.size() + posBodyTrue.size(); }
+        inline bool isFact() const { return posBody.empty() && negBody.empty() && posBodyTrue.empty() && doubleNegBody.empty(); }
+        inline bool isFiring() const { return posBody.empty() && negBody.empty() && doubleNegBody.empty(); }
+        inline unsigned size() const { return negBody.size() + posBody.size() + posBodyTrue.size() + doubleNegBody.size(); }
         
         inline void addNegativeLiteral( unsigned id ) { negBody.push_back( id ); }
         inline void addPositiveLiteral( unsigned id ) { posBody.push_back( id ); }
         inline void addPositiveTrueLiteral( unsigned id ) { posBodyTrue.push_back( id ); }
+        inline void addDoubleNegLiteral( unsigned id ) { doubleNegBody.push_back( id ); }
     };
     
     class WeightConstraintRule
@@ -182,11 +184,12 @@ public:
         vector< NormalRule* > headOccurrences;
         vector< NormalRule* > posOccurrences;
         vector< NormalRule* > negOccurrences;
-        
         vector< WeightConstraintRule* > negWeightConstraintsOccurrences;
         vector< unsigned int > positionsInNegWeightConstraints;
         vector< WeightConstraintRule* > posWeightConstraintsOccurrences;
         vector< unsigned int > positionsInPosWeightConstraints;
+        vector< NormalRule* > doubleNegOccurrences;
+        
         unsigned readNormalRule_negativeLiterals;
         unsigned readNormalRule_positiveLiterals;
         
@@ -202,6 +205,7 @@ public:
     };        
     
 private:
+    void readChoiceRule( istream& input );
     void readNormalRule( istream& input );
     void readNormalRule( istream& input, unsigned head, int bodySize, int negativeSize );
     void readConstraint( istream& input );
@@ -240,6 +244,8 @@ private:
     void propagateFalse( Variable* var );
     void propagateFact( Variable* var );
     
+    void bodyToConstraint( NormalRule* rule );
+    
 //    Literal getLiteralForInputVar( unsigned int id, unsigned int sign );
 //    Literal getLiteralForAuxVar( unsigned int id, unsigned int sign );
 
@@ -257,6 +263,7 @@ private:
     void removeAndCheckSupport( NormalRule* rule );
     bool shrinkPos( NormalRule* rule, unsigned lit );
     void shrinkNeg( NormalRule* rule, unsigned lit );
+    void shrinkDoubleNeg( NormalRule* rule, unsigned lit );
     void onShrinking( NormalRule* rule );
     
     void updateMaxPossibleValueWeightConstraint( WeightConstraintRule* rule, unsigned int position );

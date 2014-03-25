@@ -403,6 +403,7 @@ Solver::addClause(
 {
     assert( clause != NULL );
     assert( clause->allUndefined() );
+    assert( !clause->isTautology() );
     
     unsigned int size = clause->size();    
     if( size > 1 )

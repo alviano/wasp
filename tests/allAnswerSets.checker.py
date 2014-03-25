@@ -12,6 +12,8 @@ def checker(actualOutput, actualError):
     global output
     expectedModels = decodeModels(output)
     actualModels = decodeModels(actualOutput)
+    #print(expectedModels)
+    #print(actualModels)
     if expectedModels != actualModels:
         reportFailure(expectedModels, actualModels)
     else:

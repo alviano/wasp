@@ -87,6 +87,7 @@ TESTS_DIR = tests
 TESTS_TESTER = $(TESTS_DIR)/pyregtest.py
 
 TESTS_COMMAND_AllAnswerSets = $(BINARY) -n 0 --silent #gringo | $(BINARY)
+TESTS_COMMAND_gringo = gringo --shift | $(BINARY) -n 0 --silent
 TESTS_COMMAND_SatModel = $(BINARY)
 
 TESTS_CHECKER_AllAnswerSets = $(TESTS_DIR)/allAnswerSets.checker.py
@@ -113,6 +114,10 @@ TESTS_OUT_asp_AllAnswerSetsAggregates = $(patsubst %.test.py,%.test.py.text, $(T
 TESTS_DIR_asp_AllAnswerSetsIntensive = $(TESTS_DIR)/asp/AllAnswerSetsIntensive
 TESTS_SRC_asp_AllAnswerSetsIntensive = $(sort $(shell find $(TESTS_DIR_asp_AllAnswerSetsIntensive) -name '*.test.py'))
 TESTS_OUT_asp_AllAnswerSetsIntensive = $(patsubst %.test.py,%.test.py.text, $(TESTS_SRC_asp_AllAnswerSetsIntensive))
+
+TESTS_DIR_asp_gringo = $(TESTS_DIR)/asp/gringo
+TESTS_SRC_asp_gringo = $(sort $(shell find $(TESTS_DIR_asp_gringo) -name '*.test.py'))
+TESTS_OUT_asp_gringo = $(patsubst %.test.py,%.test.py.text, $(TESTS_SRC_asp_gringo))
 
 TESTS_DIR_sat_Models = $(TESTS_DIR)/sat/Models
 TESTS_SRC_sat_Models = $(sort $(shell find $(TESTS_DIR_sat_Models) -name '*.test.py'))
@@ -163,6 +168,7 @@ $(TESTS_OUT_sat_Intensive3):
 
 tests/asp: tests/asp/AllAnswerSets/tight tests/asp/AllAnswerSets/nontight tests/asp/AllAnswerSets/aggregates tests/asp/AllAnswerSetsIntensive
 
+tests/asp/gringo: $(TESTS_OUT_asp_gringo)
 tests/asp/AllAnswerSets/tight: $(TESTS_OUT_asp_AllAnswerSetsTight)
 tests/asp/AllAnswerSets/nontight: $(TESTS_OUT_asp_AllAnswerSetsNonTight)
 tests/asp/AllAnswerSets/aggregates: $(TESTS_OUT_asp_AllAnswerSetsAggregates)
@@ -180,6 +186,9 @@ $(TESTS_OUT_asp_AllAnswerSetsAggregates):
 
 $(TESTS_OUT_asp_AllAnswerSetsIntensive):
 	@$(TESTS_TESTER) "$(TESTS_COMMAND_AllAnswerSets)" $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_AllAnswerSets) $(TESTS_REPORT_text)
+
+$(TESTS_OUT_asp_gringo):
+	@$(TESTS_TESTER) "$(TESTS_COMMAND_gringo)" $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_AllAnswerSets) $(TESTS_REPORT_text)
 
 ########## Clean
 
