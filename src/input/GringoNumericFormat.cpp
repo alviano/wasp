@@ -98,7 +98,7 @@ GringoNumericFormat::parse(
 //    cout << "occs\n";
 //    for( unsigned i = 1; i < 10; i++)
 //        cout << c[i] << endl;
-    cout << "Solving..." << endl;
+//    cout << "Solving..." << endl;
 }
 
 void

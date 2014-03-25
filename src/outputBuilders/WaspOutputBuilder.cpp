@@ -59,3 +59,9 @@ WaspOutputBuilder::onProgramIncoherent()
 {
      cout << NOMODEL << endl;
 }
+
+void
+WaspOutputBuilder::greetings()
+{
+    cout << WASP_STRING << endl;
+}

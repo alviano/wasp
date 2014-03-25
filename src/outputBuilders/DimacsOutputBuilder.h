@@ -29,6 +29,7 @@ class DimacsOutputBuilder : public OutputBuilder
         virtual void printVariable( const Variable* );
         virtual void endModel();
         virtual void onProgramIncoherent();
+        virtual void greetings();
     
     private:
         unsigned int numberOfModels;

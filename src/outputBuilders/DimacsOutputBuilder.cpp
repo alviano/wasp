@@ -61,3 +61,9 @@ DimacsOutputBuilder::onProgramIncoherent()
     EXIT_CODE = 20;
     cout << SOLUTION_DIMACS << " " << UNSAT << endl;
 }
+
+void
+DimacsOutputBuilder::greetings()
+{
+    cout << COMMENT_DIMACS << " " << WASP_STRING << endl;
+}
