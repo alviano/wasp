@@ -48,7 +48,7 @@ class Component : public PostPropagator
         inline Component( vector< GUSData* >& gusData_ ) : PostPropagator(), gusData( gusData_ ), clauseToPropagate( NULL ), id( 0 ) {}
         inline ~Component() {}
         
-        virtual bool onLiteralFalse( Literal lit );
+        virtual bool onLiteralFalse( Literal lit, int );
 
         inline bool isCyclic() const { return variablesInComponent.size() > 1; }
         inline unsigned int size() const { return variablesInComponent.size(); }

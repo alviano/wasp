@@ -147,15 +147,15 @@ Variable::postPropagation(
     assert( getTruthValue() == TRUE ? sign == NEGATIVE : sign == POSITIVE );
     #endif
     
-    Vector< PostPropagator* >& wl = postPropagators[ ( getTruthValue() >> 1 ) ];
+    Vector< pair< PostPropagator*, int > >& wl = postPropagators[ ( getTruthValue() >> 1 ) ];
 
     Literal complement = Literal::createOppositeFromAssignedVariable( this );    
     
     for( unsigned i = 0; i < wl.size(); ++i )
     {
-        PostPropagator* postPropagator =  wl[ i ];
+        PostPropagator* postPropagator = wl[ i ].first;
         assert( "Post propagator is null." && postPropagator != NULL );
-        bool res = postPropagator->onLiteralFalse( complement );
+        bool res = postPropagator->onLiteralFalse( complement, wl[ i ].second );
         
         if( res )
             solver.addPostPropagator( postPropagator );

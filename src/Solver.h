@@ -39,6 +39,7 @@ using namespace std;
 #include "util/Statistics.h"
 #include "PostPropagator.h"
 #include "DependencyGraph.h"
+#include "Aggregate.h"
 
 class Solver
 {
@@ -188,6 +189,9 @@ class Solver
         
         inline Satelite* getSatelite() { return satelite; }
         
+        inline void addAggregate( Aggregate* aggr ) { assert( aggr != NULL ); aggregates.push_back( aggr ); }
+        inline bool hasPropagators() const { return ( !tight() || !aggregates.empty() ); }
+        
     private:
         inline Variable* addVariableInternal();
         
@@ -232,7 +236,7 @@ class Solver
         Vector< PostPropagator* > postPropagators;
         
         vector< GUSData* > gusDataVector;
-
+        vector< Aggregate* > aggregates;
         struct DeletionCounters
         {
             Activity increment;
@@ -625,7 +629,7 @@ Solver::analyzeConflict()
             nextValueOfPropagation--;            
             Variable* variableToPropagate = getNextVariableToPropagate();
             unitPropagation( variableToPropagate );
-            if( !tight() )
+            if( hasPropagators() )
                 postPropagation( variableToPropagate );
 
             if( conflictDetected() )
@@ -963,9 +967,10 @@ Solver::resetPostPropagators()
 {
     while( !postPropagators.empty() )
     {
-        PostPropagator* postPropagator = postPropagators.back();        
-        postPropagators.pop_back();        
+        PostPropagator* postPropagator = postPropagators.back();
+        postPropagators.pop_back();
         postPropagator->onRemoving();
+        postPropagator->reset();
     }
 }
 

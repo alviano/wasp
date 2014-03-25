@@ -30,15 +30,14 @@ class PostPropagator
         inline PostPropagator() : inserted( false ) {}
         virtual ~PostPropagator() {}
         
-        virtual bool onLiteralFalse( Literal literal ) = 0;
+        virtual bool onLiteralFalse( Literal literal, int pos ) = 0;
         virtual Clause* getClauseToPropagate( Learning& learning ) = 0;
         
         inline void onAdding();
         inline void onRemoving();
         
         bool hasBeenAdded() const { return inserted; }
-        
-    protected:
+    
         virtual void reset() = 0;
         
     private:
@@ -55,8 +54,7 @@ PostPropagator::onAdding()
 void
 PostPropagator::onRemoving()
 {
-    inserted = false;
-    reset();
+    inserted = false;    
 }
 
 #endif

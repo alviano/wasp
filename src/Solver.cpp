@@ -51,7 +51,14 @@ Solver::~Solver()
             delete gusDataVector.back();
         gusDataVector.pop_back();
     }
-        
+    
+    while( !aggregates.empty() )
+    {
+        assert( aggregates.back() );
+        delete aggregates.back();
+        aggregates.pop_back();
+    }
+    
     if( outputBuilder != NULL )
         delete outputBuilder;
     
@@ -88,6 +95,11 @@ Solver::unroll(
     }
     
     variables.onUnroll();
+    
+    for( unsigned int i = 0; i < aggregates.size(); i++ )
+    {
+        aggregates[ i ]->reset();
+    }
 }
 
 bool
@@ -128,7 +140,9 @@ Solver::addClauseFromModelAndRestart()
     }
     
     this->doRestart();
-    simplifyOnRestart();
+    simplifyOnRestart();    
+    clearConflictStatus();
+    
     return addClauseFromModel( clause );
 }
 
@@ -361,6 +375,11 @@ Solver::printProgram() const
     for( ConstClauseIterator it = clauses.begin(); it != clauses.end(); ++it )
     {
         cout << *( *it ) << endl;
+    }
+    
+    for( unsigned int i = 0; i < aggregates.size(); i++ )
+    {
+        cout << *aggregates[ i ] << endl;
     }
 }
 

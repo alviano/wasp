@@ -45,6 +45,7 @@ namespace wasp
 #define OPTIONID_trace_learning ( 'z' + 6 )
 #define OPTIONID_trace_enumeration ( 'z' + 7 )
 #define OPTIONID_trace_satelite ( 'z' + 8 )
+#define OPTIONID_trace_aggregates ( 'z' + 9 )
 
 /* OUTPUT OPTIONS */
 #define OPTIONID_silent ( 'z' + 20 )
@@ -142,6 +143,7 @@ Options::parse(
                 { "trace-learning", required_argument, NULL, OPTIONID_trace_learning },
                 { "trace-enumeration", required_argument, NULL, OPTIONID_trace_enumeration },
                 { "trace-satelite", required_argument, NULL, OPTIONID_trace_satelite },
+                { "trace-aggregates", required_argument, NULL, OPTIONID_trace_aggregates },
 
                 /* OUTPUT OPTIONS */
                 { "competition-output", no_argument, NULL, OPTIONID_competition_output },
@@ -232,6 +234,10 @@ Options::parse(
                 
             case OPTIONID_trace_satelite:
                 setTraceLevel( satelite, atoi( optarg ) );
+                break;
+                
+            case OPTIONID_trace_aggregates:
+                setTraceLevel( aggregates, atoi( optarg ) );
                 break;
 
             case OPTIONID_competition_output:

@@ -3,6 +3,7 @@
 #include "../util/Constants.h"
 #include "../util/ErrorMessage.h"
 #include "../Clause.h"
+#include "../Aggregate.h"
 
 #include <cassert>
 #include <iostream>
@@ -38,9 +39,12 @@ GringoNumericFormat::parse(
             ErrorMessage::errorDuringParsing( "Unsupported rule type." );
             break;
 
-        case GRINGO_CONSTRAINT_RULE_ID:
-//                readConstraintRule( input );
-            ErrorMessage::errorDuringParsing( "Unsupported rule type." );
+        case GRINGO_COUNT_CONSTRAINT_RULE_ID:
+            readCount( input );
+            break;
+            
+        case GRINGO_SUM_CONSTRAINT_RULE_ID:
+            readSum( input );
             break;
 
         case GRINGO_DISJUNCTIVE_RULE_ID:
@@ -79,11 +83,13 @@ GringoNumericFormat::parse(
     {
         trace_msg( parser, 1, "Program is not tight" );
         computeGusStructures();
-    } else
+    }
+    else
     {
         trace_msg( parser, 1, "Program is tight" );
     }
     computeCompletion();
+    addWeightConstraints();
 
     //TODO: remove
 //    cout << solver.numberOfVariables() << endl;
@@ -249,8 +255,121 @@ GringoNumericFormat::readConstraint(
             return;
         }
     }
-
+    
+    trace_msg( parser, 2, "Adding clause " << *clause );
     solver.addClause( clause );
+}
+
+void
+GringoNumericFormat::readCount(
+    istream& input )
+{
+    unsigned int id, bound, size, negativeSize, tmp;
+    input >> id >> size >> negativeSize >> bound;
+    
+    createStructures( id );
+    if( size < negativeSize )
+    {
+        ErrorMessage::errorDuringParsing( "Size must be greater than or equal to negative size." );
+    }
+    
+    if( size < bound )
+    {
+        cerr << "Add clause representing the falsity of the aggregate." << endl;
+        assert( 0 && "IMPLEMENT ME!" );
+    }
+
+    WeightConstraintRule* weightConstraintRule = new WeightConstraintRule( id, bound );
+    while( negativeSize-- > 0 )
+    {
+        --size;
+        input >> tmp;
+        createStructures( tmp );
+        //Eventually we should create again the set.
+//        if( atomData[ tmp ].readNormalRule_negativeLiterals == readNormalRule_numberOfCalls )
+//            continue;
+//        if( solver.getVariable( tmp )->isTrue() )
+//            continue;
+//        else if( solver.getVariable( tmp )->isFalse() )
+//        {
+//            assert( weightConstraintRule->bound > 0 );
+//            --weightConstraintRule->bound;
+//        }
+//        else
+            weightConstraintRule->addNegativeLiteral( tmp, 1 );
+    }
+    while( size-- > 0 )
+    {
+        input >> tmp;
+        createStructures( tmp );
+//        if( solver.getVariable( tmp )->isFalse() )
+//            continue;
+//        else if( solver.getVariable( tmp )->isTrue() )
+//        {
+//            assert( weightConstraintRule->bound > 0 );
+//            --weightConstraintRule->bound;
+//        }
+//        else        
+            weightConstraintRule->addPositiveLiteral( tmp, 1 );
+    }
+    
+    assert( weightConstraintRule->literals.size() == weightConstraintRule->weights.size() );    
+    add( weightConstraintRule );
+}
+
+void
+GringoNumericFormat::readSum(
+    istream& input )
+{
+    unsigned int id, bound, size, negativeSize, tmp;
+    input >> id >> bound >> size >> negativeSize;
+
+    createStructures( id );
+
+    if( size < negativeSize )
+    {
+        ErrorMessage::errorDuringParsing( "Size must be greater than or equal to negative size." );
+    }
+    
+    WeightConstraintRule* weightConstraintRule = new WeightConstraintRule( id, bound );
+    
+    unsigned int counter = 0;
+    
+    while( counter < negativeSize )
+    {
+        input >> tmp;
+        createStructures( tmp );
+        weightConstraintRule->addNegativeLiteral( tmp );
+        ++counter;
+    }
+    while( counter < size )
+    {
+        input >> tmp;
+        createStructures( tmp );
+        weightConstraintRule->addPositiveLiteral( tmp );
+        ++counter;
+    }
+        
+    counter = 0;
+    while( counter < negativeSize )
+    {
+        input >> tmp;
+        if( tmp > bound )
+            tmp = bound;
+        weightConstraintRule->addNegativeLiteralWeight( tmp );
+        ++counter;
+    }
+    while( counter < size )
+    {
+        input >> tmp;        
+        if( tmp > bound )
+            tmp = bound;
+        weightConstraintRule->addPositiveLiteralWeight( tmp );
+        ++counter;
+    }
+
+    assert( weightConstraintRule->literals.size() == weightConstraintRule->weights.size() );
+    add( weightConstraintRule );
 }
 
 void
@@ -310,6 +429,29 @@ GringoNumericFormat::propagateTrue(
         removeAndCheckSupport( rule );
     }
     data.negOccurrences.clear();
+    
+    for( unsigned int i = 0; i < data.negWeightConstraintsOccurrences.size(); i++ )
+    {
+        WeightConstraintRule* weightConstraintRule = data.negWeightConstraintsOccurrences[ i ];
+        assert( weightConstraintRule != NULL );
+        updateMaxPossibleValueWeightConstraint( weightConstraintRule, data.positionsInNegWeightConstraints[ i ] );
+    }
+    data.negWeightConstraintsOccurrences.clear();
+    data.positionsInNegWeightConstraints.clear();
+    
+    for( unsigned int i = 0; i < data.posWeightConstraintsOccurrences.size(); i++ )
+    {
+        WeightConstraintRule* weightConstraintRule = data.posWeightConstraintsOccurrences[ i ];
+        assert( weightConstraintRule != NULL );        
+        updateCurrentValueWeightConstraint( weightConstraintRule, data.positionsInPosWeightConstraints[ i ] );
+    }
+    data.posWeightConstraintsOccurrences.clear();
+    data.positionsInPosWeightConstraints.clear();
+    
+    if( data.isWeightConstraint() )
+    {
+        weightConstraintIsTrue( data.weightConstraintRule );
+    }
 }
 
 void
@@ -357,6 +499,29 @@ GringoNumericFormat::propagateFalse(
         shrinkNeg( rule, var->getId() );
     }
     data.negOccurrences.clear();
+    
+    for( unsigned int i = 0; i < data.negWeightConstraintsOccurrences.size(); i++ )
+    {
+        WeightConstraintRule* weightConstraintRule = data.negWeightConstraintsOccurrences[ i ];
+        assert( weightConstraintRule != NULL );
+        updateCurrentValueWeightConstraint( weightConstraintRule, data.positionsInNegWeightConstraints[ i ] );
+    }
+    data.negWeightConstraintsOccurrences.clear();
+    data.positionsInNegWeightConstraints.clear();
+    
+    for( unsigned int i = 0; i < data.posWeightConstraintsOccurrences.size(); i++ )
+    {
+        WeightConstraintRule* weightConstraintRule = data.posWeightConstraintsOccurrences[ i ];
+        assert( weightConstraintRule != NULL );
+        updateMaxPossibleValueWeightConstraint( weightConstraintRule, data.positionsInPosWeightConstraints[ i ] );
+    }
+    data.posWeightConstraintsOccurrences.clear();
+    data.positionsInPosWeightConstraints.clear();
+    
+    if( data.isWeightConstraint() )
+    {
+        weightConstraintIsFalse( data.weightConstraintRule );
+    }
 }
 
 void
@@ -400,6 +565,20 @@ GringoNumericFormat::addFact(
     atomData[ head ].setSupported();
     solver.addClause( Literal( solver.getVariable( head ), POSITIVE ) );
     facts.push_back( head );
+}
+
+void
+GringoNumericFormat::addTrueVariable(
+    unsigned int id )
+{
+    solver.addClause( Literal( solver.getVariable( id ), POSITIVE ) );
+}
+    
+void
+GringoNumericFormat::addFalseVariable(
+    unsigned int id )
+{   
+    solver.addClause( Literal( solver.getVariable( id ), NEGATIVE ) );
 }
 
 void
@@ -565,7 +744,7 @@ GringoNumericFormat::processRecursiveNegativeCrule(
         Variable* ruleVar = crule->getAt( j ).getVariable();
         ruleVar->setFrozen();
         if( literalsPostPropagator[ crule->getAt( j ).getSign() ][ ruleVar ].insert( component ).second )
-            Literal( ruleVar, crule->getAt( j ).getSign() ).addPostPropagator( component );
+            Literal( ruleVar, crule->getAt( j ).getSign() ).addPostPropagator( component, -1 );
 
         if( crule->getAt( j ).isPositive() && variable->inTheSameComponent( ruleVar ) )
         {
@@ -651,7 +830,8 @@ void
 GringoNumericFormat::createStructures(
     unsigned id )
 {
-    while( id >= atomData.size() ) {
+    while( id >= atomData.size() )
+    {
         solver.addVariable();
         solver.addEdgeInDependencyGraph( solver.numberOfVariables(), 0 );
         atomData.push_back( AtomData( false ) );
@@ -674,7 +854,7 @@ GringoNumericFormat::simplify()
     while( !atomsWithSupportInference.empty() )
     {
         AtomData& data = atomData[ atomsWithSupportInference.back() ];
-        if( !data.isSupported() && !solver.getVariable( atomsWithSupportInference.back() )->isFalse() )
+        if( !data.isSupported() && !solver.getVariable( atomsWithSupportInference.back() )->isFalse() && !data.isWeightConstraint() )
         {
             if( data.numberOfHeadOccurrences == 0 )
             {
@@ -746,7 +926,7 @@ GringoNumericFormat::computeSCCs()
     {
         AtomData& data = atomData[ i ];
         Variable* var = solver.getVariable( i );
-        if( data.isSupported() || var->isFalse() )
+        if( data.isSupported() || var->isFalse() || data.isWeightConstraint() )
             continue;
         assert( data.numberOfHeadOccurrences > 0 );
         
@@ -852,6 +1032,73 @@ GringoNumericFormat::add(
 }
 
 void
+GringoNumericFormat::add(
+    WeightConstraintRule* weightConstraintRule )
+{
+    assert( weightConstraintRule != NULL );
+    
+    trace_msg( parser, 2, "Adding weight constraint rule " << *weightConstraintRule );
+    removeSatisfiedLiterals( weightConstraintRule );
+    weightConstraintRule->sort();
+    trace_msg( parser, 2, "Sorted weight constraint rule " << *weightConstraintRule );
+    weightConstraintRules.push_back( weightConstraintRule );
+
+    atomData[ weightConstraintRule->id ].setWeightConstraint( weightConstraintRule );
+    for( unsigned i = 0; i < weightConstraintRule->literals.size(); ++i )
+    {
+        int lit = weightConstraintRule->literals[ i ];
+        if( lit < 0 )
+        {
+            atomData[ -lit ].negWeightConstraintsOccurrences.push_back( weightConstraintRule );
+            atomData[ -lit ].positionsInNegWeightConstraints.push_back( i );
+        }
+        else
+        {
+            atomData[ lit ].posWeightConstraintsOccurrences.push_back( weightConstraintRule );
+            atomData[ lit ].positionsInPosWeightConstraints.push_back( i );
+        }
+    }
+    
+    if( weightConstraintRule->isTrue() )
+        addTrueVariable( weightConstraintRule->id );
+    else if( weightConstraintRule->isFalse() )
+        addFalseVariable( weightConstraintRule->id );    
+}
+
+void
+GringoNumericFormat::removeSatisfiedLiterals(
+    WeightConstraintRule* weightConstraintRule )
+{
+    assert( weightConstraintRule != NULL );
+    assert( weightConstraintRule->literals.size() == weightConstraintRule->weights.size() );
+    unsigned int j = 0;
+    for( unsigned int i = 0; i < weightConstraintRule->literals.size(); i++ )
+    {
+        weightConstraintRule->literals[ j ] = weightConstraintRule->literals[ i ];
+        weightConstraintRule->weights[ j ] = weightConstraintRule->weights[ i ];
+        
+        int literalId = weightConstraintRule->literals[ i ];
+        Literal lit = solver.getLiteral( literalId );
+        if( lit.isTrue() )
+        {
+            if( weightConstraintRule->bound >= weightConstraintRule->weights[ i ] )
+                weightConstraintRule->bound -= weightConstraintRule->weights[ i ];
+            else
+                weightConstraintRule->bound = 0;
+        }
+        else if( !lit.isFalse() )
+        {
+            weightConstraintRule->maxPossibleValue += weightConstraintRule->weights[ i ];
+            j++;
+        }
+    }
+    
+    weightConstraintRule->literals.resize( j );
+    weightConstraintRule->weights.resize( j );
+}
+
+
+void
 GringoNumericFormat::removeAndCheckSupport(
     NormalRule* rule )
 {
@@ -942,6 +1189,256 @@ GringoNumericFormat::shrinkNeg(
     assert( 0 );
 }
 
+void
+GringoNumericFormat::updateMaxPossibleValueWeightConstraint(
+    WeightConstraintRule* weightConstraintRule,
+    unsigned int position )
+{
+    assert( weightConstraintRule != NULL );
+    trace_msg( parser, 4, "Updating values for weightConstraintRule " << *weightConstraintRule );
+    if( weightConstraintRule->isFalse() || weightConstraintRule->isTrue() )
+    {
+        trace_msg( parser, 4, "It is satisfied: skipping" );
+        return;
+    }
+    
+    assert( position < weightConstraintRule->weights.size() );
+    weightConstraintRule->maxPossibleValue -= weightConstraintRule->weights[ position ];    
+    
+    assert( !weightConstraintRule->isTrue() );
+    if( weightConstraintRule->isFalse() )
+    {
+        trace_msg( parser, 4, "Inferring (weight constraint) variable " << weightConstraintRule->id << " as false" );
+        addFalseVariable( weightConstraintRule->id );
+    }
+    else
+    {
+        if( solver.getVariable( weightConstraintRule->id )->isTrue() )
+        {
+            weightConstraintIsTrue( weightConstraintRule );
+        }
+        else if( solver.getVariable( weightConstraintRule->id )->isFalse() )
+        {
+            weightConstraintIsFalse( weightConstraintRule );
+        }
+    }    
+}
+
+void
+GringoNumericFormat::updateCurrentValueWeightConstraint(
+    WeightConstraintRule* weightConstraintRule,
+    unsigned int position )
+{
+    assert( weightConstraintRule != NULL );
+    trace_msg( parser, 4, "Updating values for weightConstraintRule " << *weightConstraintRule );
+    if( weightConstraintRule->isFalse() || weightConstraintRule->isTrue() )
+    {
+        trace_msg( parser, 4, "It is satisfied: skipping" );
+        return;
+    }
+    
+    assert( position < weightConstraintRule->weights.size() );
+    weightConstraintRule->currentValue += weightConstraintRule->weights[ position ];    
+    
+    assert( !weightConstraintRule->isFalse() );
+    if( weightConstraintRule->isTrue() )
+    {
+        trace_msg( parser, 4, "Inferring (weight constraint) variable " << weightConstraintRule->id << " as true" );
+        addTrueVariable( weightConstraintRule->id );
+    }
+    else
+    {
+        if( solver.getVariable( weightConstraintRule->id )->isTrue() )
+        {
+            weightConstraintIsTrue( weightConstraintRule );
+        }
+        else if( solver.getVariable( weightConstraintRule->id )->isFalse() )
+        {
+            weightConstraintIsFalse( weightConstraintRule );
+        }
+    }    
+}
+
+void
+GringoNumericFormat::weightConstraintIsTrue(
+    WeightConstraintRule* weightConstraintRule )
+{
+    assert( weightConstraintRule != NULL );
+    
+    trace_msg( parser, 4, "WeightConstraintRule " << *weightConstraintRule << " is true" );
+    if( weightConstraintRule->isFalse() || weightConstraintRule->isTrue() )
+    {
+        trace_msg( parser, 4, "...and it is satisfied" );
+        return;
+    }
+    
+    unsigned int maxPossibleValue = weightConstraintRule->maxPossibleValue;
+    unsigned int i = 0;
+    while( i < weightConstraintRule->literals.size() )
+    {
+        Literal lit = solver.getLiteral( weightConstraintRule->literals[ i ] );
+        if( lit.isUndefined() )
+        {
+            if( ( maxPossibleValue - weightConstraintRule->weights[ i ] ) < weightConstraintRule->bound )
+            {
+                assert( weightConstraintRule->literals[ i ] != 0 );
+
+                if( weightConstraintRule->literals[ i ] > 0 )
+                {
+                    trace_msg( parser, 4, "Inferring " << weightConstraintRule->literals[ i ] << " as true" );
+                    addTrueVariable( weightConstraintRule->literals[ i ] );
+                }
+                else
+                {
+                    trace_msg( parser, 4, "Inferring " << weightConstraintRule->literals[ i ] << " as false" );
+                    addFalseVariable( -weightConstraintRule->literals[ i ] );
+                } 
+            }
+            else
+                break;
+        }        
+        
+        i++;
+    }
+}
+
+void
+GringoNumericFormat::weightConstraintIsFalse(
+    WeightConstraintRule* weightConstraintRule )
+{    
+    assert( weightConstraintRule != NULL );
+    
+    trace_msg( parser, 4, "WeightConstraintRule " << *weightConstraintRule << " is false" );
+    if( weightConstraintRule->isFalse() || weightConstraintRule->isTrue() )
+    {
+        trace_msg( parser, 4, "...and it is satisfied" );
+        return;
+    }
+
+    unsigned int currentValue = weightConstraintRule->currentValue;
+    unsigned int i = 0;
+    while( i < weightConstraintRule->literals.size() )
+    {
+        Literal lit = solver.getLiteral( weightConstraintRule->literals[ i ] );
+        if( lit.isUndefined() )
+        {
+            if( ( currentValue + weightConstraintRule->weights[ i ] ) >= weightConstraintRule->bound )
+            {
+                assert( weightConstraintRule->literals[ i ] != 0 );
+                if( weightConstraintRule->literals[ i ] > 0 )
+                {
+                    trace_msg( parser, 4, "Inferring " << weightConstraintRule->literals[ i ] << " as false" );
+                    addFalseVariable( weightConstraintRule->literals[ i ] );
+                }
+                else
+                {
+                    trace_msg( parser, 4, "Inferring " << -weightConstraintRule->literals[ i ] << " as true" );
+                    addTrueVariable( -weightConstraintRule->literals[ i ] );
+                }
+            }
+            else
+                break;
+        }
+
+        i++;
+    }
+}
+
+void
+GringoNumericFormat::addWeightConstraints()
+{
+    trace_msg( parser, 4, "Adding weight constraints (if any)" );
+    for( unsigned int i = 0; i < weightConstraintRules.size(); i++ )
+    {
+        WeightConstraintRule* weightConstraintRule = weightConstraintRules[ i ];
+        trace_msg( parser, 4, "Considering weight constraint " << *weightConstraintRule );
+        if( weightConstraintRule->isFalse() )
+        {
+            trace_msg( parser, 5, "... which is false: skipping it." );
+            assert( solver.getVariable( weightConstraintRule->id )->isFalse() );                        
+            continue;
+        }
+        else if( weightConstraintRule->isTrue() )
+        {
+            trace_msg( parser, 5, "... which is true: skipping it." );
+            assert( solver.getVariable( weightConstraintRule->id )->isTrue() );
+            continue;
+        }
+        
+        unsigned int sumOfWeights = 0;
+        
+        unsigned int k = 0;
+        for( unsigned int j = 0; j < weightConstraintRule->literals.size(); j++ )
+        {
+            weightConstraintRule->literals[ k ] = weightConstraintRule->literals[ j ];
+            weightConstraintRule->weights[ k ] = weightConstraintRule->weights[ j ];
+
+            unsigned int weight = weightConstraintRule->weights[ j ];
+            Literal lit = solver.getLiteral( weightConstraintRule->literals[ j ] );
+
+            assert( weight <= weightConstraintRule->bound );
+            if( lit.isTrue() )
+                weightConstraintRule->bound -= weight;
+            else if( !lit.isFalse() )
+            {
+                sumOfWeights += weight;
+                ++k;
+            }
+        }
+        
+        weightConstraintRule->literals.resize( k );
+        weightConstraintRule->weights.resize( k );
+
+        unsigned int w1 = ( sumOfWeights - weightConstraintRule->bound + 1 );
+        unsigned int w = max( w1, weightConstraintRule->bound );
+        
+        Literal aggregateLiteral = solver.getLiteral( weightConstraintRule->id );
+
+        aggregateLiteral.getVariable()->setFrozen();
+        Aggregate* aggregate = new Aggregate();
+        
+        aggregate->addLiteral( aggregateLiteral.getOppositeLiteral(), w );
+        aggregateLiteral.addPostPropagator( aggregate, -1 );
+        aggregateLiteral.getOppositeLiteral().addPostPropagator( aggregate, 1 );        
+        
+        for( unsigned int j = 0; j < weightConstraintRule->literals.size(); j++ )
+        {
+            unsigned int weight = weightConstraintRule->weights[ j ];
+            Literal lit = solver.getLiteral( weightConstraintRule->literals[ j ] );
+
+            assert( lit.isUndefined() );
+            assert( weight <= weightConstraintRule->bound );
+            aggregate->addLiteral( lit, weight );
+            lit.getVariable()->setFrozen();
+            lit.getOppositeLiteral().addPostPropagator( aggregate, -( aggregate->size() ) );
+            lit.addPostPropagator( aggregate, aggregate->size() );            
+        }
+
+        assert( weightConstraintRule->bound != 0 );
+        assert( aggregate->size() > 0 );        
+        
+        unsigned int counterW1 = sumOfWeights - w1 + w;
+        unsigned int counterW2 = sumOfWeights - weightConstraintRule->bound + w;
+        
+        aggregate->setCounterW1( counterW1 );
+        aggregate->setCounterW2( counterW2 );
+        
+        if( aggregateLiteral.isFalse() )
+        {
+            if( aggregate->onLiteralFalse( aggregateLiteral, -1 ) )
+                solver.addPostPropagator( aggregate );
+        }
+        else if( aggregateLiteral.isTrue() )
+        {
+            if( aggregate->onLiteralFalse( aggregateLiteral.getOppositeLiteral(), 1 ) )
+                solver.addPostPropagator( aggregate );
+        }
+        
+        solver.addAggregate( aggregate );
+        trace_msg( parser, 4, "Adding aggregate " << *aggregate );        
+    }    
+}
+
 ostream&
 operator<<( 
     ostream& out, 
@@ -957,4 +1454,20 @@ operator<<(
     for( unsigned i = 0; i < rule.posBodyTrue.size(); ++i )
         out << rule.posBodyTrue[ i ] << " ";
     return out << "]}";
+}
+
+ostream&
+operator<<( 
+    ostream& out, 
+    const GringoNumericFormat::WeightConstraintRule& rule )
+{
+    out << "{id: " << rule.id << ". " << " [";
+    if( rule.literals.size() > 0 )
+    {
+        unsigned i = 0;
+        for( ; i < rule.literals.size() - 1; ++i )
+            out << rule.literals[ i ] << "=" << rule.weights[ i ] << ",";
+        out << rule.literals[ i ] << "=" << rule.weights[ i ];
+    }
+    return out << "] >= " << rule.bound << "}";
 }

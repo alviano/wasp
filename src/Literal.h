@@ -63,7 +63,7 @@ class Literal
         inline void addClause( Clause* clause );
         inline void findAndEraseClause( Clause* clauses );   
         
-        inline void addPostPropagator( PostPropagator* p );
+        inline void addPostPropagator( PostPropagator* p, int position );
         
         inline unsigned int getDecisionLevel() const;
 
@@ -282,10 +282,11 @@ Literal::addClause(
 
 void
 Literal::addPostPropagator(
-    PostPropagator* p )
+    PostPropagator* p,
+    int position )
 {
     assert( "Variable has not been set." && getVariable() != NULL );
-    getVariable()->addPostPropagator( p, getSign() );
+    getVariable()->addPostPropagator( p, getSign(), position );
 }
 
 void

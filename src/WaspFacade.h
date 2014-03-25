@@ -64,7 +64,7 @@ WaspFacade::WaspFacade() : numberOfModels( 0 ), maxModels( 1 ), printProgram( fa
 bool
 WaspFacade::solveInternal()
 {
-    if( solver.tight() )
+    if( !solver.hasPropagators() )
         return solver.solve();
     else
         return solver.solvePropagators();

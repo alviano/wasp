@@ -134,7 +134,7 @@ class Variable
         inline Component* getComponent() { return component; }
         
         void onLearningForUnfounded( Learning& learning );        
-        inline void addPostPropagator( PostPropagator* p, unsigned int sign ) { postPropagators[ sign ].push_back( p ); }
+        inline void addPostPropagator( PostPropagator* p, unsigned int sign, int position ) { postPropagators[ sign ].push_back( pair< PostPropagator*, int >( p, position ) ); }
         
         bool isFrozen() const { return frozen; }
         void setFrozen() { frozen = true; }
@@ -187,7 +187,7 @@ class Variable
          * Position POSITIVE of this vector contains the occurrences of the positive literal associated with this variable.
          * Position NEGATIVE of this vector contains the occurrences of the negative literal associated with this variable.
          */        
-        Vector< PostPropagator* > postPropagators[ 2 ];
+        Vector< pair< PostPropagator*, int > > postPropagators[ 2 ];
         
         uint64_t signature;
         
