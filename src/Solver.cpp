@@ -355,7 +355,8 @@ Solver::propagateAtLevelZero(
 {
     assert( "Variable to propagate has not been set." && variable != NULL );    
     variable->propagateAtLevelZero( *this );    
-    postPropagation( variable );
+    if( hasPropagators() )
+        postPropagation( variable );
 }
 
 void
@@ -367,6 +368,8 @@ Solver::propagateAtLevelZeroSatelite(
     
     assert( "Variable to propagate has not been set." && variable != NULL );    
     variable->propagateAtLevelZeroSatelite( *this );
+    if( hasPropagators() )
+        postPropagation( variable );
 }
 
 void

@@ -1552,12 +1552,12 @@ GringoNumericFormat::addWeightConstraints()
         if( aggregateLiteral.isFalse() )
         {
             if( aggregate->onLiteralFalse( aggregateLiteral, -1 ) )
-                solver.addPostPropagator( aggregate );
+                solver.addPostPropagator( aggregate );            
         }
         else if( aggregateLiteral.isTrue() )
         {
             if( aggregate->onLiteralFalse( aggregateLiteral.getOppositeLiteral(), 1 ) )
-                solver.addPostPropagator( aggregate );
+                solver.addPostPropagator( aggregate );            
         }
         
         solver.addAggregate( aggregate );
