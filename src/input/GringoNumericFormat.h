@@ -21,6 +21,7 @@
 
 #include "../Solver.h"
 #include "../stl/Trie.h"
+#include "../util/Istream.h"
 #include <unordered_set>
 
 using namespace std;
@@ -43,7 +44,7 @@ public:
     *
     * @param input The istream input.
     */
-    void parse( istream& input );    
+    void parse( Istream& input );    
 
     class NormalRule
     {
@@ -271,14 +272,14 @@ public:
     };        
     
 private:
-    void readChoiceRule( istream& input );
-    void readNormalRule( istream& input );
-    void readNormalRule( istream& input, unsigned head, int bodySize, int negativeSize );
-    void readConstraint( istream& input );
-    void readCount( istream& input );
-    void readSum( istream& input );
-    void skipLiterals( istream& input, unsigned howMany );
-    void readBodySize( istream& input, int& bodySize, int& negativeSize );
+    void readChoiceRule( Istream& input );
+    void readNormalRule( Istream& input );
+    void readNormalRule( Istream& input, unsigned head, int bodySize, int negativeSize );
+    void readConstraint( Istream& input );
+    void readCount( Istream& input );
+    void readSum( Istream& input );
+    void skipLiterals( Istream& input, unsigned howMany );
+    void readBodySize( Istream& input, int& bodySize, int& negativeSize );
     void addFact( unsigned head );
     void addTrueVariable( unsigned int id );
     void addFalseVariable( unsigned int id );
@@ -296,12 +297,12 @@ private:
     void simplify();
     void removeSatisfiedLiterals( WeightConstraintRule* );
     
-    void readAtomsTable( istream& input );
+    void readAtomsTable( Istream& input );
 
-    void readTrueAtoms( istream& input );
-    void readFalseAtoms( istream& input );
+    void readTrueAtoms( Istream& input );
+    void readFalseAtoms( Istream& input );
 
-    void readErrorNumber( istream& input );
+    void readErrorNumber( Istream& input );
     
     void createStructures( unsigned id );
     

@@ -4,6 +4,7 @@
 #include "../util/ErrorMessage.h"
 #include "../Clause.h"
 #include "../Aggregate.h"
+#include "../util/Istream.h"
 
 #include <cassert>
 #include <iostream>
@@ -15,12 +16,13 @@ using namespace std;
 void
 GringoNumericFormat::parse()
 {
-    this->parse( cin );
+    Istream input( cin );
+    this->parse( input );
 }
 
 void
 GringoNumericFormat::parse(
-    istream& input )
+    Istream& input )
 {
     trace_msg( parser, 1, "Start parsing..." );
     bool loop = true;
@@ -29,7 +31,7 @@ GringoNumericFormat::parse(
     while( loop )
     {
         unsigned int type;
-        input >> type;
+        input.read( type );
 
         value = constraints.size() + normalRules.size();
         if( value != 0 && value % 10000000 == 0 )
@@ -116,14 +118,14 @@ GringoNumericFormat::parse(
 
 void
 GringoNumericFormat::readChoiceRule(
-    istream& input )
+    Istream& input )
 {
     int headSize, bodySize, negativeSize;
-    input >> headSize;
+    input.read( headSize );
     unsigned head[ headSize ];
     for( int i = 0; i < headSize; )
     {
-        input >> head[ i ];
+        input.read( head[ i ] );
         createStructures( head[ i ] );
         if( solver.getVariable( head[ i ] )->isFalse() )
             --headSize;
@@ -143,7 +145,7 @@ GringoNumericFormat::readChoiceRule(
     while( negativeSize-- > 0 )
     {
         --bodySize;
-        input >> tmp;
+        input.read( tmp );
         createStructures( tmp );
         
         if( atomData[ tmp ].readNormalRule_negativeLiterals == readNormalRule_numberOfCalls )
@@ -162,7 +164,7 @@ GringoNumericFormat::readChoiceRule(
     }
     while( bodySize-- > 0 )
     {
-        input >> tmp;
+        input.read( tmp );
         createStructures( tmp );
 
         if( atomData[ tmp ].readNormalRule_positiveLiterals == readNormalRule_numberOfCalls )
@@ -203,10 +205,10 @@ GringoNumericFormat::readChoiceRule(
 
 void
 GringoNumericFormat::readNormalRule(
-    istream& input )
+    Istream& input )
 {
     unsigned head;
-    input >> head;
+    input.read( head );
 
     createStructures( head );
 
@@ -243,11 +245,12 @@ GringoNumericFormat::readNormalRule(
 
 void
 GringoNumericFormat::readBodySize(
-    istream& input,
+    Istream& input,
     int& bodySize,
     int& negativeSize )
 {
-    input >> bodySize >> negativeSize;
+    input.read( bodySize );
+    input.read( negativeSize );
 
     if( bodySize < negativeSize )
         ErrorMessage::errorDuringParsing( "Body size must be greater than or equal to negative size." );
@@ -255,17 +258,17 @@ GringoNumericFormat::readBodySize(
 
 void
 GringoNumericFormat::skipLiterals(
-    istream& input,
+    Istream& input,
     unsigned howMany )
 {
     unsigned tmp;
     while( howMany-- > 0 )
-        input >> tmp;
+        input.read( tmp );
 }
 
 void
 GringoNumericFormat::readNormalRule(
-    istream& input,
+    Istream& input,
     unsigned head,
     int bodySize,
     int negativeSize )
@@ -287,7 +290,7 @@ GringoNumericFormat::readNormalRule(
     while( negativeSize-- > 0 )
     {
         --bodySize;
-        input >> tmp;
+        input.read( tmp );
         
         createStructures( tmp );
         bodiesDictionary.addElement( -tmp );
@@ -309,7 +312,7 @@ GringoNumericFormat::readNormalRule(
     }
     while( bodySize-- > 0 )
     {
-        input >> tmp;
+        input.read( tmp );
         createStructures( tmp );
         
         bodiesDictionary.addElement( tmp );
@@ -370,10 +373,11 @@ GringoNumericFormat::readNormalRule(
 
 void
 GringoNumericFormat::readConstraint(
-    istream& input )
+    Istream& input )
 {
     unsigned  bodySize, negativeSize, tmp;
-    input >> bodySize >> negativeSize;
+    input.read( bodySize );
+    input.read( negativeSize );
 
     if( bodySize < negativeSize )
         ErrorMessage::errorDuringParsing( "Body size must be greater than or equal to negative size." );
@@ -382,7 +386,7 @@ GringoNumericFormat::readConstraint(
     while( negativeSize-- > 0 )
     {
         --bodySize;
-        input >> tmp;
+        input.read( tmp );
         if( !clause->addUndefinedLiteral( Literal( solver.getVariable( tmp ), POSITIVE ) ) )
         {
             solver.releaseClause( clause );
@@ -392,7 +396,7 @@ GringoNumericFormat::readConstraint(
     }
     while( bodySize-- > 0 )
     {
-        input >> tmp;
+        input.read( tmp );
         if( !clause->addUndefinedLiteral( Literal( solver.getVariable( tmp ), NEGATIVE ) ) )
         {
             solver.releaseClause( clause );
@@ -407,10 +411,13 @@ GringoNumericFormat::readConstraint(
 
 void
 GringoNumericFormat::readCount(
-    istream& input )
+    Istream& input )
 {
     unsigned int id, bound, size, negativeSize, tmp;
-    input >> id >> size >> negativeSize >> bound;
+    input.read( id );
+    input.read( size );
+    input.read( negativeSize );
+    input.read( bound );
     
     createStructures( id );
     if( size < negativeSize )
@@ -428,7 +435,7 @@ GringoNumericFormat::readCount(
     while( negativeSize-- > 0 )
     {
         --size;
-        input >> tmp;
+        input.read( tmp );
         createStructures( tmp );
         //Eventually we should create again the set.
 //        if( atomData[ tmp ].readNormalRule_negativeLiterals == readNormalRule_numberOfCalls )
@@ -445,7 +452,7 @@ GringoNumericFormat::readCount(
     }
     while( size-- > 0 )
     {
-        input >> tmp;
+        input.read( tmp );
         createStructures( tmp );
 //        if( solver.getVariable( tmp )->isFalse() )
 //            continue;
@@ -464,10 +471,13 @@ GringoNumericFormat::readCount(
 
 void
 GringoNumericFormat::readSum(
-    istream& input )
+    Istream& input )
 {
     unsigned int id, bound, size, negativeSize, tmp;
-    input >> id >> bound >> size >> negativeSize;
+    input.read( id );
+    input.read( bound );
+    input.read( size );
+    input.read( negativeSize );
 
     createStructures( id );
 
@@ -482,14 +492,14 @@ GringoNumericFormat::readSum(
     
     while( counter < negativeSize )
     {
-        input >> tmp;
+        input.read( tmp );
         createStructures( tmp );
         weightConstraintRule->addNegativeLiteral( tmp );
         ++counter;
     }
     while( counter < size )
     {
-        input >> tmp;
+        input.read( tmp );
         createStructures( tmp );
         weightConstraintRule->addPositiveLiteral( tmp );
         ++counter;
@@ -498,7 +508,7 @@ GringoNumericFormat::readSum(
     counter = 0;
     while( counter < negativeSize )
     {
-        input >> tmp;
+        input.read( tmp );
         if( tmp > bound )
             tmp = bound;
         weightConstraintRule->addNegativeLiteralWeight( tmp );
@@ -506,7 +516,7 @@ GringoNumericFormat::readSum(
     }
     while( counter < size )
     {
-        input >> tmp;        
+        input.read( tmp );
         if( tmp > bound )
             tmp = bound;
         weightConstraintRule->addPositiveLiteralWeight( tmp );
@@ -809,10 +819,10 @@ GringoNumericFormat::addFalseVariable(
 
 void
 GringoNumericFormat::readAtomsTable(
-    istream& input )
+    Istream& input )
 {
     unsigned int nextAtom;
-    input >> nextAtom;
+    input.read( nextAtom );
 
     createStructures( nextAtom );
 
@@ -823,9 +833,9 @@ GringoNumericFormat::readAtomsTable(
 //        assert( inputVarId[ nextAtom ] > 1 );
 
         input.getline( name, 1024 );
-        VariableNames::setName( solver.getVariable( nextAtom ), name+1 );
+        VariableNames::setName( solver.getVariable( nextAtom ), name );
         trace_msg( parser, 6, "Set name " << name+1 << " for atom " << nextAtom );
-        input >> nextAtom;
+        input.read( nextAtom );
     }
 
 //    #ifdef TRACE_ON
@@ -856,17 +866,17 @@ GringoNumericFormat::readAtomsTable(
 
 void
 GringoNumericFormat::readTrueAtoms(
-    istream& input )
+    Istream& input )
 {
     char b;
 
-    input >> b;
+    input.read( b );
     assert( b == 'B' );
-    input >> b;
+    input.read( b );
     assert( b == '+' );
 
     unsigned int nextAtom;
-    input >> nextAtom;
+    input.read( nextAtom );
 
     createStructures( nextAtom );
 
@@ -874,39 +884,39 @@ GringoNumericFormat::readTrueAtoms(
     {
         cout << nextAtom << endl;
         solver.addClause( Literal( solver.getVariable( nextAtom ), POSITIVE ) );
-        input >> nextAtom;
+        input.read( nextAtom );
     }
 }
 
 void
 GringoNumericFormat::readFalseAtoms(
-    istream& input )
+    Istream& input )
 {
     char b;
 
-    input >> b;
+    input.read( b );
     assert( b == 'B' );
-    input >> b;
+    input.read( b );
     assert( b == '-' );
 
     unsigned int nextAtom;
-    input >> nextAtom;
+    input.read( nextAtom );
 
     createStructures( nextAtom );
 
     while( nextAtom != 0 )
     {
         solver.addClause( Literal( solver.getVariable( nextAtom ), NEGATIVE ) );
-        input >> nextAtom;
+        input.read( nextAtom );
     }
 }
 
 void
 GringoNumericFormat::readErrorNumber(
-    istream& input )
+    Istream& input )
 {
     unsigned int errorNumber;
-    input >> errorNumber;
+    input.read( errorNumber );;
 
     if( errorNumber != 1 ) {
         stringstream ss;

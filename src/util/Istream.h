@@ -31,6 +31,8 @@ class Istream
         inline bool read( unsigned int& value );
         inline bool read( int& value );
         inline bool read( string& value );
+        inline void read( char& value );
+        inline void getline( char* buff, unsigned size );
         inline bool readInfoDimacs( unsigned int& numberOfVariables, unsigned int& numberOfClauses );        
         inline bool eof(){ return buff[ 0 ] == EOF; }
 
@@ -140,6 +142,28 @@ Istream::read(
     }
     
     return true;
+}
+
+void
+Istream::read(
+    char& value )
+{
+    skipBlanks();
+    value = next();
+}
+
+void
+Istream::getline(
+    char* buff,
+    unsigned size )
+{
+    unsigned i = 0;
+    buff[ i ] = next();
+    while( buff[ i ] != '\n' && i < size )
+    {
+        buff[ ++i ] = next();
+    }
+    buff[ i ] = '\0';
 }
 
 void
