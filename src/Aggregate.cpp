@@ -80,7 +80,7 @@ Aggregate::onLiteralFalse(
     int position )
 {
     bool toAddInSolver = false;
-    assert( abs( position ) > 0 && abs( position ) < literals.size() );
+    assert( abs( position ) > 0 && abs( position ) < static_cast< int >( literals.size() ) );
     assert( currentLiteral == ( position < 0 ? literals[ -position ].getOppositeLiteral() : literals[ position ] ) );
     trace_msg( aggregates, 1, "Aggregate: " << *this << ". Literal: " << currentLiteral.getOppositeLiteral() << " is true. Position: " << position );
     int ac = ( position < 0 ? POS : NEG );

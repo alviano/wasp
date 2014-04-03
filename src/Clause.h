@@ -126,7 +126,7 @@ class Clause
         
     protected:
         vector< Literal > literals;
-        unsigned lastSwapIndex;
+//        unsigned lastSwapIndex;
 
         virtual ostream& print( ostream& out ) const;  
     private:
@@ -136,7 +136,7 @@ class Clause
             assert( "The copy constructor has been disabled." && 0 );
         }
         
-        inline void resetLastSwapIndex() { lastSwapIndex = 1; }
+//        inline void resetLastSwapIndex() { lastSwapIndex = 1; }
         inline void setWatchesInRandomPositions();
         
         inline void attachFirstWatch();
@@ -160,7 +160,7 @@ class Clause
 };
 
 Clause::Clause(
-    unsigned reserve) : lastSwapIndex( 1 ), signature( 0 ), act( 0.0 )
+    unsigned reserve) : /*lastSwapIndex( 1 ),*/ signature( 0 ), act( 0.0 )
 {
     literals.reserve( reserve );
     clauseData.inQueue = 0;
@@ -387,8 +387,8 @@ Clause::onLearning(
             swapUnwatchedLiterals( i, literals.size() - 1 );
             literals.pop_back();
 
-            if( lastSwapIndex >= literals.size() )
-                resetLastSwapIndex();
+//            if( lastSwapIndex >= literals.size() )
+//                resetLastSwapIndex();
         }
     }
 }
@@ -465,13 +465,13 @@ Clause::updateWatch()
 {
     assert( "Unary clauses must be removed." && literals.size() > 1 );
     
-    for( unsigned i = lastSwapIndex + 1; i < literals.size(); ++i )
+    for( unsigned i = 2; i < literals.size(); ++i )
     {
         if( !literals[ i ].isFalse() )
         {
-            lastSwapIndex = i;
+//            lastSwapIndex = i;
             //Swap the two literals
-            swapLiterals( 1, lastSwapIndex );
+            swapLiterals( 1, i );
 
             //Attach the watch in the new position
             attachSecondWatch();            
@@ -479,20 +479,20 @@ Clause::updateWatch()
         }
     }
     
-    for( unsigned i = 2; i <= lastSwapIndex; ++i )
-    {
-        assert( i < literals.size() );
-        if( !literals[ i ].isFalse() )
-        {
-            lastSwapIndex = i;
-            //Swap the two literals
-            swapLiterals( 1, lastSwapIndex );
-
-            //Attach the watch in the new position
-            attachSecondWatch();            
-            return true;
-        }
-    }
+//    for( unsigned i = 2; i <= lastSwapIndex; ++i )
+//    {
+//        assert( i < literals.size() );
+//        if( !literals[ i ].isFalse() )
+//        {
+//            lastSwapIndex = i;
+//            //Swap the two literals
+//            swapLiterals( 1, lastSwapIndex );
+//
+//            //Attach the watch in the new position
+//            attachSecondWatch();            
+//            return true;
+//        }
+//    }
 
     assert( "The other watched literal cannot be true." && !literals[ 0 ].isTrue() );
     
@@ -611,8 +611,8 @@ Clause::removeSatisfiedLiterals()
         }        
     }
 
-    if( lastSwapIndex >= literals.size() )
-        resetLastSwapIndex();
+//    if( lastSwapIndex >= literals.size() )
+//        resetLastSwapIndex();
         
     return false;
 }
@@ -750,7 +750,7 @@ Clause::recomputeSignature()
 void
 Clause::free()
 {
-    lastSwapIndex = 1;
+//    lastSwapIndex = 1;
     signature = 0;
     act = 0.0;
     clauseData.inQueue = 0;
