@@ -149,6 +149,7 @@ class Variable
         void markAllClauses( Solver& solver );
         
         void checkSubsumptionForClause( Solver& solver, Clause* clause, unsigned sign );
+        inline void clearOccurrences();
         
     private:
 
@@ -416,6 +417,16 @@ Variable::setEliminated(
     #endif
     setTruthValue( TRUE );    
     assert( result );
+}
+
+void
+Variable::clearOccurrences()
+{
+    if( signOfEliminatedVariable == ELIMINATED_BY_DISTRIBUTION )
+        return;
+
+    allOccurrences[ 0 ].clearAndDelete();
+    allOccurrences[ 1 ].clearAndDelete();
 }
 
 #endif /* VARIABLE_H */

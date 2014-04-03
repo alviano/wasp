@@ -563,19 +563,19 @@ Satelite::substitute(
 bool
 Satelite::simplificationsMinisat2()
 {
+    assert( solver.callSimplifications() );
+    for( unsigned int i = 1; i <= solver.numberOfVariables(); i++ )
+    {
+        assert( touchedVariables.size() == i );
+        touchedVariables.push_back( true );
+        numberOfTouched++;
+        elim_heap.pushNoCheck( solver.getVariable( i ) );
+    }
+    
     assert( numberOfTouched != 0 );
     
-    bool disabled = solver.numberOfClauses() > 1000000;
     while( numberOfTouched > 0 && elim_heap.size() > 0 )
     {
-        if( disabled )
-        {
-            while( !elim_heap.empty() )
-                elim_heap.removeMin();
-            
-            return true;
-        }
-        
         gatherTouchedClauses();
         numberOfTouched = 0;
 

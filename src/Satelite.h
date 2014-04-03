@@ -39,7 +39,7 @@ class Satelite
 //        bool simplificationsSatelite();
         bool simplificationsMinisat2();
         inline void onStrengtheningClause( Clause* clause );
-        inline void onAddingVariable( Variable* var );
+//        inline void onAddingVariable( Variable* var );
         
         inline void onDeletingClause( Clause* clause );
 
@@ -195,15 +195,15 @@ Satelite::eliminateVariable(
     return true;
 }
 
-void
-Satelite::onAddingVariable( 
-    Variable* variable )
-{ 
-    assert( touchedVariables.size() == variable->getId() );
-    touchedVariables.push_back( true );
-    numberOfTouched++;
-    elim_heap.pushNoCheck( variable );
-}
+//void
+//Satelite::onAddingVariable( 
+//    Variable* variable )
+//{ 
+//    assert( touchedVariables.size() == variable->getId() );
+//    touchedVariables.push_back( true );
+//    numberOfTouched++;
+//    elim_heap.pushNoCheck( variable );
+//}
 
 void
 Satelite::addClauseInSubsumptionQueue(

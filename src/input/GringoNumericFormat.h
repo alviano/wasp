@@ -311,6 +311,7 @@ private:
     void propagateFact( Variable* var );
     
     void bodyToConstraint( NormalRule* rule );
+    void generateConstraint( NormalRule* rule );
     
     void cleanData();
     

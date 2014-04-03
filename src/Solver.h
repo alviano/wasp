@@ -60,6 +60,7 @@ class Solver
 
         inline bool preprocessing();
         inline void attachWatches();
+        inline void clearVariableOccurrences();
         
         inline void addVariable( const string& name );
         inline void addVariable();        
@@ -192,6 +193,9 @@ class Solver
         inline void addAggregate( Aggregate* aggr ) { assert( aggr != NULL ); aggregates.push_back( aggr ); }
         inline bool hasPropagators() const { return ( !tight() || !aggregates.empty() ); }
         
+        inline void turnOffSimplifications() { callSimplifications_ = false; }
+        inline bool callSimplifications() const { return callSimplifications_; }
+        
     private:
         inline Variable* addVariableInternal();
         
@@ -237,6 +241,8 @@ class Solver
         
         vector< GUSData* > gusDataVector;
         vector< Aggregate* > aggregates;
+        
+        bool callSimplifications_;
         struct DeletionCounters
         {
             Activity increment;
@@ -276,7 +282,8 @@ Solver::Solver()
     assignedVariablesAtLevelZero( MAXUNSIGNEDINT ),
     nextValueOfPropagation( 0 ),
     literalsInClauses( 0 ),
-    literalsInLearnedClauses( 0 )    
+    literalsInLearnedClauses( 0 ),
+    callSimplifications_( true )
 {
     satelite = new Satelite( *this );
     deletionCounters.init();
@@ -300,7 +307,7 @@ Solver::addVariableInternal()
     assert( variables.numberOfVariables() == variable->getId() );
     minisatHeuristic.onNewVariable( variable );
     learning.onNewVariable();
-    satelite->onAddingVariable( variable );
+//    satelite->onAddingVariable( variable );
     return variable;
 }
 
@@ -409,7 +416,8 @@ Solver::addClause(
     if( size > 1 )
     {
         statistics( onAddingClause( size ) );
-        clause->attachClauseToAllLiterals();
+        if( callSimplifications() )
+            clause->attachClauseToAllLiterals();
         clause->setPositionInSolver( clauses.size() );
         clauses.push_back( clause );
         return true;
@@ -769,6 +777,20 @@ Solver::propagateLiteralAsDeterministicConsequenceSatelite(
 }
 
 void
+Solver::clearVariableOccurrences()
+{
+    if( callSimplifications() )
+    {
+        for( unsigned int i = 1; i <= numberOfVariables(); i++ )
+            getVariable( i )->clearOccurrences();
+    }
+    #ifndef NDEBUG    
+    for( unsigned int i = 1; i <= numberOfVariables(); i++ )
+        assert( getVariable( i )->hasBeenEliminated() || getVariable( i )->numberOfOccurrences() == 0 );    
+    #endif
+}
+
+void
 Solver::attachWatches()
 {
     for( unsigned int i = 0; i < clauses.size(); )
@@ -799,11 +821,12 @@ Solver::preprocessing()
     statistics( beforePreprocessing( numberOfVariables() - numberOfAssignedLiterals(), numberOfClauses() ) );
     assert( satelite != NULL );
     assert( checkVariablesState() );
-    if( !satelite->simplify() )
+    if( callSimplifications() && !satelite->simplify() )
         return false;
 
-    minisatHeuristic.simplifyVariablesAtLevelZero();    
-    attachWatches();    
+    minisatHeuristic.simplifyVariablesAtLevelZero();
+    clearVariableOccurrences();
+    attachWatches();
     
     assignedVariablesAtLevelZero = numberOfAssignedLiterals();
     

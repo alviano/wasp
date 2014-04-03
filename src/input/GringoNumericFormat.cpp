@@ -86,6 +86,9 @@ GringoNumericFormat::parse(
         return;
         
 //    cout << "cc" << endl;
+    if( constraints.size() + normalRules.size() > 1000000 )
+        solver.turnOffSimplifications();
+    
     processConstraints();
     computeSCCs();
     if( !solver.tight() )
@@ -338,8 +341,9 @@ GringoNumericFormat::readNormalRule(
     
     if( atomData[ head ].readNormalRule_negativeLiterals == readNormalRule_numberOfCalls )
     {
-        bodyToConstraint( rule );
-        delete rule;
+        constraints.push_back( rule );
+//        bodyToConstraint( rule );
+//        delete rule;
     }
     else if( rule->isFact() )
     {
@@ -645,7 +649,8 @@ GringoNumericFormat::propagateFalse(
         assert( rule != NULL );
         if( rule->isRemoved() )
             continue;
-        bodyToConstraint( rule );
+        //bodyToConstraint( rule );
+        generateConstraint( rule );
         rule->remove();
     }
     data.numberOfHeadOccurrences = 0;
@@ -720,6 +725,29 @@ GringoNumericFormat::bodyToConstraint(
     for( unsigned j = 0; j < rule->doubleNegBody.size(); ++j )
         clause->addLiteral( Literal( solver.getVariable( rule->doubleNegBody[ j ] ), NEGATIVE ) );
     solver.cleanAndAddClause( clause );
+}
+
+void
+GringoNumericFormat::generateConstraint(
+    NormalRule* rule )
+{
+    NormalRule* r = new NormalRule( 1 );
+    r->negBody.swap( rule->negBody );
+    r->posBody.swap( rule->posBody );
+    
+    if( r->size() == 1 )
+    {
+        if( r->posBody.size() == 1 )
+            solver.addClause( solver.getLiteral( -r->posBody[ 0 ] ) );
+        else
+            solver.addClause( solver.getLiteral( r->negBody[ 0 ] ) );
+        delete r;        
+    }
+    else
+    {
+        add( r );
+    }
+    //    clause->addLiteral( Literal( solver.getVariable( rule->doubleNegBody[ j ] ), NEGATIVE ) );    
 }
 
 void
