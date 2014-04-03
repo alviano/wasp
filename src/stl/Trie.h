@@ -81,7 +81,7 @@ class Trie {
             current = root;
         }
         inline void addElement( int );        
-        inline unsigned int endInsertion();
+        inline bool endInsertion();
 
         inline unsigned int addElements( const vector< int >& );
     private:
@@ -104,20 +104,29 @@ Trie::addElement(
     current = node;    
 }
 
-unsigned int
+bool
 Trie::endInsertion()
 {
     assert( current != NULL );
     
+    bool tmp = true;
     if( !current->hasLabel() )
     {
-        current->setLabel( ++numberOfLabels );        
+        current->setLabel( ++numberOfLabels );
+        tmp = false;
     }
-    
-    unsigned int value = current->getLabel();
-    
     current = NULL;
-    return value;
+    return tmp;
+    
+//    if( !current->hasLabel() )
+//    {
+//        current->setLabel( ++numberOfLabels );        
+//    }
+//    
+//    unsigned int value = current->getLabel();
+//    
+//    current = NULL;
+//    return value;
 }
 
 unsigned int

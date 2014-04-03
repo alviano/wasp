@@ -564,8 +564,18 @@ bool
 Satelite::simplificationsMinisat2()
 {
     assert( numberOfTouched != 0 );
+    
+    bool disabled = solver.numberOfClauses() > 1000000;
     while( numberOfTouched > 0 && elim_heap.size() > 0 )
     {
+        if( disabled )
+        {
+            while( !elim_heap.empty() )
+                elim_heap.removeMin();
+            
+            return true;
+        }
+        
         gatherTouchedClauses();
         numberOfTouched = 0;
 

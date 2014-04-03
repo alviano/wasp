@@ -66,8 +66,22 @@ public:
         
         inline void addNegativeLiteral( unsigned id ) { negBody.push_back( id ); }
         inline void addPositiveLiteral( unsigned id ) { posBody.push_back( id ); }
-        inline void addPositiveTrueLiteral( unsigned id ) { posBodyTrue.push_back( id ); }
+        inline void addPositiveTrueLiteral( unsigned id )
+        {
+            if( head != 1 )
+                posBodyTrue.push_back( id );
+        }
+
         inline void addDoubleNegLiteral( unsigned id ) { doubleNegBody.push_back( id ); }
+        
+        inline unsigned int sizeOf()
+        {
+            return ( negBody.capacity() * sizeof( unsigned ) + sizeof( negBody ) +
+            posBody.capacity() * sizeof( unsigned ) + sizeof( posBody ) +
+            posBodyTrue.capacity() * sizeof( unsigned ) + sizeof( posBodyTrue )+
+            doubleNegBody.capacity() * sizeof( unsigned ) + sizeof( doubleNegBody ) +
+            sizeof( unsigned ) );
+        }
     };
     
     class WeightConstraintRule
@@ -127,6 +141,13 @@ public:
             inline void sort()
             {
                 mergesort( 0, literals.size() - 1 );
+            }
+            
+            inline unsigned int sizeOf()
+            {
+                return ( literals.capacity() * sizeof( int ) + sizeof( literals ) +
+                weights.capacity() * sizeof( unsigned ) + sizeof( weights ) +
+                sizeof( unsigned ) * 4 );
             }
             
         private:
@@ -189,6 +210,8 @@ public:
         vector< WeightConstraintRule* > posWeightConstraintsOccurrences;
         vector< unsigned int > positionsInPosWeightConstraints;
         vector< NormalRule* > doubleNegOccurrences;
+        vector< NormalRule* > negConstraints;
+        vector< NormalRule* > posConstraints;
         
         unsigned readNormalRule_negativeLiterals;
         unsigned readNormalRule_positiveLiterals;
@@ -202,6 +225,49 @@ public:
         
         inline bool isWeightConstraint() const { return weightConstraintRule != NULL; }
         inline void setWeightConstraint( WeightConstraintRule* rule ) { assert( rule != NULL ); weightConstraintRule = rule; }
+        
+        inline unsigned int sizeOf()
+        {
+            return
+            (
+                    headOccurrences.capacity() * sizeof( NormalRule* ) + sizeof( headOccurrences ) +
+                    posOccurrences.capacity() * sizeof( NormalRule* ) + sizeof( posOccurrences ) +
+                    negOccurrences.capacity() * sizeof( NormalRule* ) + sizeof( negOccurrences )+
+                    negWeightConstraintsOccurrences.capacity() * sizeof( WeightConstraintRule* ) + sizeof( negWeightConstraintsOccurrences ) +
+                    positionsInNegWeightConstraints.capacity() * sizeof( unsigned ) + sizeof( positionsInNegWeightConstraints ) +
+                    posWeightConstraintsOccurrences.capacity() * sizeof( WeightConstraintRule* ) + sizeof( posWeightConstraintsOccurrences ) +
+                    positionsInPosWeightConstraints.capacity() * sizeof( unsigned ) + sizeof( positionsInPosWeightConstraints ) +
+                    doubleNegOccurrences.capacity() * sizeof( NormalRule* ) + sizeof( doubleNegOccurrences ) +
+                    negConstraints.capacity() * sizeof( NormalRule* ) + sizeof( negConstraints ) +
+                    posConstraints.capacity() * sizeof( NormalRule* ) + sizeof( posConstraints ) +
+                    sizeof( unsigned ) * 3 + sizeof( bool ) + sizeof( WeightConstraintRule* )
+            );
+        }
+        
+        inline void clear()
+        {
+            vector< NormalRule* > tmpHeadOccurrences;            
+            vector< NormalRule* > tmpPosOccurrences;
+            vector< NormalRule* > tmpNegOccurrences;
+            vector< WeightConstraintRule* > tmpNegWeightConstraintsOccurrences;
+            vector< unsigned int > tmpPositionsInNegWeightConstraints;
+            vector< WeightConstraintRule* > tmpPosWeightConstraintsOccurrences;
+            vector< unsigned int > tmpPositionsInPosWeightConstraints;
+            vector< NormalRule* > tmpDoubleNegOccurrences;
+            vector< NormalRule* > tmpNegConstraints;
+            vector< NormalRule* > tmpPosConstraints;
+            
+            headOccurrences.swap( tmpHeadOccurrences );
+            posOccurrences.swap( tmpPosOccurrences );
+            negOccurrences.swap( tmpNegOccurrences );
+            negWeightConstraintsOccurrences.swap( tmpNegWeightConstraintsOccurrences );
+            positionsInNegWeightConstraints.swap( tmpPositionsInNegWeightConstraints );
+            posWeightConstraintsOccurrences.swap( tmpPosWeightConstraintsOccurrences );
+            positionsInPosWeightConstraints.swap( tmpPositionsInPosWeightConstraints );
+            doubleNegOccurrences.swap( tmpDoubleNegOccurrences );
+            negConstraints.swap( tmpNegConstraints );
+            posConstraints.swap( tmpPosConstraints );
+        }
     };        
     
 private:
@@ -246,12 +312,14 @@ private:
     
     void bodyToConstraint( NormalRule* rule );
     
+    void cleanData();
+    
 //    Literal getLiteralForInputVar( unsigned int id, unsigned int sign );
 //    Literal getLiteralForAuxVar( unsigned int id, unsigned int sign );
 
     Solver& solver;
     
-//    Trie bodiesDictionary;
+    Trie bodiesDictionary;
     
 //    vector< unsigned int > inputVarId;
 //    vector< unsigned int > auxVarId;
@@ -264,6 +332,7 @@ private:
     bool shrinkPos( NormalRule* rule, unsigned lit );
     void shrinkNeg( NormalRule* rule, unsigned lit );
     void shrinkDoubleNeg( NormalRule* rule, unsigned lit );
+    void shrinkConstraint( NormalRule* rule, unsigned lit );
     void onShrinking( NormalRule* rule );
     
     void updateMaxPossibleValueWeightConstraint( WeightConstraintRule* rule, unsigned int position );
@@ -273,11 +342,15 @@ private:
     void addWeightConstraints();
     
     void createCrule( Literal head, NormalRule* rule );
+    void clearDataStructures();
+    
+    void processConstraints();
 
     vector< NormalRule* > normalRules;
     vector< WeightConstraintRule* > weightConstraintRules;
     vector< AtomData > atomData;
     vector< Clause* > crules;
+    vector< NormalRule* > constraints;
     
     unsigned readNormalRule_numberOfCalls;
     vector< unsigned > atomsWithSupportInference;
@@ -288,18 +361,16 @@ private:
 GringoNumericFormat::GringoNumericFormat(
     Solver& s ) : solver( s ), propagatedLiterals( 0 ), readNormalRule_numberOfCalls( 0 )
 {
-    atomData.push_back( AtomData( false ) );
+    atomData.push_back( new AtomData( false ) );
     createStructures( 1 );
     solver.addClause( Literal( solver.getVariable( 1 ), NEGATIVE ) );
 }
 
 GringoNumericFormat::~GringoNumericFormat()
 {
-    for( unsigned i = 0; i < normalRules.size(); ++i )
-        delete normalRules[ i ];
-    
-    for( unsigned int i = 0; i < weightConstraintRules.size(); ++i )
-        delete weightConstraintRules[ i ];
+    assert( normalRules.empty() );
+    assert( weightConstraintRules.empty() );  
+    assert( constraints.empty() );
 }
 
 #endif

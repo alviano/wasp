@@ -8,6 +8,8 @@
 #include <cassert>
 #include <iostream>
 #include <unordered_set>
+#include <bitset>
+#include <stdint.h>
 using namespace std;
 
 void
@@ -23,11 +25,18 @@ GringoNumericFormat::parse(
     trace_msg( parser, 1, "Start parsing..." );
     bool loop = true;
 
+    uint64_t value = 0;
     while( loop )
     {
         unsigned int type;
         input >> type;
 
+        value = constraints.size() + normalRules.size();
+        if( value != 0 && value % 10000000 == 0 )
+        {
+            cleanData();
+        }
+        
         switch( type )
         {
         case GRINGO_NORMAL_RULE_ID:
@@ -77,6 +86,7 @@ GringoNumericFormat::parse(
         return;
         
 //    cout << "cc" << endl;
+    processConstraints();
     computeSCCs();
     if( !solver.tight() )
     {
@@ -86,10 +96,10 @@ GringoNumericFormat::parse(
     else
     {
         trace_msg( parser, 1, "Program is tight" );
-    }
-    computeCompletion();
+    }    
     addWeightConstraints();
-
+    clearDataStructures();
+    computeCompletion();
     //TODO: remove
 //    cout << solver.numberOfVariables() << endl;
 //    unsigned c[1024] = {0};
@@ -197,20 +207,35 @@ GringoNumericFormat::readNormalRule(
 
     createStructures( head );
 
-    if( solver.getVariable( head )->isFalse() )
-        readConstraint( input );
-    else
-    {
-        int bodySize, negativeSize;
-        readBodySize( input, bodySize, negativeSize );
+//    if( solver.getVariable( head )->isFalse() )
+//        readConstraint( input );
+//    else
+//    {
+//        int bodySize, negativeSize;
+//        readBodySize( input, bodySize, negativeSize );
+//
+//        if( atomData[ head ].isSupported() )
+//            skipLiterals( input, bodySize );
+//        else if( bodySize == 0 )
+//            addFact( head );
+//        else
+//            readNormalRule( input, head, bodySize, negativeSize );
+//    }
+    
+    int bodySize, negativeSize;
+    readBodySize( input, bodySize, negativeSize );
 
-        if( atomData[ head ].isSupported() )
-            skipLiterals( input, bodySize );
-        else if( bodySize == 0 )
-            addFact( head );
-        else
-            readNormalRule( input, head, bodySize, negativeSize );
+    if( atomData[ head ].isSupported() )
+        skipLiterals( input, bodySize );
+    else if( bodySize == 0 )
+        addFact( head );
+    else if( solver.getVariable( head )->isFalse() )
+    {
+        head = 1;
+        readNormalRule( input, head, bodySize, negativeSize ); 
     }
+    else
+        readNormalRule( input, head, bodySize, negativeSize );    
 }
 
 void
@@ -242,8 +267,8 @@ GringoNumericFormat::readNormalRule(
     int bodySize,
     int negativeSize )
 {
-    assert( !solver.getVariable( head )->isFalse() );
-    assert( !atomData[ head ].isSupported() );
+//    assert( !solver.getVariable( head )->isFalse() );
+//    assert( !atomData[ head ].isSupported() );
     assert( bodySize >= negativeSize );
     assert( negativeSize >= 0 );
     assert( bodySize >= 1 );
@@ -251,13 +276,18 @@ GringoNumericFormat::readNormalRule(
     readNormalRule_numberOfCalls++;
     assert( readNormalRule_numberOfCalls != 0 );
 
+    bodiesDictionary.startInsertion();
+    bodiesDictionary.addElement( head );    
     NormalRule* rule = new NormalRule( head );
+    
     unsigned tmp;
     while( negativeSize-- > 0 )
     {
         --bodySize;
         input >> tmp;
+        
         createStructures( tmp );
+        bodiesDictionary.addElement( -tmp );
         
         if( atomData[ tmp ].readNormalRule_negativeLiterals == readNormalRule_numberOfCalls )
             continue;
@@ -265,6 +295,7 @@ GringoNumericFormat::readNormalRule(
         {
             delete rule;
             skipLiterals( input, bodySize );
+            bodiesDictionary.endInsertion();
             return;
         }
         else if( solver.getVariable( tmp )->isUndefined() )
@@ -277,6 +308,8 @@ GringoNumericFormat::readNormalRule(
     {
         input >> tmp;
         createStructures( tmp );
+        
+        bodiesDictionary.addElement( tmp );
 
         if( atomData[ tmp ].readNormalRule_positiveLiterals == readNormalRule_numberOfCalls )
             continue;
@@ -284,6 +317,7 @@ GringoNumericFormat::readNormalRule(
         {
             delete rule;
             skipLiterals( input, bodySize );
+            bodiesDictionary.endInsertion();
             return;
         }
         else 
@@ -296,6 +330,12 @@ GringoNumericFormat::readNormalRule(
         }
     }
 
+    if( bodiesDictionary.endInsertion() )
+    {
+        delete rule;        
+        return;
+    }
+    
     if( atomData[ head ].readNormalRule_negativeLiterals == readNormalRule_numberOfCalls )
     {
         bodyToConstraint( rule );
@@ -310,7 +350,17 @@ GringoNumericFormat::readNormalRule(
     {
         if( rule->isFiring() )
             solver.addClause( Literal( solver.getVariable( head ), POSITIVE ) );
-        add( rule );
+        
+        if( rule->size() == 1 && head == 1 )
+        {
+            assert( rule->posBody.size() == 1 || rule->negBody.size() == 1 );
+            if( rule->posBody.size() == 1 )
+                solver.addClause( solver.getLiteral( -rule->posBody[ 0 ] ) );
+            else
+                solver.addClause( solver.getLiteral( rule->negBody[ 0 ] ) );
+        }
+        else
+            add( rule );        
     }
 }
 
@@ -528,6 +578,22 @@ GringoNumericFormat::propagateTrue(
         shrinkDoubleNeg( rule, var->getId() );
     }
     data.doubleNegOccurrences.clear();
+    
+    for( unsigned i = 0; i < data.negConstraints.size(); ++i )
+    {
+        NormalRule* rule = data.negConstraints[ i ];
+        assert( rule != NULL );
+        rule->remove();
+    }
+    data.negConstraints.clear();
+    
+    for( unsigned i = 0; i < data.posConstraints.size(); ++i )
+    {
+        NormalRule* rule = data.posConstraints[ i ];
+        assert( rule != NULL );
+        shrinkConstraint( rule, var->getId() );            
+    }
+    data.posConstraints.clear();
 
     for( unsigned int i = 0; i < data.negWeightConstraintsOccurrences.size(); i++ )
     {
@@ -600,6 +666,22 @@ GringoNumericFormat::propagateFalse(
         shrinkNeg( rule, var->getId() );
     }
     data.negOccurrences.clear();
+    
+    for( unsigned i = 0; i < data.posConstraints.size(); ++i )
+    {
+        NormalRule* rule = data.posConstraints[ i ];
+        assert( rule != NULL );
+        rule->remove();
+    }
+    data.posConstraints.clear();
+    
+    for( unsigned i = 0; i < data.negConstraints.size(); ++i )
+    {
+        NormalRule* rule = data.negConstraints[ i ];
+        assert( rule != NULL );
+        shrinkConstraint( rule, var->getId() );            
+    }
+    data.negConstraints.clear();    
     
     for( unsigned int i = 0; i < data.negWeightConstraintsOccurrences.size(); i++ )
     {
@@ -1121,7 +1203,7 @@ GringoNumericFormat::computeCompletion()
                     continue;
                 assert( lit.isUndefined() );
                 assert( lit2.isUndefined() );
-                    
+                   
                 Clause* bin = solver.newClause();
                 bin->addLiteral( lit );
                 bin->addLiteral( lit2 );
@@ -1131,7 +1213,7 @@ GringoNumericFormat::computeCompletion()
         }
         solver.cleanAndAddClause( crule );
         assert( propagatedLiterals == solver.numberOfAssignedLiterals() );
-    }
+    }    
 }
 
 void
@@ -1142,19 +1224,30 @@ GringoNumericFormat::add(
     assert( !rule->isFact() );
 
     trace_msg( parser, 2, "Adding rule " << *rule );
-    normalRules.push_back( rule );
+    if( rule->head != 1 )
+    {
+        normalRules.push_back( rule );
 
-    AtomData& headData = atomData[ rule->head ];
-    headData.headOccurrences.push_back( rule );
-    headData.numberOfHeadOccurrences++;
-    for( unsigned i = 0; i < rule->negBody.size(); ++i )
-        atomData[ rule->negBody[ i ] ].negOccurrences.push_back( rule );
-    for( unsigned i = 0; i < rule->posBody.size(); ++i )
-        atomData[ rule->posBody[ i ] ].posOccurrences.push_back( rule );
-    for( unsigned i = 0; i < rule->posBodyTrue.size(); ++i )
-        atomData[ rule->posBodyTrue[ i ] ].posOccurrences.push_back( rule );
-    for( unsigned i = 0; i < rule->doubleNegBody.size(); ++i )
-        atomData[ rule->doubleNegBody[ i ] ].doubleNegOccurrences.push_back( rule );
+        AtomData& headData = atomData[ rule->head ];
+        headData.headOccurrences.push_back( rule );
+        headData.numberOfHeadOccurrences++;
+        for( unsigned i = 0; i < rule->negBody.size(); ++i )
+            atomData[ rule->negBody[ i ] ].negOccurrences.push_back( rule );
+        for( unsigned i = 0; i < rule->posBody.size(); ++i )
+            atomData[ rule->posBody[ i ] ].posOccurrences.push_back( rule );
+        for( unsigned i = 0; i < rule->posBodyTrue.size(); ++i )
+            atomData[ rule->posBodyTrue[ i ] ].posOccurrences.push_back( rule );
+        for( unsigned i = 0; i < rule->doubleNegBody.size(); ++i )
+            atomData[ rule->doubleNegBody[ i ] ].doubleNegOccurrences.push_back( rule );
+    }
+    else
+    {
+        constraints.push_back( rule );
+        for( unsigned i = 0; i < rule->negBody.size(); ++i )
+            atomData[ rule->negBody[ i ] ].negConstraints.push_back( rule );
+        for( unsigned i = 0; i < rule->posBody.size(); ++i )
+            atomData[ rule->posBody[ i ] ].posConstraints.push_back( rule );        
+    }
 }
 
 void
@@ -1276,6 +1369,54 @@ GringoNumericFormat::shrinkPos(
     }
     assert( 0 );
     return false;
+}
+
+void
+GringoNumericFormat::shrinkConstraint( 
+    NormalRule* rule, 
+    unsigned lit )
+{
+    assert( rule != NULL );
+    if( rule->isRemoved() )
+        return;
+    trace_msg( parser, 3, "Shrinking constraint " << *rule );
+    for( unsigned j = 0; j < rule->posBody.size(); ++j )
+    {
+        if( rule->posBody[ j ] == lit )
+        {
+            rule->posBody[ j ] = rule->posBody.back();
+            rule->posBody.pop_back();
+            if( rule->size() == 1 )
+            {
+                assert( rule->posBody.size() == 1 || rule->negBody.size() == 1 );
+                if( rule->posBody.size() == 1 )
+                    solver.addClause( solver.getLiteral( -rule->posBody[ 0 ] ) );
+                else
+                    solver.addClause( solver.getLiteral( rule->negBody[ 0 ] ) );
+            }
+            return;
+        }
+    }
+
+    for( unsigned j = 0; j < rule->negBody.size(); ++j )
+    {
+        if( rule->negBody[ j ] == lit )
+        {
+            rule->negBody[ j ] = rule->negBody.back();
+            rule->negBody.pop_back();
+            if( rule->size() == 1 )
+            {
+                assert( rule->posBody.size() == 1 || rule->negBody.size() == 1 );
+                if( rule->posBody.size() == 1 )
+                    solver.addClause( solver.getLiteral( -rule->posBody[ 0 ] ) );
+                else
+                    solver.addClause( solver.getLiteral( rule->negBody[ 0 ] ) );
+            }
+            return;
+        }
+    }
+    assert( 0 );
+    return;
 }
 
 void
@@ -1536,8 +1677,10 @@ GringoNumericFormat::addWeightConstraints()
             assert( weight <= weightConstraintRule->bound );
             aggregate->addLiteral( lit, weight );
             lit.getVariable()->setFrozen();
-            lit.getOppositeLiteral().addPostPropagator( aggregate, -( aggregate->size() ) );
-            lit.addPostPropagator( aggregate, aggregate->size() );            
+            if( !aggregateLiteral.isTrue() )
+                lit.getOppositeLiteral().addPostPropagator( aggregate, -( aggregate->size() ) );
+            if( !aggregateLiteral.isFalse() )
+                lit.addPostPropagator( aggregate, aggregate->size() );            
         }
 
         assert( weightConstraintRule->bound != 0 );
@@ -1621,4 +1764,117 @@ operator<<(
         out << rule.literals[ i ] << "=" << rule.weights[ i ];
     }
     return out << "] >= " << rule.bound << "}";
+}
+
+void
+GringoNumericFormat::clearDataStructures()
+{
+    while( !normalRules.empty() )
+    {
+        delete normalRules.back();
+        normalRules.pop_back();
+    }    
+    
+    while( !weightConstraintRules.empty() )
+    {
+        delete weightConstraintRules.back();
+        weightConstraintRules.pop_back();
+    }
+    
+    while( !atomData.empty() )
+    {
+        atomData.back().clear();
+        atomData.pop_back();
+    }
+}
+
+void
+GringoNumericFormat::cleanData()
+{
+    for( unsigned int i = 2; i < atomData.size(); i++ )
+    {
+        AtomData& data = atomData[ i ];        
+        
+        unsigned int k = 0;
+        for( unsigned int j = 0; j < data.headOccurrences.size(); j++ )
+        {
+            if( !data.headOccurrences[ j ]->isRemoved() )
+                data.headOccurrences[ k++ ] = data.headOccurrences[ j ];            
+        }
+        data.headOccurrences.resize( k );
+        
+        k = 0;
+        for( unsigned int j = 0; j < data.negOccurrences.size(); j++ )
+        {
+            if( !data.negOccurrences[ j ]->isRemoved() )
+                data.negOccurrences[ k++ ] = data.negOccurrences[ j ];            
+        }
+        data.negOccurrences.resize( k );
+        
+        k = 0;
+        for( unsigned int j = 0; j < data.posOccurrences.size(); j++ )
+        {
+            if( !data.posOccurrences[ j ]->isRemoved() )
+                data.posOccurrences[ k++ ] = data.posOccurrences[ j ];            
+        }
+        data.posOccurrences.resize( k );
+        
+        k = 0;
+        for( unsigned int j = 0; j < data.negConstraints.size(); j++ )
+        {
+            if( !data.negConstraints[ j ]->isRemoved() )
+                data.negConstraints[ k++ ] = data.negConstraints[ j ];            
+        }
+        data.negConstraints.resize( k );
+        
+        k = 0;
+        for( unsigned int j = 0; j < data.posConstraints.size(); j++ )
+        {
+            if( !data.posConstraints[ j ]->isRemoved() )
+                data.posConstraints[ k++ ] = data.posConstraints[ j ];            
+        }
+        data.posConstraints.resize( k );
+        
+        k = 0;
+        for( unsigned int j = 0; j < data.doubleNegOccurrences.size(); j++ )
+        {
+            if( !data.doubleNegOccurrences[ j ]->isRemoved() )
+                data.doubleNegOccurrences[ k++ ] = data.doubleNegOccurrences[ j ];            
+        }
+        data.doubleNegOccurrences.resize( k );        
+    }
+    
+    unsigned int j = 0;
+    for( unsigned int i = 0; i < normalRules.size(); i++ )
+    {
+        if( !normalRules[ i ]->isRemoved() )
+            normalRules[ j++ ] = normalRules[ i ];
+        else
+            delete normalRules[ i ];
+    }
+    normalRules.resize( j );    
+    
+    j = 0;
+    for( unsigned int i = 0; i < constraints.size(); i++ )
+    {
+        if( !constraints[ i ]->isRemoved() )
+            constraints[ j++ ] = constraints[ i ];
+        else
+            delete constraints[ i ];
+    }
+    constraints.resize( j );    
+}
+
+void
+GringoNumericFormat::processConstraints()
+{
+    while( !constraints.empty() )
+    {
+        NormalRule* rule = constraints.back();
+        if( !rule->isRemoved() )
+            bodyToConstraint( rule );
+        
+        delete constraints.back();
+        constraints.pop_back();
+    }
 }
