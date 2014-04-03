@@ -109,7 +109,7 @@ class Variable
         
         inline Clause* getOccurrence( unsigned index, unsigned sign ) { return allOccurrences[ sign ][ index ]; }
         
-        inline uint64_t getSignature() const { return signature; }
+        inline uint64_t getSignature() const { return static_cast< uint64_t >( 1 ) << ( ( id - 1 ) & 63 ); }
         inline Activity& activity() { return act; }
         inline const Activity& activity() const { return act; }
         
@@ -190,7 +190,7 @@ class Variable
          */        
         Vector< pair< PostPropagator*, int > > postPropagators[ 2 ];
         
-        uint64_t signature;
+//        uint64_t signature;
         
         Activity act;
         
@@ -224,7 +224,7 @@ Variable::Variable(
     component( NULL ),
     frozen( false )
 {
-    signature = ( ( uint64_t ) 1 ) << ( ( id - 1 ) & 63 );
+//    signature = ( ( uint64_t ) 1 ) << ( ( id - 1 ) & 63 );
 }
 
 
