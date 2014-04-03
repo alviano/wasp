@@ -89,7 +89,7 @@ Learning::onConflict(
     if( learnedClause->size() > 1 )
         simplifyLearnedClause( learnedClause );
 
-    learnedClause->addLiteral( firstUIP );    
+    learnedClause->addLiteralInLearnedClause( firstUIP );    
     
     assert( learnedClause->size() > 0 );
     
@@ -142,7 +142,7 @@ Learning::addLiteralInLearnedClause(
             maxDecisionLevel = literal.getDecisionLevel();
             maxPosition = learnedClause->size();
         }
-        learnedClause->addLiteral( literal );
+        learnedClause->addLiteralInLearnedClause( literal );
     }
 }
 

@@ -53,6 +53,7 @@ class Clause
         inline void markAsDeleted() { literals[ 0 ] = Literal::null; }
         inline bool hasBeenDeleted() const { assert( !literals.empty() ); return literals[ 0 ] == Literal::null; }
         inline void addLiteral( Literal literal );
+        inline void addLiteralInLearnedClause( Literal literal );
         inline bool addUndefinedLiteral( Literal literal );
 
         inline bool contains( Literal literal );
@@ -83,7 +84,7 @@ class Clause
         inline void swapUnwatchedLiterals( unsigned int pos1, unsigned int pos2 );
         inline void swapWatchedLiterals();        
           
-        inline uint64_t getSignature() const { return signature; }
+        inline uint64_t getSignature() const { return signature(); }
         inline Literal getLiteralWithMinOccurrences() const;
         inline Variable* getVariableWithMinOccurrences();
         
@@ -96,8 +97,8 @@ class Clause
          */
         inline bool isSubsetOf( const Clause* clause ) const;
         
-        inline Activity& activity(){ return act; }
-        inline const Activity& activity() const { return act; }
+        inline Activity& activity(){ return act(); }
+        inline const Activity& activity() const { return act(); }
         inline void setLearned(){ clauseData.learned = 1; }
         inline bool isLearned() const { return clauseData.learned == 1; }
         
@@ -145,11 +146,23 @@ class Clause
         inline bool updateWatch();
         void notifyImplication( Solver& solver );        
         
-        uint64_t signature;
+//        uint64_t signature;
 //        unsigned int positionInSolver;
         
-        Activity act;
+//        Activity act;
 //        bool learned;
+        
+        union SignatureAct
+        {
+            uint64_t signature;
+            Activity act;
+            
+            SignatureAct() { memset( this, 0, sizeof( SignatureAct ) ); }
+        } signature_act;
+        inline uint64_t& signature() { assert( !isLearned() ); return signature_act.signature; }
+        inline const uint64_t& signature() const { assert( !isLearned() ); return signature_act.signature; }
+        inline Activity& act() { assert( isLearned() ); return signature_act.act; }
+        inline const Activity& act() const { assert( isLearned() ); return signature_act.act; }
         
         struct
         {        
@@ -160,7 +173,7 @@ class Clause
 };
 
 Clause::Clause(
-    unsigned reserve) : /*lastSwapIndex( 1 ),*/ signature( 0 ), act( 0.0 )
+    unsigned reserve) /*: lastSwapIndex( 1 ),*/ /*signature( 0 ), act( 0.0 )*/
 {
     literals.reserve( reserve );
     clauseData.inQueue = 0;
@@ -178,8 +191,17 @@ void
 Clause::addLiteral(
     Literal literal )
 {
+    assert( !isLearned() );
     literals.push_back( literal );
-    signature |= literal.getVariable()->getSignature();
+    signature() |= literal.getVariable()->getSignature();
+}
+
+void
+Clause::addLiteralInLearnedClause(
+    Literal literal )
+{
+    assert( isLearned() );
+    literals.push_back( literal );
 }
 
 bool
@@ -742,19 +764,19 @@ Clause::removeDuplicatesAndFalseAndCheckIfTautological()
 void
 Clause::recomputeSignature()
 {
-    signature = 0;    
+    signature() = 0;
     for( unsigned int i = 0; i < literals.size(); i++ )    
-         signature |= literals[ i ].getVariable()->getSignature();
+         signature() |= literals[ i ].getVariable()->getSignature();
 }
 
 void
 Clause::free()
 {
 //    lastSwapIndex = 1;
-    signature = 0;
-    act = 0.0;
     clauseData.inQueue = 0;
     clauseData.learned = 0;
+    signature() = 0;
+//    act = 0.0;
     literals.clear();
 }
 
@@ -764,7 +786,7 @@ Clause::subsumes(
 {
     unsigned int size = this->size();
     unsigned int otherSize = other.size();
-    if( size < otherSize && ( signature & ~other.signature ) != 0 )
+    if( size < otherSize && ( signature() & ~other.signature() ) != 0 )
         return NO_SUBSUMPTION;
     
     SubsumptionData ret = SUBSUMPTION;
