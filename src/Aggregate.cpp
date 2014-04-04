@@ -209,6 +209,7 @@ Aggregate::createClauseFromTrail(
     
     trace_msg( aggregates, 2, "Created clause: " << *clause );
     assert( checkDecisionLevelsOrder( clause ) );
+    clause->setLearned();
     clausesToPropagate.push_back( clause );
 }
 

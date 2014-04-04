@@ -21,7 +21,7 @@ GringoNumericFormat::parse()
 void
 GringoNumericFormat::parse(
     istream& input )
-{
+{   
     trace_msg( parser, 1, "Start parsing..." );
     bool loop = true;
 
@@ -206,8 +206,9 @@ GringoNumericFormat::readNormalRule(
     istream& input )
 {
     unsigned head;
-    input >> head;
+//    input >> head;
 
+    scanf( "%i", &head );
     createStructures( head );
 
 //    if( solver.getVariable( head )->isFalse() )
@@ -247,8 +248,8 @@ GringoNumericFormat::readBodySize(
     int& bodySize,
     int& negativeSize )
 {
-    input >> bodySize >> negativeSize;
-
+//    input >> bodySize >> negativeSize;
+    scanf( "%i%i", &bodySize, &negativeSize );
     if( bodySize < negativeSize )
         ErrorMessage::errorDuringParsing( "Body size must be greater than or equal to negative size." );
 }
@@ -279,18 +280,25 @@ GringoNumericFormat::readNormalRule(
     readNormalRule_numberOfCalls++;
     assert( readNormalRule_numberOfCalls != 0 );
 
-    bodiesDictionary.startInsertion();
-    bodiesDictionary.addElement( head );    
+    if( head != 1 )
+    {
+        bodiesDictionary.startInsertion();
+        bodiesDictionary.addElement( head );    
+    }
     NormalRule* rule = new NormalRule( head );
     
     unsigned tmp;
     while( negativeSize-- > 0 )
     {
         --bodySize;
-        input >> tmp;
+//        input >> tmp;
+        scanf( "%i", &tmp );
         
         createStructures( tmp );
-        bodiesDictionary.addElement( -tmp );
+        if( head != 1 )
+        {
+            bodiesDictionary.addElement( -tmp );
+        }
         
         if( atomData[ tmp ].readNormalRule_negativeLiterals == readNormalRule_numberOfCalls )
             continue;
@@ -298,7 +306,10 @@ GringoNumericFormat::readNormalRule(
         {
             delete rule;
             skipLiterals( input, bodySize );
-            bodiesDictionary.endInsertion();
+            if( head != 1 )
+            {
+                bodiesDictionary.endInsertion();
+            }
             return;
         }
         else if( solver.getVariable( tmp )->isUndefined() )
@@ -309,10 +320,14 @@ GringoNumericFormat::readNormalRule(
     }
     while( bodySize-- > 0 )
     {
-        input >> tmp;
+//        input >> tmp;
+        scanf( "%i", &tmp );
         createStructures( tmp );
         
-        bodiesDictionary.addElement( tmp );
+        if( head != 1 )
+        {
+            bodiesDictionary.addElement( tmp );
+        }
 
         if( atomData[ tmp ].readNormalRule_positiveLiterals == readNormalRule_numberOfCalls )
             continue;
@@ -320,7 +335,10 @@ GringoNumericFormat::readNormalRule(
         {
             delete rule;
             skipLiterals( input, bodySize );
-            bodiesDictionary.endInsertion();
+            if( head != 1 )
+            {
+                bodiesDictionary.endInsertion();
+            }
             return;
         }
         else 
@@ -333,7 +351,7 @@ GringoNumericFormat::readNormalRule(
         }
     }
 
-    if( bodiesDictionary.endInsertion() )
+    if( head != 1 && bodiesDictionary.endInsertion() )
     {
         delete rule;        
         return;
@@ -1813,7 +1831,7 @@ GringoNumericFormat::clearDataStructures()
     {
         atomData.back().clear();
         atomData.pop_back();
-    }
+    }       
 }
 
 void
@@ -1896,6 +1914,27 @@ GringoNumericFormat::cleanData()
 void
 GringoNumericFormat::processConstraints()
 {
+//    uint64_t sum = 0;
+//    for( unsigned int i = 0; i < normalRules.size(); i++ )
+//    {
+//        sum += normalRules[ i ]->sizeOf();
+//    }
+//    cout << "Normal Rules " << normalRules.size() << " " << ( sum / ( 1024 * 1024 ) ) << " " << ( ( normalRules.capacity() * sizeof( NormalRule* ) ) / ( 1024 * 1024 ) ) << endl;
+//    
+//    sum = 0;
+//    for( unsigned int i = 0; i < constraints.size(); i++ )
+//    {
+//        sum += constraints[ i ]->sizeOf();
+//    }
+//    cout << "Constraints " << constraints.size() << " " << ( sum / ( 1024 * 1024 ) ) << " " << ( ( constraints.capacity() * sizeof( NormalRule* ) ) / ( 1024 * 1024 ) ) << endl;
+//    
+//    sum = 0;
+//    for( unsigned int i = 0; i < atomData.size(); i++ )
+//    {
+//        sum += atomData[ i ].sizeOf();
+//    }
+//    cout << "AtomData " << atomData.size() << " " << ( sum / ( 1024 * 1024 ) ) << " " << ( ( atomData.capacity() * sizeof( AtomData ) ) / ( 1024 * 1024 ) ) << endl;    
+    
     while( !constraints.empty() )
     {
         NormalRule* rule = constraints.back();
