@@ -56,7 +56,7 @@ WaspFacade::readInput()
         default:
         {
             GringoNumericFormat gringo( solver );
-            gringo.parse( cin );
+            gringo.parse();
 //            solver.setOutputBuilder( new WaspOutputBuilder() );
             break;
         }
