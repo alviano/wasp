@@ -1,24 +1,24 @@
-#ifndef W_VECTOR_H
-#define W_VECTOR_H
+#ifndef SMALL_VECTOR_H
+#define SMALL_VECTOR_H
 
 #include <cassert>
 #include <cstdio>
 #include <cstring>
 #include "../util/Constants.h"
+#include "Vector.h"
 using namespace std;
 
 template< class T >
-class Vector
+class SmallVector
 {
     public:
-        inline Vector();
-        virtual ~Vector()
+        inline SmallVector();
+        virtual ~SmallVector()
         {
             if( vector )
                 delete [] vector;
         }
 
-        inline unsigned int capacity() const { return capacity_; }
         inline unsigned int size() const { return size_; }
         inline bool empty() const { return size_ == 0; }
 
@@ -35,30 +35,33 @@ class Vector
         inline const T& operator[] ( unsigned int index ) const { assert( index < size_ ); return vector[ index ]; }
         inline T& operator[] ( unsigned int index ) { assert( index < size_ ); return vector[ index ]; }
 
-        inline void swap( Vector< T >& other );
+        inline void swap( SmallVector< T >& other );
         
-        inline bool existElement( T );
-        inline unsigned int findElement( T );
+        inline bool existElement( T ) const;
+        inline unsigned int findElement( T ) const;
+        
+        inline void reserve( unsigned capacity ) { resetCapacity( capacity ); }
+        inline void sort( int (*comp)( const void*, const void* ) ) { qsort( vector, size_, sizeof( T ), comp ); }
 
     private:
-        T*   vector;
-        unsigned int size_;
-        unsigned int capacity_;
+        T* vector;
+        unsigned int size_ : 16;
+        unsigned int capacity_ : 16;
 
-           Vector< T >& operator=( Vector< T >& );
-        Vector( const Vector< T >& );
+        SmallVector< T >& operator=( SmallVector< T >& );
+        SmallVector( const SmallVector< T >& );
     
         inline void resetCapacity( unsigned int value );
 };
 
 template< class T >
-Vector< T >::Vector() : vector( NULL ), size_( 0 ), capacity_( 0 )
+SmallVector< T >::SmallVector() : vector( NULL ), size_( 0 ), capacity_( 0 )
 {
 }
 
 template< class T >
 void
-Vector< T >::push_back(
+SmallVector< T >::push_back(
     T element )
 {
     if( size_ == capacity_ )
@@ -68,15 +71,15 @@ Vector< T >::push_back(
     vector[ size_++ ] = element;
 }
 
-inline unsigned int max( unsigned int x, unsigned int y ) { return ( x > y ) ? x : y; }
 template< class T >
 void
-Vector< T >::resetCapacity(
+SmallVector< T >::resetCapacity(
     unsigned int min_cap )
 {
     if( capacity_ >= min_cap )
         return;
     unsigned int add = max( ( min_cap - capacity_ + 1 ) & ~1, ( ( capacity_ >> 1 ) + 2 ) & ~1 );   // NOTE: grow by approximately 3/2
+    assert( capacity_ + add < 65536 );
 
     T* tmpVector = new T[ capacity_ + add ];
     memcpy( tmpVector, vector, sizeof( T ) * capacity_ );
@@ -88,16 +91,16 @@ Vector< T >::resetCapacity(
 
 template< class T >
 bool
-Vector< T >::existElement(
-    T elem )
+SmallVector< T >::existElement(
+    T elem ) const
 {
     return findElement( elem ) != MAXUNSIGNEDINT;
 }
 
 template< class T >
 unsigned int
-Vector< T >::findElement(
-    T elem )
+SmallVector< T >::findElement(
+    T elem ) const
 {
     for( unsigned int i = 0; i < size_; ++i )    
         if( elem == vector[ i ] )
@@ -108,8 +111,8 @@ Vector< T >::findElement(
 
 template< class T >
 void
-Vector< T >::swap(
-    Vector< T >& other )
+SmallVector< T >::swap(
+    SmallVector< T >& other )
 {
     T* tmp = other.vector; other.vector = vector; vector = tmp;    
     unsigned int tmpSize = other.size_; other.size_ = size_; size_ = tmpSize;        
@@ -118,7 +121,7 @@ Vector< T >::swap(
 
 template< class T >
 void
-Vector< T >::findAndRemove(
+SmallVector< T >::findAndRemove(
     T element )
 {
 //    typename vector< T >::iterator it = find( vector< T >::begin(), vector< T >::end(), element );
@@ -133,4 +136,3 @@ Vector< T >::findAndRemove(
 }
 
 #endif
-

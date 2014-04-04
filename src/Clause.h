@@ -23,9 +23,9 @@
 #include <iostream>
 #include <vector>
 
-#include "Clause.h"
 #include "Literal.h"
 #include "Learning.h"
+#include "stl/SmallVector.h"
 
 using namespace std;
 
@@ -126,7 +126,7 @@ class Clause
         bool isTautology() const;
         
     protected:
-        vector< Literal > literals;
+        SmallVector< Literal > literals;
 //        unsigned lastSwapIndex;
 
         virtual ostream& print( ostream& out ) const;  
@@ -594,8 +594,8 @@ Clause::isSubsetOf(
     assert_msg( clause != NULL, "Clause cannot be null" );
     for( unsigned int i = 0; i < literals.size(); i++ )
     {
-        if( find( clause->literals.begin(), clause->literals.end(), literals[ i ] ) == clause->literals.end() )
-            return false;        
+        if( clause->literals.existElement( literals[ i ] ) )
+            return false;
     }
     
     return true;
@@ -659,12 +659,12 @@ Clause::containsAnyComplementOf(
     return false;
 }
 
-inline bool literalComparator( Literal l1, Literal l2 ){ return l1.getVariable()->getId() < l2.getVariable()->getId(); }
+inline int literalComparator( const void* l1, const void* l2 ){ return ( ( const Literal* ) l1 )->getVariable()->getId() < ( ( const Literal* ) l2 )->getVariable()->getId(); }
 
 void
 Clause::removeDuplicates()
 {
-    sort( literals.begin(), literals.end(), literalComparator );
+    literals.sort( literalComparator );
     
     Literal previousLiteral = literals[ 0 ];
     
@@ -680,7 +680,7 @@ Clause::removeDuplicates()
 
     if( i != j )
     {
-        literals.resize( j );
+        literals.shrink( j );
         recomputeSignature();
     }
 }
@@ -688,7 +688,7 @@ Clause::removeDuplicates()
 bool
 Clause::removeDuplicatesAndCheckIfTautological()
 {
-    sort( literals.begin(), literals.end(), literalComparator ); 
+    literals.sort( literalComparator ); 
     
     Literal previousLiteral = literals[ 0 ];
     
@@ -715,7 +715,7 @@ Clause::removeDuplicatesAndCheckIfTautological()
 
     if( i != j )
     {
-        literals.resize( j );
+        literals.shrink( j );
         recomputeSignature();
     }
 
@@ -725,7 +725,7 @@ Clause::removeDuplicatesAndCheckIfTautological()
 bool
 Clause::removeDuplicatesAndFalseAndCheckIfTautological()
 {
-    sort( literals.begin(), literals.end(), literalComparator ); 
+    literals.sort( literalComparator ); 
     
     Literal previousLiteral = Literal::null;
     
@@ -754,7 +754,7 @@ Clause::removeDuplicatesAndFalseAndCheckIfTautological()
     
     if( i != j )
     {
-        literals.resize( j );
+        literals.shrink( j );
         recomputeSignature();
     }
     
