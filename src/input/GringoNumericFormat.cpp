@@ -120,10 +120,10 @@ void
 GringoNumericFormat::readChoiceRule(
     Istream& input )
 {
-    int headSize, bodySize, negativeSize;
+    unsigned headSize, bodySize, negativeSize;
     input.read( headSize );
     unsigned head[ headSize ];
-    for( int i = 0; i < headSize; )
+    for( unsigned i = 0; i < headSize; )
     {
         input.read( head[ i ] );
         createStructures( head[ i ] );
@@ -186,7 +186,7 @@ GringoNumericFormat::readChoiceRule(
     }
     rule->addDoubleNegLiteral( head[ 0 ] );
 
-    for( int i = 1; i < headSize; ++i )
+    for( unsigned i = 1; i < headSize; ++i )
     {
         if( atomData[ i ].readNormalRule_negativeLiterals == readNormalRule_numberOfCalls )
             continue;
@@ -227,7 +227,7 @@ GringoNumericFormat::readNormalRule(
 //            readNormalRule( input, head, bodySize, negativeSize );
 //    }
     
-    int bodySize, negativeSize;
+    unsigned bodySize, negativeSize;
     readBodySize( input, bodySize, negativeSize );
 
     if( atomData[ head ].isSupported() )
@@ -246,8 +246,8 @@ GringoNumericFormat::readNormalRule(
 void
 GringoNumericFormat::readBodySize(
     Istream& input,
-    int& bodySize,
-    int& negativeSize )
+    unsigned& bodySize,
+    unsigned& negativeSize )
 {
     input.read( bodySize );
     input.read( negativeSize );
@@ -270,13 +270,13 @@ void
 GringoNumericFormat::readNormalRule(
     Istream& input,
     unsigned head,
-    int bodySize,
-    int negativeSize )
+    unsigned bodySize,
+    unsigned negativeSize )
 {
 //    assert( !solver.getVariable( head )->isFalse() );
 //    assert( !atomData[ head ].isSupported() );
     assert( bodySize >= negativeSize );
-    assert( negativeSize >= 0 );
+//    assert( negativeSize >= 0 );
     assert( bodySize >= 1 );
 
     readNormalRule_numberOfCalls++;

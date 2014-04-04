@@ -274,12 +274,12 @@ public:
 private:
     void readChoiceRule( Istream& input );
     void readNormalRule( Istream& input );
-    void readNormalRule( Istream& input, unsigned head, int bodySize, int negativeSize );
+    void readNormalRule( Istream& input, unsigned head, unsigned bodySize, unsigned negativeSize );
     void readConstraint( Istream& input );
     void readCount( Istream& input );
     void readSum( Istream& input );
     void skipLiterals( Istream& input, unsigned howMany );
-    void readBodySize( Istream& input, int& bodySize, int& negativeSize );
+    void readBodySize( Istream& input, unsigned& bodySize, unsigned& negativeSize );
     void addFact( unsigned head );
     void addTrueVariable( unsigned int id );
     void addFalseVariable( unsigned int id );
