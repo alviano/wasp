@@ -58,8 +58,7 @@ GringoNumericFormat::parse(
             break;
 
         case GRINGO_DISJUNCTIVE_RULE_ID:
-//                readDisjunctiveRule( input );
-            ErrorMessage::errorDuringParsing( "Unsupported rule type." );
+            readDisjunctiveRule( input );
             break;
 
         case GRINGO_LINE_SEPARATOR:
@@ -187,7 +186,7 @@ GringoNumericFormat::readChoiceRule(
 
     for( unsigned i = 1; i < headSize; ++i )
     {
-        if( atomData[ i ].readNormalRule_negativeLiterals == readNormalRule_numberOfCalls )
+        if( atomData[ head[ i ] ].readNormalRule_negativeLiterals == readNormalRule_numberOfCalls )
             continue;
         NormalRule* r = new NormalRule( *rule );
         r->head = head[ i ];
@@ -200,6 +199,123 @@ GringoNumericFormat::readChoiceRule(
     else
         add( rule );
     
+}
+
+void
+GringoNumericFormat::readDisjunctiveRule(
+    Istream& input )
+{
+    unsigned headSize;
+    input.read( headSize );
+    unsigned head[ headSize ];
+    ++readNormalRule_numberOfCalls;
+    for( unsigned i = 0; i < headSize; )
+    {
+        input.read( head[ i ] );
+        createStructures( head[ i ] );
+        if( solver.getVariable( head[ i ] )->isFalse() )
+            --headSize;
+        else
+        {
+            atomData[ head[ i ] ].readNormalRule_headAtoms = readNormalRule_numberOfCalls;
+            ++i;
+        }
+    }
+    if( headSize == 0)
+    {
+        readConstraint( input );
+        return;
+    }
+    
+    unsigned bodySize, negativeSize;
+    readBodySize( input, bodySize, negativeSize );
+    NormalRule* rule = new NormalRule( head[ 0 ] );
+    unsigned tmp;
+    while( negativeSize-- > 0 )
+    {
+        --bodySize;
+        input.read( tmp );
+        createStructures( tmp );
+        
+        if( atomData[ tmp ].readNormalRule_negativeLiterals == readNormalRule_numberOfCalls )
+            continue;
+        if( solver.getVariable( tmp )->isTrue() )
+        {
+            delete rule;
+            skipLiterals( input, bodySize );
+            return;
+        }
+        else if( solver.getVariable( tmp )->isUndefined() )
+        {
+            rule->addNegativeLiteral( tmp );
+            atomData[ tmp ].readNormalRule_negativeLiterals = readNormalRule_numberOfCalls;
+        }
+    }
+    while( bodySize-- > 0 )
+    {
+        input.read( tmp );
+        createStructures( tmp );
+
+        if( atomData[ tmp ].readNormalRule_positiveLiterals == readNormalRule_numberOfCalls )
+            continue;
+        if( solver.getVariable( tmp )->isFalse() || atomData[ tmp ].readNormalRule_headAtoms == readNormalRule_numberOfCalls || atomData[ tmp ].readNormalRule_negativeLiterals == readNormalRule_numberOfCalls )
+        {
+            delete rule;
+            skipLiterals( input, bodySize );
+            return;
+        }
+        else 
+        {
+            if( solver.getVariable( tmp )->isUndefined() )
+                rule->addPositiveLiteral( tmp );
+            else
+                rule->addPositiveTrueLiteral( tmp );
+            atomData[ tmp ].readNormalRule_positiveLiterals = readNormalRule_numberOfCalls;
+        }
+    }
+
+    // remove head atoms appearing in negative body
+    {
+        unsigned j = 0;
+        for( unsigned i = 0; i < headSize; ++i )
+        {
+            head[ j ] = head[ i ];
+            if( atomData[ head[ i ] ].readNormalRule_negativeLiterals != readNormalRule_numberOfCalls )
+                ++j;
+        }
+        headSize = j;
+    }
+    
+    if( headSize == 0 )
+    {
+        bodyToConstraint( rule );
+        delete rule;
+    }
+    else if( headSize == 1 )
+    {
+        if( rule->isFact() )
+        {
+            addFact( head[ 0 ] );
+            delete rule;
+        }
+        else
+        {
+            rule->head = head[ 0 ];
+            add( rule );
+        }
+    }
+    else
+    {
+        for( unsigned i = 0; i < headSize; ++i )
+        {
+            NormalRule* r = new NormalRule( *rule );
+            r->head = head[ i ];
+            for( unsigned j = 0; j < headSize; ++j )
+                if( j != i )
+                    r->addNegativeLiteral( head[ j ] );
+            add( r );
+        }
+    }
 }
 
 void
@@ -1757,7 +1873,7 @@ GringoNumericFormat::cleanData()
         else
             delete normalRules[ i ];
     }
-    normalRules.resize( j );        
+    normalRules.shrink( j );        
 }
 
 //void

@@ -214,12 +214,13 @@ public:
 //        vector< NormalRule* > negConstraints;
 //        vector< NormalRule* > posConstraints;
         
+        unsigned readNormalRule_headAtoms;
         unsigned readNormalRule_negativeLiterals;
         unsigned readNormalRule_positiveLiterals;
         
         WeightConstraintRule* weightConstraintRule;
         
-        inline AtomData( bool supported_ ) : supported( supported_ ), numberOfHeadOccurrences( 0 ), readNormalRule_negativeLiterals( 0 ), readNormalRule_positiveLiterals( 0 ), weightConstraintRule( NULL ) {}
+        inline AtomData( bool supported_ = false ) : supported( supported_ ), numberOfHeadOccurrences( 0 ), readNormalRule_negativeLiterals( 0 ), readNormalRule_positiveLiterals( 0 ), weightConstraintRule( NULL ) {}
         
         inline bool isSupported() const { return supported; }
         inline void setSupported() { supported = true; }
@@ -272,14 +273,15 @@ public:
     };        
     
 private:
-    void readChoiceRule( Istream& input );
-    void readNormalRule( Istream& input );
-    void readNormalRule( Istream& input, unsigned head, unsigned bodySize, unsigned negativeSize );
-    void readConstraint( Istream& input );
-    void readCount( Istream& input );
-    void readSum( Istream& input );
-    void skipLiterals( Istream& input, unsigned howMany );
-    void readBodySize( Istream& input, unsigned& bodySize, unsigned& negativeSize );
+    inline void readChoiceRule( Istream& input );
+    inline void readNormalRule( Istream& input );
+    inline void readNormalRule( Istream& input, unsigned head, unsigned bodySize, unsigned negativeSize );
+    inline void readDisjunctiveRule( Istream& input );
+    inline void readConstraint( Istream& input );
+    inline void readCount( Istream& input );
+    inline void readSum( Istream& input );
+    inline void skipLiterals( Istream& input, unsigned howMany );
+    inline void readBodySize( Istream& input, unsigned& bodySize, unsigned& negativeSize );
     void addFact( unsigned head );
     void addTrueVariable( unsigned int id );
     void addFalseVariable( unsigned int id );
@@ -344,15 +346,15 @@ private:
     void createCrule( Literal head, NormalRule* rule );
     void clearDataStructures();    
 
-    vector< NormalRule* > normalRules;
-    vector< WeightConstraintRule* > weightConstraintRules;
+    Vector< NormalRule* > normalRules;
+    Vector< WeightConstraintRule* > weightConstraintRules;
     vector< AtomData > atomData;
-    vector< Clause* > crules;
+    Vector< Clause* > crules;
     //vector< NormalRule* > constraints;
     
     unsigned readNormalRule_numberOfCalls;
-    vector< unsigned > atomsWithSupportInference;
-    vector< unsigned > facts;
+    Vector< unsigned > atomsWithSupportInference;
+    Vector< unsigned > facts;
     unordered_map< Variable*, unordered_set< PostPropagator* > > literalsPostPropagator[ 2 ];
 };
 

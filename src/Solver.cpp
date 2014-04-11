@@ -157,20 +157,22 @@ Solver::solve()
     while( hasUndefinedLiterals() )
     {
         /*
-        static unsigned int PROVA = 0;
-        static time_t PROVA_TIME = time( 0 );
-
-
-        unsigned int end = 10001;
-        unsigned int printValue = 10000;
-
-        if( ++PROVA > end ) {
-            cerr << "PROVA END!" << endl;
-            return false;
-        }
-        else if( ++PROVA % printValue == 0 )
         {
-            cout << PROVA << " " << learnedClauses.size() <<  " " << ( time( 0 ) - PROVA_TIME ) << endl;
+            static unsigned int PROVA = 0;
+            static time_t PROVA_TIME = time( 0 );
+
+
+            unsigned int end = 5001;
+            unsigned int printValue = 100;
+
+            if( ++PROVA > end ) {
+                cerr << "PROVA END!" << endl;
+                return false;
+            }
+            else if( ++PROVA % printValue == 0 )
+            {
+                cout << PROVA << " " << learnedClauses.size() <<  " " << ( time( 0 ) - PROVA_TIME ) << endl;
+            }
         }
         //*/
         
