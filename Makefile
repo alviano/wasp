@@ -87,7 +87,7 @@ TESTS_DIR = tests
 TESTS_TESTER = $(TESTS_DIR)/pyregtest.py
 
 TESTS_COMMAND_AllAnswerSets = $(BINARY) -n 0 --silent #gringo | $(BINARY)
-TESTS_COMMAND_gringo = gringo --shift | $(BINARY) -n 0 --silent
+TESTS_COMMAND_gringo = gringo | $(BINARY) -n 0 --silent
 TESTS_COMMAND_SatModel = $(BINARY)
 
 TESTS_CHECKER_AllAnswerSets = $(TESTS_DIR)/allAnswerSets.checker.py
