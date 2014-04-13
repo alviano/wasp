@@ -784,10 +784,10 @@ Solver::clearVariableOccurrences()
         for( unsigned int i = 1; i <= numberOfVariables(); i++ )
             getVariable( i )->clearOccurrences();
     }
-    #ifndef NDEBUG    
-    for( unsigned int i = 1; i <= numberOfVariables(); i++ )
-        assert( getVariable( i )->hasBeenEliminated() || getVariable( i )->numberOfOccurrences() == 0 );    
-    #endif
+//    #ifndef NDEBUG    
+//    for( unsigned int i = 1; i <= numberOfVariables(); i++ )
+//        assert( getVariable( i )->hasBeenEliminated() || getVariable( i )->numberOfOccurrences() == 0 );    
+//    #endif
 }
 
 void
