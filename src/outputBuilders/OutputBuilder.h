@@ -26,6 +26,7 @@
 using namespace std;
 
 class Variable;
+class Solver;
 
 class OutputBuilder
 {
@@ -36,7 +37,8 @@ class OutputBuilder
         virtual void endModel() = 0;
         virtual void onProgramIncoherent() = 0;
         virtual void greetings(){}
-//        virtual void onAnswerSetFoundWithWeakConstraint( Interpretation&, Program& );
+        virtual void foundModelOptimization( Solver& solver, unsigned int cost, unsigned int numberOfLevels );
+        virtual void optimumFound();
 };
 
 #endif

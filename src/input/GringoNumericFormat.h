@@ -97,8 +97,10 @@ public:
             unsigned int currentValue;
             unsigned int maxPossibleValue;
             unsigned int umax;
+            
+            bool couldBeAClause;
 
-            inline WeightConstraintRule( unsigned int id_, unsigned int bound_ ) : id( id_ ), bound( bound_ ), currentValue( 0 ), maxPossibleValue( 0 ), umax( 0 ) {}
+            inline WeightConstraintRule( unsigned int id_, unsigned int bound_ ) : id( id_ ), bound( bound_ ), currentValue( 0 ), maxPossibleValue( 0 ), umax( 0 ), couldBeAClause( false ) {}
 
             inline void addNegativeLiteral( unsigned int idLit, unsigned int weightLit )
             {
@@ -129,20 +131,11 @@ public:
                 weights.push_back( weightLit );
             }
             
-            inline bool isTrue()
-            {
-                return currentValue >= bound;
-            }
+            inline bool isTrue() { return currentValue >= bound; }
             
-            inline bool isFalse()
-            {
-                return maxPossibleValue < bound;
-            }
+            inline bool isFalse() { return maxPossibleValue < bound; }
             
-            inline void sort()
-            {
-                mergesort( 0, literals.size() - 1 );
-            }
+            inline void sort() { mergesort( 0, literals.size() - 1 ); }
             
             inline unsigned int sizeOf()
             {
@@ -150,6 +143,9 @@ public:
                 weights.capacity() * sizeof( unsigned ) + sizeof( weights ) +
                 sizeof( unsigned ) * 4 );
             }
+            
+            inline void remove(){ umax = MAXUNSIGNEDINT; }            
+            inline bool isRemoved() const { return umax == MAXUNSIGNEDINT; }
             
         private:
             void mergesort( int left, int right )
@@ -280,6 +276,7 @@ private:
     inline void readConstraint( Istream& input );
     inline void readCount( Istream& input );
     inline void readSum( Istream& input );
+    inline void readOptimizationRule( Istream& input );
     inline void skipLiterals( Istream& input, unsigned howMany );
     inline void readBodySize( Istream& input, unsigned& bodySize, unsigned& negativeSize );
     void addFact( unsigned head );
@@ -341,13 +338,19 @@ private:
     void updateCurrentValueWeightConstraint( WeightConstraintRule* rule, unsigned int position );
     void weightConstraintIsTrue( WeightConstraintRule* rule );
     void weightConstraintIsFalse( WeightConstraintRule* rule );
+    void weightConstraintToClause( WeightConstraintRule* rule );
+    Aggregate* weightConstraintToAggregate( WeightConstraintRule* rule );
     void addWeightConstraints();
+    void addOptimizationRules();
+    void addOptimizationRule( WeightConstraintRule* rule );
+    void computeLinearCostsForOptimizationRules( vector< unsigned int >& maxCostOfLevelOfOptimizationRules, vector< int >& literals, vector< unsigned int >& weights, vector< unsigned int >& levels, unsigned int& bound );
     
     void createCrule( Literal head, NormalRule* rule );
     void clearDataStructures();    
 
     Vector< NormalRule* > normalRules;
     Vector< WeightConstraintRule* > weightConstraintRules;
+    Vector< WeightConstraintRule* > optimizationRules;
     vector< AtomData > atomData;
     Vector< Clause* > crules;
     //vector< NormalRule* > constraints;
@@ -368,9 +371,23 @@ GringoNumericFormat::GringoNumericFormat(
 
 GringoNumericFormat::~GringoNumericFormat()
 {
-    assert( normalRules.empty() );
-    assert( weightConstraintRules.empty() );  
-//    assert( constraints.empty() );
+    while( !normalRules.empty() )
+    {
+        delete normalRules.back();
+        normalRules.pop_back();
+    }
+    
+    while( !optimizationRules.empty() )
+    {
+        delete optimizationRules.back();
+        optimizationRules.pop_back();
+    }
+    
+    while( !weightConstraintRules.empty() )
+    {
+        delete weightConstraintRules.back();
+        weightConstraintRules.pop_back();
+    }
 }
 
 #endif

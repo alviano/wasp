@@ -25,8 +25,16 @@ Literal
 MinisatHeuristic::makeAChoice()
 {
     trace( heuristic, 1, "Starting Minisat Heuristic.\n" );
-    chosenVariable = NULL;
+    if( !preferredChoices.empty() )
+    {
+        for( unsigned int i = 0; i < preferredChoices.size(); i++ )
+        {
+            if( preferredChoices[ i ].isUndefined() )
+                return preferredChoices[ i ];
+        }        
+    }
     
+    chosenVariable = NULL;    
     //randomChoice();
     
     if( chosenVariable == NULL )

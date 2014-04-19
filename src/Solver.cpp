@@ -67,6 +67,9 @@ Solver::~Solver()
     
     if( restart != NULL )
         delete restart;
+    
+    if( optimizationAggregate != NULL )
+        delete optimizationAggregate;
 }
 
 void
@@ -99,6 +102,11 @@ Solver::unroll(
     for( unsigned int i = 0; i < aggregates.size(); i++ )
     {
         aggregates[ i ]->reset();
+    }
+    
+    if( optimizationAggregate != NULL )
+    {
+        optimizationAggregate->reset();
     }
 }
 
@@ -226,7 +234,7 @@ Solver::solvePropagators()
     trace( solving, 1, "Starting solving.\n" );
     if( hasNextVariableToPropagate() )
         goto propagationLabel;
-    
+
     if( !postPropagators.empty() )
         goto postPropagationLabel;
     

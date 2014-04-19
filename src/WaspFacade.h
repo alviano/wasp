@@ -50,6 +50,7 @@ class WaspFacade
         Solver solver;        
         
         inline bool solveInternal();
+        inline void algorithmOpt();
         
         unsigned int numberOfModels;
         unsigned int maxModels;

@@ -40,6 +40,7 @@ class MinisatHeuristic
         inline void simplifyVariablesAtLevelZero();
         inline void onUnrollingVariable( Variable* variable );
         inline void variableDecayActivity(){ trace( heuristic, 1, "Calling decay activity.\n" ); variableIncrement *= variableDecay; }
+        inline void addPreferredChoice( Literal lit ){ assert( lit != Literal::null ); preferredChoices.push_back( lit ); }
         
     private:
         inline bool bumpActivity( Variable* variable ){ return ( ( variable->activity() += variableIncrement ) > 1e100 ); }
@@ -51,6 +52,7 @@ class MinisatHeuristic
         Activity variableDecay;
 
         vector< Variable* > variables;
+        vector< Literal > preferredChoices;
 
         Variable* chosenVariable;
         Heap< Variable, Comparator > heap;

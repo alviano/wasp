@@ -99,7 +99,7 @@ Aggregate::onLiteralFalse(
     
     if( counter < weights[ index ] )
     {
-        assert( checkLiteralHasBeenInferred( currentLiteral ) );
+        assert( checkLiteralHasBeenInferred( currentLiteral ) || currentLiteral.getDecisionLevel() == 0 );
         trace_msg( aggregates, 3, "A conflict happened." );
         return toAddInSolver;
     }
@@ -135,7 +135,7 @@ Aggregate::onLiteralFalse(
         ++umax;
         trace_msg( aggregates, 3, "Updated umax. New Value: " << umax );        
     }
-    
+
     return toAddInSolver;
 }
 
@@ -211,6 +211,85 @@ Aggregate::createClauseFromTrail(
     assert( checkDecisionLevelsOrder( clause ) );
     clause->setLearned();
     clausesToPropagate.push_back( clause );
+}
+
+bool
+Aggregate::updateBound(
+    unsigned int bound )
+{
+    trace_msg( aggregates, 4, "Updating bound. New value: " << bound );
+    unsigned int sumOfWeights = 0;
+    for( unsigned int i = 2; i < weights.size(); i++ )
+    {
+        if( weights[ i ] > bound )
+            weights[ i ] = bound;
+        
+        if( !literals[ i ].isTrue() || literals[ i ].getDecisionLevel() != 0 )        
+            sumOfWeights += weights[ i ];        
+    }
+    trace_msg( aggregates, 4, "Sum of weights: " << sumOfWeights );
+
+    unsigned int w1 = ( sumOfWeights - bound + 1 );
+    unsigned int w = max( w1, bound );
+
+    counterW1 = sumOfWeights - w1 + w;
+    counterW2 = sumOfWeights - bound + w;
+
+    trace_msg( aggregates, 4, "Counters: " << counterW1 << "," << counterW2 );
+    weights[ 1 ] = w;
+
+    return ( sumOfWeights >= bound );
+}
+
+unsigned int
+Aggregate::getLevelOfBackjump( unsigned int bound )
+{
+    unsigned int sum = 0;
+    unsigned int level = 0;
+    for( int i = trail.size() - 1; i >= 0; i-- )
+    {
+        int position = trail[ i ];
+        
+        int ac = ( position < 0 ? POS : NEG );
+        if( ac == active )
+        {
+            unsigned int index = ( position > 0 ? position : -position );
+            Literal l = literals[ index ];
+            
+            if( active == NEG )
+                l = l.getOppositeLiteral();
+            
+            if( !watched[ index ] )
+            {
+                assert_msg( l.getDecisionLevel() > 0, "Literal " << l << " has been inferred at the decision level 0" );
+                assert( l.isTrue() );
+                
+                sum += weights[ index ];
+                if( sum >= bound && level != 0 )
+                    level = l.getDecisionLevel();
+            }            
+        }
+    }
+    
+    return level;
+}
+
+void
+Aggregate::attachAggregate()
+{
+    assert( literals.size() > 1 );
+    Literal aggregateLiteral = literals[ 1 ].getOppositeLiteral();
+    aggregateLiteral.addPostPropagator( this, -1 );
+    aggregateLiteral.getOppositeLiteral().addPostPropagator( this, 1 );
+    
+    for( unsigned int j = 2; j < literals.size(); j++ )
+    {
+        Literal lit = literals[ j ];
+        if( !aggregateLiteral.isTrue() )
+            lit.getOppositeLiteral().addPostPropagator( this, -j );
+        if( !aggregateLiteral.isFalse() )
+            lit.addPostPropagator( this, j );
+    }
 }
 
 ostream&

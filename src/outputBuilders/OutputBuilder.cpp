@@ -17,26 +17,27 @@
  */
 
 #include "OutputBuilder.h"
+#include "../Solver.h"
 
-//void
-//OutputBuilder::onAnswerSetFoundWithWeakConstraint(
-//    Interpretation&,
-//    Program& program)
-//{
-//    assert( program.hasWeakConstraints() );
-//    Aggregate* aggr = program.getAggregateRepresentingWeakConstraints();
-//    assert( aggr != NULL );
-//    vector< int >& levels = program.getLevelsOfWeakConstraints();
-//    if( !levels.empty() )
-//    {
-//        cout << COST;
-//        for( int i = levels.size() - 1; i >= 0; --i )
-//        {
-//            cout << " " << program.getCostOfLevel( i, aggr->getCurrentValue() ) << WEIGHT_LEVEL_WEAKCONSTRAINT_SEPARATOR << levels[ i ];               
-//        }
-//        #ifndef TRACE_OFF
-//            cout << " = " << aggr->getCurrentValue();
-//        #endif
-//        cout << endl;
-//    }
-//}
+void
+OutputBuilder::foundModelOptimization(
+    Solver& solver,
+    unsigned int cost,
+    unsigned int numberOfLevels )
+{
+    cout << COST;
+    for( int i = numberOfLevels - 1; i >= 0; --i )
+    {
+        cout << " " << solver.getCostOfLevel( i, cost ) << WEIGHT_LEVEL_WEAKCONSTRAINT_SEPARATOR << ( i + 1 );
+    }
+    #ifdef TRACE_ON
+        cout << " = " << cost;
+    #endif
+    cout << endl;    
+}
+
+void
+OutputBuilder::optimumFound()
+{
+    cout << OPTIMUM << endl;
+}

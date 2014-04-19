@@ -81,20 +81,28 @@ WaspFacade::solve()
             solver.printDimacs();
             return;
         }
-        while( solveInternal() )
+        
+        if( !solver.hasOptimizationAggregate() )
+        {            
+            while( solveInternal() )
+            {
+                solver.printAnswerSet();
+                trace_msg( enumeration, 1, "Model number: " << numberOfModels + 1 );
+                if( ++numberOfModels >= maxModels )
+                {
+                    trace_msg( enumeration, 1, "Enumerated " << maxModels << "." );
+                    break;
+                }
+                else if( !solver.addClauseFromModelAndRestart() )
+                {
+                    trace_msg( enumeration, 1, "All models have been found." );
+                    break;
+                }
+            }
+        }
+        else
         {
-            solver.printAnswerSet();
-            trace_msg( enumeration, 1, "Model number: " << numberOfModels + 1 );
-            if( ++numberOfModels >= maxModels )
-            {
-                trace_msg( enumeration, 1, "Enumerated " << maxModels << "." );
-                break;
-            }
-            else if( !solver.addClauseFromModelAndRestart() )
-            {
-                trace_msg( enumeration, 1, "All models have been found." );
-                break;
-            }
+            algorithmOpt();
         }
     }
 
@@ -211,4 +219,32 @@ WaspFacade::setRestartsPolicy(
             solver.setRestart( restart );
             break;
     }
+}
+
+void
+WaspFacade::algorithmOpt()
+{
+    solver.addPreferredChoicesFromOptimizationLiterals();
+    while( solveInternal() )
+    {
+        numberOfModels++;
+        solver.printAnswerSet();
+        unsigned int modelCost = solver.computeCostOfModel(); 
+        
+        solver.printOptimizationValue( modelCost );
+
+        if( modelCost == 0 || solver.getCurrentDecisionLevel() == 0 )
+            break;
+        
+//        /*Implement a better policy of unroll*/
+//        solver.doRestart();
+//        solver.simplifyOnRestart();
+//        solver.clearConflictStatus();
+        
+        if( !solver.updateOptimizationAggregate( modelCost ) )
+            break;        
+    }
+    
+    if( numberOfModels > 0 )
+        solver.optimumFound();    
 }

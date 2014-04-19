@@ -89,9 +89,11 @@ TESTS_TESTER = $(TESTS_DIR)/pyregtest.py
 TESTS_COMMAND_AllAnswerSets = $(BINARY) -n 0 --silent #gringo | $(BINARY)
 TESTS_COMMAND_gringo = gringo | $(BINARY) -n 0 --silent
 TESTS_COMMAND_SatModel = $(BINARY)
+TESTS_COMMAND_WeakConstraints = $(BINARY) -n 0 --silent
 
 TESTS_CHECKER_AllAnswerSets = $(TESTS_DIR)/allAnswerSets.checker.py
 TESTS_CHECKER_SatModels = $(TESTS_DIR)/satModels.checker.py
+TESTS_CHECKER_WeakConstraints = $(TESTS_DIR)/weakConstraints.checker.py
 
 TESTS_REPORT_text = $(TESTS_DIR)/text.report.py
 
@@ -114,6 +116,10 @@ TESTS_OUT_asp_AllAnswerSetsAggregates = $(patsubst %.test.py,%.test.py.text, $(T
 TESTS_DIR_asp_AllAnswerSetsIntensive = $(TESTS_DIR)/asp/AllAnswerSetsIntensive
 TESTS_SRC_asp_AllAnswerSetsIntensive = $(sort $(shell find $(TESTS_DIR_asp_AllAnswerSetsIntensive) -name '*.test.py'))
 TESTS_OUT_asp_AllAnswerSetsIntensive = $(patsubst %.test.py,%.test.py.text, $(TESTS_SRC_asp_AllAnswerSetsIntensive))
+
+TESTS_DIR_asp_WeakConstraints = $(TESTS_DIR)/asp/weakConstraints
+TESTS_SRC_asp_WeakConstraints = $(sort $(shell find $(TESTS_DIR_asp_WeakConstraints) -name '*.test.py'))
+TESTS_OUT_asp_WeakConstraints = $(patsubst %.test.py,%.test.py.text, $(TESTS_SRC_asp_WeakConstraints))
 
 TESTS_DIR_asp_gringo = $(TESTS_DIR)/asp/gringo
 TESTS_SRC_asp_gringo = $(sort $(shell find $(TESTS_DIR_asp_gringo) -name '*.test.py'))
@@ -172,6 +178,7 @@ tests/asp/gringo: $(TESTS_OUT_asp_gringo)
 tests/asp/AllAnswerSets/tight: $(TESTS_OUT_asp_AllAnswerSetsTight)
 tests/asp/AllAnswerSets/nontight: $(TESTS_OUT_asp_AllAnswerSetsNonTight)
 tests/asp/AllAnswerSets/aggregates: $(TESTS_OUT_asp_AllAnswerSetsAggregates)
+tests/asp/weakConstraints: $(TESTS_OUT_asp_WeakConstraints)
 
 tests/asp/AllAnswerSetsIntensive: $(TESTS_OUT_asp_AllAnswerSetsIntensive)
 
@@ -186,6 +193,9 @@ $(TESTS_OUT_asp_AllAnswerSetsAggregates):
 
 $(TESTS_OUT_asp_AllAnswerSetsIntensive):
 	@$(TESTS_TESTER) "$(TESTS_COMMAND_AllAnswerSets)" $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_AllAnswerSets) $(TESTS_REPORT_text)
+
+$(TESTS_OUT_asp_WeakConstraints):
+	@$(TESTS_TESTER) "$(TESTS_COMMAND_WeakConstraints)" $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_WeakConstraints) $(TESTS_REPORT_text)
 
 $(TESTS_OUT_asp_gringo):
 	@$(TESTS_TESTER) "$(TESTS_COMMAND_gringo)" $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_AllAnswerSets) $(TESTS_REPORT_text)

@@ -54,10 +54,14 @@ class Aggregate : public PostPropagator
         inline Literal getLiteral( unsigned int i ) const { assert( i < literals.size() ); return literals[ i ]; }
         inline unsigned int getWeight( unsigned int i ) const { assert( i < weights.size() ); return weights[ i ]; }
         
-        inline void setCounterW1( unsigned int value ){ counterW1 = value; }
-        inline void setCounterW2( unsigned int value ){ counterW2 = value; }
-        
+        unsigned int getLevelOfBackjump( unsigned int bound );
+        bool updateBound( unsigned int bound );        
+
+//        inline void setCounterW1( unsigned int value ){ counterW1 = value; }
+//        inline void setCounterW2( unsigned int value ){ counterW2 = value; }
         virtual void reset();
+        
+        void attachAggregate();
 
     private:
         inline Aggregate( const Aggregate& orig );

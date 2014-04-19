@@ -113,7 +113,9 @@ class Solver
         inline bool hasUndefinedLiterals();
         inline Variable* getFirstUndefined() { return variables.getFirstUndefined(); }
         inline Variable* getNextUndefined( Variable* v ) { return variables.getNextUndefined( v ); }
-        inline void printAnswerSet();        
+        inline void printAnswerSet();
+        inline void printOptimizationValue( unsigned int cost );
+        inline void optimumFound();
         
         void unroll( unsigned int level );
         inline void unrollOne();
@@ -191,10 +193,22 @@ class Solver
         inline Satelite* getSatelite() { return satelite; }
         
         inline void addAggregate( Aggregate* aggr ) { assert( aggr != NULL ); aggregates.push_back( aggr ); }
-        inline bool hasPropagators() const { return ( !tight() || !aggregates.empty() ); }
+        inline bool hasPropagators() const { return ( !tight() || !aggregates.empty() || hasOptimizationAggregate() ); }
         
         inline void turnOffSimplifications() { callSimplifications_ = false; }
         inline bool callSimplifications() const { return callSimplifications_; }
+        
+        inline void setOptimizationAggregate( Aggregate* optAggregate ) { assert( optAggregate != NULL ); optimizationAggregate = optAggregate; }
+        inline void addOptimizationLiteral( Literal lit, unsigned int weight, unsigned int level );
+        inline unsigned int computeCostOfModel();
+        inline bool updateOptimizationAggregate( unsigned int modelCost );
+        inline bool hasOptimizationAggregate() const { return optimizationAggregate != NULL; }
+        
+        inline unsigned int getCostOfLevel( unsigned int levelIndex, unsigned int totalCost ) const;
+        inline void setMaxCostOfLevelOfOptimizationRules( vector< unsigned int >& m ) { maxCostOfLevelOfOptimizationRules.swap( m ); }
+        inline void setNumberOfOptimizationLevels( unsigned int n ) { numberOfOptimizationLevels = n; }
+        inline void setPrecomputedCost( unsigned int c ) { precomputedCost = c; }
+        inline void addPreferredChoicesFromOptimizationLiterals();
         
     private:
         inline Variable* addVariableInternal();
@@ -222,7 +236,7 @@ class Solver
         
         MinisatHeuristic minisatHeuristic;
         Restart* restart;
-        Satelite* satelite;
+        Satelite* satelite;                
         
         unsigned int getNumberOfUndefined() const;
         bool allClausesSatisfied() const;
@@ -242,7 +256,18 @@ class Solver
         vector< GUSData* > gusDataVector;
         vector< Aggregate* > aggregates;
         
+        Aggregate* optimizationAggregate;
+        unsigned int numberOfOptimizationLevels;
+        unsigned int precomputedCost;
+        
         bool callSimplifications_;
+        struct OptimizationLiteralData
+        {
+            Literal lit;
+            unsigned int weight;
+            unsigned int level;
+        };
+        
         struct DeletionCounters
         {
             Activity increment;
@@ -269,6 +294,9 @@ class Solver
                 learnedSizeAdjustIncrement = 1.5;
             }
         } deletionCounters; 
+        
+        vector< OptimizationLiteralData > optimizationLiterals;
+        vector< unsigned int > maxCostOfLevelOfOptimizationRules;
 };
 
 Solver::Solver() 
@@ -283,6 +311,9 @@ Solver::Solver()
     nextValueOfPropagation( 0 ),
     literalsInClauses( 0 ),
     literalsInLearnedClauses( 0 ),
+    optimizationAggregate( NULL ),
+    numberOfOptimizationLevels( 0 ),
+    precomputedCost( 0 ),
     callSimplifications_( true )
 {
     satelite = new Satelite( *this );
@@ -600,6 +631,19 @@ void
 Solver::printAnswerSet()
 {
     variables.printAnswerSet( outputBuilder );
+}
+
+void
+Solver::printOptimizationValue(
+    unsigned int cost )
+{
+    outputBuilder->foundModelOptimization( *this, cost, numberOfOptimizationLevels );
+}
+
+void
+Solver::optimumFound()
+{
+    outputBuilder->optimumFound();
 }
 
 void
@@ -1004,6 +1048,76 @@ Solver::propagateWithPropagators(
 {
     unitPropagation( variable );
     postPropagation( variable );
+}
+
+unsigned int
+Solver::computeCostOfModel()
+{
+    unsigned int cost = 0;
+    
+    for( unsigned int i = 0; i < optimizationLiterals.size(); i++ )
+    {
+        assert( optimizationLiterals[ i ].lit != Literal::null );        
+        if( optimizationLiterals[ i ].lit.isTrue() )
+            cost += optimizationLiterals[ i ].weight;        
+    }
+    
+    return cost;
+}
+
+bool
+Solver::updateOptimizationAggregate(
+    unsigned int modelCost )
+{   
+    assert( optimizationAggregate != NULL );
+    if( precomputedCost >= modelCost )
+        return false;
+    
+    unsigned int backjumpingLevel = optimizationAggregate->getLevelOfBackjump( modelCost - precomputedCost );
+    unroll( backjumpingLevel );
+    clearConflictStatus();
+    
+    if( !optimizationAggregate->updateBound( modelCost - precomputedCost ) )
+        return false;
+    
+    assert( optimizationAggregate->getLiteral( 1 ).getOppositeLiteral().isFalse() );
+    if( optimizationAggregate->onLiteralFalse( optimizationAggregate->getLiteral( 1 ).getOppositeLiteral(), -1 ) )
+        addPostPropagator( optimizationAggregate );    
+    
+    return true;
+}
+
+void
+Solver::addOptimizationLiteral(
+    Literal lit,
+    unsigned int weight,
+    unsigned int level )
+{
+    OptimizationLiteralData opt;
+    opt.lit = lit;
+    opt.weight = weight;
+    opt.level = level;
+    optimizationLiterals.push_back( opt );
+}
+
+unsigned int
+Solver::getCostOfLevel(
+    unsigned int levelIndex,
+    unsigned int totalCost ) const
+{    
+    assert_msg( levelIndex + 1 < maxCostOfLevelOfOptimizationRules.size(), "Index is " << levelIndex << " - Elements " << totalCost );
+    return ( totalCost % maxCostOfLevelOfOptimizationRules[ levelIndex + 1 ] ) / maxCostOfLevelOfOptimizationRules[ levelIndex ];
+}
+
+void
+Solver::addPreferredChoicesFromOptimizationLiterals()
+{
+    assert( currentDecisionLevel == 0 );
+    for( unsigned int i = 0; i < optimizationLiterals.size(); i++ )
+    {
+        if( optimizationLiterals[ i ].lit.isUndefined() )
+            minisatHeuristic.addPreferredChoice( optimizationLiterals[ i ].lit.getOppositeLiteral() );
+    }
 }
 
 #endif
