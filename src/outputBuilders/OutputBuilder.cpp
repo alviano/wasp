@@ -19,6 +19,8 @@
 #include "OutputBuilder.h"
 #include "../Solver.h"
 
+extern int EXIT_CODE;
+
 void
 OutputBuilder::foundModelOptimization(
     Solver& solver,
@@ -40,4 +42,5 @@ void
 OutputBuilder::optimumFound()
 {
     cout << OPTIMUM << endl;
+    EXIT_CODE = 30;
 }

@@ -445,7 +445,7 @@ GringoNumericFormat::readNormalRule(
     bodiesDictionary.addElement( head );    
     NormalRule* rule = new NormalRule( head );
     
-    unsigned tmp;
+    unsigned tmp = 0;
     while( negativeSize-- > 0 )
     {
         --bodySize;
@@ -631,7 +631,7 @@ void
 GringoNumericFormat::readSum(
     Istream& input )
 {
-    unsigned int id, bound, size, negativeSize, tmp;
+    unsigned int id, bound, size, negativeSize, tmp = 0;
     input.read( id );
     input.read( bound );
     input.read( size );
