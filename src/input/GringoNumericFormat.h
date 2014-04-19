@@ -98,9 +98,7 @@ public:
             unsigned int maxPossibleValue;
             unsigned int umax;
             
-            bool couldBeAClause;
-
-            inline WeightConstraintRule( unsigned int id_, unsigned int bound_ ) : id( id_ ), bound( bound_ ), currentValue( 0 ), maxPossibleValue( 0 ), umax( 0 ), couldBeAClause( false ) {}
+            inline WeightConstraintRule( unsigned int id_, unsigned int bound_ ) : id( id_ ), bound( bound_ ), currentValue( 0 ), maxPossibleValue( 0 ), umax( 0 ) {}
 
             inline void addNegativeLiteral( unsigned int idLit, unsigned int weightLit )
             {

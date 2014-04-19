@@ -589,7 +589,6 @@ GringoNumericFormat::readCount(
     assert( size >= bound );
 
     WeightConstraintRule* weightConstraintRule = new WeightConstraintRule( id, bound );    
-    weightConstraintRule->couldBeAClause = ( bound == 1 );
     while( negativeSize-- > 0 )
     {
         --size;
@@ -690,7 +689,6 @@ GringoNumericFormat::readSum(
             previousWeight = MAXUNSIGNEDINT;
     }
 
-    weightConstraintRule->couldBeAClause = ( previousWeight != MAXUNSIGNEDINT && bound == previousWeight );
     assert( weightConstraintRule->literals.size() == weightConstraintRule->weights.size() );
     add( weightConstraintRule );
 }
@@ -797,7 +795,7 @@ GringoNumericFormat::propagateTrue(
     
     if( data.isWeightConstraint() )
     {
-        if( data.weightConstraintRule->couldBeAClause && !data.weightConstraintRule->isTrue() )
+        if( data.weightConstraintRule->weights.back() == data.weightConstraintRule->bound && !data.weightConstraintRule->isTrue() )
         {
             weightConstraintToClause( data.weightConstraintRule );
             data.weightConstraintRule->remove();
