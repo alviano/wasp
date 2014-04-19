@@ -99,7 +99,6 @@ class Solver
         inline unsigned int numberOfLearnedClauses() const;         
         inline unsigned int numberOfAssignedLiterals() const;
         inline unsigned int numberOfVariables() const;
-        inline unsigned int numberOfAuxVariables() const;
         
         inline Variable* getAssignedVariable( unsigned idx ) { return variables.getAssignedVariable( idx ); }
         

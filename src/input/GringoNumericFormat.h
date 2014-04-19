@@ -337,8 +337,12 @@ private:
     void weightConstraintIsTrue( WeightConstraintRule* rule );
     void weightConstraintIsFalse( WeightConstraintRule* rule );
     void weightConstraintToClause( WeightConstraintRule* rule );
+    void atMostOne( WeightConstraintRule* rule );
+    void atMostOnePairwise( WeightConstraintRule* rule );
+    void atMostOneBimander( WeightConstraintRule* rule );
     Aggregate* weightConstraintToAggregate( WeightConstraintRule* rule );
     void addWeightConstraints();
+    void cleanWeightConstraint( WeightConstraintRule* rule );
     void addOptimizationRules();
     void addOptimizationRule( WeightConstraintRule* rule );
     void computeLinearCostsForOptimizationRules( vector< unsigned int >& maxCostOfLevelOfOptimizationRules, vector< int >& literals, vector< unsigned int >& weights, vector< unsigned int >& levels, unsigned int& bound );
@@ -348,6 +352,7 @@ private:
 
     Vector< NormalRule* > normalRules;
     Vector< WeightConstraintRule* > weightConstraintRules;
+    Vector< WeightConstraintRule* > toBeBimandered;
     Vector< WeightConstraintRule* > optimizationRules;
     vector< AtomData > atomData;
     Vector< Clause* > crules;
