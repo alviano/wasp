@@ -245,7 +245,7 @@ unsigned int
 Aggregate::getLevelOfBackjump( unsigned int bound )
 {
     unsigned int sum = 0;
-    unsigned int level = 0;
+    unsigned int level = 1;
     for( int i = trail.size() - 1; i >= 0; i-- )
     {
         int position = trail[ i ];
@@ -265,13 +265,12 @@ Aggregate::getLevelOfBackjump( unsigned int bound )
                 assert( l.isTrue() );
                 
                 sum += weights[ index ];
-                if( sum >= bound && level != 0 )
+                if( sum >= bound && level == 1 )
                     level = l.getDecisionLevel();
             }            
         }
-    }
-    
-    return level;
+    }      
+    return level - 1;
 }
 
 void
