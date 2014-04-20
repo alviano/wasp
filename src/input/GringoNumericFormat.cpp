@@ -87,7 +87,7 @@ GringoNumericFormat::parse(
 
     trace_msg( parser, 1, "Apply bimander to at-most-one constraints" );
     for( unsigned i = 0; i < toBeBimandered.size(); ++i )
-        atMostOneBimander( toBeBimandered[ i ] );
+        atMostOneBisequential( toBeBimandered[ i ] );
     toBeBimandered.clear();
     
     simplify();
@@ -1824,6 +1824,11 @@ GringoNumericFormat::atMostOneBimander( WeightConstraintRule* rule )
     cleanWeightConstraint( rule );
     trace_msg( parser, 4, "Bimander rewriting of " << *rule );
     
+    for( unsigned i = 0; i < rule->literals.size(); ++i )
+    {
+        solver.getLiteral( rule->literals[ i ] ).getVariable()->setFrozen();
+    }
+    
     unsigned last = rule->literals.size() - rule->literals.size() % 2;
     for( unsigned i = 0; i < last; i += 2 )
     {
@@ -1837,7 +1842,10 @@ GringoNumericFormat::atMostOneBimander( WeightConstraintRule* rule )
     unsigned nAux = ceil( log2( rule->literals.size() ) ) - 1;
     unsigned firstAux = solver.numberOfVariables() + 1;
     for( unsigned i = 0; i < nAux; ++i )
+    {
         solver.addVariable();
+        solver.getVariable( solver.numberOfVariables() )->setFrozen();
+    }
     for( unsigned i = 0; i < rule->literals.size(); ++i )
     {
         for( unsigned j = 0; j < nAux; ++j )
@@ -1848,6 +1856,134 @@ GringoNumericFormat::atMostOneBimander( WeightConstraintRule* rule )
             trace_msg( parser, 5, "Adding clause: " << *clause );
             solver.addClause( clause );
         }
+    }
+}
+
+void
+GringoNumericFormat::atMostOneSequential( WeightConstraintRule* rule )
+{
+    cleanWeightConstraint( rule );
+    trace_msg( parser, 4, "Bimander rewriting of " << *rule );
+    
+    for( unsigned i = 0; i < rule->literals.size(); ++i )
+    {
+        solver.getLiteral( rule->literals[ i ] ).getVariable()->setFrozen();
+    }
+    
+    unsigned nAux = rule->literals.size() - 1;
+    unsigned firstAux = solver.numberOfVariables() + 1;
+    for( unsigned i = 0; i < nAux; ++i )
+    {
+        solver.addVariable();
+        solver.getVariable( solver.numberOfVariables() )->setFrozen();
+    }
+    for( unsigned i = 0; i < rule->literals.size() - 1; ++i )
+    {
+        Clause* clause = solver.newClause( 2 );
+        clause->addLiteral( solver.getLiteral( -rule->literals[ i ] ) );
+        clause->addLiteral( solver.getLiteral( firstAux + i ) );
+        trace_msg( parser, 5, "Adding clause: " << *clause );
+        solver.addClause( clause );
+        
+        clause = solver.newClause( 2 );
+        clause->addLiteral( solver.getLiteral( -rule->literals[ i+1 ] ) );
+        clause->addLiteral( solver.getLiteral( -firstAux - i ) );
+        trace_msg( parser, 5, "Adding clause: " << *clause );
+        solver.addClause( clause );
+    }
+    for( unsigned i = 1; i < nAux; ++i )
+    {
+        Clause* clause = solver.newClause( 2 );
+        clause->addLiteral( solver.getLiteral( -firstAux - i + 1 ) );
+        clause->addLiteral( solver.getLiteral( firstAux + i ) );
+        trace_msg( parser, 5, "Adding clause: " << *clause );
+        solver.addClause( clause );
+    }
+}
+
+void
+GringoNumericFormat::atMostOneBisequential( WeightConstraintRule* rule )
+{
+    cleanWeightConstraint( rule );
+    trace_msg( parser, 4, "Bimander rewriting of " << *rule );
+    
+    for( unsigned i = 0; i < rule->literals.size(); ++i )
+    {
+        solver.getLiteral( rule->literals[ i ] ).getVariable()->setFrozen();
+    }
+    
+    unsigned nAux = ( rule->literals.size() + 1 ) / 2 - 1;
+    unsigned firstAux = solver.numberOfVariables() + 1;
+    for( unsigned i = 0; i < nAux; ++i )
+    {
+        solver.addVariable();
+        solver.getVariable( solver.numberOfVariables() )->setFrozen();
+    }
+
+    unsigned last = rule->literals.size() - rule->literals.size() % 2;
+    for( unsigned i = 0; i < last; i += 2 )
+    {
+        Clause* clause = solver.newClause( 2 );
+        clause->addLiteral( solver.getLiteral( -rule->literals[ i ] ) );
+        clause->addLiteral( solver.getLiteral( -rule->literals[ i+1 ] ) );
+        trace_msg( parser, 5, "Adding clause: " << *clause );
+        solver.addClause( clause );
+    }
+
+    for( unsigned i = 0; i < last - 2; i += 2 )
+    {
+        Clause* clause = solver.newClause( 2 );
+        clause->addLiteral( solver.getLiteral( -rule->literals[ i ] ) );
+        clause->addLiteral( solver.getLiteral( firstAux + i/2 ) );
+        trace_msg( parser, 5, "Adding clause: " << *clause );
+        solver.addClause( clause );
+
+        clause = solver.newClause( 2 );
+        clause->addLiteral( solver.getLiteral( -rule->literals[ i+1 ] ) );
+        clause->addLiteral( solver.getLiteral( firstAux + i/2 ) );
+        trace_msg( parser, 5, "Adding clause: " << *clause );
+        solver.addClause( clause );
+        
+        clause = solver.newClause( 2 );
+        clause->addLiteral( solver.getLiteral( -rule->literals[ i+2 ] ) );
+        clause->addLiteral( solver.getLiteral( -firstAux - i/2 ) );
+        trace_msg( parser, 5, "Adding clause: " << *clause );
+        solver.addClause( clause );
+        
+        clause = solver.newClause( 2 );
+        clause->addLiteral( solver.getLiteral( -rule->literals[ i+3 ] ) );
+        clause->addLiteral( solver.getLiteral( -firstAux - i/2 ) );
+        trace_msg( parser, 5, "Adding clause: " << *clause );
+        solver.addClause( clause );
+    }
+    if( last != rule->literals.size() )
+    {
+        Clause* clause = solver.newClause( 2 );
+        clause->addLiteral( solver.getLiteral( -rule->literals[ rule->literals.size() - 3 ] ) );
+        clause->addLiteral( solver.getLiteral( firstAux + nAux - 1 ) );
+        trace_msg( parser, 5, "Adding clause: " << *clause );
+        solver.addClause( clause );
+
+        clause = solver.newClause( 2 );
+        clause->addLiteral( solver.getLiteral( -rule->literals[ rule->literals.size() - 2 ] ) );
+        clause->addLiteral( solver.getLiteral( firstAux + nAux - 1 ) );
+        trace_msg( parser, 5, "Adding clause: " << *clause );
+        solver.addClause( clause );
+
+        clause = solver.newClause( 2 );
+        clause->addLiteral( solver.getLiteral( -rule->literals.back() ) );
+        clause->addLiteral( solver.getLiteral( -firstAux - nAux + 1 ) );
+        trace_msg( parser, 5, "Adding clause: " << *clause );
+        solver.addClause( clause );
+    }
+
+    for( unsigned i = 1; i < nAux; ++i )
+    {
+        Clause* clause = solver.newClause( 2 );
+        clause->addLiteral( solver.getLiteral( -firstAux - i + 1 ) );
+        clause->addLiteral( solver.getLiteral( firstAux + i ) );
+        trace_msg( parser, 5, "Adding clause: " << *clause );
+        solver.addClause( clause );
     }
 }
 

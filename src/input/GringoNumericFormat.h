@@ -340,6 +340,8 @@ private:
     void atMostOne( WeightConstraintRule* rule );
     void atMostOnePairwise( WeightConstraintRule* rule );
     void atMostOneBimander( WeightConstraintRule* rule );
+    void atMostOneSequential( WeightConstraintRule* rule );
+    void atMostOneBisequential( WeightConstraintRule* rule );
     Aggregate* weightConstraintToAggregate( WeightConstraintRule* rule );
     void addWeightConstraints();
     void cleanWeightConstraint( WeightConstraintRule* rule );
