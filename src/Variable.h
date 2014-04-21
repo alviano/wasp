@@ -36,6 +36,7 @@ class Learning;
 class Literal;
 class Component;
 class PostPropagator;
+class Propagator;
 
 class Variable;
 class Solver;
@@ -89,7 +90,7 @@ class Variable
         inline TruthValue getTruthValue() const;
         inline TruthValue getCachedTruthValue() const;
 
-        void onLearning( Learning* strategy );
+//        void onLearning( Learning* strategy );
         
         inline void addWatchedClause( Clause* clause, unsigned int sign );        
         inline void findAndEraseWatchedClause( Clause* clause, unsigned int sign );
@@ -133,13 +134,15 @@ class Variable
         inline void setComponent( Component* c ){ assert( component == NULL ); component = c; }
         inline Component* getComponent() { return component; }
         
-        void onLearningForUnfounded( Learning& learning );        
+        void onLearningForUnfounded( Learning& learning );
+        inline void addPropagator( Propagator* p, unsigned int sign, int position ) { propagators[ sign ].push_back( pair< Propagator*, int >( p, position ) ); }
         inline void addPostPropagator( PostPropagator* p, unsigned int sign, int position ) { postPropagators[ sign ].push_back( pair< PostPropagator*, int >( p, position ) ); }
         
         bool isFrozen() const { return frozen; }
         void setFrozen() { frozen = true; }
         
         void unitPropagation( Solver& solver );
+        void propagation( Solver& solver );
         void postPropagation( Solver& solver );
         
         void propagateAtLevelZero( Solver& solver );
@@ -189,6 +192,8 @@ class Variable
          * Position NEGATIVE of this vector contains the occurrences of the negative literal associated with this variable.
          */        
         Vector< pair< PostPropagator*, int > > postPropagators[ 2 ];
+        
+        Vector< pair< Propagator*, int > > propagators[ 2 ];
         
 //        uint64_t signature;
         

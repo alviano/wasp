@@ -19,31 +19,34 @@
 #ifndef AGGREGATE_H
 #define AGGREGATE_H
 
+#include "Clause.h"
+
+
 #include <cassert>
 #include <iostream>
 #include <list>
 
-#include "PostPropagator.h"
+#include "Propagator.h"
+#include "Clause.h"
 #include "Learning.h"
 #include "Literal.h"
 #include "stl/Vector.h"
 #include "util/Options.h"
 #include "util/Trace.h"
 
-class Clause;
 using namespace std;
 
 #define POS 1
 #define NEG -1
 
-class Aggregate : public PostPropagator
+class Aggregate : public Propagator, public Clause
 {
     friend ostream& operator<<( ostream& out, const Aggregate& aggregate );
     public:
         inline Aggregate();
         inline ~Aggregate() {}
         
-        virtual bool onLiteralFalse( Literal lit, int pos );
+        virtual bool onLiteralFalse( Solver& solver, Literal lit, int pos );
         
         inline unsigned int size() const { return literals.size() - 1; }
 
@@ -62,6 +65,9 @@ class Aggregate : public PostPropagator
         virtual void reset();
         
         void attachAggregate();
+        
+        virtual void onLearning( Learning* strategy, Literal lit );
+        virtual bool onNavigatingLiteralForAllMarked( Learning* strategy, Literal lit );
 
     private:
         inline Aggregate( const Aggregate& orig );
@@ -86,7 +92,7 @@ class Aggregate : public PostPropagator
         #endif
 };
 
-Aggregate::Aggregate() : PostPropagator(), active( 0 ), counterW1( 0 ), counterW2( 0 ), umax( 1 )
+Aggregate::Aggregate() : Propagator(), Clause(), active( 0 ), counterW1( 0 ), counterW2( 0 ), umax( 1 )
 {
     literals.push_back( Literal::null );
     weights.push_back( 0 );    

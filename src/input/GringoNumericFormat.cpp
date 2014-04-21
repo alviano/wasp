@@ -2016,13 +2016,13 @@ GringoNumericFormat::weightConstraintToAggregate( WeightConstraintRule* weightCo
 
     if( aggregateLiteral.isFalse() )
     {
-        if( aggregate->onLiteralFalse( aggregateLiteral, -1 ) )
-            solver.addPostPropagator( aggregate );
+        aggregate->onLiteralFalse( solver, aggregateLiteral, -1 );
+//            solver.addPostPropagator( aggregate );
     }
     else if( aggregateLiteral.isTrue() )
     {
-        if( aggregate->onLiteralFalse( aggregateLiteral.getOppositeLiteral(), 1 ) )
-            solver.addPostPropagator( aggregate );
+        aggregate->onLiteralFalse( solver, aggregateLiteral.getOppositeLiteral(), 1 );
+//            solver.addPostPropagator( aggregate );
     }
 
     return aggregate;
@@ -2109,7 +2109,7 @@ GringoNumericFormat::addOptimizationRules()
     
     optimizationWeightConstraint->sort();
     
-    trace_msg( parser, 4, "Creating optimization weight constraint " << *optimizationWeightConstraint );
+    trace_msg( parser, 4, "Created optimization weight constraint " << *optimizationWeightConstraint );
     unsigned int k = 0;
     
     unsigned int precomputedCost = 0;
@@ -2141,9 +2141,9 @@ GringoNumericFormat::addOptimizationRules()
 
     optimizationWeightConstraint->literals.resize( k );
     optimizationWeightConstraint->weights.resize( k );
-        
+    trace_msg( parser, 4, "Shrinked optimization weight constraint " << *optimizationWeightConstraint );    
     solver.setPrecomputedCost( precomputedCost );
-    solver.addVariable();    
+    solver.addVariable();
     optimizationWeightConstraint->id = solver.numberOfVariables();
     solver.getVariable( solver.numberOfVariables() )->setFrozen();
 
@@ -2151,6 +2151,8 @@ GringoNumericFormat::addOptimizationRules()
     propagatedLiterals++;        
     Aggregate* aggregate = weightConstraintToAggregate( optimizationWeightConstraint );
     assert( aggregate != NULL );
+    
+    trace_msg( parser, 4, "Final optimization aggregate " << *aggregate );
     solver.setOptimizationAggregate( aggregate );
     solver.setMaxCostOfLevelOfOptimizationRules( maxCostOfLevelOfWeakConstraints );
     solver.setNumberOfOptimizationLevels( optimizationRules.size() );

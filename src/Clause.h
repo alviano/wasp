@@ -68,7 +68,8 @@ class Clause
         inline void removeLiteral( Literal literal );
         inline void removeLastLiteralNoWatches(){ literals.pop_back(); }
         
-        inline void onLearning( Learning* strategy );
+        virtual void onLearning( Learning* strategy, Literal lit );
+        virtual bool onNavigatingLiteralForAllMarked( Learning* strategy, Literal lit );
         inline bool onLiteralFalse( Literal literal );
         inline void onRemovingNoDelete( Literal literal );
 
@@ -380,41 +381,6 @@ Clause::size() const
 //        strategy->onNavigatingLiteral( literal );
 //    }
 //}
-
-void
-Clause::onLearning(
-    Learning* strategy )
-{
-    assert( "LearningStrategy is not initialized." && strategy != NULL );
-
-    //Navigating all literals in the clause.
-    assert_msg( literals[ 0 ].getDecisionLevel() != 0, "Literal " << literals[ 0 ] << " is in position 0 and it has been inferred " << ( literals[ 0 ].isTrue() ? "TRUE" : "FALSE" ) << " at level 0. Clause: " << *this );
-    
-    strategy->onNavigatingLiteral( literals[ 0 ] );
-
-    assert_msg( literals[ 1 ].getDecisionLevel() != 0, "Literal " << literals[ 1 ] << " is in position 1 and it has been inferred at level 0. Clause: " << *this );
-    strategy->onNavigatingLiteral( literals[ 1 ] );
-
-    for( unsigned int i = 2; i < literals.size(); )
-    {
-        Literal literal = literals[ i ];
-        if( literal.getDecisionLevel() != 0 )
-        {
-            strategy->onNavigatingLiteral( literal );
-            i++;
-        }
-        else
-        {
-            assert_msg( literal.isFalse(), "Literal " << literal << " is not false." );
-            swapUnwatchedLiterals( i, literals.size() - 1 );
-            literals.pop_back();
-
-//            if( lastSwapIndex >= literals.size() )
-//                resetLastSwapIndex();
-        }
-    }
-}
-
 
 //bool
 //Clause::checkUnsatisfiedAndOptimize( 

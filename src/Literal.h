@@ -63,13 +63,14 @@ class Literal
         inline void addClause( Clause* clause );
         inline void findAndEraseClause( Clause* clauses );   
         
+        inline void addPropagator( Propagator* p, int position );
         inline void addPostPropagator( PostPropagator* p, int position );
         
         inline unsigned int getDecisionLevel() const;
 
         inline bool isImplicant( const Clause* clause ) const;
         
-        inline void onLearning( Learning* strategy );
+//        inline void onLearning( Learning* strategy );
 
         inline void onAging( unsigned int );
 
@@ -228,13 +229,13 @@ Literal::setTrue()
     return getVariable()->setTruthValue( truth );    
 }
 
-void
-Literal::onLearning( 
-    Learning* strategy )
-{
-    assert( "Variable has not been set." && getVariable() != NULL );
-    getVariable()->onLearning( strategy );
-}
+//void
+//Literal::onLearning( 
+//    Learning* strategy )
+//{
+//    assert( "Variable has not been set." && getVariable() != NULL );
+//    getVariable()->onLearning( strategy );
+//}
 
 Literal
 Literal::getOppositeLiteral()
@@ -279,6 +280,16 @@ Literal::addClause(
     assert( "Variable has not been set." && getVariable() != NULL );
     getVariable()->addClause( clause, getSign() );
 }
+
+void
+Literal::addPropagator(
+    Propagator* p,
+    int position )
+{
+    assert( "Variable has not been set." && getVariable() != NULL );
+    getVariable()->addPropagator( p, getSign(), position );
+}
+
 
 void
 Literal::addPostPropagator(
