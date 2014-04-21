@@ -143,6 +143,8 @@ TESTS_OUT_sat_Intensive3 = $(patsubst %.test.py,%.test.py.text, $(TESTS_SRC_sat_
 
 tests: tests/wasp1 tests/sat tests/asp
 
+test: tests/sat/Models tests/asp/gringo tests/asp/AllAnswerSets/tight tests/asp/AllAnswerSets/nontight tests/asp/AllAnswerSets/aggregates tests/asp/weakConstraints
+
 tests/wasp1: tests/wasp1/AllAnswerSets
 
 tests/wasp1/AllAnswerSets: $(TESTS_OUT_wasp1_AllAnswerSets)
