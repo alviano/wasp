@@ -17,6 +17,7 @@
 */
 
 #include "Aggregate.h"
+#include "Solver.h"
 #include "Literal.h"
 #include "Variable.h"
 #include "util/Options.h"
@@ -42,8 +43,8 @@ Aggregate::getClauseToPropagate(
 
 void
 Aggregate::reset()
-{
-    trace_msg( aggregates, 2, "Calling reset" );
+{    
+    trace_msg( aggregates, 2, "Calling reset for aggregate " << *this );
     if( trail.empty() || ( !literals[ abs( trail.back() ) ].isUndefined() && literals[ abs( trail.back() ) ].getDecisionLevel() != 0 ) )
         return;
 
@@ -58,9 +59,10 @@ Aggregate::reset()
     unsigned int pos = abs( last );
     
     do
-    {        
+    {
         trail.pop_back();
-        ( last > 0 ) ? counterW2 += weights[ pos ] : counterW1 += weights[ pos ];
+        if( !watched[ pos ] )
+            ( last > 0 ) ? counterW2 += weights[ pos ] : counterW1 += weights[ pos ];
         watched[ pos ] = true;        
         
         if( trail.empty() )
@@ -76,6 +78,7 @@ Aggregate::reset()
 
 bool
 Aggregate::onLiteralFalse(
+    Solver& solver,
     Literal currentLiteral,
     int position )
 {
@@ -87,20 +90,20 @@ Aggregate::onLiteralFalse(
     Literal aggrLiteral = ( ac == POS ? literals[ 1 ].getOppositeLiteral() : literals[ 1 ] );
     
     if( aggrLiteral.isTrue() || active + ac == 0 )
-    {
+    {        
         trace_msg( aggregates, 2, "Return. AggrLiteral: " << aggrLiteral << " - Active: " << active << " - Ac: " << ac );
         return toAddInSolver;
     }
     
     unsigned int index = ( position > 0 ? position : -position ); 
     unsigned int& counter = ( position > 0 ? counterW2 : counterW1 );
-    
+
     trace_msg( aggregates, 2, "Updating counter. Old value: " << counter << " - New value: " << counter - weights[ index ] );
     
     if( counter < weights[ index ] )
     {
         assert( checkLiteralHasBeenInferred( currentLiteral ) || currentLiteral.getDecisionLevel() == 0 );
-        trace_msg( aggregates, 3, "A conflict happened." );
+        trace_msg( aggregates, 3, "A conflict happened." );        
         return toAddInSolver;
     }
     assert( counter >= weights[ index ] );
@@ -116,14 +119,15 @@ Aggregate::onLiteralFalse(
         if( watched[ umax ] )
         {
             active = ac;
-            //Maybe we don't need to add the position of this literal
-//            trail.push_back( umax * ac );
             Literal lit = ( ac == POS ? literals[ umax ].getOppositeLiteral() : literals[ umax ] );
-            
             if( !lit.isTrue() )
             {                
+                //Maybe we don't need to add the position of this literal
+                trail.push_back( umax * ac );
+            
                 trace_msg( aggregates, 1, "Inferring " << lit << " as true" );
-                createClauseFromTrail( lit );
+//                createClauseFromTrail( lit );
+                solver.assignLiteral( lit, this );
                 toAddInSolver = true;
             }
             else
@@ -164,6 +168,7 @@ bool
 Aggregate::checkLiteralHasBeenInferred(
     Literal lit ) const
 {
+    return true;
     for( list< Clause* >::const_iterator it = clausesToPropagate.begin(); it != clausesToPropagate.end(); ++it )
     {
         const Clause* c = *it;
@@ -278,16 +283,16 @@ Aggregate::attachAggregate()
 {
     assert( literals.size() > 1 );
     Literal aggregateLiteral = literals[ 1 ].getOppositeLiteral();
-    aggregateLiteral.addPostPropagator( this, -1 );
-    aggregateLiteral.getOppositeLiteral().addPostPropagator( this, 1 );
+    aggregateLiteral.addPropagator( this, -1 );
+    aggregateLiteral.getOppositeLiteral().addPropagator( this, 1 );
     
     for( unsigned int j = 2; j < literals.size(); j++ )
     {
         Literal lit = literals[ j ];
         if( !aggregateLiteral.isTrue() )
-            lit.getOppositeLiteral().addPostPropagator( this, -j );
+            lit.getOppositeLiteral().addPropagator( this, -j );
         if( !aggregateLiteral.isFalse() )
-            lit.addPostPropagator( this, j );
+            lit.addPropagator( this, j );
     }
 }
 
@@ -312,4 +317,72 @@ operator<<(
         out << "[]";    
 
     return out;
+}
+
+void
+Aggregate::onLearning(
+    Learning* strategy,
+    Literal lit )
+{
+//    for( int i = trail.size() - 1; i >= 0; i-- )
+    for( unsigned int i = 0; i < trail.size(); i++ )
+    {
+        int position = trail[ i ];
+        
+        int ac = ( position < 0 ? POS : NEG );
+        
+        unsigned int index = ( position > 0 ? position : -position );
+        Literal l = literals[ index ];            
+        if( ac == active )
+        {
+            if( active == NEG )
+                l = l.getOppositeLiteral();
+        
+            if( !watched[ index ] )
+            {
+                assert_msg( l.getDecisionLevel() > 0, "Literal " << l << " has been inferred at the decision level 0" );
+//                clause->addLiteral( l.getOppositeLiteral() );
+                strategy->onNavigatingLiteral( l.getOppositeLiteral() );
+            }
+            
+            assert( l != lit );            
+        }
+        
+        if( l.getVariable() == lit.getVariable() )
+            break;
+    }
+}
+
+bool
+Aggregate::onNavigatingLiteralForAllMarked(
+    Learning* strategy,
+    Literal lit )
+{
+    for( unsigned int i = 0; i < trail.size(); i++ )
+    {
+        int position = trail[ i ];        
+        int ac = ( position < 0 ? POS : NEG );
+        
+        unsigned int index = ( position > 0 ? position : -position );
+        Literal l = literals[ index ];            
+        if( ac == active )
+        {
+            if( active == NEG )
+                l = l.getOppositeLiteral();
+        
+            if( !watched[ index ] )
+            {
+                assert_msg( l.getDecisionLevel() > 0, "Literal " << l << " has been inferred at the decision level 0" );
+                if( !strategy->onNavigatingLiteralForAllMarked( l.getOppositeLiteral() ) )
+                    return false;
+            }
+            
+            assert( l != lit );            
+        }
+        
+        if( l.getVariable() == lit.getVariable() )
+            break;
+    }
+    
+    return true;
 }

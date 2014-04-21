@@ -66,16 +66,16 @@ Variable::~Variable()
 //    heuristicCounters[ 1 ] = heuristicCounterFactoryForLiteral->createHeuristicCounter();
 //}
 
-void
-Variable::onLearning( 
-    Learning* strategy )
-{    
-    //The implicant can be NULL if the literal is a choice.
-    if( implicant != NULL )
-    {
-        implicant->onLearning( strategy );
-    }
-}
+//void
+//Variable::onLearning( 
+//    Learning* strategy )
+//{    
+//    //The implicant can be NULL if the literal is a choice.
+//    if( implicant != NULL )
+//    {
+//        implicant->onLearning( strategy );
+//    }
+//}
 
 void
 Variable::onLearningForUnfounded(
@@ -130,6 +130,35 @@ Variable::unitPropagation(
             assert( !solver.conflictDetected() );
     }
     wl.shrink( j );
+}
+
+void
+Variable::propagation(
+    Solver& solver )
+{
+    assert( !solver.conflictDetected() );
+    assert_msg( !this->isUndefined(), "Propagating variable " << *this << ", the truth value is Undefined." );
+
+    assert( FALSE == 1 && TRUE == 2 );
+
+    #ifndef NDEBUG
+    unsigned int sign = ( getTruthValue() >> 1 );
+    assert( sign <= 1 );
+    assert( getTruthValue() == TRUE ? sign == NEGATIVE : sign == POSITIVE );
+    #endif
+    
+    Vector< pair< Propagator*, int > >& wl = propagators[ ( getTruthValue() >> 1 ) ];
+
+    Literal complement = Literal::createOppositeFromAssignedVariable( this );    
+    
+    for( unsigned i = 0; i < wl.size(); ++i )
+    {
+        if( solver.conflictDetected() )
+            break;
+        Propagator* propagator = wl[ i ].first;
+        assert( "Post propagator is null." && propagator != NULL );
+        propagator->onLiteralFalse( solver, complement, wl[ i ].second );        
+    }
 }
 
 void

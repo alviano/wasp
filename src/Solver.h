@@ -87,6 +87,7 @@ class Solver
         
         inline void assignLiteral( Literal literal );
         inline void assignLiteral( Clause* implicant );
+        inline void assignLiteral( Literal literal, Clause* implicant );
         
         inline bool propagateLiteralAsDeterministicConsequence( Literal literal );
         inline bool propagateLiteralAsDeterministicConsequenceSatelite( Literal literal );
@@ -397,6 +398,19 @@ Solver::assignLiteral(
     if( !variables.assign( currentDecisionLevel, implicant ) )
     {
         conflictLiteral = implicant->getAt( 0 );
+        conflictClause = implicant;        
+    }
+}
+
+void
+Solver::assignLiteral(
+    Literal lit,
+    Clause* implicant )
+{
+    assert( implicant != NULL );
+    if( !variables.assign( currentDecisionLevel, lit, implicant ) )
+    {
+        conflictLiteral = lit;
         conflictClause = implicant;        
     }
 }
@@ -1081,8 +1095,8 @@ Solver::updateOptimizationAggregate(
         return false;
     
     assert( optimizationAggregate->getLiteral( 1 ).getOppositeLiteral().isFalse() );
-    if( optimizationAggregate->onLiteralFalse( optimizationAggregate->getLiteral( 1 ).getOppositeLiteral(), -1 ) )
-        addPostPropagator( optimizationAggregate );    
+    optimizationAggregate->onLiteralFalse( *this, optimizationAggregate->getLiteral( 1 ).getOppositeLiteral(), -1 );
+//        addPostPropagator( optimizationAggregate ); 
     
     return true;
 }

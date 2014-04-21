@@ -56,13 +56,14 @@ Learning::onConflict(
     if( conflictClause->isLearned() )    
         solver.updateActivity( conflictClause );
     
-    conflictClause->onLearning( this );
+    conflictClause->onLearning( this, conflictLiteral );
     //assert_msg( conflictLiteral.getVariable()->getImplicant() != NULL, "Conflict literal " << conflictLiteral << " has no implicant" ); // FIXME: I added this assert. Is it right? It is true only for tight programs.
     
     if( conflictLiteral.getVariable()->getImplicant() != NULL  )
-        conflictLiteral.getVariable()->getImplicant()->onLearning( this );
-
+        conflictLiteral.getVariable()->getImplicant()->onLearning( this, conflictLiteral.getOppositeLiteral() );
+    
     trace( learning, 2, "Conflict literal: %s.\n", toString( conflictLiteral ).c_str() );
+    addLiteralToNavigate( conflictLiteral );
     assert( conflictLiteral.getVariable()->visited() == numberOfCalls );
     solver.startIterationOnAssignedVariable();
     
@@ -79,7 +80,7 @@ Learning::onConflict(
         {
             if( implicant->isLearned() )
                 solver.updateActivity( implicant );
-            implicant->onLearning( this );
+            implicant->onLearning( this, currentLiteral );
         }
     }
 
@@ -183,7 +184,8 @@ Learning::onNavigatingLiteralForUnfoundedSetLearning(
 void
 Learning::simplifyLearnedClause(
     Clause* lc )
-{
+{    
+//    return;
     assert( lc != NULL );
     assert( lc->size() > 1 );
 
@@ -197,7 +199,7 @@ Learning::simplifyLearnedClause(
     for( unsigned int i = 1; i < learnedClause.size(); )
     {
         trace_msg( learning, 5, "Considering literal " << learnedClause.getAt( i ) );
-        if( allMarked( learnedClause.getAt( i ).getVariable()->getImplicant() ) )
+        if( allMarked( learnedClause.getAt( i ).getVariable()->getImplicant(), learnedClause.getAt( i ) ) )
         {
             trace_msg( learning, 5, "Removing literal " << learnedClause.getAt( i ) );
             learnedClause.swapLiteralsNoWatches( i, learnedClause.size() - 1 );
@@ -210,7 +212,7 @@ Learning::simplifyLearnedClause(
         
     }
     
-    if( allMarked( learnedClause.getAt( 0 ).getVariable()->getImplicant() ) )
+    if( allMarked( learnedClause.getAt( 0 ).getVariable()->getImplicant(), learnedClause.getAt( 0 ) ) )
     {
         trace_msg( learning, 5, "Removing literal " << learnedClause.getAt( 0 ) );
         learnedClause.swapLiteralsNoWatches( 0, learnedClause.size() - 1 );
@@ -230,9 +232,46 @@ Learning::simplifyLearnedClause(
     statistics( endShrinkingLearnedClause( lc->size() + 1 ) );
 }
 
+//bool
+//Learning::allMarked(
+//    const Clause* clause )
+//{
+//    if( clause == NULL )
+//    {
+//        trace_msg( learning, 5, "All marked on NULL clause" );
+//        return false;
+//    }
+//    trace_msg( learning, 5, "All marked on clause " << *clause );
+//    
+//    for( unsigned int i = 1; i < clause->size(); i++ )
+//    {
+//        trace_msg( learning, 5, "Considering literal " << clause->getAt( i ) << " in position " << i );
+//
+//        if( clause->getAt( i ).getVariable()->visited() != numberOfCalls )
+//        {
+//            if( allMarked( clause->getAt( i ).getVariable()->getImplicant() ) )
+//            {
+//                trace_msg( learning, 5, "Literal " << clause->getAt( i ) << " set as visited" );
+//                clause->getAt( i ).getVariable()->visited() = numberOfCalls;
+//            }
+//            else
+//            {
+//                return false;
+//            }
+//        }
+//        else
+//        {
+//            trace_msg( learning, 5, "Literal " << clause->getAt( i ) << " has been visited." );
+//        }
+//    }
+//    
+//    return true;
+//}
+
 bool
 Learning::allMarked(
-    const Clause* clause )
+    Clause* clause,
+    Literal literal )
 {
     if( clause == NULL )
     {
@@ -241,26 +280,31 @@ Learning::allMarked(
     }
     trace_msg( learning, 5, "All marked on clause " << *clause );
     
-    for( unsigned int i = 1; i < clause->size(); i++ )
-    {
-        trace_msg( learning, 5, "Considering literal " << clause->getAt( i ) << " in position " << i );
+    if( !clause->onNavigatingLiteralForAllMarked( this, literal ) )
+        return false;
+    
+    return true;
+}
 
-        if( clause->getAt( i ).getVariable()->visited() != numberOfCalls )
+bool
+Learning::onNavigatingLiteralForAllMarked(
+    Literal literal )
+{
+    if( literal.getVariable()->visited() != numberOfCalls )
+    {
+        if( allMarked( literal.getVariable()->getImplicant(), literal ) )
         {
-            if( allMarked( clause->getAt( i ).getVariable()->getImplicant() ) )
-            {
-                trace_msg( learning, 5, "Literal " << clause->getAt( i ) << " set as visited" );
-                clause->getAt( i ).getVariable()->visited() = numberOfCalls;
-            }
-            else
-            {
-                return false;
-            }
+            trace_msg( learning, 5, "Literal " << literal << " set as visited" );
+            literal.getVariable()->visited() = numberOfCalls;
         }
         else
         {
-            trace_msg( learning, 5, "Literal " << clause->getAt( i ) << " has been visited." );
+            return false;
         }
+    }
+    else
+    {
+        trace_msg( learning, 5, "Literal " << literal << " has been visited." );
     }
     
     return true;

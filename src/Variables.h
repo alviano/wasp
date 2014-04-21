@@ -59,6 +59,15 @@ class Variables
         
         inline void printAnswerSet( OutputBuilder* outputBuilder ) const;
         
+        /**
+         * Assign a literal with the truth value TRUE.
+         * 
+         * @param level the level of the inference.
+         * @param literal the literal which is true.
+         * @param implicant the clause which is the reason of the literal assignment.
+         * @return true if no conflict occurs, false otherwise. 
+         */
+        inline bool assign( int level, Literal literal, Clause* implicant );
         inline bool assign( int level, Literal literal );
         inline bool assign( int level, Clause* implicant );
         inline void onEliminatingVariable( Variable* variable, unsigned int sign, Clause* definition );
@@ -80,17 +89,7 @@ class Variables
         /* Data structures */
         vector< Variable* > variables;
         
-        inline bool checkNoUndefinedBefore( unsigned idx ) const;
-
-        /**
-         * Assign a literal with the truth value TRUE.
-         * 
-         * @param level the level of the inference.
-         * @param literal the literal which is true.
-         * @param implicant the clause which is the reason of the literal assignment.
-         * @return true if no conflict occurs, false otherwise. 
-         */
-        inline bool assign( int level, Literal literal, Clause* implicant );
+        inline bool checkNoUndefinedBefore( unsigned idx ) const;        
         
         inline bool checkVariableHasBeenAssigned( Variable* var );
 };

@@ -257,7 +257,7 @@ Solver::solvePropagators()
             conflict:;
             if( conflictDetected() )
             {
-                trace( solving, 1, "Conflict detected.\n" );
+                trace( solving, 1, "Conflict detected.\n" );                
                 if( getCurrentDecisionLevel() == 0 )
                 {
                     trace( solving, 1, "Conflict at level 0: return. \n");
@@ -354,6 +354,11 @@ Solver::postPropagation(
     if( conflictDetected() )
         return;
     
+    variable->propagation( *this );
+    
+    if( conflictDetected() )
+        return;
+
     variable->postPropagation( *this );
     
     assert( !conflictDetected() );

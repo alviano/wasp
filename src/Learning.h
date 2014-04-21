@@ -38,6 +38,8 @@ class Learning
         
         void onNavigatingLiteral( Literal );
         void onNavigatingLiteralForUnfoundedSetLearning( Literal );
+        
+        bool onNavigatingLiteralForAllMarked( Literal );
         Clause* onConflict( Literal conflictLiteral, Clause* conflictClause );
         
         inline void onNewVariable();
@@ -85,7 +87,7 @@ class Learning
         Literal getNextLiteralToNavigate();
         
         void simplifyLearnedClause( Clause* lc );
-        bool allMarked( const Clause* clause );
+        bool allMarked( Clause* clause, Literal literal );
         
         #ifndef NDEBUG
         /**
