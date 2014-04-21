@@ -1366,36 +1366,6 @@ GringoNumericFormat::computeSCCs()
     solver.computeStrongConnectedComponents();
 }
 
-//void
-//GringoNumericFormat::computeCompletion()
-//{
-//    assert( propagatedLiterals == solver.numberOfAssignedLiterals() );
-//    for( unsigned i = 0; i < crules.size(); ++i )
-//    {
-//        Clause* crule = crules[ i ];
-//        assert( crule != NULL );
-//        Literal lit = crule->getAt( 0 ).getOppositeLiteral();
-//        if( !lit.isTrue() )
-//        {
-//            for( unsigned j = 1; j < crule->size(); ++j )
-//            {
-//                Literal lit2 = crule->getAt( j ).getOppositeLiteral();
-//                if( lit2.isTrue() || crule->getAt( j ) == lit )
-//                    continue;
-//                assert( lit.isUndefined() );
-//                assert( lit2.isUndefined() );
-//                   
-//                Clause* bin = solver.newClause();
-//                bin->addLiteral( lit );
-//                bin->addLiteral( lit2 );
-//                solver.addClause( bin );
-//                assert( propagatedLiterals == solver.numberOfAssignedLiterals() );
-//            }
-//        }
-//        solver.cleanAndAddClause( crule );
-//        assert( propagatedLiterals == solver.numberOfAssignedLiterals() );
-//    }    
-//}
 void
 GringoNumericFormat::computeCompletion()
 {
@@ -1405,49 +1375,7 @@ GringoNumericFormat::computeCompletion()
         Clause* crule = crules[ i ];
         assert( crule != NULL );
         Literal lit = crule->getAt( 0 ).getOppositeLiteral();
-        if( lit.isTrue() )
-        {
-            solver.cleanAndAddClause( crule );
-        }
-        else if( crule->size() >= 3 )
-        {
-            lit.getVariable()->setFrozen();
-            Aggregate* aggregate = new Aggregate();
-
-            //The weight of this literal is computed in aggregate->updateBound()
-            aggregate->addLiteral( lit.getOppositeLiteral(), 0 );
-
-            for( unsigned int j = 1; j < crule->size(); j++ )
-            {
-                Literal lit2 = crule->getAt( j );
-
-                assert( !lit2.isTrue() );
-                if( lit2.isUndefined() )
-                {
-                    aggregate->addLiteral( lit2, 1 );
-                    lit2.getVariable()->setFrozen();
-                }
-            }
-
-            aggregate->attachAggregate();
-            assert( aggregate->size() > 0 );
-            aggregate->updateBound( 1 );
-            trace_msg( parser, 3, "Crule: " << *aggregate );
-
-            if( lit.isFalse() )
-            {
-                aggregate->onLiteralFalse( solver, lit, -1 );
-        //            solver.addPostPropagator( aggregate );
-            }
-            else if( lit.isTrue() )
-            {
-                aggregate->onLiteralFalse( solver, lit.getOppositeLiteral(), 1 );
-        //            solver.addPostPropagator( aggregate );
-            }            
-            
-            solver.addAggregate( aggregate );
-        }
-        else
+        if( !lit.isTrue() )
         {
             for( unsigned j = 1; j < crule->size(); ++j )
             {
@@ -1463,11 +1391,83 @@ GringoNumericFormat::computeCompletion()
                 solver.addClause( bin );
                 assert( propagatedLiterals == solver.numberOfAssignedLiterals() );
             }
-            solver.cleanAndAddClause( crule );
         }
+        solver.cleanAndAddClause( crule );
         assert( propagatedLiterals == solver.numberOfAssignedLiterals() );
     }    
 }
+//void
+//GringoNumericFormat::computeCompletion()
+//{
+//    assert( propagatedLiterals == solver.numberOfAssignedLiterals() );
+//    for( unsigned i = 0; i < crules.size(); ++i )
+//    {
+//        Clause* crule = crules[ i ];
+//        assert( crule != NULL );
+//        Literal lit = crule->getAt( 0 ).getOppositeLiteral();
+//        if( lit.isTrue() )
+//        {
+//            solver.cleanAndAddClause( crule );
+//        }
+//        else if( crule->size() >= 5 )
+//        {
+//            lit.getVariable()->setFrozen();
+//            Aggregate* aggregate = new Aggregate();
+//
+//            //The weight of this literal is computed in aggregate->updateBound()
+//            aggregate->addLiteral( lit.getOppositeLiteral(), 0 );
+//
+//            for( unsigned int j = 1; j < crule->size(); j++ )
+//            {
+//                Literal lit2 = crule->getAt( j );
+//
+//                assert( !lit2.isTrue() );
+//                if( lit2.isUndefined() )
+//                {
+//                    aggregate->addLiteral( lit2, 1 );
+//                    lit2.getVariable()->setFrozen();
+//                }
+//            }
+//
+//            aggregate->attachAggregate();
+//            assert( aggregate->size() > 0 );
+//            aggregate->updateBound( 1 );
+//            trace_msg( parser, 3, "Crule: " << *aggregate );
+//
+//            if( lit.isFalse() )
+//            {
+//                aggregate->onLiteralFalse( solver, lit, -1 );
+//        //            solver.addPostPropagator( aggregate );
+//            }
+//            else if( lit.isTrue() )
+//            {
+//                aggregate->onLiteralFalse( solver, lit.getOppositeLiteral(), 1 );
+//        //            solver.addPostPropagator( aggregate );
+//            }            
+//            
+//            solver.addAggregate( aggregate );
+//        }
+//        else
+//        {
+//            for( unsigned j = 1; j < crule->size(); ++j )
+//            {
+//                Literal lit2 = crule->getAt( j ).getOppositeLiteral();
+//                if( lit2.isTrue() || crule->getAt( j ) == lit )
+//                    continue;
+//                assert( lit.isUndefined() );
+//                assert( lit2.isUndefined() );
+//                   
+//                Clause* bin = solver.newClause();
+//                bin->addLiteral( lit );
+//                bin->addLiteral( lit2 );
+//                solver.addClause( bin );
+//                assert( propagatedLiterals == solver.numberOfAssignedLiterals() );
+//            }
+//            solver.cleanAndAddClause( crule );
+//        }
+//        assert( propagatedLiterals == solver.numberOfAssignedLiterals() );
+//    }    
+//}
 
 void
 GringoNumericFormat::add(
