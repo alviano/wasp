@@ -241,6 +241,8 @@ WaspFacade::algorithmOpt()
 //        solver.simplifyOnRestart();
 //        solver.clearConflictStatus();
         
+//        solver.removePrefChoices();
+        
         if( !solver.updateOptimizationAggregate( modelCost ) )
             break;        
     }

@@ -209,6 +209,7 @@ class Solver
         inline void setNumberOfOptimizationLevels( unsigned int n ) { numberOfOptimizationLevels = n; }
         inline void setPrecomputedCost( unsigned int c ) { precomputedCost = c; }
         inline void addPreferredChoicesFromOptimizationLiterals();
+        inline void removePrefChoices() { minisatHeuristic.removePrefChoices(); }
         
     private:
         inline Variable* addVariableInternal();
