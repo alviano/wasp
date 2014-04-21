@@ -336,7 +336,7 @@ private:
     void updateCurrentValueWeightConstraint( WeightConstraintRule* rule, unsigned int position );
     void weightConstraintIsTrue( WeightConstraintRule* rule );
     void weightConstraintIsFalse( WeightConstraintRule* rule );
-    void weightConstraintToClause( WeightConstraintRule* rule );
+    void atLeastOne( WeightConstraintRule* rule );
     void atMostOne( WeightConstraintRule* rule );
     void atMostOnePairwise( WeightConstraintRule* rule );
     void atMostOneBimander( WeightConstraintRule* rule );
@@ -354,7 +354,7 @@ private:
 
     Vector< NormalRule* > normalRules;
     Vector< WeightConstraintRule* > weightConstraintRules;
-    Vector< WeightConstraintRule* > toBeBimandered;
+    Vector< WeightConstraintRule* > delayedAggregateRewriting;
     Vector< WeightConstraintRule* > optimizationRules;
     vector< AtomData > atomData;
     Vector< Clause* > crules;

@@ -86,9 +86,9 @@ GringoNumericFormat::parse(
     readErrorNumber( input );
 
     trace_msg( parser, 1, "Apply bimander to at-most-one constraints" );
-    for( unsigned i = 0; i < toBeBimandered.size(); ++i )
-        atMostOneBisequential( toBeBimandered[ i ] );
-    toBeBimandered.clear();
+    for( unsigned i = 0; i < delayedAggregateRewriting.size(); ++i )
+        atMostOneBimander( delayedAggregateRewriting[ i ] );
+    delayedAggregateRewriting.clear();
     
     simplify();
 
@@ -802,7 +802,7 @@ GringoNumericFormat::propagateTrue(
     {
         if( data.weightConstraintRule->weights.front() == data.weightConstraintRule->weights.back() && data.weightConstraintRule->bound / data.weightConstraintRule->weights.front() == 1 && !data.weightConstraintRule->isTrue() )
         {
-            weightConstraintToClause( data.weightConstraintRule );
+            atLeastOne( data.weightConstraintRule );
             data.weightConstraintRule->remove();
         }
         else
@@ -876,16 +876,17 @@ GringoNumericFormat::propagateFalse(
     data.posWeightConstraintsOccurrences.clear();
     data.positionsInPosWeightConstraints.clear();
     
-    if( data.isWeightConstraint() )
-    {
-        if( data.weightConstraintRule->weights.front() == data.weightConstraintRule->weights.back() && data.weightConstraintRule->bound / data.weightConstraintRule->weights.front() == 2 && !data.weightConstraintRule->isFalse() )
-        {
-            atMostOne( data.weightConstraintRule );
-            data.weightConstraintRule->remove();
-        }
-        else
-            weightConstraintIsFalse( data.weightConstraintRule );
-    }
+//    if( data.isWeightConstraint() )
+//    {
+//        if( data.weightConstraintRule->weights.front() == data.weightConstraintRule->weights.back() && data.weightConstraintRule->bound / data.weightConstraintRule->weights.front() == 2 && data.weightConstraintRule->literals.size() > 8 && !data.weightConstraintRule->isFalse() )
+//        {
+//            atMostOne( data.weightConstraintRule );
+//            data.weightConstraintRule->remove();
+//        }
+//        else
+//            weightConstraintIsFalse( data.weightConstraintRule );
+//    }
+    weightConstraintIsFalse( data.weightConstraintRule );
 }
 
 void
@@ -1756,7 +1757,7 @@ GringoNumericFormat::weightConstraintIsFalse(
 }
 
 void
-GringoNumericFormat::weightConstraintToClause( WeightConstraintRule* rule )
+GringoNumericFormat::atLeastOne( WeightConstraintRule* rule )
 {    
     trace_msg( parser, 3, "Replacing " << *rule << " by a clause" );
     Clause* clause = solver.newClause( rule->literals.size() );
@@ -1776,14 +1777,14 @@ GringoNumericFormat::atMostOne( WeightConstraintRule* rule )
 {    
     trace_msg( parser, 3, "Replacing " << *rule << " (at most one)" );
     
-    if( rule->literals.size() <= 8 )
+//    if( rule->literals.size() <= 8 )
+//    {
+//        atMostOnePairwise( rule );
+//    }
+//    else
     {
-        atMostOnePairwise( rule );
-    }
-    else
-    {
-        trace_msg( parser, 4, "Delaied (bimander will be used)" );
-        toBeBimandered.push_back( rule );
+        trace_msg( parser, 4, "Delayed" );
+        delayedAggregateRewriting.push_back( rule );
     }
     
 //    
