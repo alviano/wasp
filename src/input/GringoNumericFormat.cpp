@@ -1409,7 +1409,7 @@ GringoNumericFormat::computeCompletion()
         {
             solver.cleanAndAddClause( crule );
         }
-        else if( crule->size() >= 1000 )
+        else if( crule->size() >= 3 )
         {
             lit.getVariable()->setFrozen();
             Aggregate* aggregate = new Aggregate();

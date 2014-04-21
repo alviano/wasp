@@ -281,16 +281,6 @@ Aggregate::updateBound(
             counterW2 -= weights[ i ];
     }
 
-    for( unsigned int i = 2; i < weights.size(); i++ )
-    {
-        if( literals[ i ].getDecisionLevel() != 0 )
-            continue;
-        if( literals[ i ].isTrue() )
-            counterW1 -= weights[ i ];
-        else if( literals[ i ].isFalse() )
-            counterW2 -= weights[ i ];
-    }
-
     return ( sumOfWeights >= bound );
 }
 
