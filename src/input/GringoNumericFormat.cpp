@@ -2113,6 +2113,7 @@ GringoNumericFormat::addOptimizationRules()
     unsigned int k = 0;
     
     unsigned int precomputedCost = 0;
+    optimizationWeightConstraint->bound = 1;
     for( unsigned int j = 0; j < optimizationWeightConstraint->literals.size(); j++ )
     {
         optimizationWeightConstraint->literals[ k ] = optimizationWeightConstraint->literals[ j ];
@@ -2121,22 +2122,23 @@ GringoNumericFormat::addOptimizationRules()
         unsigned int weight = optimizationWeightConstraint->weights[ j ];
         Literal lit = solver.getLiteral( optimizationWeightConstraint->literals[ j ] );
 
-        assert( weight <= optimizationWeightConstraint->bound );
+//        assert( weight <= optimizationWeightConstraint->bound );
         
         if( lit.isTrue() )
         {
             assert( lit != Literal::null );
             solver.addOptimizationLiteral( lit, weight, levels[ j ] );
-            optimizationWeightConstraint->bound -= weight;
+//            optimizationWeightConstraint->bound -= weight;
             precomputedCost += weight;
         }
         else if( !lit.isFalse() )
         {
+            optimizationWeightConstraint->bound += weight;
             lit.getVariable()->setFrozen();
             assert( lit != Literal::null );
             solver.addOptimizationLiteral( lit, weight, levels[ j ] );
             ++k;
-        }
+        }                
     }
 
     optimizationWeightConstraint->literals.resize( k );

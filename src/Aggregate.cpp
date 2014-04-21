@@ -82,10 +82,10 @@ Aggregate::onLiteralFalse(
     Literal currentLiteral,
     int position )
 {
-    bool toAddInSolver = false;
+    bool toAddInSolver = false;    
     assert( abs( position ) > 0 && abs( position ) < static_cast< int >( literals.size() ) );
     assert( currentLiteral == ( position < 0 ? literals[ -position ].getOppositeLiteral() : literals[ position ] ) );
-    trace_msg( aggregates, 1, "Aggregate: " << *this << ". Literal: " << currentLiteral.getOppositeLiteral() << " is true. Position: " << position );
+    trace_msg( aggregates, 1, "Aggregate: " << *this << ". Literal: " << currentLiteral.getOppositeLiteral() << " is true. Position: " << position );    
     int ac = ( position < 0 ? POS : NEG );
     Literal aggrLiteral = ( ac == POS ? literals[ 1 ].getOppositeLiteral() : literals[ 1 ] );
     
@@ -103,7 +103,8 @@ Aggregate::onLiteralFalse(
     if( counter < weights[ index ] )
     {
         assert( checkLiteralHasBeenInferred( currentLiteral ) || currentLiteral.getDecisionLevel() == 0 );
-        trace_msg( aggregates, 3, "A conflict happened." );        
+        trace_msg( aggregates, 3, "A conflict happened." );
+        solver.assignLiteral( currentLiteral.getOppositeLiteral() );
         return toAddInSolver;
     }
     assert( counter >= weights[ index ] );
@@ -218,21 +219,48 @@ Aggregate::createClauseFromTrail(
     clausesToPropagate.push_back( clause );
 }
 
+//bool
+//Aggregate::updateBound(
+//    unsigned int bound )
+//{
+//    trace_msg( aggregates, 4, "Updating bound. New value: " << bound );
+//    unsigned int sumOfWeights = 0;
+//    for( unsigned int i = 2; i < weights.size(); i++ )
+//    {
+//        if( weights[ i ] > bound )
+//            weights[ i ] = bound;
+//        
+//        if( !literals[ i ].isFalse() || literals[ i ].getDecisionLevel() != 0 )
+//            sumOfWeights += weights[ i ];        
+//    }
+//    trace_msg( aggregates, 4, "Sum of weights: " << sumOfWeights );
+//
+//    unsigned int w1 = ( sumOfWeights - bound + 1 );        
+//    unsigned int w = max( w1, bound );
+//
+//    counterW1 = sumOfWeights - w1 + w;
+//    counterW2 = sumOfWeights - bound + w;
+//    trace_msg( aggregates, 4, "Counters: " << counterW1 << "," << counterW2 );
+//    weights[ 1 ] = w;
+//
+//    return ( sumOfWeights >= bound );
+//}
+
 bool
 Aggregate::updateBound(
     unsigned int bound )
 {
-    trace_msg( aggregates, 4, "Updating bound. New value: " << bound );
+    trace_msg( aggregates, 1, "Updating bound. New value: " << bound );
     unsigned int sumOfWeights = 0;
     for( unsigned int i = 2; i < weights.size(); i++ )
     {
         if( weights[ i ] > bound )
             weights[ i ] = bound;
-        
-        if( !literals[ i ].isTrue() || literals[ i ].getDecisionLevel() != 0 )        
-            sumOfWeights += weights[ i ];        
+
+        // if( !literals[ i ].isFalse() || literals[ i ].getDecisionLevel() != 0 ) 
+        sumOfWeights += weights[ i ]; 
     }
-    trace_msg( aggregates, 4, "Sum of weights: " << sumOfWeights );
+    trace_msg( aggregates, 1, "Sum of weights: " << sumOfWeights );
 
     unsigned int w1 = ( sumOfWeights - bound + 1 );
     unsigned int w = max( w1, bound );
@@ -240,8 +268,18 @@ Aggregate::updateBound(
     counterW1 = sumOfWeights - w1 + w;
     counterW2 = sumOfWeights - bound + w;
 
-    trace_msg( aggregates, 4, "Counters: " << counterW1 << "," << counterW2 );
+    trace_msg( aggregates, 1, "Counters: " << counterW1 << "," << counterW2 );
     weights[ 1 ] = w;
+
+    for( unsigned int i = 2; i < weights.size(); i++ )
+    {
+        if( literals[ i ].getDecisionLevel() != 0 )
+            continue;
+        if( literals[ i ].isTrue() )
+            counterW1 -= weights[ i ];
+        else if( literals[ i ].isFalse() )
+            counterW2 -= weights[ i ];
+    }
 
     return ( sumOfWeights >= bound );
 }
