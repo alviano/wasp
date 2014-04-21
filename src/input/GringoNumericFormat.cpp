@@ -1409,7 +1409,7 @@ GringoNumericFormat::computeCompletion()
         {
             solver.cleanAndAddClause( crule );
         }
-        else if( crule->size() >= 1 )
+        else if( crule->size() >= 1000 )
         {
             lit.getVariable()->setFrozen();
             Aggregate* aggregate = new Aggregate();
@@ -1421,9 +1421,12 @@ GringoNumericFormat::computeCompletion()
             {
                 Literal lit2 = crule->getAt( j );
 
-                assert( lit2.isUndefined() );
-                aggregate->addLiteral( lit2, 1 );
-                lit2.getVariable()->setFrozen();
+                assert( !lit2.isTrue() );
+                if( lit2.isUndefined() )
+                {
+                    aggregate->addLiteral( lit2, 1 );
+                    lit2.getVariable()->setFrozen();
+                }
             }
 
             aggregate->attachAggregate();
@@ -2182,6 +2185,7 @@ GringoNumericFormat::addOptimizationRules()
     unsigned int k = 0;
     
     unsigned int precomputedCost = 0;
+    optimizationWeightConstraint->bound = 1;
     for( unsigned int j = 0; j < optimizationWeightConstraint->literals.size(); j++ )
     {
         optimizationWeightConstraint->literals[ k ] = optimizationWeightConstraint->literals[ j ];
@@ -2190,22 +2194,23 @@ GringoNumericFormat::addOptimizationRules()
         unsigned int weight = optimizationWeightConstraint->weights[ j ];
         Literal lit = solver.getLiteral( optimizationWeightConstraint->literals[ j ] );
 
-        assert( weight <= optimizationWeightConstraint->bound );
+//        assert( weight <= optimizationWeightConstraint->bound );
         
         if( lit.isTrue() )
         {
             assert( lit != Literal::null );
             solver.addOptimizationLiteral( lit, weight, levels[ j ] );
-            optimizationWeightConstraint->bound -= weight;
+//            optimizationWeightConstraint->bound -= weight;
             precomputedCost += weight;
         }
         else if( !lit.isFalse() )
         {
+            optimizationWeightConstraint->bound += weight;
             lit.getVariable()->setFrozen();
             assert( lit != Literal::null );
             solver.addOptimizationLiteral( lit, weight, levels[ j ] );
             ++k;
-        }
+        }                
     }
 
     optimizationWeightConstraint->literals.resize( k );
