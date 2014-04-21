@@ -876,17 +876,16 @@ GringoNumericFormat::propagateFalse(
     data.posWeightConstraintsOccurrences.clear();
     data.positionsInPosWeightConstraints.clear();
     
-//    if( data.isWeightConstraint() )
-//    {
+    if( data.isWeightConstraint() )
+    {
 //        if( data.weightConstraintRule->weights.front() == data.weightConstraintRule->weights.back() && data.weightConstraintRule->bound / data.weightConstraintRule->weights.front() == 2 && data.weightConstraintRule->literals.size() > 8 && !data.weightConstraintRule->isFalse() )
 //        {
 //            atMostOne( data.weightConstraintRule );
 //            data.weightConstraintRule->remove();
 //        }
 //        else
-//            weightConstraintIsFalse( data.weightConstraintRule );
-//    }
-    weightConstraintIsFalse( data.weightConstraintRule );
+            weightConstraintIsFalse( data.weightConstraintRule );
+    }
 }
 
 void
