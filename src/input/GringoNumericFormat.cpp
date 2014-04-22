@@ -799,8 +799,8 @@ GringoNumericFormat::propagateTrue(
     data.positionsInPosWeightConstraints.clear();
     
     if( data.isWeightConstraint() )
-    {
-        if( data.weightConstraintRule->weights.front() == data.weightConstraintRule->weights.back() && data.weightConstraintRule->bound / data.weightConstraintRule->weights.front() == 1 && !data.weightConstraintRule->isTrue() )
+    {                
+        if( data.weightConstraintRule->weights.front() == data.weightConstraintRule->weights.back() && data.weightConstraintRule->weights.front() != 0 && data.weightConstraintRule->bound / data.weightConstraintRule->weights.front() == 1 && !data.weightConstraintRule->isTrue() )
         {
             atLeastOne( data.weightConstraintRule );
             data.weightConstraintRule->remove();
