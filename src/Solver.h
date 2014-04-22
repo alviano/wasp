@@ -1096,6 +1096,9 @@ Solver::updateOptimizationAggregate(
     
     assert( optimizationAggregate->getLiteral( 1 ).getOppositeLiteral().isFalse() );
     optimizationAggregate->onLiteralFalse( *this, optimizationAggregate->getLiteral( 1 ).getOppositeLiteral(), -1 );
+    
+    if( conflictDetected() )
+        return false;
 //        addPostPropagator( optimizationAggregate ); 
     
     return true;

@@ -81,7 +81,7 @@ Aggregate::onLiteralFalse(
     Solver& solver,
     Literal currentLiteral,
     int position )
-{
+{    
     bool toAddInSolver = false;    
     assert( abs( position ) > 0 && abs( position ) < static_cast< int >( literals.size() ) );
     assert( currentLiteral == ( position < 0 ? literals[ -position ].getOppositeLiteral() : literals[ position ] ) );
@@ -103,8 +103,8 @@ Aggregate::onLiteralFalse(
     if( counter < weights[ index ] )
     {
         assert( checkLiteralHasBeenInferred( currentLiteral ) || currentLiteral.getDecisionLevel() == 0 );
-        trace_msg( aggregates, 3, "A conflict happened." );
-        solver.assignLiteral( currentLiteral.getOppositeLiteral() );
+        trace_msg( aggregates, 3, "A conflict happened." );        
+        solver.assignLiteral( currentLiteral );
         return toAddInSolver;
     }
     assert( counter >= weights[ index ] );
@@ -339,17 +339,23 @@ operator<<(
     ostream& out, 
     const Aggregate& aggregate )
 {
+    return aggregate.print( out );
+}
+
+ostream&
+Aggregate::print( ostream& out ) const
+{
     #ifdef TRACE_ON
-    out << "Counters: (" << aggregate.counterW1 << ";" << aggregate.counterW2 << ") - ";
+    out << "Counters: (" << counterW1 << ";" << counterW2 << ") - ";
     #endif
-    if( aggregate.literals.size() > 1 )
+    if( literals.size() > 1 )
     {
         out << "[";
         unsigned i = 1;
-        for( ; i < aggregate.literals.size() - 1; ++i )
-            out << aggregate.literals[ i ] << "=" << aggregate.weights[ i ] << ",";
+        for( ; i < literals.size() - 1; ++i )
+            out << literals[ i ] << "=" << weights[ i ] << ",";
         
-        out << aggregate.literals[ i ] << "=" << aggregate.weights[ i ] << "]";        
+        out << literals[ i ] << "=" << weights[ i ] << "]";        
     }
     else
         out << "[]";    
@@ -361,7 +367,7 @@ void
 Aggregate::onLearning(
     Learning* strategy,
     Literal lit )
-{
+{        
 //    for( int i = trail.size() - 1; i >= 0; i-- )
     for( unsigned int i = 0; i < trail.size(); i++ )
     {
@@ -370,11 +376,11 @@ Aggregate::onLearning(
         int ac = ( position < 0 ? POS : NEG );
         
         unsigned int index = ( position > 0 ? position : -position );
-        Literal l = literals[ index ];            
+        Literal l = literals[ index ];    
         if( ac == active )
         {
             if( active == NEG )
-                l = l.getOppositeLiteral();
+                l = l.getOppositeLiteral();                                
         
             if( !watched[ index ] )
             {

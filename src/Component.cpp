@@ -128,7 +128,7 @@ Component::getClauseToPropagate(
 void
 Component::computeGUS()
 {
-    trace_msg( unfoundedset, 1, "Starting the computation of unfounded sets" );
+    trace_msg( unfoundedset, 1, "Starting the computation of unfounded sets for component " << id );
     for( unsigned int i = 0; i < variablesWithoutSourcePointer.size(); )
     {
         Variable* variable = variablesWithoutSourcePointer[ i ];

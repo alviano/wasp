@@ -68,6 +68,9 @@ class Aggregate : public Propagator, public Clause
         
         virtual void onLearning( Learning* strategy, Literal lit );
         virtual bool onNavigatingLiteralForAllMarked( Learning* strategy, Literal lit );
+        
+    protected:
+        virtual ostream& print( ostream& out ) const;
 
     private:
         inline Aggregate( const Aggregate& orig );

@@ -110,7 +110,8 @@ class Component : public PostPropagator
         {
             for( unsigned int i = 0; i < variablesInComponent.size(); i++ )
             {
-                unsigned int id = variablesInComponent[ i ];
+                unsigned int id = variablesInComponent[ i ];                
+                assert( getGUSData( id ).variable->getComponent()->getId() == this->id );
                 if( !getGUSData( id ).founded )
                 {
                     cerr << "Variable " << *getGUSData( id ).variable << " is not founded " << getGUSData( id ).numberOfSupporting << endl;
@@ -164,8 +165,9 @@ Component::iterationOnSupportedByThisExternal(
     for( ; i < wl.size(); ++i )
     {
         Variable* variable = wl[ j ] = wl[ i ];
+        assert( variable->getComponent() != NULL );
         trace_msg( unfoundedset, 3, "Considering variable " << *variable << " which is " << ( variable->isFalse() ? "false" : "true" ) << " and " << ( ( getGUSData( variable->getId() ).inQueue ) ? "in queue" : "not in queue" ) );
-        if( !variable->isFalse() && !( getGUSData( variable->getId() ).inQueue ) )
+        if( variable->getComponent()->getId() == id && !variable->isFalse() && !( getGUSData( variable->getId() ).inQueue ) )
             variableHasNoSourcePointer( variable );
         else
             ++j;
@@ -189,6 +191,7 @@ Component::iterationOnSupportedByThisInternal(
     for( ; i < wl.size(); ++i )
     {
         Variable* variable = wl[ j ] = wl[ i ];
+        assert( variable->getComponent() != NULL && variable->getComponent()->getId() == id );
         trace_msg( unfoundedset, 3, "Considering variable " << *variable << " which is " << ( variable->isFalse() ? "false" : "true" ) << " and " << ( ( getGUSData( variable->getId() ).inQueue ) ? "in queue" : "not in queue" ) );
         if( !variable->isFalse() && !( getGUSData( variable->getId() ).inQueue ) )
             variableHasNoSourcePointer( variable );
@@ -212,7 +215,7 @@ Component::iterationOnAuxSupportedByThis(
     {
         Variable* variable = vec[ i ];
         assert( getGUSData( variable->getId() ).aux );
-        trace_msg( unfoundedset, 3, "Considering variable " << *variable << " which is " << ( variable->isFalse() ? "false" : "true" ) << " and " << ( ( getGUSData( variable->getId() ).inQueue ) ? "in queue" : "not in queue" ) );
+        trace_msg( unfoundedset, 3, "Considering variable " << *variable << " which is " << ( variable->isFalse() ? "false" : "true/undefined" ) << " and " << ( ( getGUSData( variable->getId() ).inQueue ) ? "in queue" : "not in queue" ) );
         if( !variable->isFalse() )
         {
             if( !getGUSData( variable->getId() ).inQueue )
