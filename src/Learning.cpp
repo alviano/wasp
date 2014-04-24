@@ -51,7 +51,8 @@ Learning::onConflict(
     decisionLevel = solver.getCurrentDecisionLevel();
 
     trace_msg( learning, 2, "Starting First UIP Learning Strategy. Current Level: " << decisionLevel );
-    
+    trace_msg( learning, 2, "Conflict literal: " << conflictLiteral << " - Conflict clause: " << *conflictClause << ( conflictClause->isLearned() ? " (learned)" : " (original)" ) );
+
     //Compute implicants of the conflicting literal.
     if( conflictClause->isLearned() )    
         solver.updateActivity( conflictClause );
@@ -62,7 +63,6 @@ Learning::onConflict(
     if( conflictLiteral.getVariable()->getImplicant() != NULL  )
         conflictLiteral.getVariable()->getImplicant()->onLearning( this, conflictLiteral.getOppositeLiteral() );
     
-    trace( learning, 2, "Conflict literal: %s.\n", toString( conflictLiteral ).c_str() );
     addLiteralToNavigate( conflictLiteral );
     assert( conflictLiteral.getVariable()->visited() == numberOfCalls );
     solver.startIterationOnAssignedVariable();
@@ -72,24 +72,31 @@ Learning::onConflict(
     {
         //Get next literal.
         Literal currentLiteral = getNextLiteralToNavigate();
-        trace( learning, 3, "Navigating %s for calculating UIP.\n", toString( currentLiteral ).c_str() );
+        trace_msg( learning, 3, "Navigating " << currentLiteral << " for calculating the UIP" );
         
-        Clause* implicant = currentLiteral.getVariable()->getImplicant();
+        Clause* implicant = currentLiteral.getVariable()->getImplicant();        
         //Compute implicants of the literal.
         if( implicant != NULL )
         {
+            trace_msg( learning, 4, "The implicant of " << currentLiteral << " is " << *implicant << ( implicant->isLearned() ? " (learned)" : " (original)" ) );
             if( implicant->isLearned() )
                 solver.updateActivity( implicant );
             implicant->onLearning( this, currentLiteral );
         }
+        else
+        {
+            trace_msg( learning, 4, currentLiteral << " has no implicant" );
+        }
     }
 
     Literal firstUIP = getNextLiteralToNavigate();
-    trace( learning, 2, "First UIP: %s.\n", toString( firstUIP ).c_str() );
+    trace_msg( learning, 2, "First UIP: " << firstUIP );
     
+    trace_msg( learning, 3, "Clause before simplification: " << *learnedClause );
     if( learnedClause->size() > 1 )
         simplifyLearnedClause( learnedClause );
-
+    trace_msg( learning, 3, "Clause after simplification: " << *learnedClause );
+    
     learnedClause->addLiteralInLearnedClause( firstUIP );    
     
     assert( learnedClause->size() > 0 );
@@ -102,7 +109,18 @@ Learning::onConflict(
         assert( learnedClause->getAt( 0 ).getDecisionLevel() == solver.getCurrentDecisionLevel() );
     }
     
-    trace( learning, 1, "Learned Clause: %s.\n", toString( *learnedClause ).c_str() );
+    trace_msg( learning, 1, "Learned Clause: " << *learnedClause );    
+    
+    if( learnedClause->size() == 3 )
+    {
+        if( learnedClause->getAt( 0 ).getId() == 476 || learnedClause->getAt( 1 ).getId() == 476 || learnedClause->getAt( 2 ).getId() == 476 )
+            if( learnedClause->getAt( 0 ).getId() == -67 || learnedClause->getAt( 1 ).getId() == -67 || learnedClause->getAt( 2 ).getId() == -67 )
+                if( learnedClause->getAt( 0 ).getId() == -182 || learnedClause->getAt( 1 ).getId() == -182 || learnedClause->getAt( 2 ).getId() == -182 )
+                {
+                    cout << "ESCO" << endl;
+                    exit( 0 );
+                }
+    }
     
     return learnedClause;
 }

@@ -383,6 +383,7 @@ void
 Solver::assignLiteral(
     Literal literal )
 {
+    assert( !conflictDetected() );
     if( !variables.assign( currentDecisionLevel, literal ) )
     {
         conflictLiteral = literal;
@@ -395,6 +396,7 @@ Solver::assignLiteral(
     Clause* implicant )
 {
     assert( implicant != NULL );
+    assert( !conflictDetected() );
     if( !variables.assign( currentDecisionLevel, implicant ) )
     {
         conflictLiteral = implicant->getAt( 0 );
@@ -408,6 +410,8 @@ Solver::assignLiteral(
     Clause* implicant )
 {
     assert( implicant != NULL );
+    
+    assert( !conflictDetected() );
     if( !variables.assign( currentDecisionLevel, lit, implicant ) )
     {
         conflictLiteral = lit;
@@ -500,6 +504,7 @@ Solver::addClauseFromModel(
     }
     else
     {
+        assert( !conflictDetected() );
         assignLiteral( clause->getAt( 0 ) );
         releaseClause( clause );
 
@@ -685,12 +690,13 @@ Solver::analyzeConflict()
     if( learnedClause->size() == 1 )
     {
         doRestart();
+        clearConflictStatus();
         assignLiteral( learnedClause->getAt( 0 ) );
         assert( learnedClause->getAt( 0 ).isTrue() );
+        assert( !conflictDetected() );
 //        delete learnedClause;
         releaseClause( learnedClause );
 
-        clearConflictStatus();
         while( hasNextVariableToPropagate() )
         {
             nextValueOfPropagation--;            
@@ -726,6 +732,7 @@ Solver::analyzeConflict()
             
             assert( "Each learned clause has to be an asserting clause." && learnedClause->getAt( 0 ) != Literal::null );
             
+            clearConflictStatus();
             assignLiteral( learnedClause );
             
             onLearning( learnedClause );  // FIXME: this should be moved outside

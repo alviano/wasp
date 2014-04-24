@@ -44,9 +44,9 @@ Aggregate::getClauseToPropagate(
 void
 Aggregate::reset()
 {    
-    trace_msg( aggregates, 2, "Calling reset for aggregate " << *this );
-    if( trail.empty() || ( !literals[ abs( trail.back() ) ].isUndefined() && literals[ abs( trail.back() ) ].getDecisionLevel() != 0 ) )
-        return;
+    trace_msg( aggregates, 2, "Calling reset for aggregate " << *this );        
+    if( trail.empty() || ( !literals[ abs( trail.back() ) ].isUndefined() && literals[ abs( trail.back() ) ].getDecisionLevel() != 0 ) )    
+        return;    
 
     while( !clausesToPropagate.empty() )
     {
@@ -54,7 +54,14 @@ Aggregate::reset()
         clausesToPropagate.pop_back();
     }
     umax = 1;
-    active = 0;
+    
+    assert( literalOfUnroll != Literal::null || active == 0 );
+    if( literalOfUnroll != Literal::null && literalOfUnroll.isUndefined() )
+    {
+        active = 0;
+        literalOfUnroll = Literal::null;
+    }
+
     int last = trail.back();
     unsigned int pos = abs( last );
     
@@ -76,13 +83,12 @@ Aggregate::reset()
     } while( literals[ pos ].isUndefined() || literals[ pos ].getDecisionLevel() == 0 );
 }
 
-bool
+void
 Aggregate::onLiteralFalse(
     Solver& solver,
     Literal currentLiteral,
     int position )
 {    
-    bool toAddInSolver = false;    
     assert( abs( position ) > 0 && abs( position ) < static_cast< int >( literals.size() ) );
     assert( currentLiteral == ( position < 0 ? literals[ -position ].getOppositeLiteral() : literals[ position ] ) );
     trace_msg( aggregates, 10, "Aggregate: " << *this << ". Literal: " << currentLiteral.getOppositeLiteral() << " is true. Position: " << position );
@@ -92,7 +98,7 @@ Aggregate::onLiteralFalse(
     if( aggrLiteral.isTrue() || active + ac == 0 )
     {        
         trace_msg( aggregates, 2, "Return. AggrLiteral: " << aggrLiteral << " - Active: " << active << " - Ac: " << ac );
-        return toAddInSolver;
+        return;
     }
     
     unsigned int index = ( position > 0 ? position : -position ); 
@@ -105,7 +111,7 @@ Aggregate::onLiteralFalse(
         assert( checkLiteralHasBeenInferred( currentLiteral ) || currentLiteral.getDecisionLevel() == 0 );
         trace_msg( aggregates, 3, "A conflict happened." );        
         solver.assignLiteral( currentLiteral );
-        return toAddInSolver;
+        return;
     }
     assert( counter >= weights[ index ] );
     counter -= weights[ index ];
@@ -119,6 +125,8 @@ Aggregate::onLiteralFalse(
     {
         if( watched[ umax ] )
         {
+            if( literalOfUnroll == Literal::null )
+                literalOfUnroll = currentLiteral;
             active = ac;
             Literal lit = ( ac == POS ? literals[ umax ].getOppositeLiteral() : literals[ umax ] );
             if( !lit.isTrue() )
@@ -129,7 +137,8 @@ Aggregate::onLiteralFalse(
                 trace_msg( aggregates, 9, "Inferring " << lit << " as true" );
 //                createClauseFromTrail( lit );
                 solver.assignLiteral( lit, this );
-                toAddInSolver = true;
+                if( solver.conflictDetected() )
+                    return;
             }
             else
             {
@@ -140,8 +149,6 @@ Aggregate::onLiteralFalse(
         ++umax;
         trace_msg( aggregates, 3, "Updated umax. New Value: " << umax );        
     }
-
-    return toAddInSolver;
 }
 
 #ifndef NDEBUG
@@ -367,7 +374,7 @@ void
 Aggregate::onLearning(
     Learning* strategy,
     Literal lit )
-{        
+{
 //    for( int i = trail.size() - 1; i >= 0; i-- )
     for( unsigned int i = 0; i < trail.size(); i++ )
     {

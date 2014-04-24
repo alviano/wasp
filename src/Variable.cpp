@@ -302,6 +302,8 @@ Variable::propagateAtLevelZeroSatelite(
                 {
                     trace_msg( solving, 5, "Assigning literal " << clause->getAt( 0 ) << " as true" );
                     solver.assignLiteral( clause->getAt( 0 ) );
+                    if( solver.conflictDetected() )
+                        break;
                 }
                 clause->detachClauseFromAllLiterals();
                 solver.markClauseForDeletion( clause );

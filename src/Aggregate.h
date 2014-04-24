@@ -46,7 +46,7 @@ class Aggregate : public Propagator, public Clause
         inline Aggregate();
         inline ~Aggregate() {}
         
-        virtual bool onLiteralFalse( Solver& solver, Literal lit, int pos );
+        virtual void onLiteralFalse( Solver& solver, Literal lit, int pos );
         
         inline unsigned int size() const { return literals.size() - 1; }
 
@@ -88,6 +88,8 @@ class Aggregate : public Propagator, public Clause
         unsigned int umax;
         Vector< int > trail;
         
+        Literal literalOfUnroll;
+        
         void createClauseFromTrail( Literal lit );
         #ifndef NDEBUG
         bool checkDecisionLevelsOrder( Clause* ) const;
@@ -95,7 +97,7 @@ class Aggregate : public Propagator, public Clause
         #endif
 };
 
-Aggregate::Aggregate() : Propagator(), Clause(), active( 0 ), counterW1( 0 ), counterW2( 0 ), umax( 1 )
+Aggregate::Aggregate() : Propagator(), Clause(), active( 0 ), counterW1( 0 ), counterW2( 0 ), umax( 1 ), literalOfUnroll( Literal::null )
 {
     literals.push_back( Literal::null );
     weights.push_back( 0 );    

@@ -350,10 +350,9 @@ Solver::postPropagation(
     Variable* variable )
 {
     assert( "Variable to propagate has not been set." && variable != NULL );
-    trace_msg( solving, 2, "Post Propagating: " << *variable << " as " << ( variable->isTrue() ? "true" : "false" ) );
     if( conflictDetected() )
         return;
-    
+    trace_msg( solving, 2, "Post Propagating: " << *variable << " as " << ( variable->isTrue() ? "true" : "false" ) );    
     variable->propagation( *this );
     
     if( conflictDetected() )
@@ -370,7 +369,7 @@ Solver::propagateAtLevelZero(
 {
     assert( "Variable to propagate has not been set." && variable != NULL );    
     variable->propagateAtLevelZero( *this );    
-    if( hasPropagators() )
+    if( !conflictDetected() && hasPropagators() )
         postPropagation( variable );
 }
 
@@ -383,7 +382,7 @@ Solver::propagateAtLevelZeroSatelite(
     
     assert( "Variable to propagate has not been set." && variable != NULL );    
     variable->propagateAtLevelZeroSatelite( *this );
-    if( hasPropagators() )
+    if( !conflictDetected() && hasPropagators() )
         postPropagation( variable );
 }
 

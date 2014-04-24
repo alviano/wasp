@@ -1498,7 +1498,7 @@ GringoNumericFormat::add(
 {
     assert( weightConstraintRule != NULL );
     
-    trace_msg( parser, 2, "Adding weight constraint rule " << *weightConstraintRule );
+    trace_msg( parser, 2, "Adding weight constraint rule " << *weightConstraintRule );    
     removeSatisfiedLiterals( weightConstraintRule );
     weightConstraintRule->sort();
     trace_msg( parser, 2, "Sorted weight constraint rule " << *weightConstraintRule );

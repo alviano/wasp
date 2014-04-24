@@ -27,7 +27,7 @@ class Propagator
         inline Propagator(){}
         virtual ~Propagator(){}
 
-        virtual bool onLiteralFalse( Solver& solver, Literal literal, int pos ) = 0;
+        virtual void onLiteralFalse( Solver& solver, Literal literal, int pos ) = 0;
         virtual void reset() = 0;
 };
 
