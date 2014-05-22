@@ -67,7 +67,7 @@ class Variables
          * @param implicant the clause which is the reason of the literal assignment.
          * @return true if no conflict occurs, false otherwise. 
          */
-        inline bool assign( int level, Literal literal, Clause* implicant );
+        inline bool assign( int level, Literal literal, Reason* implicant );
         inline bool assign( int level, Literal literal );
         inline bool assign( int level, Clause* implicant );
         inline void onEliminatingVariable( Variable* variable, unsigned int sign, Clause* definition );
@@ -223,7 +223,7 @@ bool
 Variables::assign( 
     int level, 
     Literal literal,
-    Clause* implicant )
+    Reason* implicant )
 {
     Variable* variable = literal.getVariable();
     assert( variable != NULL );

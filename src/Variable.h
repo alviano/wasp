@@ -24,6 +24,8 @@
 #include "util/Constants.h"
 #include "WatchedList.h"
 #include "util/Assert.h"
+#include "Reason.h"
+#include "LiteralInt.h"
 
 //#include <boost/heap/fibonacci_heap.hpp>
 using namespace std;
@@ -59,7 +61,7 @@ typedef unsigned int heap_handle;
 /**
  * This class stores all information about a Variable.
  */
-class Variable
+class Variable : public Reason
 {
     friend ostream& operator<<( ostream&, const Variable& );
 
@@ -79,10 +81,10 @@ class Variable
         inline void setUndefined();
         inline void setUndefinedBrutal();
 
-        inline bool isImplicant( const Clause* clause ) const;
+        inline bool isImplicant( const Reason* reason ) const;
         inline bool hasImplicant() const;
-        inline Clause* getImplicant() const { return implicant; }
-        inline void setImplicant( Clause* clause );
+        inline Reason* getImplicant() const { return implicant; }
+        inline void setImplicant( Reason* reason );
 
         inline unsigned int getDecisionLevel() const;
         inline void setDecisionLevel( unsigned int decisionLevel );
@@ -142,6 +144,7 @@ class Variable
         void setFrozen() { frozen = true; }
         
         void unitPropagation( Solver& solver );
+        void shortPropagation( Solver& solver );
         void propagation( Solver& solver );
         void postPropagation( Solver& solver );
         
@@ -153,6 +156,9 @@ class Variable
         
         void checkSubsumptionForClause( Solver& solver, Clause* clause, unsigned sign );
         inline void clearOccurrences();
+        
+        virtual void onLearning( Learning* strategy, Literal lit );
+        virtual bool onNavigatingLiteralForAllMarked( Learning* strategy, Literal lit );
         
     private:
 
@@ -173,7 +179,7 @@ class Variable
         /**
          * This variable stores the clause which derived the literal.
          */
-        Clause* implicant;
+        Reason* implicant;
         
         /**
          * Position POSITIVE of this vector contains the watchedList of the positive literal associated with this variable.
@@ -195,6 +201,7 @@ class Variable
         
         Vector< pair< Propagator*, int > > propagators[ 2 ];
         
+        Vector< Literal > binaryClauses[ 2 ];
 //        uint64_t signature;
         
         Activity act;
@@ -293,7 +300,7 @@ Variable::setUndefinedBrutal()
 
 bool
 Variable::isImplicant( 
-    const Clause* clause ) const
+    const Reason* clause ) const
 {
     return !this->isUndefined() && implicant == clause;
 }
@@ -306,9 +313,9 @@ Variable::hasImplicant() const
 
 void
 Variable::setImplicant(
-    Clause* clause )
+    Reason* reason )
 {
-    implicant = clause;
+    implicant = reason;
 }
 
 unsigned int

@@ -18,28 +18,10 @@
 
 #include "Aggregate.h"
 #include "Solver.h"
-#include "Literal.h"
 #include "Variable.h"
 #include "util/Options.h"
 #include "Learning.h"
 #include "Clause.h"
-
-Clause*
-Aggregate::getClauseToPropagate(
-    Learning& )
-{
-    while( !clausesToPropagate.empty() )
-    {
-        Clause* tmp = clausesToPropagate.back();
-        clausesToPropagate.pop_back();
-        if( tmp->size() == 0 || !tmp->getAt( 0 ).isTrue() )
-            return tmp;
-        else
-            delete tmp;
-    }
-
-    return NULL;
-}
 
 void
 Aggregate::reset()
@@ -48,11 +30,6 @@ Aggregate::reset()
     if( trail.empty() || ( !literals[ abs( trail.back() ) ].isUndefined() && literals[ abs( trail.back() ) ].getDecisionLevel() != 0 ) )    
         return;    
 
-    while( !clausesToPropagate.empty() )
-    {
-        delete clausesToPropagate.back();
-        clausesToPropagate.pop_back();
-    }
     umax = 1;
     
     assert( literalOfUnroll != Literal::null || active == 0 );
@@ -174,57 +151,57 @@ Aggregate::checkDecisionLevelsOrder(
 
 bool
 Aggregate::checkLiteralHasBeenInferred(
-    Literal lit ) const
+    Literal ) const
 {
     return true;
-    for( list< Clause* >::const_iterator it = clausesToPropagate.begin(); it != clausesToPropagate.end(); ++it )
-    {
-        const Clause* c = *it;
-        if( c->size() > 0 && c->getAt( 0 ) == lit )
-            return true;
-    }
-    
-    return false;
+//    for( list< Clause* >::const_iterator it = clausesToPropagate.begin(); it != clausesToPropagate.end(); ++it )
+//    {
+//        const Clause* c = *it;
+//        if( c->size() > 0 && c->getAt( 0 ) == lit )
+//            return true;
+//    }
+//    
+//    return false;
 }
 #endif
 
-void
-Aggregate::createClauseFromTrail(
-    Literal lit )
-{
-    trace_msg( aggregates, 2, "Creating clause from trail for inferring " << lit );
-    Clause* clause = new Clause();    
-    clause->addLiteral( lit );
-    for( int i = trail.size() - 1; i >= 0; i-- )
-    {
-        int position = trail[ i ];
-        
-        int ac = ( position < 0 ? POS : NEG );
-        if( ac == active )
-        {
-            unsigned int index = ( position > 0 ? position : -position );
-            Literal l = literals[ index ];
-            
-            if( active == NEG )
-                l = l.getOppositeLiteral();
-            
-            if( !watched[ index ] )
-            {
-                assert_msg( l.getDecisionLevel() > 0, "Literal " << l << " has been inferred at the decision level 0" );
-                clause->addLiteral( l.getOppositeLiteral() );
-            }
-            
-            assert( l != lit );
-//            else if( l == lit )
-//                break;            
-        }
-    }
-    
-    trace_msg( aggregates, 2, "Created clause: " << *clause );
-    assert( checkDecisionLevelsOrder( clause ) );
-    clause->setLearned();
-    clausesToPropagate.push_back( clause );
-}
+//void
+//Aggregate::createClauseFromTrail(
+//    Literal lit )
+//{
+//    trace_msg( aggregates, 2, "Creating clause from trail for inferring " << lit );
+//    Clause* clause = new Clause();    
+//    clause->addLiteral( lit );
+//    for( int i = trail.size() - 1; i >= 0; i-- )
+//    {
+//        int position = trail[ i ];
+//        
+//        int ac = ( position < 0 ? POS : NEG );
+//        if( ac == active )
+//        {
+//            unsigned int index = ( position > 0 ? position : -position );
+//            Literal l = literals[ index ];
+//            
+//            if( active == NEG )
+//                l = l.getOppositeLiteral();
+//            
+//            if( !watched[ index ] )
+//            {
+//                assert_msg( l.getDecisionLevel() > 0, "Literal " << l << " has been inferred at the decision level 0" );
+//                clause->addLiteral( l.getOppositeLiteral() );
+//            }
+//            
+//            assert( l != lit );
+////            else if( l == lit )
+////                break;            
+//        }
+//    }
+//    
+//    trace_msg( aggregates, 2, "Created clause: " << *clause );
+//    assert( checkDecisionLevelsOrder( clause ) );
+//    clause->setLearned();
+//    clausesToPropagate.push_back( clause );
+//}
 
 //bool
 //Aggregate::updateBound(

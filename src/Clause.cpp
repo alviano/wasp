@@ -17,7 +17,6 @@
  */
 
 #include "Clause.h"
-#include "Literal.h"
 #include "Solver.h"
 
 #include <vector>

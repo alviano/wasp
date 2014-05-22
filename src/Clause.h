@@ -26,6 +26,7 @@
 #include "Clause.h"
 #include "Literal.h"
 #include "Learning.h"
+#include "Reason.h"
 
 using namespace std;
 
@@ -38,10 +39,10 @@ enum SubsumptionData { NO_SUBSUMPTION = 0, SUBSUMPTION = 1, SELFSUBSUMPTION = 2 
  *  For example (a1 v a2 v not a3) is a clause and a1, a2 are positive literals and not a3 is a negative literal.
  * 
  */
-class Clause
+class Clause : public Reason
 {
     friend ostream &operator<<( ostream & out, const Clause & clause );
-    friend Clause* Learning::onConflict( Literal conflictLiteral, Clause* conflictClause );
+    friend Clause* Learning::onConflict( Literal conflictLiteral, Reason* conflictClause );
     friend Clause* Learning::learnClausesFromUnfoundedSet( Vector< Variable* >& unfoundedSet );
 
     public:        

@@ -37,7 +37,7 @@ Learning::isVisitedVariablesEmpty() const
 Clause*
 Learning::onConflict(
     Literal conflictLiteral,
-    Clause* conflictClause )
+    Reason* conflictClause )
 {
     ++numberOfCalls;
     clearDataStructures();
@@ -55,7 +55,7 @@ Learning::onConflict(
 
     //Compute implicants of the conflicting literal.
     if( conflictClause->isLearned() )    
-        solver.updateActivity( conflictClause );
+        solver.updateActivity( ( Clause* ) conflictClause );
     
     conflictClause->onLearning( this, conflictLiteral );
     //assert_msg( conflictLiteral.getVariable()->getImplicant() != NULL, "Conflict literal " << conflictLiteral << " has no implicant" ); // FIXME: I added this assert. Is it right? It is true only for tight programs.
@@ -74,13 +74,13 @@ Learning::onConflict(
         Literal currentLiteral = getNextLiteralToNavigate();
         trace_msg( learning, 3, "Navigating " << currentLiteral << " for calculating the UIP" );
         
-        Clause* implicant = currentLiteral.getVariable()->getImplicant();        
+        Reason* implicant = currentLiteral.getVariable()->getImplicant();        
         //Compute implicants of the literal.
         if( implicant != NULL )
         {
             trace_msg( learning, 4, "The implicant of " << currentLiteral << " is " << *implicant << ( implicant->isLearned() ? " (learned)" : " (original)" ) );
             if( implicant->isLearned() )
-                solver.updateActivity( implicant );
+                solver.updateActivity( ( Clause* ) implicant );
             implicant->onLearning( this, currentLiteral );
         }
         else
@@ -288,7 +288,7 @@ Learning::simplifyLearnedClause(
 
 bool
 Learning::allMarked(
-    Clause* clause,
+    Reason* clause,
     Literal literal )
 {
     if( clause == NULL )

@@ -22,6 +22,8 @@
 #include "Variable.h"
 #include "Clause.h"
 #include "Literal.h"
+#include "Learning.h"
+#include "Reason.h"
 #include "util/VariableNames.h"
 #include "Solver.h"
 
@@ -130,6 +132,35 @@ Variable::unitPropagation(
             assert( !solver.conflictDetected() );
     }
     wl.shrink( j );
+}
+
+void
+Variable::shortPropagation(
+    Solver& solver )
+{
+    assert( !solver.conflictDetected() );
+    assert_msg( !this->isUndefined(), "Propagating variable " << *this << ", the truth value is Undefined." );
+
+    assert( FALSE == 1 && TRUE == 2 );
+
+    #ifndef NDEBUG
+    unsigned int sign = ( getTruthValue() >> 1 );
+    assert( sign <= 1 );
+    assert( getTruthValue() == TRUE ? sign == NEGATIVE : sign == POSITIVE );
+    #endif
+        
+    Vector< Literal >& binary = binaryClauses[ ( getTruthValue() >> 1 ) ];
+//    Literal complement = Literal::createOppositeFromAssignedVariable( this );    
+    
+    for( unsigned i = 0; i < binary.size(); ++i )
+    {
+        if( solver.conflictDetected() )
+            break;
+        Literal lit = binary[ i ];
+
+        if( !lit.isTrue() )
+            solver.assignLiteral( lit, this );
+    }
 }
 
 void
@@ -418,4 +449,21 @@ Variable::checkSubsumptionForClause(
         }
     }    
     wl.shrink( j );
+}
+
+void
+Variable::onLearning(
+    Learning*,
+    Literal )
+{
+    
+}
+
+bool
+Variable::onNavigatingLiteralForAllMarked(
+    Learning*,
+    Literal )
+{
+
+    return false;
 }

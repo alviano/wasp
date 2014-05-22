@@ -87,7 +87,7 @@ class Solver
         
         inline void assignLiteral( Literal literal );
         inline void assignLiteral( Clause* implicant );
-        inline void assignLiteral( Literal literal, Clause* implicant );
+        inline void assignLiteral( Literal literal, Reason* implicant );
         
         inline bool propagateLiteralAsDeterministicConsequence( Literal literal );
         inline bool propagateLiteralAsDeterministicConsequenceSatelite( Literal literal );
@@ -230,7 +230,7 @@ class Solver
         vector< unsigned int > unrollVector;
         
         Literal conflictLiteral;
-        Clause* conflictClause;
+        Reason* conflictClause;
         
         Learning learning;
         OutputBuilder* outputBuilder;        
@@ -407,7 +407,7 @@ Solver::assignLiteral(
 void
 Solver::assignLiteral(
     Literal lit,
-    Clause* implicant )
+    Reason* implicant )
 {
     assert( implicant != NULL );
     
