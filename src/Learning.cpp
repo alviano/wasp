@@ -51,8 +51,9 @@ Learning::onConflict(
     decisionLevel = solver.getCurrentDecisionLevel();
 
     trace_msg( learning, 2, "Starting First UIP Learning Strategy. Current Level: " << decisionLevel );
-    trace_msg( learning, 2, "Conflict literal: " << conflictLiteral << " - Conflict clause: " << *conflictClause << ( conflictClause->isLearned() ? " (learned)" : " (original)" ) );
+    trace_msg( learning, 2, "Conflict literal: " << conflictLiteral << " - Conflict implicant: " << *conflictClause << ( conflictClause->isLearned() ? " (learned)" : " (original)" ) );
 
+    cout << "CONFLICT LITERAL IMPLICANT " << conflictLiteral.getVariable()->getImplicant() << endl;
     //Compute implicants of the conflicting literal.
     if( conflictClause->isLearned() )    
         solver.updateActivity( ( Clause* ) conflictClause );

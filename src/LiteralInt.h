@@ -94,10 +94,12 @@ class Literal
         inline Clause* getOccurrence( unsigned int idx );
         
         inline bool isPositive() const;
-        inline bool isNegative() const { return !isPositive(); }
+        inline bool isNegative() const;
         
         inline void checkSubsumptionForClause( Solver& solver, Clause* clause );
 
+        inline void addLiteralInShortClause( Literal );
+        
     private:
         
         /**

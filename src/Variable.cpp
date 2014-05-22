@@ -31,12 +31,20 @@ ostream& operator<<(
     ostream& out,
     const Variable& var )
 {
-#ifndef NDEBUG    
+    #ifndef NDEBUG    
     if( VariableNames::isHidden( &var ) )
         out << var.id;
     else
-#endif
+    #endif
     out << VariableNames::getName( &var );
+    return out;
+}
+
+ostream&
+Variable::print(
+    ostream& out ) const
+{
+    out << *this;
     return out;
 }
 
@@ -152,14 +160,18 @@ Variable::shortPropagation(
     Vector< Literal >& binary = binaryClauses[ ( getTruthValue() >> 1 ) ];
 //    Literal complement = Literal::createOppositeFromAssignedVariable( this );    
     
+    trace_msg( solving, 2, "Propagation of binary clauses for literal " << Literal::createFromAssignedVariable( this ) );
     for( unsigned i = 0; i < binary.size(); ++i )
     {
         if( solver.conflictDetected() )
             break;
+        
         Literal lit = binary[ i ];
-
         if( !lit.isTrue() )
+        {
+            trace_msg( solving, 5, "Inferring " << lit << " as true" );        
             solver.assignLiteral( lit, this );
+        }
     }
 }
 
@@ -453,17 +465,18 @@ Variable::checkSubsumptionForClause(
 
 void
 Variable::onLearning(
-    Learning*,
+    Learning* strategy,
     Literal )
 {
-    
+    Literal lit = Literal::createFromAssignedVariable( this );
+    strategy->onNavigatingLiteral( lit );
 }
 
 bool
 Variable::onNavigatingLiteralForAllMarked(
-    Learning*,
+    Learning* strategy,
     Literal )
 {
-
-    return false;
+    Literal lit = Literal::createFromAssignedVariable( this );
+    return strategy->onNavigatingLiteralForAllMarked( lit );    
 }

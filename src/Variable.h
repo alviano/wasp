@@ -139,7 +139,8 @@ class Variable : public Reason
         void onLearningForUnfounded( Learning& learning );
         inline void addPropagator( Propagator* p, unsigned int sign, int position ) { propagators[ sign ].push_back( pair< Propagator*, int >( p, position ) ); }
         inline void addPostPropagator( PostPropagator* p, unsigned int sign, int position ) { postPropagators[ sign ].push_back( pair< PostPropagator*, int >( p, position ) ); }
-        
+        inline void addLiteralInShortClause( Literal lit, unsigned int sign ) { binaryClauses[ sign ].push_back( lit ); }
+                
         bool isFrozen() const { return frozen; }
         void setFrozen() { frozen = true; }
         
@@ -158,10 +159,11 @@ class Variable : public Reason
         inline void clearOccurrences();
         
         virtual void onLearning( Learning* strategy, Literal lit );
-        virtual bool onNavigatingLiteralForAllMarked( Learning* strategy, Literal lit );
+        virtual bool onNavigatingLiteralForAllMarked( Learning* strategy, Literal lit );                
         
     private:
 
+        virtual ostream& print( ostream& out ) const;
         inline Variable( const Variable& );
 
         unsigned id;
@@ -218,6 +220,7 @@ class Variable : public Reason
         bool frozen;
 };
 
+#include "LiteralImpl.h"
 bool Comparator::operator()( const Variable* v1, const Variable* v2 ) const{ return v1->activity() > v2->activity(); }
 bool EliminationComparator::operator()( const Variable* v1, const Variable* v2 ) const{ return v1->cost() < v2->cost(); }
 

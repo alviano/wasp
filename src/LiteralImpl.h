@@ -19,8 +19,10 @@
 #ifndef LITERALIMPL_H
 #define LITERALIMPL_H
 
-#include "Literal.h"
+#include "LiteralInt.h"
 #include "Variable.h"
+
+#include <cassert>
 
 Literal
 Literal::createFromAssignedVariable(
@@ -61,6 +63,12 @@ bool
 Literal::isPositive() const
 {
     return !( signedVariable & 1 );
+}
+
+bool
+Literal::isNegative() const
+{
+    return !isPositive();
 }
 
 unsigned int
@@ -208,6 +216,13 @@ Literal::addPropagator(
     getVariable()->addPropagator( p, getSign(), position );
 }
 
+void
+Literal::addLiteralInShortClause(
+    Literal lit )
+{
+    assert( "Variable has not been set." && getVariable() != NULL );
+    getVariable()->addLiteralInShortClause( lit, getSign() );
+}
 
 void
 Literal::addPostPropagator(
