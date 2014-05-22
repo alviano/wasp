@@ -68,7 +68,7 @@ class Variable : public Reason
     public:
         
         inline Variable( unsigned id );
-        ~Variable();
+        virtual ~Variable();
 
         inline unsigned getId() const { return id; }
         
