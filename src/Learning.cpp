@@ -111,17 +111,6 @@ Learning::onConflict(
     
     trace_msg( learning, 1, "Learned Clause: " << *learnedClause );    
     
-    if( learnedClause->size() == 3 )
-    {
-        if( learnedClause->getAt( 0 ).getId() == 476 || learnedClause->getAt( 1 ).getId() == 476 || learnedClause->getAt( 2 ).getId() == 476 )
-            if( learnedClause->getAt( 0 ).getId() == -67 || learnedClause->getAt( 1 ).getId() == -67 || learnedClause->getAt( 2 ).getId() == -67 )
-                if( learnedClause->getAt( 0 ).getId() == -182 || learnedClause->getAt( 1 ).getId() == -182 || learnedClause->getAt( 2 ).getId() == -182 )
-                {
-                    cout << "ESCO" << endl;
-                    exit( 0 );
-                }
-    }
-    
     return learnedClause;
 }
 
