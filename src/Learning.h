@@ -29,6 +29,7 @@ class Clause;
 class Literal;
 class Solver;
 class Variable;
+class Reason;
 
 class Learning
 {
@@ -40,7 +41,7 @@ class Learning
         void onNavigatingLiteralForUnfoundedSetLearning( Literal );
         
         bool onNavigatingLiteralForAllMarked( Literal );
-        Clause* onConflict( Literal conflictLiteral, Clause* conflictClause );
+        Clause* onConflict( Literal conflictLiteral, Reason* conflictClause );
         
         inline void onNewVariable();
         
@@ -87,7 +88,7 @@ class Learning
         Literal getNextLiteralToNavigate();
         
         void simplifyLearnedClause( Clause* lc );
-        bool allMarked( Clause* clause, Literal literal );
+        bool allMarked( Reason* clause, Literal literal );
         
         #ifndef NDEBUG
         /**

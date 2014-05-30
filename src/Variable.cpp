@@ -22,6 +22,8 @@
 #include "Variable.h"
 #include "Clause.h"
 #include "Literal.h"
+#include "Learning.h"
+#include "Reason.h"
 #include "util/VariableNames.h"
 #include "Solver.h"
 
@@ -29,12 +31,20 @@ ostream& operator<<(
     ostream& out,
     const Variable& var )
 {
-#ifndef NDEBUG    
+    #ifndef NDEBUG    
     if( VariableNames::isHidden( &var ) )
         out << var.id;
     else
-#endif
+    #endif
     out << VariableNames::getName( &var );
+    return out;
+}
+
+ostream&
+Variable::print(
+    ostream& out ) const
+{
+    out << *this;
     return out;
 }
 
@@ -130,6 +140,39 @@ Variable::unitPropagation(
             assert( !solver.conflictDetected() );
     }
     wl.shrink( j );
+}
+
+void
+Variable::shortPropagation(
+    Solver& solver )
+{
+    assert( !solver.conflictDetected() );
+    assert_msg( !this->isUndefined(), "Propagating variable " << *this << ", the truth value is Undefined." );
+
+    assert( FALSE == 1 && TRUE == 2 );
+
+    #ifndef NDEBUG
+    unsigned int sign = ( getTruthValue() >> 1 );
+    assert( sign <= 1 );
+    assert( getTruthValue() == TRUE ? sign == NEGATIVE : sign == POSITIVE );
+    #endif
+        
+    Vector< Literal >& binary = binaryClauses[ ( getTruthValue() >> 1 ) ];
+//    Literal complement = Literal::createOppositeFromAssignedVariable( this );    
+    
+    trace_msg( solving, 2, "Propagation of binary clauses for literal " << Literal::createFromAssignedVariable( this ) );
+    for( unsigned i = 0; i < binary.size(); ++i )
+    {
+        if( solver.conflictDetected() )
+            break;
+        
+        Literal lit = binary[ i ];
+        if( !lit.isTrue() )
+        {
+            trace_msg( solving, 5, "Inferring " << lit << " as true" );        
+            solver.assignLiteral( lit, this );
+        }
+    }
 }
 
 void
@@ -418,4 +461,22 @@ Variable::checkSubsumptionForClause(
         }
     }    
     wl.shrink( j );
+}
+
+void
+Variable::onLearning(
+    Learning* strategy,
+    Literal )
+{
+    Literal lit = Literal::createFromAssignedVariable( this );
+    strategy->onNavigatingLiteral( lit );
+}
+
+bool
+Variable::onNavigatingLiteralForAllMarked(
+    Learning* strategy,
+    Literal )
+{
+    Literal lit = Literal::createFromAssignedVariable( this );
+    return strategy->onNavigatingLiteralForAllMarked( lit );    
 }

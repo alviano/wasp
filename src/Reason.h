@@ -16,10 +16,27 @@
  *
  */
 
-#ifndef LITERAL_H
-#define LITERAL_H
+#ifndef REASON_H
+#define REASON_H
 
-#include "LiteralInt.h"
-#include "LiteralImpl.h"
+#include <iostream>
+using namespace std;
+
+class Learning;
+class Literal;
+
+class Reason
+{
+    friend ostream& operator<<( ostream& o, const Reason& r )
+    {
+        return r.print( o );
+    }
+    
+    public:
+        virtual void onLearning( Learning* strategy, Literal lit ) = 0;
+        virtual bool onNavigatingLiteralForAllMarked( Learning* strategy, Literal lit ) = 0;
+        virtual bool isLearned() const { return false; }
+        virtual ostream& print( ostream& o ) const = 0;
+};
 
 #endif

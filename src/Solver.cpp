@@ -341,6 +341,10 @@ Solver::unitPropagation(
 {
     assert( "Variable to propagate has not been set." && variable != NULL );
     trace_msg( solving, 2, "Propagating: " << *variable << " as " << ( variable->isTrue() ? "true" : "false" ) );
+    variable->shortPropagation( *this );
+    
+    if( conflictDetected() )
+        return;
     
     variable->unitPropagation( *this );
 }

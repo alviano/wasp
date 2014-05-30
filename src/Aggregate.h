@@ -50,9 +50,7 @@ class Aggregate : public Propagator, public Clause
         
         inline unsigned int size() const { return literals.size() - 1; }
 
-        inline void addLiteral( Literal lit, unsigned int weight ) { literals.push_back( lit ); weights.push_back( weight ); watched.push_back( true ); }
-        
-        virtual Clause* getClauseToPropagate( Learning& learning );
+        inline void addLiteral( Literal lit, unsigned int weight ) { literals.push_back( lit ); weights.push_back( weight ); watched.push_back( true ); }        
         
         inline Literal getLiteral( unsigned int i ) const { assert( i < literals.size() ); return literals[ i ]; }
         inline unsigned int getWeight( unsigned int i ) const { assert( i < weights.size() ); return weights[ i ]; }
@@ -75,7 +73,6 @@ class Aggregate : public Propagator, public Clause
     private:
         inline Aggregate( const Aggregate& orig );
         
-        list< Clause* > clausesToPropagate;
         vector< Literal > literals;
         vector< unsigned int > weights;
         vector< bool > watched;
@@ -90,7 +87,7 @@ class Aggregate : public Propagator, public Clause
         
         Literal literalOfUnroll;
         
-        void createClauseFromTrail( Literal lit );
+//        void createClauseFromTrail( Literal lit );
         #ifndef NDEBUG
         bool checkDecisionLevelsOrder( Clause* ) const;
         bool checkLiteralHasBeenInferred( Literal lit ) const;

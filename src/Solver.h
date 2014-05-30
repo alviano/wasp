@@ -87,7 +87,7 @@ class Solver
         
         inline void assignLiteral( Literal literal );
         inline void assignLiteral( Clause* implicant );
-        inline void assignLiteral( Literal literal, Clause* implicant );
+        inline void assignLiteral( Literal literal, Reason* implicant );
         
         inline bool propagateLiteralAsDeterministicConsequence( Literal literal );
         inline bool propagateLiteralAsDeterministicConsequenceSatelite( Literal literal );
@@ -230,7 +230,7 @@ class Solver
         vector< unsigned int > unrollVector;
         
         Literal conflictLiteral;
-        Clause* conflictClause;
+        Reason* conflictClause;
         
         Learning learning;
         OutputBuilder* outputBuilder;        
@@ -407,7 +407,7 @@ Solver::assignLiteral(
 void
 Solver::assignLiteral(
     Literal lit,
-    Clause* implicant )
+    Reason* implicant )
 {
     assert( implicant != NULL );
     
@@ -470,7 +470,7 @@ Solver::addClause(
         clause->setPositionInSolver( clauses.size() );
         clauses.push_back( clause );
         return true;
-    }
+    }        
 
     if( size == 1 )
     {
@@ -860,16 +860,26 @@ Solver::attachWatches()
 {
     for( unsigned int i = 0; i < clauses.size(); )
     {
-        Clause* current = clauses[ i ];
+        Clause* current = clauses[ i ];                
         if( current->hasBeenDeleted() )
         {
             deleteClause( current );
         }
         else
         {
-            literalsInClauses += current->size();
-            current->attachClause();
-            ++i;
+            if( current->size() == 2 )
+            {     
+                current->getAt( 0 ).addLiteralInShortClause( current->getAt( 1 ) );
+                current->getAt( 1 ).addLiteralInShortClause( current->getAt( 0 ) );
+        
+                deleteClause( current );
+            }
+            else
+            {
+                literalsInClauses += current->size();
+                current->attachClause();
+                ++i;
+            }
         }
     }    
 }
