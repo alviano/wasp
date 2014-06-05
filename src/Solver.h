@@ -24,7 +24,6 @@
 using namespace std;
 
 #include "Clause.h"
-#include "Variable.h"
 #include "Variables.h"
 #include "Literal.h"
 #include "util/Options.h"

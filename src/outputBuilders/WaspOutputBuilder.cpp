@@ -19,7 +19,6 @@
 #include "WaspOutputBuilder.h"
 
 #include "../util/VariableNames.h"
-#include "../Variable.h"
 #include <iostream>
 using namespace std;
 

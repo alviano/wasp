@@ -21,7 +21,6 @@
 
 #include <vector>
 
-#include "Variable.h"
 #include "Literal.h"
 #include "outputBuilders/OutputBuilder.h"
 #include "util/Assert.h"

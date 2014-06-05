@@ -18,7 +18,6 @@
 
 #include "Aggregate.h"
 #include "Solver.h"
-#include "Variable.h"
 #include "util/Options.h"
 #include "Learning.h"
 #include "Clause.h"

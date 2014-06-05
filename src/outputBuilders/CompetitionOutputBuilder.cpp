@@ -17,7 +17,6 @@
  */
 
 #include "CompetitionOutputBuilder.h"
-#include "../Variable.h"
 #include "../util/VariableNames.h"
 
 extern int EXIT_CODE;

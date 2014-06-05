@@ -18,8 +18,6 @@
 #include "ThirdCompetitionOutputBuilder.h"
 #include "../util/VariableNames.h"
 
-#include "../Variable.h"
-
 void
 ThirdCompetitionOutputBuilder::startModel()
 {

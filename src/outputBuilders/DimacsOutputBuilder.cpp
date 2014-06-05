@@ -18,7 +18,6 @@
 
 #include "DimacsOutputBuilder.h"
 
-#include "../Variable.h"
 #include <cassert>
 using namespace std;
 

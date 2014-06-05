@@ -18,7 +18,6 @@
 
 #include "Component.h"
 #include "Literal.h"
-#include "Variable.h"
 #include "util/Options.h"
 #include "Learning.h"
 #include "Clause.h"

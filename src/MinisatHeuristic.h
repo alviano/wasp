@@ -22,7 +22,6 @@
 #include "util/Options.h"
 #include "util/Trace.h"
 #include "Literal.h"
-#include "Variable.h"
 #include "stl/Heap.h"
 
 #include <cassert>
