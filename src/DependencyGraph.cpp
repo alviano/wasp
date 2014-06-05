@@ -27,8 +27,8 @@ class AdjacencyList: public boost::adjacency_list<>
 {
 };
 
-DependencyGraph::DependencyGraph()
-: graph( *new AdjacencyList() )
+DependencyGraph::DependencyGraph( Solver& s )
+: graph( *new AdjacencyList() ), solver( s )
 {
 }
 
@@ -68,7 +68,7 @@ DependencyGraph::computeStrongConnectedComponents(
         unsigned int currentComponentId = strongConnectedComponents[ i ];
         assert( currentComponentId < components.size() );
         if( components[ currentComponentId ] == NULL )
-            components[ currentComponentId ] = new Component( gd );
+            components[ currentComponentId ] = new Component( gd, solver );
     
         components[ currentComponentId ]->addVariable( i );
     }

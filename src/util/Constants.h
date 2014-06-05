@@ -103,6 +103,7 @@
  * New types
  */
 typedef double Activity;
+typedef unsigned int Var;
 typedef unsigned int TruthValue;
 typedef unsigned int DELETION_POLICY;
 typedef unsigned int DECISION_POLICY;

@@ -32,20 +32,21 @@ WaspOutputBuilder::startModel()
 
 void
 WaspOutputBuilder::printVariable( 
-    const Variable* variable )
+    Var variable,
+    bool isTrue )
 {
     if( VariableNames::isHidden( variable ) )
         return;
 
-    if( variable->isTrue() )
+    if( isTrue )
     {
         if( !first )
             cout << ", ";
         else
             first = false;
-            
-        cout << *variable;        
-    }    
+
+        cout << VariableNames::getName( variable );
+    }
 }
 
 void

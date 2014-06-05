@@ -26,71 +26,85 @@
 #include "stl/Heap.h"
 
 #include <cassert>
+#include <iostream>
 using namespace std;
+class Solver;
+
+struct ActivityComparator
+{
+    const Vector< Activity >&  act;
+    bool operator()( Var x, Var y ) const { return act[ x ] > act[ y ]; }
+    ActivityComparator( const Vector< Activity >& a ) : act( a ) {}
+};
 
 class MinisatHeuristic
 {
     public:
-        inline MinisatHeuristic();
+        inline MinisatHeuristic( Solver& s );
         inline ~MinisatHeuristic(){};
 
         Literal makeAChoice();
-        inline void onNewVariable( Variable* variable );
+        inline void onNewVariable( Var v );
         inline void onLiteralInvolvedInConflict( Literal literal );
-        inline void simplifyVariablesAtLevelZero();
-        inline void onUnrollingVariable( Variable* variable );
-        inline void variableDecayActivity(){ trace( heuristic, 1, "Calling decay activity.\n" ); variableIncrement *= variableDecay; }
+        inline void onUnrollingVariable( Var var );
+        inline void variableDecayActivity(){ trace_msg( heuristic, 1, "Calling decay activity" ); variableIncrement *= variableDecay; }
         inline void addPreferredChoice( Literal lit ){ assert( lit != Literal::null ); preferredChoices.push_back( lit ); }
-        inline void removePrefChoices();
-        
+        void removePrefChoices();
+        void simplifyVariablesAtLevelZero();
+
     private:
-        inline bool bumpActivity( Variable* variable ){ return ( ( variable->activity() += variableIncrement ) > 1e100 ); }
+        inline bool bumpActivity( Var var ){ return ( ( act[ var ] += variableIncrement ) > 1e100 ); }
         inline void rescaleActivity();        
-        inline void variableBumpActivity( Variable* variable );
+        inline void variableBumpActivity( Var variable );
         void randomChoice();
 
+        Solver& solver;
         Activity variableIncrement;
         Activity variableDecay;
-
-        vector< Variable* > variables;
+        
+        Vector< Activity > act;
         vector< Literal > preferredChoices;
+        
+        vector< Var > vars;
 
-        Variable* chosenVariable;
-        Heap< Variable, Comparator > heap;
+        Var chosenVariable;
+        Heap< ActivityComparator > heap;        
 };
 
-MinisatHeuristic::MinisatHeuristic() :
-    variableIncrement( 1.0 ), variableDecay( 1 / 0.95 ), chosenVariable( NULL )
+MinisatHeuristic::MinisatHeuristic( Solver& s ) :
+    solver( s ), variableIncrement( 1.0 ), variableDecay( 1 / 0.95 ), chosenVariable( 0 ), heap( ActivityComparator( act ) )
 {
+    act.push_back( 0.0 );
 }
 
 void
 MinisatHeuristic::variableBumpActivity(
-    Variable* variable )
+    Var variable )
 {
-    trace( heuristic, 1, "Bumping activity for variable %s.\n", toString( *variable ).c_str() );    
+    trace_msg( heuristic, 1, "Bumping activity for variable " << variable );
     if( bumpActivity( variable ) )
         rescaleActivity();
     
-    if( variable->isInHeap() )
+    if( heap.inHeap( variable ) )
         heap.decrease( variable );    
 }
 
 void
 MinisatHeuristic::rescaleActivity()
 {
-    trace( heuristic, 1, "Rescaling activity.\n" );
-    unsigned int size = variables.size();
+    trace_msg( heuristic, 1, "Rescaling activity" );
+    unsigned int size = act.size();
     for( unsigned int i = 0; i < size; ++i )
-        variables[ i ]->activity() *= 1e-100;
+        act[ i ] *= 1e-100;
     variableIncrement *= 1e-100;
 }
 
 void
 MinisatHeuristic::onNewVariable(
-    Variable* variable )
-{
-    variables.push_back( variable );
+    Var v )
+{    
+    act.push_back( 0.0 );
+    vars.push_back( v );
 }
 
 void 
@@ -101,47 +115,11 @@ MinisatHeuristic::onLiteralInvolvedInConflict(
 }
 
 void
-MinisatHeuristic::simplifyVariablesAtLevelZero()
-{
-    for( unsigned int i = 0; i < variables.size(); )
-    {
-        if( !variables[ i ]->isUndefined() )
-        {
-            assert_msg( variables[ i ]->getDecisionLevel() == 0, "Variable " << *variables[ i ] << " has not been inferred at level 0.");            
-            variables[ i ] = variables.back();
-            variables.pop_back();
-        }
-        else
-        {       
-            heap.pushNoCheck( variables[ i ] );
-            ++i;
-        }
-    }
-}
-
-void
 MinisatHeuristic::onUnrollingVariable(
-    Variable* variable )
+    Var variable )
 {
     heap.push( variable );
 }
-
-
-void
-MinisatHeuristic::removePrefChoices()
-{
-    unsigned int j = 0;
-    for( unsigned int i = 0; i < preferredChoices.size(); i++ )
-    {
-        preferredChoices[ j ] = preferredChoices[ i ];
-        
-        if( !preferredChoices[ i ].isTrue() )
-            j++;
-    }
-    
-    preferredChoices.resize( j );
-}
-
 
 #endif
 

@@ -27,10 +27,11 @@
 #include "PostPropagator.h"
 #include "Literal.h"
 #include "GUSData.h"
-#include "Learning.h"
 #include "util/Options.h"
 #include "util/Trace.h"
 
+class Learning;
+class Solver;
 class Clause;
 using namespace std;
 
@@ -45,7 +46,7 @@ using namespace std;
 class Component : public PostPropagator
 {
     public:
-        inline Component( vector< GUSData* >& gusData_ ) : PostPropagator(), gusData( gusData_ ), clauseToPropagate( NULL ), id( 0 ) {}
+        inline Component( vector< GUSData* >& gusData_, Solver& s ) : PostPropagator(), solver( s ), gusData( gusData_ ), clauseToPropagate( NULL ), id( 0 ) {}
         inline ~Component() {}
         
         virtual bool onLiteralFalse( Literal lit, int );
@@ -65,32 +66,33 @@ class Component : public PostPropagator
         inline void setAuxVariable( unsigned int varId ) { getGUSData( varId ).aux = true; }
         inline void addExternalLiteralForVariable( unsigned int varId, Literal lit ) { getGUSData( varId ).externalLiterals.push_back( lit ); }
         inline void addInternalLiteralForVariable( unsigned int varId, Literal lit ) { getGUSData( varId ).internalLiterals.push_back( lit ); }
-        inline void addVariablePossiblySupportedByLiteral( Variable* var, Literal lit ) { gusData[ lit.getVariable()->getId() ]->possiblySupportedByThis[ lit.getSign() ].push_back( var ); }
-        inline void addAuxVariableSupportedByLiteral( Variable* var, Literal lit ) { gusData[ lit.getVariable()->getId() ]->auxVariablesSupportedByThis[ lit.getSign() ].push_back( var ); }
+        inline void addVariablePossiblySupportedByLiteral( Var var, Literal lit ) { gusData[ lit.getVariable() ]->possiblySupportedByThis[ lit.getSign() ].push_back( var ); }
+        inline void addAuxVariableSupportedByLiteral( Var var, Literal lit ) { gusData[ lit.getVariable() ]->auxVariablesSupportedByThis[ lit.getSign() ].push_back( var ); }
         
-        inline void variableHasNoSourcePointer( Variable* var );
-        inline void onLearningForUnfounded( unsigned int id, Learning& );
+        inline void variableHasNoSourcePointer( Var var );
+        void onLearningForUnfounded( unsigned int id, Learning& );
         
     protected:
         virtual void reset();
 
     private:
         inline Component( const Component& orig );
+        Solver& solver;
         vector< unsigned int > variablesInComponent;
         vector< GUSData* >& gusData;
-        Vector< Variable* > variablesWithoutSourcePointer;
-        Vector< Variable* > unfoundedSet;
-        Clause* clauseToPropagate;
+        Vector< Var > variablesWithoutSourcePointer;
+        Vector< Var > unfoundedSet;
+        Clause* clauseToPropagate;        
         
         unsigned int id;
         
         inline bool propagateFalseForGUS( Literal lit );
         inline void propagateLiteralLostSourcePointer( Literal lit );
-        inline bool iterationOnSupportedByThisExternal( Literal lit );
-        inline bool iterationOnSupportedByThisInternal( Literal lit );
-        inline void iterationOnAuxSupportedByThis( Literal lit );        
+        bool iterationOnSupportedByThisExternal( Literal lit );
+        bool iterationOnSupportedByThisInternal( Literal lit );
+        void iterationOnAuxSupportedByThis( Literal lit );        
 
-        inline void foundSourcePointer( unsigned int id );
+        void foundSourcePointer( unsigned int id );
         inline void lookForANewSourcePointer( unsigned int id );
         inline void propagateSourcePointer( unsigned int id, Literal literal );
         inline void addExternalLiteral( unsigned int id, Literal literal );
@@ -99,34 +101,14 @@ class Component : public PostPropagator
 
         inline void setVariableFounded( unsigned int id, bool value );
         
-        inline void addVariableSupportedByLiteral( Variable* variable, Literal literal );
+        void addVariableSupportedByLiteral( Var variable, Literal literal );
         
         inline GUSData& getGUSData( unsigned int id );
         
         void computeGUS();
         
         #ifndef NDEBUG
-        bool checkSourcePointersStatus()
-        {
-            for( unsigned int i = 0; i < variablesInComponent.size(); i++ )
-            {
-                unsigned int id = variablesInComponent[ i ];                
-                assert( getGUSData( id ).variable->getComponent()->getId() == this->id );
-                if( !getGUSData( id ).founded )
-                {
-                    cerr << "Variable " << *getGUSData( id ).variable << " is not founded " << getGUSData( id ).numberOfSupporting << endl;
-                    return false;
-                }
-                
-                if( getGUSData( id ).numberOfSupporting != 0 )
-                {
-                    cerr << "Variable " << *getGUSData( id ).variable << " has a number of supporting greater than 0" << endl;
-                    return false;
-                }
-            }
-            
-            return true;
-        }
+        bool checkSourcePointersStatus();        
         #endif
 };
 
@@ -150,91 +132,14 @@ Component::propagateLiteralLostSourcePointer(
     iterationOnAuxSupportedByThis( lit );
 }
 
-bool
-Component::iterationOnSupportedByThisExternal(
-    Literal lit )
-{
-    trace_msg( unfoundedset, 2, "Iterating on variable supported by literal " << lit << " externally" );
-    unsigned int sign = lit.getSign();
-    unsigned int varId = lit.getVariable()->getId();
-
-    Vector< Variable* >& wl = getGUSData( varId ).supportedByThisExternalRule[ sign ];
-
-    unsigned i = 0;
-    unsigned j = 0;
-    for( ; i < wl.size(); ++i )
-    {
-        Variable* variable = wl[ j ] = wl[ i ];
-        assert( variable->getComponent() != NULL );
-        trace_msg( unfoundedset, 3, "Considering variable " << *variable << " which is " << ( variable->isFalse() ? "false" : "true" ) << " and " << ( ( getGUSData( variable->getId() ).inQueue ) ? "in queue" : "not in queue" ) );
-        if( variable->getComponent()->getId() == id && !variable->isFalse() && !( getGUSData( variable->getId() ).inQueue ) )
-            variableHasNoSourcePointer( variable );
-        else
-            ++j;
-    }
-    wl.shrink( j );
-    return i != j;
-}
-
-bool
-Component::iterationOnSupportedByThisInternal(
-    Literal lit )
-{
-    trace_msg( unfoundedset, 2, "Iterating on variable supported by literal " << lit << " internally" );
-    unsigned int sign = lit.getSign();
-    unsigned int varId = lit.getVariable()->getId();
-
-    Vector< Variable* >& wl = getGUSData( varId ).supportedByThisInternalRule[ sign ];
-
-    unsigned i = 0;
-    unsigned j = 0;
-    for( ; i < wl.size(); ++i )
-    {
-        Variable* variable = wl[ j ] = wl[ i ];
-        assert( variable->getComponent() != NULL && variable->getComponent()->getId() == id );
-        trace_msg( unfoundedset, 3, "Considering variable " << *variable << " which is " << ( variable->isFalse() ? "false" : "true" ) << " and " << ( ( getGUSData( variable->getId() ).inQueue ) ? "in queue" : "not in queue" ) );
-        if( !variable->isFalse() && !( getGUSData( variable->getId() ).inQueue ) )
-            variableHasNoSourcePointer( variable );
-        else
-            ++j;
-    }
-    wl.shrink( j );
-    return i != j;
-}
-
-void
-Component::iterationOnAuxSupportedByThis(
-    Literal lit )
-{
-    trace_msg( unfoundedset, 2, "Iterating on aux variable supported by literal " << lit );
-    unsigned int sign = lit.getSign();
-    unsigned int varId = lit.getVariable()->getId();
-
-    vector< Variable* >& vec = getGUSData( varId ).auxVariablesSupportedByThis[ sign ];
-    for( unsigned int i = 0; i < vec.size(); i++ )
-    {
-        Variable* variable = vec[ i ];
-        assert( getGUSData( variable->getId() ).aux );
-        trace_msg( unfoundedset, 3, "Considering variable " << *variable << " which is " << ( variable->isFalse() ? "false" : "true/undefined" ) << " and " << ( ( getGUSData( variable->getId() ).inQueue ) ? "in queue" : "not in queue" ) );
-        if( !variable->isFalse() )
-        {
-            if( !getGUSData( variable->getId() ).inQueue )
-                variableHasNoSourcePointer( variable );
-
-            getGUSData( variable->getId() ).numberOfSupporting++;            
-        }
-    }
-}
-
 void
 Component::variableHasNoSourcePointer(
-    Variable* variable )
-{
-    unsigned int id = variable->getId();
-    assert( !getGUSData( id ).inQueue );
+    Var variable )
+{    
+    assert( !getGUSData( variable ).inQueue );
     
-    setVariableFounded( id, false );
-    getGUSData( id ).inQueue = true;
+    setVariableFounded( variable, false );
+    getGUSData( variable ).inQueue = true;
     
     variablesWithoutSourcePointer.push_back( variable );    
 }
@@ -258,78 +163,6 @@ Component::variableHasNoSourcePointer(
 //    assert( variable->getComponent()->getId() < variablesWithoutSourcePointer.size() );
 //    variablesWithoutSourcePointer[ variable->getComponent()->getId() ]->push_back( variable );
 //}
-
-void
-Component::foundSourcePointer(
-    unsigned int id )
-{
-    Variable* variableWithSourcePointer = getGUSData( id ).variable;
-    
-    for( unsigned int i = 0; i < getGUSData( id ).possiblySupportedByThis[ POSITIVE ].size(); i++ )
-    {
-        Variable* var = getGUSData( id ).possiblySupportedByThis[ POSITIVE ][ i ];        
-        
-        if( !var->isFalse() && !getGUSData( var->getId() ).founded )
-        {
-            trace_msg( unfoundedset, 1, "Literal " << Literal( variableWithSourcePointer ) << " is a source pointer of " << *var );
-            propagateSourcePointer( var->getId(), Literal( variableWithSourcePointer ) );
-        }
-    }
-    
-    for( unsigned int i = 0; i < getGUSData( id ).auxVariablesSupportedByThis[ POSITIVE ].size(); i++ )
-    {
-        Variable* var = getGUSData( id ).auxVariablesSupportedByThis[ POSITIVE ][ i ];
-        
-        if( !var->isFalse() )
-        {
-            assert_msg( !getGUSData( var->getId() ).founded, "Variable " << *var << " is founded" );
-            trace_msg( unfoundedset, 1, "Literal " << Literal( variableWithSourcePointer ) << " is a source pointer of " << *var );
-            propagateSourcePointer( var->getId(), Literal( variableWithSourcePointer ) );
-        }
-    }
-}
-
-void
-Component::lookForANewSourcePointer(
-    unsigned int id )
-{
-    if( !getGUSData( id ).aux )
-    {
-        vector< Literal >& externalLiterals = getGUSData( id ).externalLiterals;
-        for( unsigned int i = 0; i < externalLiterals.size(); i++ )
-        {
-            if( !externalLiterals[ i ].isFalse() )
-            {
-                trace_msg( unfoundedset, 1, "Literal " << getGUSData( id ).externalLiterals[ i ] << " is an external source pointer of " << *getGUSData( id ).variable );
-                propagateSourcePointer( id, externalLiterals[ i ] );
-                return;
-            }
-        }
-
-        vector< Literal >& internalLiterals = getGUSData( id ).internalLiterals;
-        for( unsigned int i = 0; i < internalLiterals.size(); i++ )
-        {
-            if( !internalLiterals[ i ].isFalse() && getGUSData( internalLiterals[ i ].getVariable()->getId() ).founded )
-            {
-                trace_msg( unfoundedset, 1, "Literal " << getGUSData( id ).internalLiterals[ i ] << " is an internal source pointer of " << *getGUSData( id ).variable );
-                propagateSourcePointer( id, internalLiterals[ i ] );
-                return;
-            }
-        }
-    }    
-}
-
-void
-Component::addVariableSupportedByLiteral(
-    Variable* variable,
-    Literal literal )
-{
-    Variable* tmp = literal.getVariable();
-    if( tmp->inTheSameComponent( variable ) )
-        getGUSData( tmp->getId() ).supportedByThisInternalRule[ literal.getSign() ].push_back( variable );
-    else
-        getGUSData( tmp->getId() ).supportedByThisExternalRule[ literal.getSign() ].push_back( variable );        
-}
 
 void
 Component::propagateSourcePointer(
@@ -377,33 +210,6 @@ Component::addInternalLiteral(
 }
 
 void
-Component::onLearningForUnfounded(
-    unsigned int id,
-    Learning& learning )
-{
-    if( !getGUSData( id ).aux )
-    {
-        for( unsigned int i = 0; i < getGUSData( id ).externalLiterals.size(); i++ )
-        {
-            Literal literal = getGUSData( id ).externalLiterals[ i ];
-            assert( literal.isFalse() );
-            if( literal.getDecisionLevel() > 0 )
-                learning.onNavigatingLiteralForUnfoundedSetLearning( literal );        
-        }
-
-        for( unsigned int i = 0; i < getGUSData( id ).internalLiterals.size(); i++ )
-        {
-            Literal literal = getGUSData( id ).internalLiterals[ i ];            
-            if( literal.getDecisionLevel() > 0 && getGUSData( literal.getVariable()->getId() ).founded )
-            {
-                assert( literal.isFalse() );
-                learning.onNavigatingLiteralForUnfoundedSetLearning( literal );
-            }
-        }
-    }    
-}
-
-void
 Component::resetSourcePointer(
     unsigned int id )
 {
@@ -413,13 +219,13 @@ Component::resetSourcePointer(
 //        assert_msg( sourcePointer != Literal::null, "Variable " << *( getGUSData( id ).variable ) << " has no source pointer" );        
         if( sourcePointer != Literal::null )
         {
-            trace_msg( unfoundedset, 3, "Set " << sourcePointer << " as source pointer for variable " << *getGUSData( id ).variable );
+            trace_msg( unfoundedset, 3, "Set " << sourcePointer << " as source pointer for variable " << getGUSData( id ).variable );
             addVariableSupportedByLiteral( getGUSData( id ).variable, sourcePointer );
         }
     }
     else
     {
-        trace_msg( unfoundedset, 3, "Aux variable " << *getGUSData( id ).variable << " has a source pointer" );
+        trace_msg( unfoundedset, 3, "Aux variable " << getGUSData( id ).variable << " has a source pointer" );
         getGUSData( id ).numberOfSupporting = 0;
     }
 }

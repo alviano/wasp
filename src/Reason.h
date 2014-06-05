@@ -24,6 +24,7 @@ using namespace std;
 
 class Learning;
 class Literal;
+class Solver;
 
 class Reason
 {
@@ -33,10 +34,10 @@ class Reason
     }
     
     public:
-        virtual void onLearning( Learning* strategy, Literal lit ) = 0;
+        virtual void onLearning( const Solver& solver, Learning* strategy, Literal lit ) = 0;
         virtual bool onNavigatingLiteralForAllMarked( Learning* strategy, Literal lit ) = 0;
         virtual bool isLearned() const { return false; }
-        virtual ostream& print( ostream& o ) const = 0;
+        virtual ostream& print( ostream& o ) const = 0;        
 };
 
 #endif

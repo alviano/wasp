@@ -28,11 +28,17 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #ifndef HEAP_H
 #define HEAP_H
 
+#include "Vector.h"
+
+#include <iostream>
+using namespace std;
+
 //=================================================================================================
 // A heap implementation with support for decrease/increase key.
-template< class K, class COMP >
+template< class COMP >
 class Heap {
-    vector< K* > heap;// Heap of Keys
+    Vector< Var > heap;// Heap of Keys
+    Vector< int > indices;
     COMP lt; // The heap is a minimum-heap with respect to this comparator
 
     // Index "traversal" functions
@@ -42,117 +48,121 @@ class Heap {
 
     void percolateUp( unsigned int i )
     {
-        K*   x  = heap[ i ];
+        Var   x  = heap[ i ];
         int p  = parent( i );
         
         while( i != 0 && lt( x, heap[ p ] ) )
         {
             heap[ i ] = heap[ p ];
-            heap[ p ]->setHandle( i );
+            indices[ heap[ p ] ] = i;
             i = p;
             p = parent( p );
         }
         heap[ i ] = x;
-        x->setHandle( i );
+        indices[ x ] = i;
     }
 
 
     void percolateDown( unsigned int i )
     {
-        K* x = heap[ i ];
+        Var x = heap[ i ];
         while( left( i ) < heap.size() )
         {
             int child = right( i ) < heap.size() && lt( heap[ right( i ) ], heap[ left( i ) ] ) ? right( i ) : left( i );
             if( !lt( heap[ child ], x ) )
                 break;
             heap[ i ] = heap[ child ];
-            heap[ i ]->setHandle( i );
+            indices[ heap[ i ] ] = i;
             i = child;
         }
         heap[ i ] = x;
-        x->setHandle( i );
+        indices[ x ] = i;
     }
 
 
   public:
-    Heap(){}
+    Heap( const COMP& c ) : lt( c ) {}
 
     int size() const { return heap.size(); }
     bool empty() const { return heap.empty(); }
-    bool inHeap ( K* k ) const { return k->isInHeap(); }
+    bool inHeap ( Var v ) const { return indices[ v ] != -1; }
     int  operator[]( int index ) const{ assert( index < heap.size() ); return heap[ index ]; }
 
-    void decrease( K* k ) { assert( inHeap( k ) ); percolateUp( k->getHandle() ); }
-    void increase( K* k ) { assert( inHeap( k ) ); percolateDown( k->getHandle() ); }
+    void decrease( Var v ) { assert( inHeap( v ) ); percolateUp( indices[ v ] ); }
+    void increase( Var v ) { assert( inHeap( v ) ); percolateDown( indices[ v ] ); }
 
 
     // Safe variant of insert/decrease/increase:
-    void update( K* k )
-    {
-        if( !inHeap( k ) )
-            insert( k );
-        else
-        {
-            percolateUp( k->getHandle() );
-            percolateDown( k->getHandle() );
-        }
-    }
+//    void update( Var v )
+//    {
+//        if( !inHeap( v ) )
+//            insert( v );
+//        else
+//        {
+//            percolateUp( indices[ v ] );
+//            percolateDown( indices[ v ] );
+//        }
+//    }
 
-    void push( K* k )
+    void push( Var v )
     {
-        if( k->isInHeap() )
+        if( inHeap( v ) )
             return;
-        pushNoCheck( k );
+        pushNoCheck( v );
     }
 
-    void pushNoCheck( K* k )
+    void pushNoCheck( Var v )
     {
-        assert( !k->isInHeap() );
-        k->setInHeap( true );
-        k->setHandle( heap.size() );
-        heap.push_back( k );
-        percolateUp( k->getHandle() );
-    }
-
-    void remove( K* k )
-    {
-        assert( inHeap( k ) );
-
-        int k_pos = k->getHandle();
-        k->setInHeap( false );
-
-        if( k_pos < heap.size() - 1 )
+        while( v >= indices.size() )
         {
-            heap[ k_pos ] = heap.back();
-            heap[ k_pos ]->setHandle( k_pos );
+            indices.push_back( -1 );
+        }
+        assert( !inHeap( v ) );
+        indices[ v ] = heap.size();
+        heap.push_back( v );
+        percolateUp( indices[ v ] );
+    }
+
+    void remove( Var v )
+    {
+        assert( inHeap( v ) );
+
+        int pos = indices[ v ];
+        indices[ v ] = -1;;
+
+        if( pos < heap.size() - 1 )
+        {
+            heap[ pos ] = heap.back();
+            indices[ heap[ pos ] ] = pos;
             heap.pop_back();
-            percolateDown( k_pos );
+            percolateDown( pos );
         }
         else
-            heap.pop();
+            heap.pop_back();
     }
 
-    K* top()
+    Var top()
     {
         return heap[ 0 ];        
     }
     
     void pop()
     {
-        heap[ 0 ]->setInHeap( false );
-        heap[ 0 ] = heap.back();
-        heap[ 0 ]->setHandle( 0 );
+        Var x = heap[ 0 ];
+        heap[ 0 ] = heap.back();        
+        indices[ heap[ 0 ] ] = 0;
+        indices[ x ] = -1;
         heap.pop_back();
         if( heap.size() > 1 )
             percolateDown( 0 );
     }
 
-    K* removeMin()
+    Var removeMin()
     {
-        K* x = heap[ 0 ];
+        Var x = heap[ 0 ];
         heap[ 0 ] = heap.back();
-        heap[ 0 ]->setHandle( 0 );
-        x->setInHeap( false );
+        indices[ heap[ 0 ] ] = 0;        
+        indices[ x ] = -1;
         heap.pop_back();
         if( heap.size() > 1 )
             percolateDown( 0 );

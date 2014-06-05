@@ -304,9 +304,9 @@ private:
     void createStructures( unsigned id );
     
     void propagate();
-    void propagateTrue( Variable* var );
-    void propagateFalse( Variable* var );
-    void propagateFact( Variable* var );
+    void propagateTrue( Var var );
+    void propagateFalse( Var var );
+    void propagateFact( Var var );
     
     void bodyToConstraint( NormalRule* rule );    
     
@@ -326,6 +326,7 @@ private:
     
     void add( NormalRule* rule );
     void add( WeightConstraintRule* rule );
+    bool addUndefinedLiteral( Clause* clause, Literal lit );
     void removeAndCheckSupport( NormalRule* rule );
     bool shrinkPos( NormalRule* rule, unsigned lit );
     void shrinkNeg( NormalRule* rule, unsigned lit );
@@ -363,7 +364,7 @@ private:
     unsigned readNormalRule_numberOfCalls;
     Vector< unsigned > atomsWithSupportInference;
     Vector< unsigned > facts;
-    unordered_map< Variable*, unordered_set< PostPropagator* > > literalsPostPropagator[ 2 ];
+    unordered_map< Var, unordered_set< PostPropagator* > > literalsPostPropagator[ 2 ];
 };
 
 GringoNumericFormat::GringoNumericFormat(
@@ -371,7 +372,7 @@ GringoNumericFormat::GringoNumericFormat(
 {
     atomData.push_back( new AtomData( false ) );
     createStructures( 1 );
-    solver.addClause( Literal( solver.getVariable( 1 ), NEGATIVE ) );
+    solver.addClause( Literal( 1, NEGATIVE ) );
 }
 
 GringoNumericFormat::~GringoNumericFormat()

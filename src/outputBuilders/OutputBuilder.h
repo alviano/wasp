@@ -25,7 +25,6 @@
 #include <list>
 using namespace std;
 
-class Variable;
 class Solver;
 
 class OutputBuilder
@@ -33,7 +32,7 @@ class OutputBuilder
     public:
         virtual ~OutputBuilder() {}
         virtual void startModel() = 0;
-        virtual void printVariable( const Variable* ) = 0;
+        virtual void printVariable( Var v, bool isTrue ) = 0;
         virtual void endModel() = 0;
         virtual void onProgramIncoherent() = 0;
         virtual void greetings(){}

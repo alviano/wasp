@@ -27,8 +27,8 @@
 bool
 Learning::isVisitedVariablesEmpty() const
 {
-    for( unsigned i = 1; i <= solver.numberOfVariables(); ++i )
-        if( solver.getVariable( i )->visited() == numberOfCalls )
+    for( unsigned i = 0; i < visited.size(); ++i )
+        if( isVisited( i, numberOfCalls ) )
             return false;
     return true;
 }
@@ -53,19 +53,19 @@ Learning::onConflict(
     trace_msg( learning, 2, "Starting First UIP Learning Strategy. Current Level: " << decisionLevel );
     trace_msg( learning, 2, "Conflict literal: " << conflictLiteral << " - Conflict implicant: " << *conflictClause << ( conflictClause->isLearned() ? " (learned)" : " (original)" ) );
 
-    cout << "CONFLICT LITERAL IMPLICANT " << conflictLiteral.getVariable()->getImplicant() << endl;
     //Compute implicants of the conflicting literal.
     if( conflictClause->isLearned() )    
         solver.updateActivity( ( Clause* ) conflictClause );
     
-    conflictClause->onLearning( this, conflictLiteral );
+    conflictClause->onLearning( solver, this, conflictLiteral );
     //assert_msg( conflictLiteral.getVariable()->getImplicant() != NULL, "Conflict literal " << conflictLiteral << " has no implicant" ); // FIXME: I added this assert. Is it right? It is true only for tight programs.
-    
-    if( conflictLiteral.getVariable()->getImplicant() != NULL  )
-        conflictLiteral.getVariable()->getImplicant()->onLearning( this, conflictLiteral.getOppositeLiteral() );
+
+    if( solver.getImplicant( conflictLiteral.getVariable() ) != NULL  )
+        solver.getImplicant( conflictLiteral.getVariable() )->onLearning( solver, this, conflictLiteral.getOppositeLiteral() );
+//        conflictLiteral.getVariable()->getImplicant()->onLearning( this, conflictLiteral.getOppositeLiteral() );
     
     addLiteralToNavigate( conflictLiteral );
-    assert( conflictLiteral.getVariable()->visited() == numberOfCalls );
+    assert( isVisited( conflictLiteral.getVariable(), numberOfCalls ) );
     solver.startIterationOnAssignedVariable();
     
     //If there is only one element, this element is the first UIP.
@@ -75,14 +75,14 @@ Learning::onConflict(
         Literal currentLiteral = getNextLiteralToNavigate();
         trace_msg( learning, 3, "Navigating " << currentLiteral << " for calculating the UIP" );
         
-        Reason* implicant = currentLiteral.getVariable()->getImplicant();        
+        Reason* implicant = solver.getImplicant( currentLiteral.getVariable() );        
         //Compute implicants of the literal.
         if( implicant != NULL )
         {
             trace_msg( learning, 4, "The implicant of " << currentLiteral << " is " << *implicant << ( implicant->isLearned() ? " (learned)" : " (original)" ) );
             if( implicant->isLearned() )
                 solver.updateActivity( ( Clause* ) implicant );
-            implicant->onLearning( this, currentLiteral );
+            implicant->onLearning( solver, this, currentLiteral );            
         }
         else
         {
@@ -100,14 +100,16 @@ Learning::onConflict(
     
     learnedClause->addLiteralInLearnedClause( firstUIP );    
     
+    assert_msg( sameDecisionLevelOfSolver( firstUIP ), "UIP " << firstUIP << " is not of the same level of the solver. UIP dl: " << solver.getDecisionLevel( firstUIP ) << " - solver dl: " << solver.getCurrentDecisionLevel() );
+    
     assert( learnedClause->size() > 0 );
     
     if( learnedClause->size() >= 2 )
     {
-        assert( learnedClause->getAt( learnedClause->size() - 1 ).getDecisionLevel() == solver.getCurrentDecisionLevel() );
+        assert_msg( sameDecisionLevelOfSolver( learnedClause->getAt( learnedClause->size() - 1 ) ), "Learned clause: " << *learnedClause << " - literal in last position has decision level " << solver.getDecisionLevel( learnedClause->getAt( learnedClause->size() - 1 ) ) << ". Solver decision level: " << solver.getCurrentDecisionLevel() );
         learnedClause->swapLiterals( 0, learnedClause->size() - 1 );
         learnedClause->swapLiterals( 1, maxPosition != 0 ? maxPosition : learnedClause->size() - 1 );
-        assert( learnedClause->getAt( 0 ).getDecisionLevel() == solver.getCurrentDecisionLevel() );
+        assert( sameDecisionLevelOfSolver( learnedClause->getAt( 0 ) ) );
     }
     
     trace_msg( learning, 1, "Learned Clause: " << *learnedClause );    
@@ -122,12 +124,11 @@ Learning::getNextLiteralToNavigate()
     {
         assert( solver.hasNextAssignedVariable() );
         Literal next = solver.getOppositeLiteralFromLastAssignedVariable();
-
-        assert( !next.isUndefined() );
+        assert( !solver.isUndefined( next.getVariable() ) );
         solver.unrollLastVariable();
-        assert( next.isUndefined() );
+        assert( solver.isUndefined( next.getVariable() ) );
 
-        if( next.getVariable()->visited() == numberOfCalls )
+        if( isVisited( next.getVariable(), numberOfCalls ) )
         {
             --pendingVisitedVariables;
             return next;
@@ -141,14 +142,16 @@ Learning::addLiteralInLearnedClause(
 {
     assert( "Learned clause is not initialized." && learnedClause != NULL );
 
-    if( literal.getVariable()->visited() != numberOfCalls )
+    Var v = literal.getVariable();
+    if( !isVisited( v, numberOfCalls ) )
     {
-        literal.getVariable()->visited() = numberOfCalls;
-        assert( !literal.isUndefined() );        
+        setVisited( v, numberOfCalls );
+        assert( !solver.isUndefined( v ) );
         
-        if( literal.getDecisionLevel() > maxDecisionLevel )
+        unsigned int dl = solver.getDecisionLevel( v );
+        if( dl > maxDecisionLevel )
         {
-            maxDecisionLevel = literal.getDecisionLevel();
+            maxDecisionLevel = dl;
             maxPosition = learnedClause->size();
         }
         learnedClause->addLiteralInLearnedClause( literal );
@@ -158,11 +161,12 @@ Learning::addLiteralInLearnedClause(
 void
 Learning::addLiteralToNavigate( 
     Literal literal )
-{
-    if( literal.getVariable()->visited() != numberOfCalls )
+{    
+    Var v = literal.getVariable();
+    if( !isVisited( v, numberOfCalls ) )
     {
-        literal.getVariable()->visited() = numberOfCalls;
-        ++pendingVisitedVariables;    
+        setVisited( v, numberOfCalls );
+        ++pendingVisitedVariables;
     }
 }
 
@@ -170,12 +174,12 @@ void
 Learning::onNavigatingLiteral( 
     Literal literal )
 {
-    assert( literal != Literal::null );
-    assert( literal.getDecisionLevel() > 0 );
-
+    assert( literal != Literal::null );    
+    assert( solver.getDecisionLevel( literal ) > 0 );    
     solver.onLiteralInvolvedInConflict( literal );
-    if( literal.getDecisionLevel() == decisionLevel )
-        addLiteralToNavigate( literal );
+ 
+    if( solver.getDecisionLevel( literal ) == decisionLevel )    
+        addLiteralToNavigate( literal );    
     else
         addLiteralInLearnedClause( literal );    
 }
@@ -185,7 +189,7 @@ Learning::onNavigatingLiteralForUnfoundedSetLearning(
     Literal literal )
 {
     assert( literal != Literal::null );
-    assert( literal.getDecisionLevel() > 0 );
+    assert( solver.getDecisionLevel( literal.getVariable() ) > 0 );
     addLiteralInLearnedClause( literal );    
 }
 
@@ -207,7 +211,7 @@ Learning::simplifyLearnedClause(
     for( unsigned int i = 1; i < learnedClause.size(); )
     {
         trace_msg( learning, 5, "Considering literal " << learnedClause.getAt( i ) );
-        if( allMarked( learnedClause.getAt( i ).getVariable()->getImplicant(), learnedClause.getAt( i ) ) )
+        if( allMarked( solver.getImplicant( learnedClause.getAt( i ).getVariable() ), learnedClause.getAt( i ) ) )
         {
             trace_msg( learning, 5, "Removing literal " << learnedClause.getAt( i ) );
             learnedClause.swapLiteralsNoWatches( i, learnedClause.size() - 1 );
@@ -220,7 +224,7 @@ Learning::simplifyLearnedClause(
         
     }
     
-    if( allMarked( learnedClause.getAt( 0 ).getVariable()->getImplicant(), learnedClause.getAt( 0 ) ) )
+    if( allMarked( solver.getImplicant( learnedClause.getAt( 0 ).getVariable() ), learnedClause.getAt( 0 ) ) )
     {
         trace_msg( learning, 5, "Removing literal " << learnedClause.getAt( 0 ) );
         learnedClause.swapLiteralsNoWatches( 0, learnedClause.size() - 1 );
@@ -229,9 +233,10 @@ Learning::simplifyLearnedClause(
         for( unsigned int i = 0; i < learnedClause.size(); i++ )
         {
             Literal literal = learnedClause.getAt( i );
-            if( literal.getDecisionLevel() > maxDecisionLevel )
+            unsigned int dl = solver.getDecisionLevel( literal.getVariable() );
+            if( dl > maxDecisionLevel )
             {
-                maxDecisionLevel = literal.getDecisionLevel();
+                maxDecisionLevel = dl;
                 maxPosition = i;
             }
         }
@@ -298,12 +303,12 @@ bool
 Learning::onNavigatingLiteralForAllMarked(
     Literal literal )
 {
-    if( literal.getVariable()->visited() != numberOfCalls )
+    if( !isVisited( literal.getVariable(), numberOfCalls ) )
     {
-        if( allMarked( literal.getVariable()->getImplicant(), literal ) )
+        if( allMarked( solver.getImplicant( literal.getVariable() ), literal ) )
         {
             trace_msg( learning, 5, "Literal " << literal << " set as visited" );
-            literal.getVariable()->visited() = numberOfCalls;
+            setVisited( literal.getVariable(), numberOfCalls );
         }
         else
         {
@@ -321,15 +326,15 @@ Learning::onNavigatingLiteralForAllMarked(
 void
 Learning::resetVariablesNumberOfCalls()
 {
-    for( unsigned i = 1; i <= solver.numberOfVariables(); ++i )
+    for( unsigned i = 1; i < visited.size(); ++i )
     {
-        solver.getVariable( i )->visited() = 0;
+        setVisited( i, 0 );
     }
 }
 
 Clause*
 Learning::learnClausesFromUnfoundedSet(
-    Vector< Variable* >& unfoundedSet )
+    Vector< Var >& unfoundedSet )
 {
     ++numberOfCalls;
     clearDataStructures();
@@ -345,8 +350,10 @@ Learning::learnClausesFromUnfoundedSet(
 
     for( unsigned int i = 0; i < unfoundedSet.size(); i++ )
     {
-        Variable* variable = unfoundedSet[ i ];
-        variable->onLearningForUnfounded( *this );
+        Var v = unfoundedSet[ i ];
+        Component* component = solver.getComponent( v );
+        assert( component != NULL );
+        component->onLearningForUnfounded( v, *this );        
     }
     
     if( learnedClause->size() > 1 )
@@ -357,4 +364,11 @@ Learning::learnClausesFromUnfoundedSet(
     
     trace( learning, 1, "Learned Clause: %s.\n", toString( *learnedClause ).c_str() );
     return learnedClause;
+}
+
+bool
+Learning::sameDecisionLevelOfSolver(
+    Literal lit ) const
+{
+    return solver.getDecisionLevel( lit.getVariable() ) == solver.getCurrentDecisionLevel();
 }

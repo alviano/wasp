@@ -29,16 +29,16 @@ class GUSData
         
         vector< Literal > externalLiterals;
         vector< Literal > internalLiterals;
-        Vector< Variable* > supportedByThisExternalRule[ 2 ];
-        Vector< Variable* > supportedByThisInternalRule[ 2 ];
-        vector< Variable* > auxVariablesSupportedByThis[ 2 ];
-        vector< Variable* > possiblySupportedByThis[ 2 ];
+        Vector< Var > supportedByThisExternalRule[ 2 ];
+        Vector< Var > supportedByThisInternalRule[ 2 ];
+        vector< Var > auxVariablesSupportedByThis[ 2 ];
+        vector< Var > possiblySupportedByThis[ 2 ];
         
         bool aux;
         bool founded;
         bool inQueue;
         
-        Variable* variable;
+        Var variable;
         
         /* CONJUNCTIVE */
         vector< Literal > literals;
@@ -48,7 +48,7 @@ class GUSData
         Literal sourcePointer;
 };
 
-GUSData::GUSData() : aux( false ), founded( true ), inQueue( false ), variable( NULL ), numberOfSupporting( 0 ), sourcePointer( Literal::null )
+GUSData::GUSData() : aux( false ), founded( true ), inQueue( false ), variable( 0 ), numberOfSupporting( 0 ), sourcePointer( Literal::null )
 {
 }
 

@@ -21,21 +21,21 @@
 
 #include <cassert>
 #include <iostream>
-#include <unordered_map>
+#include <vector>
+#include "Constants.h"
 using namespace std;
-
-class Variable;
 
 class VariableNames
 {
     public:
 
-        static bool isHidden( const Variable* variable );
-        static const string& getName( const Variable* variable );
-        static void setName( const Variable* variable, string name );
+        static bool isHidden( Var v );
+        static const string& getName( Var v );
+        static void setName( Var v, string name );
+        static void addVariable();
         
     private:        
-        static unordered_map< const Variable*, string > variables;
+        static vector< string > variables;
 };
 
 #endif

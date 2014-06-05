@@ -34,6 +34,7 @@
 #include "util/Options.h"
 #include "util/Trace.h"
 
+class Solver;
 using namespace std;
 
 #define POS 1
@@ -55,16 +56,14 @@ class Aggregate : public Propagator, public Clause
         inline Literal getLiteral( unsigned int i ) const { assert( i < literals.size() ); return literals[ i ]; }
         inline unsigned int getWeight( unsigned int i ) const { assert( i < weights.size() ); return weights[ i ]; }
         
-        unsigned int getLevelOfBackjump( unsigned int bound );
-        bool updateBound( unsigned int bound );        
+        unsigned int getLevelOfBackjump( const Solver& solver, unsigned int bound );
+        bool updateBound( const Solver& solver, unsigned int bound );        
 
 //        inline void setCounterW1( unsigned int value ){ counterW1 = value; }
 //        inline void setCounterW2( unsigned int value ){ counterW2 = value; }
-        virtual void reset();
+        virtual void reset( const Solver& solver );                
         
-        void attachAggregate();
-        
-        virtual void onLearning( Learning* strategy, Literal lit );
+        virtual void onLearning( const Solver& solver, Learning* strategy, Literal lit );
         virtual bool onNavigatingLiteralForAllMarked( Learning* strategy, Literal lit );
         
     protected:
@@ -73,7 +72,7 @@ class Aggregate : public Propagator, public Clause
     private:
         inline Aggregate( const Aggregate& orig );
         
-        vector< Literal > literals;
+//        vector< Literal > literals;
         vector< unsigned int > weights;
         vector< bool > watched;
         
@@ -89,8 +88,7 @@ class Aggregate : public Propagator, public Clause
         
 //        void createClauseFromTrail( Literal lit );
         #ifndef NDEBUG
-        bool checkDecisionLevelsOrder( Clause* ) const;
-        bool checkLiteralHasBeenInferred( Literal lit ) const;
+        bool checkDecisionLevelsOrder( const Solver& solver, const Clause& clause ) const;        
         #endif
 };
 

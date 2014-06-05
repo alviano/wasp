@@ -26,7 +26,7 @@ class DimacsOutputBuilder : public OutputBuilder
     public:
         inline DimacsOutputBuilder();
         virtual void startModel();
-        virtual void printVariable( const Variable* );
+        virtual void printVariable( Var, bool );
         virtual void endModel();
         virtual void onProgramIncoherent();
         virtual void greetings();

@@ -28,7 +28,6 @@ using namespace std;
 class Clause;
 class Literal;
 class Solver;
-class Variable;
 class Reason;
 
 class Learning
@@ -45,7 +44,10 @@ class Learning
         
         inline void onNewVariable();
         
-        Clause* learnClausesFromUnfoundedSet( Vector< Variable* >& unfoundedSet );
+        Clause* learnClausesFromUnfoundedSet( Vector< Var >& unfoundedSet );
+        
+        bool isVisited( Var v, unsigned int value ) const { assert( v < visited.size() ); return visited[ v ] == value; }
+        void setVisited( Var v, unsigned int value ) { assert( v < visited.size() ); visited[ v ] = value; }                
         
     private:
     
@@ -98,20 +100,21 @@ class Learning
         #endif
 
         void resetVariablesNumberOfCalls();
-
-//        vector< unsigned > visitedVariables;
         unsigned int pendingVisitedVariables;
         unsigned numberOfCalls;
         
         unsigned int maxDecisionLevel;
         
         unsigned int maxPosition;
+        
+        vector< unsigned int > visited;
+        
+        inline bool sameDecisionLevelOfSolver( Literal lit ) const;
 };
 
 Learning::Learning( Solver& s ) : solver( s ), decisionLevel( 0 ), learnedClause( NULL ), pendingVisitedVariables( 0 ), numberOfCalls( 0 ), maxDecisionLevel( 0 ), maxPosition( 0 )
 {
-    // variable 0 is not used
-//    visitedVariables.push_back( 0 );
+    visited.push_back( 0 );
 }
 
 Learning::~Learning()
@@ -133,7 +136,7 @@ Learning::clearDataStructures()
 void
 Learning::onNewVariable()
 {
-//    visitedVariables.push_back( 0 );
+    visited.push_back( 0 );
 }
 
 #endif

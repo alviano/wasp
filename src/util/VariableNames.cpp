@@ -17,28 +17,35 @@
  */
 
 #include "VariableNames.h"
-
-unordered_map< const Variable*, string > VariableNames::variables;
+#include "Assert.h"
+vector< string > VariableNames::variables;
 
 bool
 VariableNames::isHidden(
-    const Variable* variable )
+    Var v )
 {
-    return variables.find( variable ) == variables.end();
+    assert_msg( v < variables.size(), "Var " << v << " is out of index: " << variables.size() );
+    return variables[ v ] == "";
 }
 
 const string&
 VariableNames::getName(
-    const Variable* variable )
+    Var v )
 {
-    assert( !isHidden( variable ) );
-    return variables[ variable ];
+    assert( !isHidden( v ) );
+    return variables[ v ];
 }
 
 void
 VariableNames::setName(
-    const Variable* variable,
+    Var v,
     string name )
 {
-    variables[ variable ] = name;
+    variables[ v ] = name;
+}
+
+void
+VariableNames::addVariable()
+{
+    variables.push_back( "" );
 }

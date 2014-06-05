@@ -26,7 +26,7 @@ class WaspOutputBuilder : public OutputBuilder
     public:
         inline WaspOutputBuilder();
         virtual void startModel();
-        virtual void printVariable( const Variable* );
+        virtual void printVariable( Var, bool isTrue );
         virtual void endModel();
         virtual void onProgramIncoherent();
         virtual void greetings();

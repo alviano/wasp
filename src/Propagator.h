@@ -28,7 +28,7 @@ class Propagator
         virtual ~Propagator(){}
 
         virtual void onLiteralFalse( Solver& solver, Literal literal, int pos ) = 0;
-        virtual void reset() = 0;
+        virtual void reset( const Solver& solver ) = 0;
 };
 
 #endif

@@ -20,76 +20,43 @@
 
 #include <cassert>
 #include "Literal.h"
+#include "Solver.h"
 
 Literal
 MinisatHeuristic::makeAChoice()
 {
-    trace( heuristic, 1, "Starting Minisat Heuristic.\n" );
+    trace_msg( heuristic, 1, "Starting MiniSAT heuristic" );
     if( !preferredChoices.empty() )
     {
         for( unsigned int i = 0; i < preferredChoices.size(); i++ )
         {
-            if( preferredChoices[ i ].isUndefined() )
+            if( solver.isUndefined( preferredChoices[ i ].getVariable() ) )
                 return preferredChoices[ i ];
         }        
     }
     
-    chosenVariable = NULL;    
+    chosenVariable = 0;
     //randomChoice();
     
-    if( chosenVariable == NULL )
+    if( chosenVariable == 0 )
     {
         // Activity based decision:
         do
         {
             assert( !heap.empty() );
-    //        if( heap.empty() )
-    //        {
-    //            next = var_Undef;
-    //            break;
-    //        }
-    //        else
-                chosenVariable = heap.top();
-                heap.pop();
-                assert( chosenVariable != NULL );
-        } while( !chosenVariable->isUndefined() );    
+            chosenVariable = heap.top();
+            heap.pop();
+            assert( chosenVariable != 0 );
+        } while( !solver.isUndefined( chosenVariable ) );    
     }
 
-//    Activity max;
-//    Variable* variable;
-//    
-//    unsigned int i = 0;
-//    for( ; i < variables.size(); ++i )
-//    {
-//        variable = variables[ i ];
-//        if( variable->isUndefined() )
-//        {
-//            chosenVariable = variable;
-//            max = variable->activity();
-//            break;
-//        }
-//    }
-//    
-//    for( ; i < variables.size(); ++i )
-//    {
-//        variable = variables[ i ];
-//        if( variable->isUndefined() )
-//        {
-//            if( variable->activity() > max )
-//            {
-//                chosenVariable = variable;
-//                max = variable->activity();
-//            }
-//        }
-//    }
-//    
-    assert( "The chosen variable has not been set." && chosenVariable != NULL );
-    assert( "The literal must be undefined." && chosenVariable->isUndefined() );
-    trace( heuristic, 1, "Ending Minisat Heuristic.\n" );
-    
+    assert_msg( chosenVariable != 0, "The chosen variable has not been set" );
+    assert_msg( solver.isUndefined( chosenVariable ), "The literal must be undefined" );
+    trace_msg( heuristic, 1, "Ending MiniSAT heuristic" );
+
     //FIXME: Maybe in future we want to add the right minisat policy    
-    if( chosenVariable->getCachedTruthValue() != UNDEFINED )
-        return chosenVariable->getCachedTruthValue() == TRUE ? Literal( chosenVariable, POSITIVE ) : Literal( chosenVariable, NEGATIVE );
+    if( solver.getCachedTruthValue( chosenVariable ) != UNDEFINED )
+        return solver.getCachedTruthValue( chosenVariable ) == TRUE ? Literal( chosenVariable, POSITIVE ) : Literal( chosenVariable, NEGATIVE );
         
     return Literal( chosenVariable, NEGATIVE );
 }
@@ -118,3 +85,37 @@ inline int irand( double& seed, int size) { return ( int )( drand( seed ) * size
 //        chosenVariable = heap[ irand( random_seed, heap.size() ) ];
 //    }
 //}
+
+void
+MinisatHeuristic::removePrefChoices()
+{
+    unsigned int j = 0;
+    for( unsigned int i = 0; i < preferredChoices.size(); i++ )
+    {
+        preferredChoices[ j ] = preferredChoices[ i ];
+        
+        if( !solver.isTrue( preferredChoices[ i ] ) )
+            j++;
+    }
+    
+    preferredChoices.resize( j );
+}
+
+void
+MinisatHeuristic::simplifyVariablesAtLevelZero()
+{
+    for( unsigned int i = 0; i < vars.size(); )
+    {
+        if( !solver.isUndefined( vars[ i ] ) )
+        {
+            assert_msg( solver.getDecisionLevel( vars[ i ] ) == 0, "Variable " << vars[ i ] << " has not been inferred at level 0.");            
+            vars[ i ] = vars.back();
+            vars.pop_back();
+        }
+        else
+        {       
+            heap.pushNoCheck( vars[ i ] );
+            ++i;
+        }
+    }
+}

@@ -26,11 +26,12 @@
 using namespace std;
 
 class AdjacencyList;
+class Solver;
 
 class DependencyGraph 
 {
     public:
-        DependencyGraph();    
+        DependencyGraph( Solver& s );    
         ~DependencyGraph();    
 
         void addEdge( unsigned int v1, unsigned int v2 );
@@ -46,6 +47,7 @@ class DependencyGraph
 
         vector< Component* > cyclicComponents;
         AdjacencyList& graph;
+        Solver& solver;
 };
 
 #endif

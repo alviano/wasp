@@ -31,13 +31,14 @@ CompetitionOutputBuilder::startModel()
 
 void
 CompetitionOutputBuilder::printVariable(
-    const Variable* variable )
+    Var variable,
+    bool isTrue )
 {
     if( VariableNames::isHidden( variable ) )
         return;
-    if( variable->isTrue() )
+    if( isTrue )
     {
-        cout << *variable << ". ";
+        cout << VariableNames::getName( variable ) << ". ";
     }    
 }
 

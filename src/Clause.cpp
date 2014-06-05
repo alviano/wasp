@@ -52,16 +52,17 @@ Clause::print(
 
 unsigned
 Clause::getMaxDecisionLevel(
+    Solver& solver,
     unsigned from,
     unsigned to ) const
 {
     assert( from < literals.size() );
     assert( to <= literals.size() );
     assert( from < to );
-    unsigned max = literals[ from ].getDecisionLevel();
+    unsigned max = solver.getDecisionLevel( literals[ from ] );
     for( unsigned i = from + 1; i < to; ++i )
-        if( literals[ i ].getDecisionLevel() > max )
-            max = literals[ i ].getDecisionLevel();
+        if( solver.getDecisionLevel( literals[ i ] ) > max )
+            max = solver.getDecisionLevel( literals[ i ] );
     return max;
 }
 
@@ -92,38 +93,6 @@ Clause::getMaxDecisionLevel(
 //}
 
 bool
-Clause::isSatisfied() const
-{
-    assert( size() > 0 );
-    
-    unsigned i = 0;
-    if( hasBeenDeleted() )
-        i = 1;
-    
-    for( ; i < literals.size(); ++i )
-        if( literals[ i ].isTrue() )
-            return true;
-    return false;
-}
-
-void
-Clause::printDimacs() const
-{
-    for( unsigned i = 0; i < literals.size(); i++ )
-        cout << ( literals[ i ].isPositive() ? "" : "-" ) << literals[ i ].getVariable()->getId() << " ";
-    cout << "0" << endl;
-}
-
-bool
-Clause::allUndefined() const
-{
-    for( unsigned i = 0; i < size(); ++i )
-        if( !getAt( i ).isUndefined() )
-            return false;
-    return true;
-}
-
-bool
 Clause::isTautology() const
 {
     for( unsigned i = 0; i < size(); ++i )
@@ -135,30 +104,31 @@ Clause::isTautology() const
 
 void
 Clause::onLearning(
+    const Solver& solver,
     Learning* strategy,
     Literal )
 {
     assert( "LearningStrategy is not initialized." && strategy != NULL );
 
     //Navigating all literals in the clause.
-    assert_msg( literals[ 0 ].getDecisionLevel() != 0, "Literal " << literals[ 0 ] << " is in position 0 and it has been inferred " << ( literals[ 0 ].isTrue() ? "TRUE" : "FALSE" ) << " at level 0. Clause: " << *this );
+    assert_msg( solver.getDecisionLevel( literals[ 0 ] ) != 0, "Literal " << literals[ 0 ] << " is in position 0 and it has been inferred " << ( solver.isTrue( literals[ 0 ] ) ? "TRUE" : "FALSE" ) << " at level 0. Clause: " << *this );
     
     strategy->onNavigatingLiteral( literals[ 0 ] );
 
-    assert_msg( literals[ 1 ].getDecisionLevel() != 0, "Literal " << literals[ 1 ] << " is in position 1 and it has been inferred at level 0. Clause: " << *this );
+    assert_msg( solver.getDecisionLevel( literals[ 1 ] ) != 0, "Literal " << literals[ 1 ] << " is in position 1 and it has been inferred at level 0. Clause: " << *this );
     strategy->onNavigatingLiteral( literals[ 1 ] );
 
     for( unsigned int i = 2; i < literals.size(); )
     {
         Literal literal = literals[ i ];
-        if( literal.getDecisionLevel() != 0 )
+        if( solver.getDecisionLevel( literal ) != 0 )
         {
             strategy->onNavigatingLiteral( literal );
             i++;
         }
         else
         {
-            assert_msg( literal.isFalse(), "Literal " << literal << " is not false." );
+            assert_msg( solver.isFalse( literal ), "Literal " << literal << " is not false." );
             swapUnwatchedLiterals( i, literals.size() - 1 );
             literals.pop_back();
 
@@ -192,4 +162,44 @@ Clause::onNavigatingLiteralForAllMarked(
 //    }
 //    
 //    return true;
+}
+
+bool
+Clause::removeDuplicatesAndFalseAndCheckIfTautological(
+    Solver& solver )
+{
+    sort( literals.begin(), literals.end(), literalComparator ); 
+    
+    Literal previousLiteral = Literal::null;
+    
+    unsigned int i = 0;
+    unsigned int j = 0;
+    while( i < literals.size() )
+    {
+        if( solver.isTrue( literals[ i ] ) )
+            return true;
+        if( !solver.isFalse( literals[ i ] ) && previousLiteral != literals[ i ] )
+        {
+            //The same variable with two different polarities: clause is tautological
+            if( previousLiteral.getVariable() == literals[ i ].getVariable() )
+            {
+                //TAUTOLOGICAL
+                return true;
+            }
+            else
+            {
+              previousLiteral = literals[ j++ ] = literals[ i ];
+            }
+        }
+        
+        ++i;
+    }
+    
+    if( i != j )
+    {
+        literals.resize( j );
+        recomputeSignature();
+    }
+    
+    return false;
 }

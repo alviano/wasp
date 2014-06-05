@@ -21,7 +21,6 @@
 
 class Clause;
 class Learning;
-class Variable;
 class Literal;
 
 class PostPropagator

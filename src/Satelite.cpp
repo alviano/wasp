@@ -24,9 +24,9 @@ Satelite::isSubsumed(
     Clause* clause,
     Literal literal )
 {
-    for( unsigned i = 0; i < literal.numberOfOccurrences(); ++i )
+    for( unsigned i = 0; i < solver.numberOfOccurrences( literal ); ++i )
     {
-        Clause* current = literal.getOccurrence( i );
+        Clause* current = solver.getOccurrence( literal, i );
 
         trace_msg( satelite, 2, "Considering clause " << *current );
         if( clause != current && subset( current, clause ) )
@@ -236,25 +236,28 @@ Satelite::isSubsumed(
 //
 bool
 Satelite::tryToEliminate(
-    Variable* variable )
+    Var variable )
 {
-    trace_msg( satelite, 2, "Trying to eliminate variable " << *variable );
-    if( !variable->isUndefined() )
+    trace_msg( satelite, 2, "Trying to eliminate variable " << variable );
+    if( !solver.isUndefined( variable ) )
         return false;
     
-    if( variable->cost() > wasp::Options::maxCost )
+    if( solver.cost( variable ) > wasp::Options::maxCost )
         return false;
     
-    if( variable->numberOfOccurrences( POSITIVE ) >= 8 && variable->numberOfOccurrences( NEGATIVE ) >= 8 )
+    Literal pos( variable, POSITIVE );
+    Literal neg( variable, NEGATIVE );
+    
+    if( solver.numberOfOccurrences( pos ) >=8 && solver.numberOfOccurrences( neg ) >=8 )
         return false;
     
-    if( variable->numberOfOccurrences( POSITIVE ) >= 3 && variable->numberOfOccurrences( NEGATIVE ) >= 3 )
+    if( solver.numberOfOccurrences( pos ) >= 3 && solver.numberOfOccurrences( neg ) >= 3 )
     {
         unsigned literals = 0;
-        for( unsigned i = 0; i < variable->numberOfOccurrences( POSITIVE ); ++i )
-            literals += variable->getOccurrence( i, POSITIVE )->size();
-        for( unsigned i = 0; i < variable->numberOfOccurrences( NEGATIVE ); ++i )
-            literals += variable->getOccurrence( i, NEGATIVE )->size();
+        for( unsigned i = 0; i < solver.numberOfOccurrences( pos ); ++i )
+            literals += solver.getOccurrence( pos, i )->size();
+        for( unsigned i = 0; i < solver.numberOfOccurrences( neg ); ++i )
+            literals += solver.getOccurrence( neg, i )->size();
             
         if( literals > 300 )
             return false;
@@ -270,15 +273,16 @@ Satelite::tryToEliminate(
 
 bool
 Satelite::tryToEliminateByDefinition(
-    Variable* variable,
-    unsigned sign )
+    Literal lit )
 {
     assert( POSITIVE == 0 && NEGATIVE == 1 );
+    Var variable = lit.getVariable();
+    Literal oppositeLiteral = lit.getOppositeLiteral();
 
     Clause negatedDefinition;
-    for( unsigned i = 0; i < variable->numberOfOccurrences( 1 - sign ); ++i )
+    for( unsigned i = 0; i < solver.numberOfOccurrences( oppositeLiteral ); ++i )
     {
-        Clause* clause = variable->getOccurrence( i, 1 - sign );
+        Clause* clause = solver.getOccurrence( oppositeLiteral, i );
         if( clause->size() == 2 )
         {
             Literal literal = clause->getAt( 0 ).getVariable() == variable ? clause->getAt( 1 ).getOppositeLiteral() : clause->getAt( 0 ).getOppositeLiteral();
@@ -291,18 +295,17 @@ Satelite::tryToEliminateByDefinition(
         {
             // DONE: propagate at level 0
             //Propagate the opposite literal
-            Literal literal( variable, 1 - sign );
-            ok = solver.propagateLiteralAsDeterministicConsequenceSatelite( literal );
+            ok = solver.propagateLiteralAsDeterministicConsequenceSatelite( oppositeLiteral );
             return true;
         }
     }
     
-    negatedDefinition.addLiteral( Literal( variable, sign ) );
+    negatedDefinition.addLiteral( Literal( lit ) );
     
     Clause* result = NULL;
-    for( unsigned i = 0; i < variable->numberOfOccurrences( sign ); ++i )
+    for( unsigned i = 0; i < solver.numberOfOccurrences( lit ); ++i )
     {
-        Clause* clause = variable->getOccurrence( i, sign );
+        Clause* clause = solver.getOccurrence( lit, i );
         if( subset( clause, &negatedDefinition ) )
         {
             if( result == NULL || result->size() >= clause->size() )
@@ -324,35 +327,36 @@ Satelite::tryToEliminateByDefinition(
         }
     }    
     
-    return tryToSubstitute( variable, sign, resultCopy );
+    return tryToSubstitute( lit, resultCopy );
 }
 
 bool
 Satelite::tryToSubstitute(
-    Variable* variable,
-    unsigned sign,
+    Literal lit,
     Clause* definition )
 {
     assert( POSITIVE == 0 && NEGATIVE == 1 );
-
     assert( trueLiterals.empty() );
-    trace_msg( satelite, 5, "Trying to substitute " << *variable << ( sign == POSITIVE ? " positive" : " negative" ) << ". Its definition is " << *definition );
-    vector< Clause* > newClauses;
+    
+    Var variable = lit.getVariable();    
+    Literal oppositeLit = lit.getOppositeLiteral();
+    trace_msg( satelite, 5, "Trying to substitute " << variable << ( lit.getSign() == POSITIVE ? " positive" : " negative" ) << ". Its definition is " << *definition );
+    vector< Clause* > newClauses;  
     
     for( unsigned i = 0; i < definition->size(); ++i )
     {
 //        if( definition->getAt( i ).getVariable() == variable )
 //            continue;
 
-        for( unsigned j = 0; j < variable->numberOfOccurrences( sign ); ++j )
+        for( unsigned j = 0; j < solver.numberOfOccurrences( lit ); ++j )
         {            
-            Clause* clause = variable->getOccurrence( j, sign );
+            Clause* clause = solver.getOccurrence( lit, j );
             if( clause->contains( definition->getAt( i ) ) )
                 continue;
 
             Clause* newClause = new Clause();
             for( unsigned k = 0; k < clause->size(); ++k )
-                newClause->addLiteral( clause->getAt( k ) == Literal( variable, sign ) ? definition->getAt( i ).getOppositeLiteral() : clause->getAt( k ) );
+                newClause->addLiteral( clause->getAt( k ) == lit ? definition->getAt( i ).getOppositeLiteral() : clause->getAt( k ) );
             
             // DONE: remove duplicates and destroy if tautological
             #ifndef NDEBUG
@@ -371,9 +375,9 @@ Satelite::tryToSubstitute(
         }
     }
     
-    for( unsigned j = 0; j < variable->numberOfOccurrences( 1 - sign ); ++j )
+    for( unsigned j = 0; j < solver.numberOfOccurrences( oppositeLit ); ++j )
     {
-        Clause* clause = variable->getOccurrence( j, 1 - sign );
+        Clause* clause = solver.getOccurrence( oppositeLit, j );
          
         if( clause->containsAnyComplementOf( definition ) )        
             continue;
@@ -410,7 +414,7 @@ Satelite::tryToSubstitute(
         }
     }
 
-    if( newClauses.size() > variable->numberOfOccurrences( POSITIVE ) + variable->numberOfOccurrences( NEGATIVE ) )
+    if( newClauses.size() > solver.numberOfOccurrences( variable ) )
     {
         delete definition;
         for( unsigned int i = 0; i < newClauses.size(); ++i )
@@ -423,23 +427,25 @@ Satelite::tryToSubstitute(
     
     substitute( variable, newClauses );
     
-    assert_msg( variable->numberOfOccurrences() == 0, "Variable " << *variable << " has been eliminated but has still " << variable->numberOfOccurrences() << " occurrences" );
-    trace_msg( satelite, 2, "Eliminated variable " << *variable );   
+    assert_msg( solver.numberOfOccurrences( variable ) == 0, "Variable " << variable << " has been eliminated but has still " << solver.numberOfOccurrences( variable ) << " occurrences" );
+    trace_msg( satelite, 2, "Eliminated variable " << variable );   
     
     ok = propagateTopLevel();
     
-    solver.onEliminatingVariable( variable, sign, definition );
+    solver.onEliminatingVariable( variable, lit.getSign(), definition );
     return true;
 }
 
 bool
 Satelite::tryToEliminateByDefinition(
-    Variable* variable )
-{
-    if( variable->numberOfOccurrences( POSITIVE ) <= 1 && variable->numberOfOccurrences( NEGATIVE ) <= 1 )
+    Var variable )
+{    
+    Literal pos( variable, POSITIVE );
+    Literal neg( variable, NEGATIVE );
+    if( solver.numberOfOccurrences( pos ) <= 1 && solver.numberOfOccurrences( neg ) <= 1 )
         return false;
     
-    if( tryToEliminateByDefinition( variable, POSITIVE ) || tryToEliminateByDefinition( variable, NEGATIVE ) )
+    if( tryToEliminateByDefinition( pos ) || tryToEliminateByDefinition( neg ) )
         return true;
     
     return false;
@@ -452,7 +458,7 @@ Satelite::propagateTopLevel()
     {
         Literal lit = trueLiterals.back();
         trueLiterals.pop_back();
-        if( !lit.isTrue() )
+        if( !solver.isTrue( lit ) )
         {
             if( !solver.propagateLiteralAsDeterministicConsequenceSatelite( lit ) )
                 return false;
@@ -464,18 +470,21 @@ Satelite::propagateTopLevel()
 
 bool
 Satelite::tryToEliminateByDistribution( 
-    Variable* variable )
+    Var variable )
 {
-    trace_msg( satelite, 5, "Trying to eliminate " << *variable << " by distribution" );
+    trace_msg( satelite, 5, "Trying to eliminate " << variable << " by distribution" );
 
     vector< Clause* > newClauses;
-    for( unsigned int i = 0; i < variable->numberOfOccurrences( POSITIVE ); i++ )
+    Literal neg( variable );
+    Literal pos( variable );    
+    
+    for( unsigned int i = 0; i < solver.numberOfOccurrences( pos ); i++ )
     {
-        for( unsigned int j = 0; j < variable->numberOfOccurrences( NEGATIVE ); j++ )
+        for( unsigned int j = 0; j < solver.numberOfOccurrences( neg ); j++ )
         {
             Clause* newClause = new Clause();            
-            Clause* firstClause = variable->getOccurrence( i, POSITIVE );
-            Clause* secondClause = variable->getOccurrence( j, NEGATIVE );
+            Clause* firstClause = solver.getOccurrence( pos, i );
+            Clause* secondClause = solver.getOccurrence( neg, i );
 
             bool tautological = false;
             for( unsigned int k = 0; k < firstClause->size(); k++ )
@@ -516,7 +525,7 @@ Satelite::tryToEliminateByDistribution(
             {
                 newClauses.push_back( newClause );
                 
-                if( newClauses.size() > variable->numberOfOccurrences() || newClause->size() > clauseLimit )
+                if( newClauses.size() > solver.numberOfOccurrences( variable ) || newClause->size() > clauseLimit )
                 {
                     for( unsigned int i = 0; i < newClauses.size(); ++i )
                         delete newClauses[ i ];
@@ -527,7 +536,7 @@ Satelite::tryToEliminateByDistribution(
         }
     }
 
-    variable->removeAllClauses( solver );
+    solver.removeAllClauses( variable );    
     
     for( unsigned int i = 0; i < newClauses.size(); i++ )
     {
@@ -537,7 +546,7 @@ Satelite::tryToEliminateByDistribution(
         solver.addClause( c );        
     }
     
-    trace_msg( satelite, 2, "Eliminated variable " << *variable );   
+    trace_msg( satelite, 2, "Eliminated variable " << variable );   
     
     solver.onEliminatingVariable( variable, ELIMINATED_BY_DISTRIBUTION, NULL );
     ok = propagateTopLevel();    
@@ -546,10 +555,10 @@ Satelite::tryToEliminateByDistribution(
 
 void
 Satelite::substitute(
-    Variable* variable,
+    Var variable,
     vector< Clause* >& newClauses )
 {
-    variable->markAllClauses( solver );
+    solver.markAllClauses( variable );
     
     for( unsigned int i = 0; i < newClauses.size(); i++ )
     {
@@ -563,13 +572,13 @@ Satelite::substitute(
 bool
 Satelite::simplificationsMinisat2()
 {
-    assert( solver.callSimplifications() );
+    assert( solver.callSimplifications() );    
     for( unsigned int i = 1; i <= solver.numberOfVariables(); i++ )
     {
         assert( touchedVariables.size() == i );
         touchedVariables.push_back( true );
         numberOfTouched++;
-        elim_heap.pushNoCheck( solver.getVariable( i ) );
+        elim_heap.pushNoCheck( i );
     }
     
     assert( numberOfTouched != 0 );
@@ -588,8 +597,8 @@ Satelite::simplificationsMinisat2()
         
         while( !elim_heap.empty() )
         {
-            Variable* v = elim_heap.removeMin();
-            if( !v->isUndefined() || v->hasBeenEliminated() || v->isFrozen() )//!solver.tight() )
+            Var v = elim_heap.removeMin();            
+            if( !solver.isUndefined( v ) || solver.hasBeenEliminated( v ) || solver.isFrozen( v ) )
                 continue;
             
             if( !eliminateVariable( v ) )
@@ -613,15 +622,15 @@ Satelite::backwardSubsumptionCheck()
             continue;
 
         trace_msg( satelite, 1, "Starting subsumption for the clause " << *clause );
-        Variable* variable = clause->getVariableWithMinOccurrences();
+        Var variable = solver.getVariableWithMinOccurrences( *clause );
         
-        assert( variable != NULL );
-        trace_msg( satelite, 1, "Variable with the min number of occurrences is " << *variable );
+        assert( variable != 0 );
+        trace_msg( satelite, 1, "Variable with the min number of occurrences is " << variable );
         
         Literal literal( variable, POSITIVE );
         checkSubsumptionForClause( clause, literal );
         checkSubsumptionForClause( clause, literal.getOppositeLiteral() );
-        
+                
         ok = propagateTopLevel();
         if( !ok )
             return false;
@@ -632,18 +641,20 @@ Satelite::backwardSubsumptionCheck()
 
 void
 Satelite::gatherTouchedClauses(
-    Variable* variable )
+    Var variable )
 {    
-    for( unsigned int i = 0; i < variable->numberOfOccurrences( POSITIVE ); i++ )
+    Literal pos( variable, POSITIVE );
+    Literal neg( variable, NEGATIVE );
+    for( unsigned int i = 0; i < solver.numberOfOccurrences( pos ); i++ )
     {
-        Clause* clause = variable->getOccurrence( i, POSITIVE );
+        Clause* clause = solver.getOccurrence( pos, i );
         assert( clause != NULL && !clause->hasBeenDeleted() );
         addClauseInSubsumptionQueue( clause );
     }
     
-    for( unsigned int i = 0; i < variable->numberOfOccurrences( NEGATIVE ); i++ )
+    for( unsigned int i = 0; i < solver.numberOfOccurrences( neg ); i++ )
     {
-        Clause* clause = variable->getOccurrence( i, NEGATIVE );
+        Clause* clause = solver.getOccurrence( neg, i );
         assert( clause != NULL && !clause->hasBeenDeleted() );
         addClauseInSubsumptionQueue( clause );
     }
@@ -656,7 +667,7 @@ Satelite::gatherTouchedClauses()
     {
         if( touchedVariables[ i ] )
         {
-            gatherTouchedClauses( solver.getVariable( i ) );
+            gatherTouchedClauses( i );
             touchedVariables[ i ] = false;
         }
     }
@@ -667,5 +678,34 @@ Satelite::checkSubsumptionForClause(
     Clause* clause,
     Literal bestLiteral )
 {
-    bestLiteral.checkSubsumptionForClause( solver, clause );
+    solver.checkSubsumptionForClause( clause, bestLiteral );
+}
+
+void
+Satelite::touchVariablesInClause(
+    Clause* clause )
+{
+    assert( !clause->hasBeenDeleted() );
+
+    for( unsigned int j = 0; j < clause->size(); j++ )
+    {
+        Var variable = clause->getAt( j ).getVariable();
+        
+        if( solver.isUndefined( variable ) && !solver.hasBeenEliminated( variable ) && solver.numberOfOccurrences( variable ) > 0 )
+        {
+            if( !touchedVariables[ variable ] )
+            {
+                numberOfTouched++;
+                if( elim_heap.inHeap( variable ) )
+                    elim_heap.increase( variable );
+            }
+        }
+    }
+}
+
+unsigned int
+Satelite::cost(
+    Var v ) const
+{
+    return solver.cost( v );
 }

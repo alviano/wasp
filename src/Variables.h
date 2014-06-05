@@ -26,8 +26,24 @@
 #include "outputBuilders/OutputBuilder.h"
 #include "util/Assert.h"
 #include "util/VariableNames.h"
+#include "stl/Vector.h"
 
 using namespace std;
+class Component;
+class Reason;
+
+struct VariableData
+{
+    Reason* implicant;
+    
+    unsigned int decisionLevel;        
+
+    Clause* definition;
+    unsigned int signOfEliminatedVariable;
+
+    Component* component;
+    bool frozen;
+};
 
 class Variables
 {
@@ -37,25 +53,25 @@ class Variables
     
         inline void init();
     
-        inline void push_back( Variable* v );
+        inline void push_back();
         
         inline bool hasNextVariableToPropagate() const { return nextVariableToPropagate < assignedVariablesSize; }
-        inline Variable* getNextVariableToPropagate();
+        inline Var getNextVariableToPropagate();
         
         inline Literal getOppositeLiteralFromLastAssignedVariable();        
+        inline Literal createLiteralFromAssignedVariable( Var variable );
+        inline Literal createOppositeLiteralFromAssignedVariable( Var variable );
+
         inline bool hasNextAssignedVariable() const;
         inline void startIterationOnAssignedVariable();
         
-        inline Variable* unrollLastVariable();
+        inline Var unrollLastVariable();
         inline void resetLiteralsToPropagate() { nextVariableToPropagate = assignedVariablesSize; }
         
         inline unsigned numberOfAssignedLiterals() const { return assignedVariablesSize; }
-        inline unsigned numberOfVariables() const { assert( variables[ 0 ] == NULL ); return variables.size() - 1; }
+        inline unsigned numberOfVariables() const { assert( numOfVariables > 0 ); return numOfVariables - 1; }
         
-        inline Variable* getAssignedVariable( unsigned idx ) { assert( idx < assignedVariables.size() ); return assignedVariables[ idx ]; }
-        
-        inline Variable* getFirstUndefined();
-        inline Variable* getNextUndefined( Variable* v );
+        inline Var getAssignedVariable( unsigned idx ) { assert( idx < assignedVariables.size() ); return assignedVariables[ idx ]; }        
         
         inline void printAnswerSet( OutputBuilder* outputBuilder ) const;
         
@@ -70,98 +86,124 @@ class Variables
         inline bool assign( int level, Literal literal, Reason* implicant );
         inline bool assign( int level, Literal literal );
         inline bool assign( int level, Clause* implicant );
-        inline void onEliminatingVariable( Variable* variable, unsigned int sign, Clause* definition );
-
-        inline Variable* operator[]( unsigned idx ) { return variables[ idx ]; }
-        inline Variable const* operator[]( unsigned idx ) const { return variables[ idx ]; }
+        inline void onEliminatingVariable( Var variable );
         
         inline void onUnroll();
         
+        inline bool isTrue( Var v ) const { return getTruthValue( v ) == TRUE; }
+        inline bool isFalse( Var v ) const { return getTruthValue( v ) == FALSE; }        
+        inline bool isUndefined( Var v ) const { return getTruthValue( v ) == UNDEFINED; }
+        
+        inline bool isTrue( Literal lit ) const { return lit.isPositive() ? getTruthValue( lit.getVariable() ) == TRUE : getTruthValue( lit.getVariable() ) == FALSE; }
+        inline bool isFalse( Literal lit ) const { return lit.isPositive() ? getTruthValue( lit.getVariable() ) == FALSE : getTruthValue( lit.getVariable() ) == TRUE; }
+        inline bool isUndefined( Literal lit ) const { return getTruthValue( lit.getVariable() ) == UNDEFINED; }
+        
+        inline bool setTruthValue( Var v, TruthValue truth );
+        inline void setUndefined( Var v );
+        inline void setUndefinedBrutal( Var v ) { assigns[ v ] = UNDEFINED; }
+        
+        inline TruthValue getTruthValue( Var v ) const { return assigns[ v ] & UNROLL_MASK; }
+        inline TruthValue getCachedTruthValue( Var v ) const { return assigns[ v ] >> UNROLL_MASK; }
+        
+        inline bool setTrue( Literal lit );        
+        
+        inline bool isImplicant( Var v, const Clause* clause ) const { return !isUndefined( v ) && variablesData[ v ].implicant == clause; }
+        inline bool hasImplicant( Var v ) const { return variablesData[ v ].implicant != NULL; }
+        inline void setImplicant( Var v, Reason* clause ) { variablesData[ v ].implicant = clause; }
+        inline Reason* getImplicant( Var v ) { return variablesData[ v ].implicant; }
+
+        inline unsigned int getDecisionLevel( Var v ) const { return variablesData[ v ].decisionLevel; }
+        inline unsigned int getDecisionLevel( Literal lit ) const { return getDecisionLevel( lit.getVariable() ); }
+        inline void setDecisionLevel( Var v, unsigned int decisionLevel ) { variablesData[ v ].decisionLevel = decisionLevel; }
+        
+        inline const Clause* getDefinition( Var v ) const { return variablesData[ v ].definition; }
+        inline void setEliminated( Var v, unsigned int value, Clause* definition );
+        inline unsigned int getSignOfEliminatedVariable( Var v ) const { return variablesData[ v ].signOfEliminatedVariable; }
+        inline bool hasBeenEliminated( Var v ) const { return variablesData[ v ].signOfEliminatedVariable != MAXUNSIGNEDINT; }
+        inline bool hasBeenEliminatedByDistribution( Var v ) const { return variablesData[ v ].signOfEliminatedVariable == ELIMINATED_BY_DISTRIBUTION; } 
+        
+        inline bool inTheSameComponent( Var v1, Var v2 ) const { return variablesData[ v1 ].component != NULL && variablesData[ v1 ].component == variablesData[ v2 ].component; } 
+        inline bool isInCyclicComponent( Var v ) const { return variablesData[ v ].component != NULL; }
+        inline void setComponent( Var v, Component* c ){ assert( variablesData[ v ].component == NULL ); variablesData[ v ].component = c; }
+        inline Component* getComponent( Var v ) { return variablesData[ v ].component; }                
+        
+        bool isFrozen( Var v ) const { return variablesData[ v ].frozen; }
+        void setFrozen( Var v ) { variablesData[ v ].frozen = true; }
+        
     private:
-        //Variable** assignedVariables;
-        vector< Variable* > assignedVariables;
+        vector< Var > assignedVariables;
+        Vector< TruthValue > assigns;
+        
+        Vector< VariableData > variablesData;
         unsigned assignedVariablesSize;
         int iteratorOnAssignedVariables;
-//        unsigned iteratorOnUndefinedVariables;
         unsigned nextVariableToPropagate;
         unsigned noUndefinedBefore;
         
-        /* Data structures */
-        vector< Variable* > variables;
+        unsigned int numOfVariables;               
         
-        inline bool checkNoUndefinedBefore( unsigned idx ) const;        
-        
-        inline bool checkVariableHasBeenAssigned( Variable* var );
+        inline bool checkVariableHasBeenAssigned( Var var );
 };
 
 Variables::Variables()
-: //assignedVariables ( NULL ),
-  assignedVariablesSize( 0 ),
-//  iteratorOnUndefinedVariables( 0 ),
-  nextVariableToPropagate( 0 ),
-  noUndefinedBefore( 1 )
-{
-    //Add a fake position.
-    variables.push_back( NULL );
+:
+    assignedVariablesSize( 0 ),
+    nextVariableToPropagate( 0 ),
+    noUndefinedBefore( 1 ),
+    numOfVariables( 1 )
+{  
+    assigns.push_back( UNDEFINED );
+    variablesData.push_back( VariableData() );
 }
 
 Variables::~Variables()
 {
-    assert( variables[ 0 ] == NULL );
-    for( unsigned int i = 1; i < variables.size(); i++ )
-    {
-        delete variables[ i ];
-    }
-    //if( assignedVariables != NULL )
-    //    delete[] assignedVariables;
 }
 
 void
 Variables::init()
 {
-    //assert( assignedVariables == NULL );
-    //assignedVariables = new Variable*[ variables.size() * 120 / 100 ];
-//    assert( noUndefinedBefore == 1 );
-    assert( variables.size() >= 2 );
-    assert( variables[ 1 ] != NULL );
 }
 
 void
-Variables::push_back(
-    Variable* v )
+Variables::push_back()
 {
-    assert( v != NULL );
-//    assert( assignedVariables == NULL );
-    variables.push_back( v );
-    assignedVariables.push_back( NULL );    
+    assignedVariables.push_back( 0 ); 
+    numOfVariables++;
+    variablesData.push_back( VariableData() );
+    
+    VariableData& vd = variablesData.back();
+    vd.implicant = NULL;
+    vd.decisionLevel = 0;
+    vd.component = NULL;
+    vd.definition = NULL;
+    vd.signOfEliminatedVariable = MAXUNSIGNEDINT;
+    vd.frozen = false;    
+    
+    assigns.push_back( UNDEFINED );
 }
 
-Variable*
+Var
 Variables::getNextVariableToPropagate()
 { 
     assert( hasNextVariableToPropagate() );
     return assignedVariables[ nextVariableToPropagate++ ];
 }
 
-Variable*
+Var
 Variables::unrollLastVariable()
 {
     assert( assignedVariablesSize > 0 && assignedVariablesSize <= assignedVariables.size() );
-    Variable* variable = assignedVariables[ --assignedVariablesSize ];
-    variable->setUndefined();
+    Var variable = assignedVariables[ --assignedVariablesSize ];
+    setUndefined( variable );
     return variable;
-//    if( variable->getId() < noUndefinedBefore )
-//    {
-//        noUndefinedBefore = variable->getId();
-//    }
-//    assert( checkNoUndefinedBefore( noUndefinedBefore ) );
 }
 
 Literal
 Variables::getOppositeLiteralFromLastAssignedVariable()
 {
     assert( iteratorOnAssignedVariables >= 0 && static_cast< unsigned >( iteratorOnAssignedVariables ) < assignedVariablesSize );    
-    return Literal::createOppositeFromAssignedVariable( assignedVariables[ iteratorOnAssignedVariables-- ] );    
+    return createOppositeLiteralFromAssignedVariable( assignedVariables[ iteratorOnAssignedVariables-- ] );    
 }
 
 bool
@@ -177,33 +219,20 @@ Variables::startIterationOnAssignedVariable()
     iteratorOnAssignedVariables = assignedVariablesSize - 1;
 }
 
-Variable* 
-Variables::getFirstUndefined()
+Literal
+Variables::createLiteralFromAssignedVariable(
+    Var v )
 {
-    assert( variables[ 0 ] == NULL );
-    assert( noUndefinedBefore >= 1 );
-    assert( checkNoUndefinedBefore( noUndefinedBefore ) );
-    while( noUndefinedBefore < variables.size() )
-    {
-        if( variables[ noUndefinedBefore ]->isUndefined() )
-        {
-            return variables[ noUndefinedBefore ];
-        }
-        ++noUndefinedBefore;
-    }
-    assert( 0 );
-    return NULL;
+    assert( TRUE == 2 && FALSE == 1 );
+    return Literal( v, getTruthValue( v ) & 1 );
 }
 
-Variable*
-Variables::getNextUndefined(
-    Variable* v )
+Literal
+Variables::createOppositeLiteralFromAssignedVariable(
+    Var v )
 {
-    assert( v != NULL );
-    for( unsigned i = v->getId() + 1; i < variables.size(); ++i )
-        if( variables[ i ]->isUndefined() )
-            return variables[ i ];
-    return NULL;
+    assert( TRUE == 2 && FALSE == 1 );
+    return Literal( v, ~( getTruthValue( v ) ) & 1 );
 }
 
 void
@@ -213,8 +242,8 @@ Variables::printAnswerSet(
     outputBuilder->startModel();
     for( unsigned int i = 0; i < assignedVariablesSize; ++i )
     {
-        const Variable* v = assignedVariables[ i ];
-        outputBuilder->printVariable( v );
+        Var v = assignedVariables[ i ];        
+        outputBuilder->printVariable( v, isTrue( v ) );
     }
     outputBuilder->endModel();
 }
@@ -225,15 +254,14 @@ Variables::assign(
     Literal literal,
     Reason* implicant )
 {
-    Variable* variable = literal.getVariable();
-    assert( variable != NULL );
-    assert( assignedVariablesSize < variables.size() );
-    if( literal.setTrue() )
+    Var variable = literal.getVariable();
+    assert( assignedVariablesSize < numOfVariables );
+    if( setTrue( literal ) )
     {
-        assert_msg( !checkVariableHasBeenAssigned( variable ), "The variable " << *variable << " has been already assigned." );
+        assert_msg( !checkVariableHasBeenAssigned( variable ), "The variable " << variable << " has been already assigned." );
         assignedVariables[ assignedVariablesSize++ ] = variable;        
-        variable->setDecisionLevel( level );
-        variable->setImplicant( implicant );
+        setDecisionLevel( variable, level );
+        setImplicant( variable, implicant );
         return true;
     }
     return false;
@@ -241,15 +269,12 @@ Variables::assign(
 
 void
 Variables::onEliminatingVariable(
-    Variable* variable,
-    unsigned int sign,
-    Clause* definition )
+    Var variable )
 {
-    assert( variable != NULL );
-    assert( assignedVariablesSize < variables.size() );
-    assert_msg( !checkVariableHasBeenAssigned( variable ), "The variable " << *variable << " has been already assigned." );
+    assert( variable != 0 );
+    assert( assignedVariablesSize < numOfVariables );
+    assert_msg( !checkVariableHasBeenAssigned( variable ), "The variable " << variable << " has been already assigned." );
     assignedVariables[ assignedVariablesSize++ ] = variable;        
-    variable->setEliminated( sign, definition );    
 }
 
 bool
@@ -269,32 +294,17 @@ Variables::assign(
     return assign( level, implicant->getAt( 0 ), implicant );
 }
 
-bool
-Variables::checkNoUndefinedBefore(
-    unsigned idx ) const
-{
-    for( unsigned i = 1; i < idx; ++i )
-        if( variables[ i ]->isUndefined() )
-            return false;
-    return true;
-}
-
 void
 Variables::onUnroll()
 {
     resetLiteralsToPropagate();
     
     noUndefinedBefore = 1;
-//    while( !variables[ noUndefinedBefore ]->isUndefined() )
-//    {
-//        ++noUndefinedBefore;
-//        assert( noUndefinedBefore < variables.size() );
-//    }
 }
 
 bool
 Variables::checkVariableHasBeenAssigned( 
-    Variable* var )
+    Var var )
 {
     for( unsigned int i = 0; i < assignedVariablesSize; i++ )
     {
@@ -304,5 +314,62 @@ Variables::checkVariableHasBeenAssigned(
     return false;
 }
 
+
+bool
+Variables::setTruthValue(
+    Var v,
+    TruthValue truth )
+{
+//    assert_msg( ( truth == TRUE || truth == FALSE ), "Truth Value parameter is neither true nor false. It is " << truth << "." );
+    if( getTruthValue( v ) == UNDEFINED )
+    {
+        assigns[ v ] = truth;
+        return true;
+    }
+    
+    /*  
+     * If truthValue is not undefined we assume that there is a conflict.
+     * The solver should check if the variable has been already assigned.
+     */
+    assert_msg( assigns[ v ] != truth, "A variable is assigned twice with the same truthValue."  );
+    return false;
+}
+
+void
+Variables::setUndefined(
+    Var v )
+{
+    assert_msg( assigns[ v ] != UNDEFINED, "This assert is not strictly necessary. By the way, this assignment is useless." );
+    assert( ( ( assigns[ v ] & ~UNROLL_MASK ) & UNROLL_MASK ) == UNDEFINED );
+    assert( getTruthValue( v ) == TRUE ? ( assigns[ v ] & ~UNROLL_MASK ) == CACHE_TRUE : ( assigns[ v ] & ~UNROLL_MASK ) == CACHE_FALSE );
+    assigns[ v ] &= ~UNROLL_MASK;
+}
+
+bool
+Variables::setTrue(
+    Literal lit )
+{
+    assert( "Variable has not been set." && lit.getVariable() != 0 );
+    TruthValue truth = ( TRUE | CACHE_TRUE ) >> lit.getSign();    
+    return setTruthValue( lit.getVariable(), truth );
+}
+
+void
+Variables::setEliminated(
+    Var v,
+    unsigned int value,
+    Clause* def )
+{
+    assert_msg( value <= 2, "The sign must be 0 or 1. Found value " << value );
+    assert( def != NULL || value == ELIMINATED_BY_DISTRIBUTION );
+    variablesData[ v ].signOfEliminatedVariable = value;
+    variablesData[ v ].definition = def;
+    
+    #ifndef NDEBUG
+    bool result = 
+    #endif
+    setTruthValue( v, TRUE );    
+    assert( result );
+}
 
 #endif

@@ -30,6 +30,15 @@ using namespace std;
 #include "stl/UnorderedSet.h"
 #include "stl/Heap.h"
 
+class Satelite;
+
+struct EliminationComparator
+{
+    const Satelite& satelite;
+    inline bool operator()( Var x, Var y ) const;
+    EliminationComparator( const Satelite& s ) : satelite( s ) {}
+};
+
 class Satelite
 {
     public:
@@ -46,6 +55,7 @@ class Satelite
         inline unsigned getSubsumptionLimit() const { return subsumptionLimit; }
         
         inline void addTrueLiteral( Literal l ) { trueLiterals.push_back( l ); }
+        unsigned int cost( Var v ) const;
         
     private:
         inline void onAddingClause( Clause* clause );
@@ -54,24 +64,24 @@ class Satelite
 //        void findSubsumed( const Clause* clause );
 //        void findSubsumedForSelfSubsumption( const Clause* clause, Literal literal );
 //        void selfSubsume( Clause* clause );
-        bool tryToEliminate( Variable* variable );
-        bool tryToEliminateByDefinition( Variable* variable );
-        bool tryToEliminateByDefinition( Variable* variable, unsigned sign );
-        bool tryToSubstitute( Variable* variable, unsigned sign, Clause* result );
-        bool tryToEliminateByDistribution( Variable* variable );
-        void substitute( Variable* variable, vector< Clause* >& newClauses );        
+        bool tryToEliminate( Var variable );
+        bool tryToEliminateByDefinition( Var variable );
+        bool tryToEliminateByDefinition( Literal lit );
+        bool tryToSubstitute( Literal lit, Clause* result );
+        bool tryToEliminateByDistribution( Var variable );
+        void substitute( Var variable, vector< Clause* >& newClauses );        
         
-        inline bool eliminateVariable( Variable* variable );
+        inline bool eliminateVariable( Var variable );
         bool backwardSubsumptionCheck();
         
-        inline void touchVariablesInClause( Clause* clause );
+        void touchVariablesInClause( Clause* clause );
         void gatherTouchedClauses();
-        void gatherTouchedClauses( Variable* variable );
+        void gatherTouchedClauses( Var variable );
         queue< Clause* > subsumptionQueue;
         
         bool propagateTopLevel();        
         inline void addClauseInSubsumptionQueue( Clause* clause );
-        void checkSubsumptionForClause( Clause* clause, Literal bestLiteral );
+        void checkSubsumptionForClause( Clause* clause, Literal bestLiteral );        
 
         Solver& solver;
 //        vector< Clause* > strengthened;
@@ -89,11 +99,11 @@ class Satelite
         unsigned int clauseLimit; //A variable is not eliminated if it produces a resolvent with a length above this limit.
         unsigned int subsumptionLimit; //Do not check if subsumption against a clause larger than this.        
 
-        Heap< Variable, EliminationComparator > elim_heap;
+        Heap< EliminationComparator > elim_heap;
 };
 
 Satelite::Satelite(
-    Solver& s ) : solver( s ), ok( true ), active( false ), numberOfTouched( 0 ), clauseLimit( 0 ), subsumptionLimit( 1000 )
+    Solver& s ) : solver( s ), ok( true ), active( false ), numberOfTouched( 0 ), clauseLimit( 0 ), subsumptionLimit( 1000 ), elim_heap( EliminationComparator( *this ) )
 {
     touchedVariables.push_back( false );
 }
@@ -101,6 +111,8 @@ Satelite::Satelite(
 Satelite::~Satelite()
 {
 }
+
+bool EliminationComparator::operator()( Var x, Var y ) const { return satelite.cost( x ) < satelite.cost( y ); }    
 
 bool
 Satelite::subset(
@@ -149,28 +161,6 @@ Satelite::onDeletingClause(
 }
 
 void
-Satelite::touchVariablesInClause(
-    Clause* clause )
-{
-    assert( !clause->hasBeenDeleted() );
-
-    for( unsigned int j = 0; j < clause->size(); j++ )
-    {
-        Variable* variable = clause->getAt( j ).getVariable();
-        
-        if( variable->isUndefined() && !variable->hasBeenEliminated() && variable->numberOfOccurrences() > 0 )
-        {
-            if( !touchedVariables[ variable->getId() ] )
-            {
-                numberOfTouched++;
-                if( elim_heap.inHeap( variable ) )
-                    elim_heap.increase( variable );
-            }
-        }
-    }
-}
-
-void
 Satelite::onAddingClause(
     Clause* clause )
 {
@@ -183,7 +173,7 @@ Satelite::onAddingClause(
 
 bool
 Satelite::eliminateVariable(
-    Variable* variable )
+    Var variable )
 {
     if( tryToEliminate( variable ) )//tryToEliminateByDistribution( variable ) )
     {

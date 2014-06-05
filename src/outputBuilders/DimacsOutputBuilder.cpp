@@ -37,15 +37,16 @@ DimacsOutputBuilder::startModel()
 
 void 
 DimacsOutputBuilder::printVariable(
-    const Variable* variable )
+    Var v,
+    bool isTrue )
 {    
-    if( variable->isTrue() )
+    if( isTrue )
     {
-        cout << " " << variable->getId();
+        cout << " " << v;
     }
     else
     {
-        cout << " -" << variable->getId();
+        cout << " -" << v;
     }
 }
 

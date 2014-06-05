@@ -18,11 +18,12 @@
 
 #include "Literal.h"
 #include "Clause.h"
+#include "util/VariableNames.h"
 
 #include <cassert>
 
-const Literal Literal::null( NULL, POSITIVE );
-const Literal Literal::conflict( NULL, NEGATIVE );
+const Literal Literal::null( 0, POSITIVE );
+const Literal Literal::conflict( 0, NEGATIVE );
 
 ostream&
 operator<<( 
@@ -31,8 +32,17 @@ operator<<(
 {
     if( !lit.isPositive() )
         out << "not ";
-    
-    out << *( lit.getVariable() );
+
+    if( !VariableNames::isHidden( lit.getVariable() ) )
+    {
+        out << VariableNames::getName( lit.getVariable() );
+    }
+    #ifdef TRACE_ON
+    else
+    {
+        out << lit.getVariable();
+    }
+    #endif
     
     return out;
 }

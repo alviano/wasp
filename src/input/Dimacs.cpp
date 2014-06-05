@@ -109,9 +109,9 @@ Dimacs::readClause(
 
         //if a literal appears in a clause C with both polarities then C is a tautology
         //if a literal is true the clause is satisfied
-        if( tempSet.find( -next ) != tempSet.end() || literal.isTrue() )
+        if( tempSet.find( -next ) != tempSet.end() || solver.isTrue( literal ) )
             trivial = true;
-        else if( literal.isUndefined() && !inserted ) //skip false literals and already inserted literals
+        else if( solver.isUndefined( literal ) && !inserted ) //skip false literals and already inserted literals
             clause->addLiteral( literal );
 
         //read the next literal

@@ -19,7 +19,129 @@
 #ifndef LITERAL_H
 #define LITERAL_H
 
-#include "LiteralInt.h"
-#include "LiteralImpl.h"
+#include <cstdint>
+#include <cassert>
+#include <sstream>
+#include <string>
+using namespace std;
+
+#include "util/Constants.h"
+class Literal
+{
+    friend ostream &operator<<( ostream &, const Literal & );
+
+    public:
+        static const Literal null;
+        static const Literal conflict;
+
+        inline explicit Literal( Var v = 0, unsigned int sign = POSITIVE );
+        
+        inline Literal( const Literal& );
+        inline ~Literal();
+
+        inline int getId() const;
+        inline unsigned int getIndex() const { return ( getVariable() << 1 ) | getSign(); }
+
+        inline bool operator==( const Literal& ) const;
+        inline bool operator!=( const Literal& ) const;
+
+        inline Var getVariable() const;
+        
+        /**
+         * This function returns 0 if the literal is positive, 1 otherwise.
+         */
+        inline unsigned int getSign() const;
+        
+        inline Literal getOppositeLiteral();
+
+        inline bool isPositive() const;
+        inline bool isNegative() const;        
+        
+    private:
+        
+        /**
+         * This function returns 1 if the literal is positive, 0 otherwise.
+         */
+        inline unsigned int getOppositeSign() const;                
+        
+        unsigned int signedVariable;
+};
+
+Literal::Literal(
+    const Literal& l ) : signedVariable( l.signedVariable )
+{
+}
+
+Literal::Literal(
+    Var v,
+    unsigned int sign ) : signedVariable( ( v << 1 ) | sign )
+{
+    assert( POSITIVE == 0 && NEGATIVE == 1 );
+    assert( sign == 0 || sign == 1 );
+    assert( ( sign == 0 && isPositive() ) || ( sign == 1 && !isPositive() ) );
+    assert( getVariable() == v );
+}
+
+Literal::~Literal()
+{
+}
+
+bool
+Literal::isPositive() const
+{
+    return !( signedVariable & 1 );
+}
+
+bool
+Literal::isNegative() const
+{
+    return !isPositive();
+}
+
+unsigned int
+Literal::getSign() const
+{
+    assert( "Variable has not been set." && signedVariable != 0 );
+    return signedVariable & 1;
+}
+
+unsigned int
+Literal::getOppositeSign() const
+{
+    assert( "Variable has not been set." && signedVariable != 0 );
+    return ( ~signedVariable ) & 1;
+}
+
+Var
+Literal::getVariable() const
+{
+    return ( signedVariable >> 1 );
+}
+
+bool
+Literal::operator==(
+    const Literal& literal ) const
+{
+    return signedVariable == literal.signedVariable;
+}
+
+bool
+Literal::operator!=(
+    const Literal& literal ) const
+{
+    return !( *this == literal );
+}
+
+Literal
+Literal::getOppositeLiteral()
+{
+    return Literal( getVariable(), getOppositeSign() );
+}
+
+int
+Literal::getId() const
+{
+    return isPositive() ? getVariable() : -getVariable();
+}
 
 #endif
