@@ -42,19 +42,13 @@ using namespace std;
 #include "util/Constants.h"
 #include "WatchedList.h"
 
-//union Implicant
-//{
-//    Reason* clause;
-//    Literal literal;
-//};
-
 struct DataStructures
 {    
     WatchedList< Clause* > variableWatchedLists;
     Vector< Clause* > variableAllOccurrences;
     Vector< pair< PostPropagator*, int > > variablePostPropagators;
     Vector< pair< Propagator*, int > > variablePropagators;
-//        Vector< Vector< Literal > > variableBinaryClauses;        
+    Vector< Literal > variableBinaryClauses;
 };
 
 class Solver
@@ -277,7 +271,7 @@ class Solver
         
         inline void addPropagator( Literal lit, Propagator* p, int position ) { getDataStructure( lit ).variablePropagators.push_back( pair< Propagator*, int >( p, position ) ); }
         inline void addPostPropagator( Literal lit, PostPropagator* p, int position ) { getDataStructure( lit ).variablePostPropagators.push_back( pair< PostPropagator*, int >( p, position ) ); }
-//        inline void addLiteralInShortClause( Literal firstLiteral, Literal secondLiteral ) { variableBinaryClauses[ firstLiteral.getIndex() ].push_back( secondLiteral ); }
+        inline void addLiteralInShortClause( Literal firstLiteral, Literal secondLiteral ) { getDataStructure( firstLiteral ).variableBinaryClauses.push_back( secondLiteral ); }
                 
         bool isFrozen( Var v ) const { return variables.isFrozen( v ); }
         void setFrozen( Var v ) { variables.setFrozen( v ); }
@@ -286,8 +280,8 @@ class Solver
         
         void checkSubsumptionForClause( Clause* clause, Literal lit );
         
-        Literal createFromAssignedVariable( Var v ){ assert( TRUE == 2 && FALSE == 1 ); return Literal( v, getTruthValue( v ) & 1 ); }
-        Literal createOppositeFromAssignedVariable( Var v ) { assert( TRUE == 2 && FALSE == 1 ); return Literal( v, ~( getTruthValue( v ) ) & 1 ); }
+        Literal createFromAssignedVariable( Var v ) const { assert( TRUE == 2 && FALSE == 1 ); return Literal( v, getTruthValue( v ) & 1 ); }
+        Literal createOppositeFromAssignedVariable( Var v ) const { assert( TRUE == 2 && FALSE == 1 ); return Literal( v, ~( getTruthValue( v ) ) & 1 ); }
         
         inline void clearOccurrences( Var v );     
         
@@ -989,19 +983,19 @@ Solver::attachWatches()
         }
         else
         {                    
-//            if( current.size() == 2 )
-//            {     
-//                addLiteralInShortClause( current[ 0 ], current[ 1 ] );
-//                addLiteralInShortClause( current[ 1 ], current[ 0 ] );
-//        
-//                deleteClause( currentPointer );
-//            }
-//            else
-//            {
+            if( current.size() == 2 )
+            {     
+                addLiteralInShortClause( current[ 0 ], current[ 1 ] );
+                addLiteralInShortClause( current[ 1 ], current[ 0 ] );
+        
+                deleteClause( currentPointer );
+            }
+            else
+            {
                 literalsInClauses += current.size();
                 attachClause( current );
                 ++i;
-//            }
+            }
         }
     }    
 }
@@ -1203,7 +1197,7 @@ Solver::propagate(
     assert( checkStatusBeforePropagation( variable ) );
     trace_msg( solving, 5, "Propagating variable " << variable );
     
-//    shortPropagation( variable );
+    shortPropagation( variable );
     if( conflictDetected() )
         return;
     unitPropagation( variable );

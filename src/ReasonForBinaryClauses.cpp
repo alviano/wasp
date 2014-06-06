@@ -16,28 +16,32 @@
  *
  */
 
-#ifndef REASON_H
-#define REASON_H
+#include "ReasonForBinaryClauses.h"
+#include "Solver.h"
 
-#include <iostream>
-using namespace std;
-
-class Learning;
-class Literal;
-class Solver;
-
-class Reason
+void
+ReasonForBinaryClauses::onLearning(
+    const Solver& solver,
+    Learning* strategy,
+    Literal )
 {
-    friend ostream& operator<<( ostream& o, const Reason& r )
-    {
-        return r.print( o );
-    }
-    
-    public:
-        virtual void onLearning( const Solver& solver, Learning* strategy, Literal lit ) = 0;
-        virtual bool onNavigatingLiteralForAllMarked( const Solver& solver, Learning* strategy, Literal lit ) = 0;
-        virtual bool isLearned() const { return false; }
-        virtual ostream& print( ostream& o ) const = 0;        
-};
+    Literal lit = solver.createFromAssignedVariable( varId );
+    strategy->onNavigatingLiteral( lit );
+}
 
-#endif
+bool
+ReasonForBinaryClauses::onNavigatingLiteralForAllMarked(
+    const Solver& solver,
+    Learning* strategy,
+    Literal )
+{
+    Literal lit = solver.createFromAssignedVariable( varId );
+    return strategy->onNavigatingLiteralForAllMarked( lit );
+}
+
+ostream&
+ReasonForBinaryClauses::print(
+    ostream& o ) const
+{
+    return o << VariableNames::getName( varId );
+}

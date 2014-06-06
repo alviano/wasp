@@ -359,29 +359,30 @@ Solver::solvePropagators()
     return true;
 }
 
-//void
-//Solver::shortPropagation(
-//    Var variable )
-//{
-//    assert( !conflictDetected() );
-//        
-//    Vector< Literal >& binary = variableBinaryClauses[ ( getTruthValue( variable ) >> 1 ) ];
-////    Literal complement = Literal::createOppositeFromAssignedVariable( this );    
-//    
-//    trace_msg( solving, 2, "Propagation of binary clauses for literal " << Literal::createFromAssignedVariable( this ) );
-//    for( unsigned i = 0; i < binary.size(); ++i )
-//    {
-//        if( conflictDetected() )
-//            break;
-//        
-//        Literal lit = binary[ i ];
-//        if( !isTrue( lit ) )
-//        {
-//            trace_msg( solving, 5, "Inferring " << lit << " as true" );        
-//            assignLiteral( lit, this );
-//        }
-//    }
-//}
+void
+Solver::shortPropagation(
+    Var variable )
+{
+    assert( !conflictDetected() );
+            
+    Literal complement = variables.createOppositeLiteralFromAssignedVariable( variable );    
+//    Vector< Literal >& binary = variableBinaryClauses[ ( getTruthValue( variable ) >> 1 ) ];    
+    Vector< Literal >& binary = getDataStructure( complement ).variableBinaryClauses;
+    
+    trace_msg( solving, 2, "Propagation of binary clauses for literal " << complement );
+    for( unsigned i = 0; i < binary.size(); ++i )
+    {
+        if( conflictDetected() )
+            break;
+        
+        Literal lit = binary[ i ];
+        if( !isTrue( lit ) )
+        {
+            trace_msg( solving, 5, "Inferring " << lit << " as true" );        
+            assignLiteral( lit, variables.getReasonForBinaryClauses( variable ) );
+        }
+    }
+}
 
 void
 Solver::unitPropagation(
@@ -523,9 +524,7 @@ Solver::propagateAtLevelZeroSatelite(
             }
         }
         wl.clearAndDelete();
-    }
-    
-    cout << "CONFLICT DETECTED SATEL" << conflictDetected() << endl;
+    }    
     if( !conflictDetected() && hasPropagators() )
     {
         propagation( variable );
@@ -605,14 +604,10 @@ void
 Solver::printProgram() const
 {
     for( ConstClauseIterator it = clauses.begin(); it != clauses.end(); ++it )
-    {
         cout << *( *it ) << endl;
-    }
     
     for( unsigned int i = 0; i < aggregates.size(); i++ )
-    {
-        cout << *aggregates[ i ] << endl;
-    }
+        cout << *aggregates[ i ] << endl;    
 }
 
 void

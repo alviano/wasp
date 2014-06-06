@@ -64,7 +64,7 @@ class Aggregate : public Propagator, public Clause
         virtual void reset( const Solver& solver );                
         
         virtual void onLearning( const Solver& solver, Learning* strategy, Literal lit );
-        virtual bool onNavigatingLiteralForAllMarked( Learning* strategy, Literal lit );
+        virtual bool onNavigatingLiteralForAllMarked( const Solver& solver, Learning* strategy, Literal lit );
         
     protected:
         virtual ostream& print( ostream& out ) const;

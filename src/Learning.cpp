@@ -293,7 +293,7 @@ Learning::allMarked(
     }
     trace_msg( learning, 5, "All marked on clause " << *clause );
     
-    if( !clause->onNavigatingLiteralForAllMarked( this, literal ) )
+    if( !clause->onNavigatingLiteralForAllMarked( solver, this, literal ) )
         return false;
     
     return true;

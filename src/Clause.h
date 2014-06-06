@@ -68,7 +68,7 @@ class Clause : public Reason
         inline void removeLastLiteralNoWatches(){ literals.pop_back(); }
         
         virtual void onLearning( const Solver& solver, Learning* strategy, Literal lit );
-        virtual bool onNavigatingLiteralForAllMarked( Learning* strategy, Literal lit );
+        virtual bool onNavigatingLiteralForAllMarked( const Solver& solver, Learning* strategy, Literal lit );
 //        inline bool onLiteralFalse( Solver& solver, Literal literal );
 
         inline unsigned int size() const;

@@ -255,7 +255,7 @@ Aggregate::print( ostream& out ) const
 
 void
 Aggregate::onLearning(
-    const Solver& solver,
+    const Solver&,
     Learning* strategy,
     Literal lit )
 {
@@ -275,7 +275,7 @@ Aggregate::onLearning(
         
             if( !watched[ index ] )
             {
-                assert_msg( solver.getDecisionLevel( l ) > 0, "Literal " << l << " has been inferred at the decision level 0" );
+//                assert_msg( solver.getDecisionLevel( l ) > 0, "Literal " << l << " has been inferred at the decision level 0" );
 //                clause->addLiteral( l.getOppositeLiteral() );                
                 strategy->onNavigatingLiteral( l.getOppositeLiteral() );                
             }
@@ -290,6 +290,7 @@ Aggregate::onLearning(
 
 bool
 Aggregate::onNavigatingLiteralForAllMarked(
+    const Solver&,
     Learning* strategy,
     Literal lit )
 {

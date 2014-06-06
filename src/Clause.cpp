@@ -140,6 +140,7 @@ Clause::onLearning(
 
 bool
 Clause::onNavigatingLiteralForAllMarked(
+    const Solver&,
     Learning* strategy,
     Literal )
 {

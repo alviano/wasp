@@ -26,6 +26,7 @@
 #include "util/Assert.h"
 #include "util/VariableNames.h"
 #include "stl/Vector.h"
+#include "ReasonForBinaryClauses.h"
 
 using namespace std;
 class Component;
@@ -42,6 +43,8 @@ struct VariableData
 
     Component* component;
     bool frozen;
+    
+    ReasonForBinaryClauses* reasonForBinaryClauses;
 };
 
 class Variables
@@ -124,7 +127,9 @@ class Variables
         inline bool inTheSameComponent( Var v1, Var v2 ) const { return variablesData[ v1 ].component != NULL && variablesData[ v1 ].component == variablesData[ v2 ].component; } 
         inline bool isInCyclicComponent( Var v ) const { return variablesData[ v ].component != NULL; }
         inline void setComponent( Var v, Component* c ){ assert( variablesData[ v ].component == NULL ); variablesData[ v ].component = c; }
-        inline Component* getComponent( Var v ) { return variablesData[ v ].component; }                
+        inline Component* getComponent( Var v ) { return variablesData[ v ].component; }
+        
+        inline ReasonForBinaryClauses* getReasonForBinaryClauses( Var v ) { return variablesData[ v ].reasonForBinaryClauses; }
         
         bool isFrozen( Var v ) const { return variablesData[ v ].frozen; }
         void setFrozen( Var v ) { variablesData[ v ].frozen = true; }
@@ -158,7 +163,10 @@ Variables::Variables()
 Variables::~Variables()
 {
     for( unsigned int i = 1; i < numOfVariables; i++ )
+    {
         delete variablesData[ i ].definition;
+        delete variablesData[ i ].reasonForBinaryClauses;
+    }
 }
 
 void
@@ -179,7 +187,8 @@ Variables::push_back()
     vd.component = NULL;
     vd.definition = NULL;
     vd.signOfEliminatedVariable = MAXUNSIGNEDINT;
-    vd.frozen = false;    
+    vd.frozen = false;
+    vd.reasonForBinaryClauses = new ReasonForBinaryClauses( variablesData.size() - 1 );
     
     assigns.push_back( UNDEFINED );
 }
