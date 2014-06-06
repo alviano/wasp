@@ -27,8 +27,9 @@ using namespace std;
 
 class ReasonForBinaryClauses : public Reason
 {
-    public:
+    public:        
         inline ReasonForBinaryClauses( Var v ) : varId( v ) {}
+        virtual ~ReasonForBinaryClauses();
         virtual void onLearning( const Solver& solver, Learning* strategy, Literal lit );
         virtual bool onNavigatingLiteralForAllMarked( const Solver& solver, Learning* strategy, Literal lit );        
         virtual ostream& print( ostream& o ) const;

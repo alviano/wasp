@@ -19,6 +19,10 @@
 #include "ReasonForBinaryClauses.h"
 #include "Solver.h"
 
+ReasonForBinaryClauses::ReasonForBinaryClauses()
+{
+}
+
 void
 ReasonForBinaryClauses::onLearning(
     const Solver& solver,
