@@ -157,6 +157,8 @@ Variables::Variables()
 
 Variables::~Variables()
 {
+    for( unsigned int i = 1; i < numOfVariables; i++ )
+        delete variablesData[ i ].definition;
 }
 
 void

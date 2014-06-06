@@ -79,6 +79,21 @@ Solver::~Solver()
     }
     
     delete minisatHeuristic;
+    
+    for( unsigned int i = 1; i <= variables.numberOfVariables(); i++ )
+    {        
+        if( variables.getSignOfEliminatedVariable( i ) == ELIMINATED_BY_DISTRIBUTION )
+        {
+            Literal pos( i, POSITIVE );
+            Vector< Clause* >& allPosOccs = getDataStructure( pos ).variableAllOccurrences;
+            for( unsigned int j = 0; j < allPosOccs.size(); j++ )
+                delete allPosOccs[ j ];
+
+            Vector< Clause* >& allNegOccs = getDataStructure( pos.getOppositeLiteral() ).variableAllOccurrences;
+            for( unsigned int j = 0; j < allNegOccs.size(); j++ )
+                delete allNegOccs[ j ];
+        }
+    }
 }
 
 void
@@ -510,8 +525,13 @@ Solver::propagateAtLevelZeroSatelite(
         wl.clearAndDelete();
     }
     
+    cout << "CONFLICT DETECTED SATEL" << conflictDetected() << endl;
     if( !conflictDetected() && hasPropagators() )
-        postPropagation( variable );
+    {
+        propagation( variable );
+        if( !conflictDetected() )
+            postPropagation( variable );
+    }
 }
 
 void
@@ -574,7 +594,11 @@ Solver::propagateAtLevelZero(
     assert( getDataStructure( Literal( variable, NEGATIVE ) ).variableAllOccurrences.size() == 0 );    
 
     if( !conflictDetected() && hasPropagators() )
-        postPropagation( variable );
+    {
+        propagation( variable );
+        if( !conflictDetected() )
+            postPropagation( variable );
+    }
 }
 
 void
