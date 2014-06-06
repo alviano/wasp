@@ -19,7 +19,7 @@
 #include "ReasonForBinaryClauses.h"
 #include "Solver.h"
 
-ReasonForBinaryClauses::ReasonForBinaryClauses()
+ReasonForBinaryClauses::~ReasonForBinaryClauses()
 {
 }
 
