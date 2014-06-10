@@ -81,6 +81,8 @@ class Solver
         inline bool cleanAndAddClause( Clause* clause );
         inline bool addClause( Literal literal );
         inline bool addClause( Clause* clause );
+        inline void addClause( Literal lit1, Literal lit2 );
+        
         inline bool addClauseFromModel( Clause* clause );
         inline void addLearnedClause( Clause* learnedClause );
         bool addClauseFromModelAndRestart();
@@ -191,11 +193,22 @@ class Solver
         inline void addPostPropagator( PostPropagator* postPropagator );
         inline void resetPostPropagators();
         
-        inline void addEdgeInDependencyGraph( unsigned int v1, unsigned int v2 ){ trace_msg( parser, 10, "Add arc " << v1 << " -> " << v2 ); dependencyGraph.addEdge( v1, v2 ); }
-        inline void computeStrongConnectedComponents(){ dependencyGraph.computeStrongConnectedComponents( gusDataVector ); }
-        inline bool tight() const { return dependencyGraph.tight(); }
-        inline unsigned int getNumberOfCyclicComponents(){ return dependencyGraph.numberOfCyclicComponents(); }
-        inline Component* getCyclicComponent( unsigned int position ){ return dependencyGraph.getCyclicComponent( position ); }
+        inline void addEdgeInDependencyGraph( unsigned int v1, unsigned int v2 ){ trace_msg( parser, 10, "Add arc " << v1 << " -> " << v2 ); dependencyGraph->addEdge( v1, v2 ); }
+        inline void computeStrongConnectedComponents()
+        {
+            dependencyGraph->computeStrongConnectedComponents( gusDataVector );
+            if( !dependencyGraph->tight() )
+            {            
+                for( unsigned int i = 0; i < dependencyGraph->numberOfCyclicComponents(); i++ )
+                    cyclicComponents.push_back( dependencyGraph->getCyclicComponent( i ) );
+            }
+            
+            delete dependencyGraph;
+        }
+
+        inline bool tight() const { return cyclicComponents.empty(); }
+        inline unsigned int getNumberOfCyclicComponents() const { return cyclicComponents.size(); }
+        inline Component* getCyclicComponent( unsigned int position ) { return cyclicComponents[ position ]; }
         
         inline void addGUSData( GUSData* gd ) { gusDataVector.push_back( gd ); }        
         
@@ -311,15 +324,16 @@ class Solver
         inline bool onLiteralFalse( Clause& clause, Literal literal );
         
         inline const DataStructures& getDataStructure( Literal lit ) const { return *variableDataStructures[ lit.getIndex() ]; }
-        inline DataStructures& getDataStructure( Literal lit ) { return *variableDataStructures[ lit.getIndex() ]; }
+        inline DataStructures& getDataStructure( Literal lit ) { return *variableDataStructures[ lit.getIndex() ]; }        
 
     private:
         inline void addVariableInternal();
         
         bool checkVariablesState();
         
-        Solver( const Solver& ) : learning( *this ), dependencyGraph( *this )
+        Solver( const Solver& ) : learning( *this ), dependencyGraph( NULL )
         {
+//            dependencyGraph = new DependencyGraph( *this );
             assert( "The copy constructor has been disabled." && 0 );
         }
 
@@ -353,7 +367,7 @@ class Solver
         vector< Var > eliminatedVariables;
         vector< Clause* > poolOfClauses;
 
-        DependencyGraph dependencyGraph;
+        DependencyGraph* dependencyGraph;
         Vector< PostPropagator* > postPropagators;
         
         vector< GUSData* > gusDataVector;
@@ -403,6 +417,8 @@ class Solver
         
         Vector< DataStructures* > variableDataStructures;
         
+        vector< Component* > cyclicComponents;
+        
         #ifndef NDEBUG
         bool checkStatusBeforePropagation( Var variable )
         {
@@ -429,12 +445,12 @@ Solver::Solver()
     nextValueOfPropagation( 0 ),
     literalsInClauses( 0 ),
     literalsInLearnedClauses( 0 ),
-    dependencyGraph( *this ),
     optimizationAggregate( NULL ),
     numberOfOptimizationLevels( 0 ),
     precomputedCost( 0 ),
     callSimplifications_( true )
 {
+    dependencyGraph = new DependencyGraph( *this );
     satelite = new Satelite( *this );
     minisatHeuristic = new MinisatHeuristic( *this );
     deletionCounters.init();
@@ -576,6 +592,15 @@ Solver::addClause(
     
     conflictLiteral = literal;
     return false;
+}
+
+void
+Solver::addClause(
+    Literal lit1,
+    Literal lit2 )
+{
+    addLiteralInShortClause( lit1, lit2 );
+    addLiteralInShortClause( lit2, lit1 );        
 }
 
 bool

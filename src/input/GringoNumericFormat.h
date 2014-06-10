@@ -389,11 +389,11 @@ GringoNumericFormat::GringoNumericFormat(
 
 GringoNumericFormat::~GringoNumericFormat()
 {
-    while( !normalRules.empty() )
-    {
-        delete normalRules.back();
-        normalRules.pop_back();
-    }
+//    while( !normalRules.empty() )
+//    {
+//        delete normalRules.back();
+//        normalRules.pop_back();
+//    }
     
     while( !optimizationRules.empty() )
     {

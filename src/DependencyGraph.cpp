@@ -38,8 +38,8 @@ DependencyGraph::~DependencyGraph()
     assert( graph.vertex_set().empty() );
     delete &graph;
 
-    for( unsigned int i = 0; i < cyclicComponents.size(); i++ )
-        delete cyclicComponents[ i ];
+//    for( unsigned int i = 0; i < cyclicComponents.size(); i++ )
+//        delete cyclicComponents[ i ];
 }
 
 void

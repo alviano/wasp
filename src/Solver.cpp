@@ -59,6 +59,12 @@ Solver::~Solver()
         aggregates.pop_back();
     }
     
+    while( !cyclicComponents.empty() )
+    {
+        delete cyclicComponents.back();
+        cyclicComponents.pop_back();
+    }
+    
     if( outputBuilder != NULL )
         delete outputBuilder;
     

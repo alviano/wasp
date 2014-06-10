@@ -1325,10 +1325,10 @@ GringoNumericFormat::computeSCCs()
         {
             for( unsigned j = 0; j < data.headOccurrences.size(); ++j )
             {
-                if( data.headOccurrences[ j ]->isRemoved() )
-                    continue;
-                createCrule( Literal( i, POSITIVE ), data.headOccurrences[ j ] );
-                break;
+                if( !data.headOccurrences[ j ]->isRemoved() )                    
+                    createCrule( Literal( i, POSITIVE ), data.headOccurrences[ j ] );
+                
+                delete data.headOccurrences[ j ];
             }
         }
         else
@@ -1337,35 +1337,38 @@ GringoNumericFormat::computeSCCs()
             crule->addLiteral( Literal( i, NEGATIVE ) );
             for( unsigned j = 0; j < data.headOccurrences.size(); ++j )
             {
-                if( data.headOccurrences[ j ]->isRemoved() )
-                    continue;
-                if( data.headOccurrences[ j ]->size() == 1 )
+                if( !data.headOccurrences[ j ]->isRemoved() )
                 {
-                    if( data.headOccurrences[ j ]->negBody.size() == 1 )
-                        crule->addLiteral( Literal( data.headOccurrences[ j ]->negBody[ 0 ], NEGATIVE ) );
-                    else if( data.headOccurrences[ j ]->posBody.size() == 1 )
+                    if( data.headOccurrences[ j ]->size() == 1 )
                     {
-                        crule->addLiteral( Literal( data.headOccurrences[ j ]->posBody[ 0 ], POSITIVE ) );
-                        solver.addEdgeInDependencyGraph( i, data.headOccurrences[ j ]->posBody[ 0 ] );
-                    }
-                    else if( data.headOccurrences[ j ]->posBodyTrue.size() == 1 )
-                    {
-                        crule->addLiteral( Literal( data.headOccurrences[ j ]->posBodyTrue[ 0 ], POSITIVE ) );
-                        solver.addEdgeInDependencyGraph( i, data.headOccurrences[ j ]->posBodyTrue[ 0 ] );
+                        if( data.headOccurrences[ j ]->negBody.size() == 1 )
+                            crule->addLiteral( Literal( data.headOccurrences[ j ]->negBody[ 0 ], NEGATIVE ) );
+                        else if( data.headOccurrences[ j ]->posBody.size() == 1 )
+                        {
+                            crule->addLiteral( Literal( data.headOccurrences[ j ]->posBody[ 0 ], POSITIVE ) );
+                            solver.addEdgeInDependencyGraph( i, data.headOccurrences[ j ]->posBody[ 0 ] );
+                        }
+                        else if( data.headOccurrences[ j ]->posBodyTrue.size() == 1 )
+                        {
+                            crule->addLiteral( Literal( data.headOccurrences[ j ]->posBodyTrue[ 0 ], POSITIVE ) );
+                            solver.addEdgeInDependencyGraph( i, data.headOccurrences[ j ]->posBodyTrue[ 0 ] );
+                        }
+                        else
+                        {
+                            assert( data.headOccurrences[ j ]->doubleNegBody.size() == 1 );
+                            crule->addLiteral( Literal( data.headOccurrences[ j ]->doubleNegBody[ 0 ], POSITIVE ) );
+                        }
                     }
                     else
                     {
-                        assert( data.headOccurrences[ j ]->doubleNegBody.size() == 1 );
-                        crule->addLiteral( Literal( data.headOccurrences[ j ]->doubleNegBody[ 0 ], POSITIVE ) );
+                        solver.addVariable();
+                        crule->addLiteral( Literal( solver.numberOfVariables(), POSITIVE ) );
+                        solver.addEdgeInDependencyGraph( i, solver.numberOfVariables() );
+                        createCrule( Literal( solver.numberOfVariables(), POSITIVE ), data.headOccurrences[ j ] );
                     }
                 }
-                else
-                {
-                    solver.addVariable();
-                    crule->addLiteral( Literal( solver.numberOfVariables(), POSITIVE ) );
-                    solver.addEdgeInDependencyGraph( i, solver.numberOfVariables() );
-                    createCrule( Literal( solver.numberOfVariables(), POSITIVE ), data.headOccurrences[ j ] );
-                }
+                
+                delete data.headOccurrences[ j ];
             }
             crules.push_back( crule );
         }
@@ -1392,11 +1395,18 @@ GringoNumericFormat::computeCompletion()
                     continue;
                 assert( solver.isUndefined( lit ) );
                 assert( solver.isUndefined( lit2 ) );
-                   
-                Clause* bin = solver.newClause();
-                bin->addLiteral( lit );
-                bin->addLiteral( lit2 );
-                solver.addClause( bin );
+
+                if( !solver.callSimplifications() )
+                {
+                    solver.addClause( lit, lit2 );
+                }
+                else
+                {
+                    Clause* bin = solver.newClause();
+                    bin->addLiteral( lit );
+                    bin->addLiteral( lit2 );
+                    solver.addClause( bin );
+                }
                 assert( propagatedLiterals == solver.numberOfAssignedLiterals() );
             }
         }
@@ -2332,11 +2342,11 @@ operator<<(
 void
 GringoNumericFormat::clearDataStructures()
 {
-    while( !normalRules.empty() )
-    {
-        delete normalRules.back();
-        normalRules.pop_back();
-    }    
+//    while( !normalRules.empty() )
+//    {
+//        delete normalRules.back();
+//        normalRules.pop_back();
+//    }    
     
     while( !weightConstraintRules.empty() )
     {
