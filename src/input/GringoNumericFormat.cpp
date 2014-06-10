@@ -91,6 +91,8 @@ GringoNumericFormat::parse(
 //    delayedAggregateRewriting.clear();
     
     simplify();
+    
+    bodiesDictionary.clear();
 
     if( solver.conflictDetected() )
         return;

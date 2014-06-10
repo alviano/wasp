@@ -71,8 +71,14 @@ class Trie {
 
         ~Trie()
         { 
-            assert( root != NULL );
+            if( root )                
+                clear();
+        }
+        
+        void clear()
+        {
             delete root;
+            root = NULL;
         }
         
         void startInsertion()

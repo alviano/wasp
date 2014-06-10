@@ -59,7 +59,7 @@ public:
         inline NormalRule( unsigned head_ ) : head( head_ ) {}
         
         inline bool isRemoved() const { return head == 0; }
-        inline void remove() { head = 0; }
+        inline void remove() { head = 0; clear(); }
         
         inline bool isFact() const { return posBody.empty() && negBody.empty() && posBodyTrue.empty() && doubleNegBody.empty(); }
         inline bool isFiring() const { return posBody.empty() && negBody.empty() && doubleNegBody.empty(); }
@@ -82,6 +82,18 @@ public:
             posBodyTrue.capacity() * sizeof( unsigned ) + sizeof( posBodyTrue )+
             doubleNegBody.capacity() * sizeof( unsigned ) + sizeof( doubleNegBody ) +
             sizeof( unsigned ) );
+        }
+        
+        inline void clear()
+        {
+            vector< unsigned int > tmp;
+            negBody.swap( tmp );
+            vector< unsigned int > tmp1;
+            posBody.swap( tmp1 );
+            vector< unsigned int > tmp2;
+            posBodyTrue.swap( tmp2 );
+            vector< unsigned int > tmp3;
+            doubleNegBody.swap( tmp3 );
         }
     };
     
