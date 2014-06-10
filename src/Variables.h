@@ -35,16 +35,12 @@ class Reason;
 struct VariableData
 {
     Reason* implicant;
-    
-    unsigned int decisionLevel;        
-
-    Clause* definition;
-    unsigned int signOfEliminatedVariable;
-
     Component* component;
-    bool frozen;
-    
     ReasonForBinaryClauses* reasonForBinaryClauses;
+    
+    unsigned int decisionLevel : 29;
+    unsigned int frozen : 1;
+    unsigned int signOfEliminatedVariable : 2;
 };
 
 class Variables
@@ -118,10 +114,10 @@ class Variables
         inline unsigned int getDecisionLevel( Literal lit ) const { return getDecisionLevel( lit.getVariable() ); }
         inline void setDecisionLevel( Var v, unsigned int decisionLevel ) { variablesData[ v ].decisionLevel = decisionLevel; }
         
-        inline const Clause* getDefinition( Var v ) const { return variablesData[ v ].definition; }
+        inline const Clause* getDefinition( Var v ) const { return ( Clause* ) variablesData[ v ].implicant; }
         inline void setEliminated( Var v, unsigned int value, Clause* definition );
         inline unsigned int getSignOfEliminatedVariable( Var v ) const { return variablesData[ v ].signOfEliminatedVariable; }
-        inline bool hasBeenEliminated( Var v ) const { return variablesData[ v ].signOfEliminatedVariable != MAXUNSIGNEDINT; }
+        inline bool hasBeenEliminated( Var v ) const { return variablesData[ v ].signOfEliminatedVariable != NOT_ELIMINATED; }
         inline bool hasBeenEliminatedByDistribution( Var v ) const { return variablesData[ v ].signOfEliminatedVariable == ELIMINATED_BY_DISTRIBUTION; } 
         
         inline bool inTheSameComponent( Var v1, Var v2 ) const { return variablesData[ v1 ].component != NULL && variablesData[ v1 ].component == variablesData[ v2 ].component; } 
@@ -132,7 +128,7 @@ class Variables
         inline ReasonForBinaryClauses* getReasonForBinaryClauses( Var v ) { return variablesData[ v ].reasonForBinaryClauses; }
         
         bool isFrozen( Var v ) const { return variablesData[ v ].frozen; }
-        void setFrozen( Var v ) { variablesData[ v ].frozen = true; }
+        void setFrozen( Var v ) { variablesData[ v ].frozen = 1; }
         
     private:
         vector< Var > assignedVariables;
@@ -164,7 +160,8 @@ Variables::~Variables()
 {
     for( unsigned int i = 1; i < numOfVariables; i++ )
     {
-        delete variablesData[ i ].definition;
+        if( hasBeenEliminatedByDistribution( i ) )
+            delete variablesData[ i ].implicant;
         delete variablesData[ i ].reasonForBinaryClauses;
     }
 }
@@ -185,9 +182,8 @@ Variables::push_back()
     vd.implicant = NULL;
     vd.decisionLevel = 0;
     vd.component = NULL;
-    vd.definition = NULL;
-    vd.signOfEliminatedVariable = MAXUNSIGNEDINT;
-    vd.frozen = false;
+    vd.signOfEliminatedVariable = NOT_ELIMINATED;
+    vd.frozen = 0;
     vd.reasonForBinaryClauses = new ReasonForBinaryClauses( variablesData.size() - 1 );
     
     assigns.push_back( UNDEFINED );
@@ -373,7 +369,7 @@ Variables::setEliminated(
     assert_msg( value <= 2, "The sign must be 0 or 1. Found value " << value );
     assert( def != NULL || value == ELIMINATED_BY_DISTRIBUTION );
     variablesData[ v ].signOfEliminatedVariable = value;
-    variablesData[ v ].definition = def;
+    variablesData[ v ].implicant = def;
     
     #ifndef NDEBUG
     bool result = 
