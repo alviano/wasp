@@ -34,6 +34,7 @@ class Reason
     }
     
     public:
+        virtual ~Reason() {}
         virtual void onLearning( const Solver& solver, Learning* strategy, Literal lit ) = 0;
         virtual bool onNavigatingLiteralForAllMarked( const Solver& solver, Learning* strategy, Literal lit ) = 0;
         virtual bool isLearned() const { return false; }
