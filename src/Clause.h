@@ -117,7 +117,7 @@ class Clause : public Reason
         bool isTautology() const;
         
     protected:
-        vector< Literal > literals;
+        Vector< Literal > literals;
 
         virtual ostream& print( ostream& out ) const;  
     private:
@@ -303,7 +303,7 @@ Clause::isSubsetOf(
     assert_msg( clause != NULL, "Clause cannot be null" );
     for( unsigned int i = 0; i < literals.size(); i++ )
     {
-        if( find( clause->literals.begin(), clause->literals.end(), literals[ i ] ) == clause->literals.end() )
+        if( !clause->literals.existElement( literals[ i ] ) )
             return false;        
     }
     
@@ -330,12 +330,12 @@ Clause::containsAnyComplementOf(
     return false;
 }
 
-inline bool literalComparator( Literal l1, Literal l2 ){ return l1.getVariable() < l2.getVariable(); }
+inline int literalComparator( Literal l1, Literal l2 ){ return l1.getVariable() < l2.getVariable(); }
 
 void
 Clause::removeDuplicates()
 {
-    sort( literals.begin(), literals.end(), literalComparator );
+    literals.sort( literalComparator );
     
     Literal previousLiteral = literals[ 0 ];
     
@@ -351,7 +351,7 @@ Clause::removeDuplicates()
 
     if( i != j )
     {
-        literals.resize( j );
+        literals.shrink( j );
         recomputeSignature();
     }
 }
@@ -359,7 +359,7 @@ Clause::removeDuplicates()
 bool
 Clause::removeDuplicatesAndCheckIfTautological()
 {
-    sort( literals.begin(), literals.end(), literalComparator ); 
+    literals.sort( literalComparator );
     
     Literal previousLiteral = literals[ 0 ];
     
@@ -386,7 +386,7 @@ Clause::removeDuplicatesAndCheckIfTautological()
 
     if( i != j )
     {
-        literals.resize( j );
+        literals.shrink( j );
         recomputeSignature();
     }
 

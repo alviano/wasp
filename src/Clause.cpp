@@ -169,7 +169,7 @@ bool
 Clause::removeDuplicatesAndFalseAndCheckIfTautological(
     Solver& solver )
 {
-    sort( literals.begin(), literals.end(), literalComparator ); 
+    literals.sort( literalComparator ); 
     
     Literal previousLiteral = Literal::null;
     
@@ -198,7 +198,7 @@ Clause::removeDuplicatesAndFalseAndCheckIfTautological(
     
     if( i != j )
     {
-        literals.resize( j );
+        literals.shrink( j );
         recomputeSignature();
     }
     

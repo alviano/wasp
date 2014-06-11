@@ -748,7 +748,7 @@ GringoNumericFormat::propagateTrue(
         if( !shrinkPos( rule, var ) )
             data.posOccurrences[ j++ ] = data.posOccurrences[ i ];
     }
-    data.posOccurrences.resize( j );
+    data.posOccurrences.shrink( j );
 
     for( unsigned i = 0; i < data.negOccurrences.size(); ++i )
     {
@@ -1263,7 +1263,7 @@ GringoNumericFormat::simplify()
                         break;
                     }
                 }
-                data.headOccurrences.resize( 1 );
+                data.headOccurrences.shrink( 1 );
                 NormalRule* rule = data.headOccurrences[ 0 ];
                 assert( !rule->isRemoved() );
                 trace_msg( parser, 2, "Infer truth of the body of " << *rule << " (unique support of true head)" );
@@ -2380,7 +2380,7 @@ GringoNumericFormat::cleanData()
             if( !data.headOccurrences[ j ]->isRemoved() )
                 data.headOccurrences[ k++ ] = data.headOccurrences[ j ];            
         }
-        data.headOccurrences.resize( k );
+        data.headOccurrences.shrink( k );
         
         k = 0;
         for( unsigned int j = 0; j < data.negOccurrences.size(); j++ )
@@ -2388,7 +2388,7 @@ GringoNumericFormat::cleanData()
             if( !data.negOccurrences[ j ]->isRemoved() )
                 data.negOccurrences[ k++ ] = data.negOccurrences[ j ];            
         }
-        data.negOccurrences.resize( k );
+        data.negOccurrences.shrink( k );
         
         k = 0;
         for( unsigned int j = 0; j < data.posOccurrences.size(); j++ )
@@ -2396,7 +2396,7 @@ GringoNumericFormat::cleanData()
             if( !data.posOccurrences[ j ]->isRemoved() )
                 data.posOccurrences[ k++ ] = data.posOccurrences[ j ];            
         }
-        data.posOccurrences.resize( k );
+        data.posOccurrences.shrink( k );
         
         k = 0;
         for( unsigned int j = 0; j < data.doubleNegOccurrences.size(); j++ )
@@ -2404,7 +2404,7 @@ GringoNumericFormat::cleanData()
             if( !data.doubleNegOccurrences[ j ]->isRemoved() )
                 data.doubleNegOccurrences[ k++ ] = data.doubleNegOccurrences[ j ];            
         }
-        data.doubleNegOccurrences.resize( k );        
+        data.doubleNegOccurrences.shrink( k );        
     }
     
     unsigned int j = 0;

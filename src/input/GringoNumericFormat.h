@@ -51,12 +51,19 @@ public:
         friend ostream& operator<<( ostream& out, const NormalRule& rule );
     public:
         unsigned head;
-        vector< unsigned > negBody;
-        vector< unsigned > posBody;
-        vector< unsigned > posBodyTrue;
-        vector< unsigned > doubleNegBody;
+        Vector< unsigned > negBody;
+        Vector< unsigned > posBody;
+        Vector< unsigned > posBodyTrue;
+        Vector< unsigned > doubleNegBody;
         
         inline NormalRule( unsigned head_ ) : head( head_ ) {}
+        NormalRule( const NormalRule& init ) : head( init.head )
+        {
+            negBody.initFrom( init.negBody );
+            posBody.initFrom( init.posBody );
+            posBodyTrue.initFrom( init.posBodyTrue );
+            doubleNegBody.initFrom( init.doubleNegBody );
+        }
         
         inline bool isRemoved() const { return head == 0; }
         inline void remove() { head = 0; clear(); }
@@ -86,14 +93,10 @@ public:
         
         inline void clear()
         {
-            vector< unsigned int > tmp;
-            negBody.swap( tmp );
-            vector< unsigned int > tmp1;
-            posBody.swap( tmp1 );
-            vector< unsigned int > tmp2;
-            posBodyTrue.swap( tmp2 );
-            vector< unsigned int > tmp3;
-            doubleNegBody.swap( tmp3 );
+            negBody.clearAndDelete();
+            posBody.clearAndDelete();
+            posBodyTrue.clearAndDelete();
+            doubleNegBody.clearAndDelete();
         }
     };
     
@@ -207,16 +210,16 @@ public:
     class AtomData
     {
     public:        
-        bool supported;
-        unsigned numberOfHeadOccurrences;
-        vector< NormalRule* > headOccurrences;
-        vector< NormalRule* > posOccurrences;
-        vector< NormalRule* > negOccurrences;
-        vector< WeightConstraintRule* > negWeightConstraintsOccurrences;
-        vector< unsigned int > positionsInNegWeightConstraints;
-        vector< WeightConstraintRule* > posWeightConstraintsOccurrences;
-        vector< unsigned int > positionsInPosWeightConstraints;
-        vector< NormalRule* > doubleNegOccurrences;
+        unsigned supported:1;
+        unsigned numberOfHeadOccurrences:31;
+        Vector< NormalRule* > headOccurrences;
+        Vector< NormalRule* > posOccurrences;
+        Vector< NormalRule* > negOccurrences;
+        Vector< NormalRule* > doubleNegOccurrences;
+        Vector< WeightConstraintRule* > negWeightConstraintsOccurrences;
+        Vector< unsigned int > positionsInNegWeightConstraints;
+        Vector< WeightConstraintRule* > posWeightConstraintsOccurrences;
+        Vector< unsigned int > positionsInPosWeightConstraints;
 //        vector< NormalRule* > negConstraints;
 //        vector< NormalRule* > posConstraints;
         
@@ -254,29 +257,59 @@ public:
         
         inline void clear()
         {
-            vector< NormalRule* > tmpHeadOccurrences;            
-            vector< NormalRule* > tmpPosOccurrences;
-            vector< NormalRule* > tmpNegOccurrences;
-            vector< WeightConstraintRule* > tmpNegWeightConstraintsOccurrences;
-            vector< unsigned int > tmpPositionsInNegWeightConstraints;
-            vector< WeightConstraintRule* > tmpPosWeightConstraintsOccurrences;
-            vector< unsigned int > tmpPositionsInPosWeightConstraints;
-            vector< NormalRule* > tmpDoubleNegOccurrences;
-            vector< NormalRule* > tmpNegConstraints;
-            vector< NormalRule* > tmpPosConstraints;
-            
-            headOccurrences.swap( tmpHeadOccurrences );
-            posOccurrences.swap( tmpPosOccurrences );
-            negOccurrences.swap( tmpNegOccurrences );
-            negWeightConstraintsOccurrences.swap( tmpNegWeightConstraintsOccurrences );
-            positionsInNegWeightConstraints.swap( tmpPositionsInNegWeightConstraints );
-            posWeightConstraintsOccurrences.swap( tmpPosWeightConstraintsOccurrences );
-            positionsInPosWeightConstraints.swap( tmpPositionsInPosWeightConstraints );
-            doubleNegOccurrences.swap( tmpDoubleNegOccurrences );
+            headOccurrences.clearAndDelete();
+            posOccurrences.clearAndDelete();
+            negOccurrences.clearAndDelete();
+            doubleNegOccurrences.clearAndDelete();
+            negWeightConstraintsOccurrences.clearAndDelete();
+            positionsInNegWeightConstraints.clearAndDelete();
+            posWeightConstraintsOccurrences.clearAndDelete();
+            positionsInPosWeightConstraints.clearAndDelete();
 //            negConstraints.swap( tmpNegConstraints );
 //            posConstraints.swap( tmpPosConstraints );
         }
-    };        
+
+        AtomData( const AtomData& init ) : supported( init.supported ), numberOfHeadOccurrences( init.numberOfHeadOccurrences ), readNormalRule_negativeLiterals( init.readNormalRule_negativeLiterals ), readNormalRule_positiveLiterals( init.readNormalRule_positiveLiterals ), weightConstraintRule( init.weightConstraintRule )
+        {
+            headOccurrences.initFrom( init.headOccurrences );
+            posOccurrences.initFrom( init.posOccurrences );
+            negOccurrences.initFrom( init.negOccurrences );
+            doubleNegOccurrences.initFrom( init.doubleNegOccurrences );
+            negWeightConstraintsOccurrences.initFrom( init.negWeightConstraintsOccurrences );
+            positionsInNegWeightConstraints.initFrom( init.positionsInNegWeightConstraints );
+            posWeightConstraintsOccurrences.initFrom( init.posWeightConstraintsOccurrences );
+            positionsInPosWeightConstraints.initFrom( init.positionsInPosWeightConstraints );
+        }
+
+//        AtomData& operator=( const AtomData& right ) 
+//        {
+//            supported = right.supported;
+//            numberOfHeadOccurrences = right.numberOfHeadOccurrences;
+//            readNormalRule_negativeLiterals = right.readNormalRule_negativeLiterals;
+//            readNormalRule_positiveLiterals = right.readNormalRule_positiveLiterals;
+//            weightConstraintRule = right.weightConstraintRule;
+//            
+//            headOccurrences.clearAndDelete();
+//            posOccurrences.clearAndDelete();
+//            negOccurrences.clearAndDelete();
+//            doubleNegOccurrences.clearAndDelete();
+//            negWeightConstraintsOccurrences.clearAndDelete();
+//            positionsInNegWeightConstraints.clearAndDelete();
+//            posWeightConstraintsOccurrences.clearAndDelete();
+//            positionsInPosWeightConstraints.clearAndDelete();
+//            
+//            headOccurrences.initFrom( right.headOccurrences );
+//            posOccurrences.initFrom( right.posOccurrences );
+//            negOccurrences.initFrom( right.negOccurrences );
+//            doubleNegOccurrences.initFrom( right.doubleNegOccurrences );
+//            negWeightConstraintsOccurrences.initFrom( right.negWeightConstraintsOccurrences );
+//            positionsInNegWeightConstraints.initFrom( right.positionsInNegWeightConstraints );
+//            posWeightConstraintsOccurrences.initFrom( right.posWeightConstraintsOccurrences );
+//            positionsInPosWeightConstraints.initFrom( right.positionsInPosWeightConstraints );
+//            
+//            return *this;
+//        }
+    };
     
 private:
     inline void readChoiceRule( Istream& input );
@@ -382,7 +415,7 @@ private:
 GringoNumericFormat::GringoNumericFormat(
     Solver& s ) : solver( s ), propagatedLiterals( 0 ), readNormalRule_numberOfCalls( 0 )
 {
-    atomData.push_back( new AtomData( false ) );
+    atomData.push_back( AtomData( false ) );
     createStructures( 1 );
     solver.addClause( Literal( 1, NEGATIVE ) );
 }

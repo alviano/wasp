@@ -40,7 +40,7 @@ class Literal
         inline ~Literal();
 
         inline int getId() const;
-        inline unsigned int getIndex() const { return ( getVariable() << 1 ) | getSign(); }
+        inline unsigned int getIndex() const { return ( variable << 1 ) | sign; }
 
         inline bool operator==( const Literal& ) const;
         inline bool operator!=( const Literal& ) const;
@@ -64,17 +64,18 @@ class Literal
          */
         inline unsigned int getOppositeSign() const;                
         
-        unsigned int signedVariable;
+        unsigned int variable : 31;
+        unsigned int sign : 1;
 };
 
 Literal::Literal(
-    const Literal& l ) : signedVariable( l.signedVariable )
+    const Literal& l ) : variable( l.variable ), sign( l.sign )
 {
 }
 
 Literal::Literal(
     Var v,
-    unsigned int sign ) : signedVariable( ( v << 1 ) | sign )
+    unsigned int sign_ ) : variable( v ), sign( sign_ )
 {
     assert( POSITIVE == 0 && NEGATIVE == 1 );
     assert( sign == 0 || sign == 1 );
@@ -89,7 +90,7 @@ Literal::~Literal()
 bool
 Literal::isPositive() const
 {
-    return !( signedVariable & 1 );
+    return sign == POSITIVE;
 }
 
 bool
@@ -101,28 +102,28 @@ Literal::isNegative() const
 unsigned int
 Literal::getSign() const
 {
-    assert( "Variable has not been set." && signedVariable != 0 );
-    return signedVariable & 1;
+    assert( "Variable has not been set." && variable != 0 );
+    return sign;
 }
 
 unsigned int
 Literal::getOppositeSign() const
 {
-    assert( "Variable has not been set." && signedVariable != 0 );
-    return ( ~signedVariable ) & 1;
+    assert( "Variable has not been set." && variable != 0 );
+    return ( ~sign ) & 1;
 }
 
 Var
 Literal::getVariable() const
 {
-    return ( signedVariable >> 1 );
+    return variable;
 }
 
 bool
 Literal::operator==(
     const Literal& literal ) const
 {
-    return signedVariable == literal.signedVariable;
+    return variable == literal.variable && sign == literal.sign;
 }
 
 bool
