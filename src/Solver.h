@@ -204,6 +204,7 @@ class Solver
             }
             
             delete dependencyGraph;
+            dependencyGraph = NULL;
         }
 
         inline bool tight() const { return cyclicComponents.empty(); }

@@ -47,8 +47,7 @@ Solver::~Solver()
     
     while( !gusDataVector.empty() )
     {
-        if( gusDataVector.back() )
-            delete gusDataVector.back();
+        delete gusDataVector.back();
         gusDataVector.pop_back();
     }
     
@@ -65,18 +64,11 @@ Solver::~Solver()
         cyclicComponents.pop_back();
     }
     
-    if( outputBuilder != NULL )
-        delete outputBuilder;
-    
-    if( satelite != NULL )
-        delete satelite;
-    
-    if( restart != NULL )
-        delete restart;
-    
-    if( optimizationAggregate != NULL )
-        delete optimizationAggregate;
-    
+    delete outputBuilder;
+    delete satelite;
+    delete restart;
+    delete optimizationAggregate;
+    delete dependencyGraph;
     
     while( !variableDataStructures.empty() )
     {

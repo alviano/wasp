@@ -1326,9 +1326,10 @@ GringoNumericFormat::computeSCCs()
             for( unsigned j = 0; j < data.headOccurrences.size(); ++j )
             {
                 if( !data.headOccurrences[ j ]->isRemoved() )                    
+                {
                     createCrule( Literal( i, POSITIVE ), data.headOccurrences[ j ] );
-                
-                delete data.headOccurrences[ j ];
+                    break;
+                }
             }
         }
         else
@@ -1367,8 +1368,6 @@ GringoNumericFormat::computeSCCs()
                         createCrule( Literal( solver.numberOfVariables(), POSITIVE ), data.headOccurrences[ j ] );
                     }
                 }
-                
-                delete data.headOccurrences[ j ];
             }
             crules.push_back( crule );
         }
