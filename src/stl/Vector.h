@@ -7,22 +7,22 @@
 #include "../util/Constants.h"
 using namespace std;
 
-template< class T >
-class Vector
+template< class T, typename SizeCapacityType >
+class TVector
 {
     public:
-        inline Vector();
-        virtual ~Vector()
+        inline TVector();
+        virtual ~TVector()
         {
             if( vector )
                 delete [] vector;
         }
 
-        inline unsigned int capacity() const { return capacity_; }
-        inline unsigned int size() const { return size_; }
+        inline SizeCapacityType capacity() const { return capacity_; }
+        inline SizeCapacityType size() const { return size_; }
         inline bool empty() const { return size_ == 0; }
 
-        inline void shrink( unsigned int newSize ) { assert( newSize <= size_ ); size_ = newSize; }
+        inline void shrink( SizeCapacityType newSize ) { assert( newSize <= size_ ); size_ = newSize; }
         inline void push_back( T element );
         inline void pop_back() { assert( !empty() ); --size_; }
         inline void clear() { size_ = 0; }
@@ -32,33 +32,34 @@ class Vector
         const T& back() const { assert( !empty() ); return vector[ size_ - 1 ]; }
         T& back() { assert( !empty() ); return vector[ size_ - 1 ]; }
 
-        inline const T& operator[] ( unsigned int index ) const { assert( index < size_ ); return vector[ index ]; }
-        inline T& operator[] ( unsigned int index ) { assert( index < size_ ); return vector[ index ]; }
+        inline const T& operator[] ( SizeCapacityType index ) const { assert( index < size_ ); return vector[ index ]; }
+        inline T& operator[] ( SizeCapacityType index ) { assert( index < size_ ); return vector[ index ]; }
 
-        inline void swap( Vector< T >& other );
+        inline void swap( TVector< T, SizeCapacityType >& other );
         
         inline bool existElement( T );
-        inline unsigned int findElement( T );
+        inline SizeCapacityType findElement( T );
 
     private:
-        T*   vector;
-        unsigned int size_;
-        unsigned int capacity_;
+        T* vector;
+        SizeCapacityType size_;
+        SizeCapacityType capacity_;
 
-           Vector< T >& operator=( Vector< T >& );
-        Vector( const Vector< T >& );
+        TVector< T, SizeCapacityType >& operator=( TVector< T, SizeCapacityType >& );
+        TVector( const TVector< T, SizeCapacityType >& );
     
-        inline void resetCapacity( unsigned int value );
+        inline void resetCapacity( SizeCapacityType value );
+        inline static SizeCapacityType max( SizeCapacityType x, SizeCapacityType y ) { return ( x > y ) ? x : y; }
 };
 
-template< class T >
-Vector< T >::Vector() : vector( NULL ), size_( 0 ), capacity_( 0 )
+template< class T, typename SizeCapacityType >
+TVector< T, SizeCapacityType >::TVector() : vector( NULL ), size_( 0 ), capacity_( 0 )
 {
 }
 
-template< class T >
+template< class T, typename SizeCapacityType >
 void
-Vector< T >::push_back(
+TVector< T, SizeCapacityType >::push_back(
     T element )
 {
     if( size_ == capacity_ )
@@ -68,15 +69,14 @@ Vector< T >::push_back(
     vector[ size_++ ] = element;
 }
 
-inline unsigned int max( unsigned int x, unsigned int y ) { return ( x > y ) ? x : y; }
-template< class T >
+template< class T, typename SizeCapacityType >
 void
-Vector< T >::resetCapacity(
-    unsigned int min_cap )
+TVector< T, SizeCapacityType >::resetCapacity(
+    SizeCapacityType min_cap )
 {
     if( capacity_ >= min_cap )
         return;
-    unsigned int add = max( ( min_cap - capacity_ + 1 ) & ~1, ( ( capacity_ >> 1 ) + 2 ) & ~1 );   // NOTE: grow by approximately 3/2
+    SizeCapacityType add = max( ( min_cap - capacity_ + 1 ) & ~1, ( ( capacity_ >> 1 ) + 2 ) & ~1 );   // NOTE: grow by approximately 3/2
 
     T* tmpVector = new T[ capacity_ + add ];
     memcpy( tmpVector, vector, sizeof( T ) * capacity_ );
@@ -86,39 +86,39 @@ Vector< T >::resetCapacity(
     vector = tmpVector;    
 }
 
-template< class T >
+template< class T, typename SizeCapacityType >
 bool
-Vector< T >::existElement(
+TVector< T, SizeCapacityType >::existElement(
     T elem )
 {
     return findElement( elem ) != MAXUNSIGNEDINT;
 }
 
-template< class T >
-unsigned int
-Vector< T >::findElement(
+template< class T, typename SizeCapacityType >
+SizeCapacityType
+TVector< T, SizeCapacityType >::findElement(
     T elem )
 {
-    for( unsigned int i = 0; i < size_; ++i )    
+    for( SizeCapacityType i = 0; i < size_; ++i )    
         if( elem == vector[ i ] )
             return i;
     
     return MAXUNSIGNEDINT;
 }
 
-template< class T >
+template< class T, typename SizeCapacityType >
 void
-Vector< T >::swap(
-    Vector< T >& other )
+TVector< T, SizeCapacityType >::swap(
+    TVector< T, SizeCapacityType >& other )
 {
     T* tmp = other.vector; other.vector = vector; vector = tmp;    
-    unsigned int tmpSize = other.size_; other.size_ = size_; size_ = tmpSize;        
-    unsigned int tmpCapacity = other.capacity_; other.capacity_ = capacity_; capacity_ = tmpCapacity;
+    SizeCapacityType tmpSize = other.size_; other.size_ = size_; size_ = tmpSize;        
+    SizeCapacityType tmpCapacity = other.capacity_; other.capacity_ = capacity_; capacity_ = tmpCapacity;
 }
 
-template< class T >
+template< class T, typename SizeCapacityType >
 void
-Vector< T >::findAndRemove(
+TVector< T, SizeCapacityType >::findAndRemove(
     T element )
 {
 //    typename vector< T >::iterator it = find( vector< T >::begin(), vector< T >::end(), element );
@@ -126,11 +126,21 @@ Vector< T >::findAndRemove(
 //    *it = vector< T >::back();
 //    vector< T >::pop_back();
     assert( existElement( element ) );
-    unsigned int position = findElement( element );
+    SizeCapacityType position = findElement( element );
     assert( position < size() );
     operator[]( position ) = back();
     pop_back();
 }
+
+template< class T >
+class Vector : public TVector< T, unsigned int >
+{
+};
+
+template< class T >
+class ShortVector : public TVector< T, unsigned short int >
+{
+};
 
 #endif
 
