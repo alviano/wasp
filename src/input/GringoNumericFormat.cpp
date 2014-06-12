@@ -101,7 +101,10 @@ GringoNumericFormat::parse(
     if( solver.numberOfClauses() + normalRules.size() > 1000000 )
         solver.turnOffSimplifications();
 
+    statistics( endParsing() );
+    statistics( startSCCs() );
     computeSCCs();
+    statistics( endSCCs() );
     if( !solver.tight() )
     {
         trace_msg( parser, 1, "Program is not tight" );
@@ -114,7 +117,9 @@ GringoNumericFormat::parse(
     addWeightConstraints();
     addOptimizationRules();
     clearDataStructures();
+    statistics( startCompletion() );
     computeCompletion();    
+    statistics( endCompletion() );
     //TODO: remove
 //    cout << solver.numberOfVariables() << endl;
 //    unsigned c[1024] = {0};

@@ -181,6 +181,13 @@ using namespace std;
             }
             
             inline static Statistics& inst(){ return instance; }
+            
+            inline void startParsing() { cerr << "Start parsing" << endl; }      
+            inline void endParsing() { cerr << "End parsing" << endl; }            
+            inline void startSCCs() { cerr << "Start SCCs" << endl; }
+            inline void endSCCs() { cerr << "End SCCs" << endl; }
+            inline void startCompletion() { cerr << "Start completion" << endl; }
+            inline void endCompletion() { cerr << "End completion" << endl; }
 
         private:
             static Statistics instance;
