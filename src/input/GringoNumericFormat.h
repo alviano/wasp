@@ -229,7 +229,7 @@ public:
         
         WeightConstraintRule* weightConstraintRule;
         
-        inline AtomData( bool supported_ = false ) : supported( supported_ ), numberOfHeadOccurrences( 0 ), readNormalRule_negativeLiterals( 0 ), readNormalRule_positiveLiterals( 0 ), weightConstraintRule( NULL ) {}
+        inline AtomData( bool supported_ = false ) : supported( supported_ ), numberOfHeadOccurrences( 0 ), readNormalRule_headAtoms( 0 ), readNormalRule_negativeLiterals( 0 ), readNormalRule_positiveLiterals( 0 ), weightConstraintRule( NULL ) {}
         
         inline bool isSupported() const { return supported; }
         inline void setSupported() { supported = true; }
@@ -281,34 +281,34 @@ public:
             positionsInPosWeightConstraints.initFrom( init.positionsInPosWeightConstraints );
         }
 
-//        AtomData& operator=( const AtomData& right ) 
-//        {
-//            supported = right.supported;
-//            numberOfHeadOccurrences = right.numberOfHeadOccurrences;
-//            readNormalRule_negativeLiterals = right.readNormalRule_negativeLiterals;
-//            readNormalRule_positiveLiterals = right.readNormalRule_positiveLiterals;
-//            weightConstraintRule = right.weightConstraintRule;
-//            
-//            headOccurrences.clearAndDelete();
-//            posOccurrences.clearAndDelete();
-//            negOccurrences.clearAndDelete();
-//            doubleNegOccurrences.clearAndDelete();
-//            negWeightConstraintsOccurrences.clearAndDelete();
-//            positionsInNegWeightConstraints.clearAndDelete();
-//            posWeightConstraintsOccurrences.clearAndDelete();
-//            positionsInPosWeightConstraints.clearAndDelete();
-//            
-//            headOccurrences.initFrom( right.headOccurrences );
-//            posOccurrences.initFrom( right.posOccurrences );
-//            negOccurrences.initFrom( right.negOccurrences );
-//            doubleNegOccurrences.initFrom( right.doubleNegOccurrences );
-//            negWeightConstraintsOccurrences.initFrom( right.negWeightConstraintsOccurrences );
-//            positionsInNegWeightConstraints.initFrom( right.positionsInNegWeightConstraints );
-//            posWeightConstraintsOccurrences.initFrom( right.posWeightConstraintsOccurrences );
-//            positionsInPosWeightConstraints.initFrom( right.positionsInPosWeightConstraints );
-//            
-//            return *this;
-//        }
+        AtomData& operator=( const AtomData& right ) 
+        {
+            supported = right.supported;
+            numberOfHeadOccurrences = right.numberOfHeadOccurrences;
+            readNormalRule_negativeLiterals = right.readNormalRule_negativeLiterals;
+            readNormalRule_positiveLiterals = right.readNormalRule_positiveLiterals;
+            weightConstraintRule = right.weightConstraintRule;
+            
+            headOccurrences.clearAndDelete();
+            posOccurrences.clearAndDelete();
+            negOccurrences.clearAndDelete();
+            doubleNegOccurrences.clearAndDelete();
+            negWeightConstraintsOccurrences.clearAndDelete();
+            positionsInNegWeightConstraints.clearAndDelete();
+            posWeightConstraintsOccurrences.clearAndDelete();
+            positionsInPosWeightConstraints.clearAndDelete();
+            
+            headOccurrences.initFrom( right.headOccurrences );
+            posOccurrences.initFrom( right.posOccurrences );
+            negOccurrences.initFrom( right.negOccurrences );
+            doubleNegOccurrences.initFrom( right.doubleNegOccurrences );
+            negWeightConstraintsOccurrences.initFrom( right.negWeightConstraintsOccurrences );
+            positionsInNegWeightConstraints.initFrom( right.positionsInNegWeightConstraints );
+            posWeightConstraintsOccurrences.initFrom( right.posWeightConstraintsOccurrences );
+            positionsInPosWeightConstraints.initFrom( right.positionsInPosWeightConstraints );
+            
+            return *this;
+        }
     };
     
 private:

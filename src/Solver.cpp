@@ -80,7 +80,7 @@ Solver::~Solver()
     
     for( unsigned int i = 1; i <= variables.numberOfVariables(); i++ )
     {        
-        if( variables.getSignOfEliminatedVariable( i ) == ELIMINATED_BY_DISTRIBUTION )
+        if( variables.hasBeenEliminatedByDistribution( i ) )
         {
             Literal pos( i, POSITIVE );
             Vector< Clause* >& allPosOccs = getDataStructure( pos ).variableAllOccurrences;

@@ -20,6 +20,7 @@
 #define	PROPAGATOR_H
 
 class Literal;
+class Solver;
 
 class Propagator
 {
