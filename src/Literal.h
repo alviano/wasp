@@ -36,7 +36,6 @@ class Literal
 
         inline explicit Literal( Var v = 0, unsigned int sign = POSITIVE );
         
-        inline Literal( const Literal& );
         inline ~Literal();
 
         inline int getId() const;
@@ -55,23 +54,36 @@ class Literal
         inline Literal getOppositeLiteral();
 
         inline bool isPositive() const;
-        inline bool isNegative() const;        
+        inline bool isNegative() const;
+        
+        static Literal newUndefinedPositiveBodyLiteral( Var v ) { return Literal( v, NEGATIVE, true, false ); }
+        static Literal newTruePositiveBodyLiteral( Var v ) { return Literal( v, NEGATIVE, true, true ); }
+        static Literal newDoubleNegatedBodyLiteral( Var v ) { return Literal( v, NEGATIVE, false, false ); }
+        static Literal newNegativeBodyLiteral( Var v ) { return Literal( v, POSITIVE, false, false ); }
+        static Literal newHeadAtom( Var v ) { return Literal( v, POSITIVE, true, false ); }
+        
+        inline bool isUndefinedPositiveBodyLiteral() const { return sign & ~toBeRemoved & relevantForDependencyGraph; }
+        inline bool isTruePositiveBodyLiteral() const { return sign & toBeRemoved; }
+        inline bool isDoubleNegatedBodyLiteral() const { return sign & ~relevantForDependencyGraph; }
+        inline bool isNegativeBodyLiteral() const { return ( ~sign & ~relevantForDependencyGraph ) & 1; }
+        inline bool isHeadAtom() const { return ~sign & relevantForDependencyGraph; }
+        
+        inline bool isToBeRemoved() const { return toBeRemoved; }
+        inline bool isPositiveBodyLiteral() const { return sign & ( relevantForDependencyGraph | toBeRemoved ); }
         
     private:
+        inline Literal( Var v, bool s, bool d, bool r ) : variable( v ), sign( s ), relevantForDependencyGraph( d ), toBeRemoved( r ) {}
         
         /**
          * This function returns 1 if the literal is positive, 0 otherwise.
          */
-        inline unsigned int getOppositeSign() const;                
+        inline unsigned int getOppositeSign() const;
         
-        unsigned int variable : 31;
+        unsigned int variable : 29;
         unsigned int sign : 1;
+        unsigned int relevantForDependencyGraph : 1;
+        unsigned int toBeRemoved : 1;
 };
-
-Literal::Literal(
-    const Literal& l ) : variable( l.variable ), sign( l.sign )
-{
-}
 
 Literal::Literal(
     Var v,

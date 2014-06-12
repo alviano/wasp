@@ -50,54 +50,33 @@ public:
     {
         friend ostream& operator<<( ostream& out, const NormalRule& rule );
     public:
-        unsigned head;
-        Vector< unsigned > negBody;
-        Vector< unsigned > posBody;
-        Vector< unsigned > posBodyTrue;
-        Vector< unsigned > doubleNegBody;
-        
-        inline NormalRule( unsigned head_ ) : head( head_ ) {}
-        NormalRule( const NormalRule& init ) : head( init.head )
-        {
-            negBody.initFrom( init.negBody );
-            posBody.initFrom( init.posBody );
-            posBodyTrue.initFrom( init.posBodyTrue );
-            doubleNegBody.initFrom( init.doubleNegBody );
-        }
-        
-        inline bool isRemoved() const { return head == 0; }
-        inline void remove() { head = 0; clear(); }
-        
-        inline bool isFact() const { return posBody.empty() && negBody.empty() && posBodyTrue.empty() && doubleNegBody.empty(); }
-        inline bool isFiring() const { return posBody.empty() && negBody.empty() && doubleNegBody.empty(); }
-        inline unsigned size() const { return negBody.size() + posBody.size() + posBodyTrue.size() + doubleNegBody.size(); }
-        
-        inline void addNegativeLiteral( unsigned id ) { negBody.push_back( id ); }
-        inline void addPositiveLiteral( unsigned id ) { posBody.push_back( id ); }
-        inline void addPositiveTrueLiteral( unsigned id )
-        {
-            if( head != 1 )
-                posBodyTrue.push_back( id );
-        }
+        Vector< Literal > literals;
 
-        inline void addDoubleNegLiteral( unsigned id ) { doubleNegBody.push_back( id ); }
+        inline NormalRule() {}
+        inline NormalRule( unsigned head_ ) { addHeadAtom( head_ ); }
+        NormalRule( const NormalRule& init ) { literals.initFrom( init.literals ); }
         
-        inline unsigned int sizeOf()
-        {
-            return ( negBody.capacity() * sizeof( unsigned ) + sizeof( negBody ) +
-            posBody.capacity() * sizeof( unsigned ) + sizeof( posBody ) +
-            posBodyTrue.capacity() * sizeof( unsigned ) + sizeof( posBodyTrue )+
-            doubleNegBody.capacity() * sizeof( unsigned ) + sizeof( doubleNegBody ) +
-            sizeof( unsigned ) );
-        }
+        inline bool isRemoved() const { return literals.empty(); }
+        inline void remove() { literals.clearAndDelete(); }
         
-        inline void clear()
-        {
-            negBody.clearAndDelete();
-            posBody.clearAndDelete();
-            posBodyTrue.clearAndDelete();
-            doubleNegBody.clearAndDelete();
-        }
+        inline bool isFact() const { assert( !literals.empty() ); assert( literals.size() != 1 || literals.back().isHeadAtom() ); return literals.size() == 1; }
+//        inline bool isFiring() const { return posBody.empty() && negBody.empty() && doubleNegBody.empty(); }
+        inline unsigned size() const { return literals.size(); }
+        
+        inline void addHeadAtom( unsigned id ) { literals.push_back( Literal::newHeadAtom( id ) ); }
+        inline void addNegativeLiteral( unsigned id ) { literals.push_back( Literal::newNegativeBodyLiteral( id ) ); }
+        inline void addPositiveLiteral( unsigned id ) { literals.push_back( Literal::newUndefinedPositiveBodyLiteral( id ) ); }
+        inline void addPositiveTrueLiteral( unsigned id ) { literals.push_back( Literal::newTruePositiveBodyLiteral( id ) ); }
+        inline void addDoubleNegLiteral( unsigned id ) { literals.push_back( Literal::newDoubleNegatedBodyLiteral( id ) ); }
+        
+//        inline unsigned int sizeOf()
+//        {
+//            return ( negBody.capacity() * sizeof( unsigned ) + sizeof( negBody ) +
+//            posBody.capacity() * sizeof( unsigned ) + sizeof( posBody ) +
+//            posBodyTrue.capacity() * sizeof( unsigned ) + sizeof( posBodyTrue )+
+//            doubleNegBody.capacity() * sizeof( unsigned ) + sizeof( doubleNegBody ) +
+//            sizeof( unsigned ) );
+//        }
     };
     
     class WeightConstraintRule
