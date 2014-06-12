@@ -2347,11 +2347,11 @@ operator<<(
 void
 GringoNumericFormat::clearDataStructures()
 {
-//    while( !normalRules.empty() )
-//    {
-//        delete normalRules.back();
-//        normalRules.pop_back();
-//    }    
+    while( !normalRules.empty() )
+    {
+        delete normalRules.back();
+        normalRules.pop_back();
+    }    
     
     while( !weightConstraintRules.empty() )
     {
