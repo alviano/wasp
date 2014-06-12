@@ -12,10 +12,7 @@ class Vector
 {
     public:
         inline Vector();
-        ~Vector()
-        {
-            delete [] vector;
-        }
+        inline ~Vector() { delete [] vector; }
 
         inline void reserve( unsigned int capacity ) { resetCapacity( capacity ); }
         
