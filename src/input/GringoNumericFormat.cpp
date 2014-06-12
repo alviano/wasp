@@ -28,6 +28,7 @@ GringoNumericFormat::parse(
     bool loop = true;
 
     uint64_t value = 0;
+    statistics( startParsing() );
     while( loop )
     {
         unsigned int type;
