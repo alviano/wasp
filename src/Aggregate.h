@@ -19,12 +19,8 @@
 #ifndef AGGREGATE_H
 #define AGGREGATE_H
 
-#include "Clause.h"
-
-
 #include <cassert>
 #include <iostream>
-#include <list>
 
 #include "Propagator.h"
 #include "Clause.h"
@@ -40,7 +36,7 @@ using namespace std;
 #define POS 1
 #define NEG -1
 
-class Aggregate : public Propagator, public Clause
+class Aggregate : public Propagator, public Reason
 {
     friend ostream& operator<<( ostream& out, const Aggregate& aggregate );
     public:
@@ -58,6 +54,9 @@ class Aggregate : public Propagator, public Clause
         
         unsigned int getLevelOfBackjump( const Solver& solver, unsigned int bound );
         bool updateBound( const Solver& solver, unsigned int bound );        
+        
+        inline Literal operator[]( unsigned int idx ) const { assert_msg( ( idx > 0 && idx < literals.size() ), "Index is " << idx << " - literals: " << literals.size() ); return literals[ idx ]; }
+        inline Literal& operator[]( unsigned int idx ) { assert_msg( ( idx > 0 && idx < literals.size() ), "Index is " << idx << " - literals: " << literals.size() ); return literals[ idx ]; }
 
 //        inline void setCounterW1( unsigned int value ){ counterW1 = value; }
 //        inline void setCounterW2( unsigned int value ){ counterW2 = value; }
@@ -72,7 +71,7 @@ class Aggregate : public Propagator, public Clause
     private:
         inline Aggregate( const Aggregate& orig );
         
-//        vector< Literal > literals;
+        vector< Literal > literals;
         vector< unsigned int > weights;
         vector< bool > watched;
         
@@ -92,7 +91,7 @@ class Aggregate : public Propagator, public Clause
         #endif
 };
 
-Aggregate::Aggregate() : Propagator(), Clause(), active( 0 ), counterW1( 0 ), counterW2( 0 ), umax( 1 ), literalOfUnroll( Literal::null )
+Aggregate::Aggregate() : Propagator(), active( 0 ), counterW1( 0 ), counterW2( 0 ), umax( 1 ), literalOfUnroll( Literal::null )
 {
     literals.push_back( Literal::null );
     weights.push_back( 0 );    

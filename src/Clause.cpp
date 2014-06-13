@@ -30,10 +30,6 @@ operator<<(
     return clause.print( out );
 }
 
-Clause::~Clause()
-{
-}
-
 ostream&
 Clause::print(
     ostream& out ) const

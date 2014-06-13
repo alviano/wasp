@@ -48,7 +48,7 @@ class Clause : public Reason
     friend Clause* Learning::learnClausesFromUnfoundedSet( Vector< Var >& unfoundedSet );
 
     public:        
-        virtual ~Clause();
+        inline ~Clause(){}
         inline Clause( unsigned reserve = 8 );
 
         inline Literal getAt( unsigned idx ) const { assert( idx < literals.size() ); return literals[ idx ]; }
@@ -67,8 +67,8 @@ class Clause : public Reason
         inline void removeLiteral( Literal literal );
         inline void removeLastLiteralNoWatches(){ literals.pop_back(); }
         
-        virtual void onLearning( const Solver& solver, Learning* strategy, Literal lit );
-        virtual bool onNavigatingLiteralForAllMarked( const Solver& solver, Learning* strategy, Literal lit );
+        void onLearning( const Solver& solver, Learning* strategy, Literal lit );
+        bool onNavigatingLiteralForAllMarked( const Solver& solver, Learning* strategy, Literal lit );
 //        inline bool onLiteralFalse( Solver& solver, Literal literal );
 
         inline unsigned int size() const;
@@ -116,11 +116,10 @@ class Clause : public Reason
         inline void recomputeSignature();                
         bool isTautology() const;
         
-    protected:
-        Vector< Literal > literals;
-
-        virtual ostream& print( ostream& out ) const;  
     private:
+        
+        Vector< Literal > literals;
+        ostream& print( ostream& out ) const;  
         
         Clause( const Clause& )
         {

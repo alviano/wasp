@@ -1221,7 +1221,7 @@ Solver::propagate(
     Var variable )
 {
     assert( checkStatusBeforePropagation( variable ) );
-    trace_msg( solving, 5, "Propagating variable " << variable );
+    trace_msg( solving, 5, "Propagating variable " << VariableNames::getName( variable ) << " as " << ( isTrue( variable ) ? "true" : "false" ) );
     
     shortPropagation( variable );
     if( conflictDetected() )

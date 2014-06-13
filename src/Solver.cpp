@@ -80,7 +80,7 @@ Solver::~Solver()
     
     for( unsigned int i = 1; i <= variables.numberOfVariables(); i++ )
     {        
-        if( variables.getSignOfEliminatedVariable( i ) == ELIMINATED_BY_DISTRIBUTION )
+        if( variables.hasBeenEliminatedByDistribution( i ) )
         {
             Literal pos( i, POSITIVE );
             Vector< Clause* >& allPosOccs = getDataStructure( pos ).variableAllOccurrences;
@@ -471,6 +471,7 @@ Solver::propagateAtLevelZeroSatelite(
     if( hasBeenEliminated( variable ) )
         return;
     
+    trace_msg( solving, 2, "Propagating " << variables.createLiteralFromAssignedVariable( variable ) << " as true at level 0 (Satelite)" );
     assert( !conflictDetected() );
     {
         Literal literal = variables.createLiteralFromAssignedVariable( variable );        
@@ -491,7 +492,6 @@ Solver::propagateAtLevelZeroSatelite(
     
     {
         assert( !conflictDetected() );
-        trace_msg( solving, 2, "Propagating " << variables.createOppositeLiteralFromAssignedVariable( variable ) << " as false at level 0" );
         Literal complement = variables.createOppositeLiteralFromAssignedVariable( variable );        
         
 //        Vector< Clause* >& wl = variableAllOccurrences[ ( getTruthValue( variable ) >> 1 ) ];
@@ -536,8 +536,8 @@ Solver::propagateAtLevelZero(
     Var variable )
 {
     assert( !conflictDetected() );    
-    {
-        trace_msg( solving, 2, "Propagating " << variables.createLiteralFromAssignedVariable( variable ) << " as true at level 0" );
+    trace_msg( solving, 2, "Propagating " << variables.createLiteralFromAssignedVariable( variable ) << " as true at level 0" );
+    {        
         Literal literal = variables.createLiteralFromAssignedVariable( variable );
 //        Vector< Clause* >& wl = variableAllOccurrences[ 1 - ( getTruthValue( variable ) >> 1 ) ];       
         Vector< Clause* >& wl = getDataStructure( literal ).variableAllOccurrences;
@@ -554,7 +554,6 @@ Solver::propagateAtLevelZero(
     
     {
         assert( !conflictDetected() );
-        trace_msg( solving, 2, "Propagating " << variables.createOppositeLiteralFromAssignedVariable( variable ) << " as false at level 0" );
         Literal complement = variables.createOppositeLiteralFromAssignedVariable( variable );
         
 //        Vector< Clause* >& wl = variableAllOccurrences[ ( getTruthValue( variable ) >> 1 ) ];

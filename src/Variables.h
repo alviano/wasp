@@ -160,7 +160,7 @@ Variables::~Variables()
 {
     for( unsigned int i = 1; i < numOfVariables; i++ )
     {
-        if( hasBeenEliminatedByDistribution( i ) )
+        if( hasBeenEliminated( i ) && !hasBeenEliminatedByDistribution( i ) )
             delete variablesData[ i ].implicant;
         delete variablesData[ i ].reasonForBinaryClauses;
     }
