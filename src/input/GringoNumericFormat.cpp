@@ -1292,8 +1292,8 @@ GringoNumericFormat::createCrule(
         if( lit.isHeadAtom() ) // && lit.getVariable() == head.getVariable() )
             continue;
 //        assert_msg( !lit.isHaedAtom(), "rule: " << *rule << "; head: " << head );
-        
-        if( !lit.isToBeRemoved() )
+
+//        if( !lit.isToBeRemoved() )
             crule->addLiteral( lit );
         if( lit.isPositiveBodyLiteral() )
             solver.addEdgeInDependencyGraph( head.getVariable(), lit.getVariable() );
@@ -1344,7 +1344,7 @@ GringoNumericFormat::computeSCCs()
                     {
                         assert( data.headOccurrences[ j ]->literals[ 0 ].getVariable() == i || data.headOccurrences[ j ]->literals[ 1 ].getVariable() == i );
                         Literal lit = data.headOccurrences[ j ]->literals[ 0 ].getVariable() == i ? data.headOccurrences[ j ]->literals[ 1 ] : data.headOccurrences[ j ]->literals[ 0 ];
-                        if( !lit.isToBeRemoved() )
+//                        if( !lit.isToBeRemoved() )
                             crule->addLiteral( lit.getOppositeLiteral() );
                         if( lit.isPositiveBodyLiteral() )
                             solver.addEdgeInDependencyGraph( i, lit.getVariable() );
@@ -1369,10 +1369,12 @@ GringoNumericFormat::computeSCCs()
 void
 GringoNumericFormat::computeCompletion()
 {
-    assert( propagatedLiterals == solver.numberOfAssignedLiterals() );
+    trace_msg( parser, 1, "Computing completion" );
+    assert_msg( propagatedLiterals == solver.numberOfAssignedLiterals(), "difference is " << ( solver.numberOfAssignedLiterals() - propagatedLiterals ) );
     for( unsigned i = 0; i < crules.size(); ++i )
     {
         Clause* crule = crules[ i ];
+        trace_msg( parser, 2, "Processing crule " << *crule );
         assert( crule != NULL );
         Literal lit = crule->getAt( 0 ).getOppositeLiteral();
         if( !solver.isTrue( lit ) )
@@ -1384,6 +1386,8 @@ GringoNumericFormat::computeCompletion()
                     continue;
                 assert( solver.isUndefined( lit ) );
                 assert( solver.isUndefined( lit2 ) );
+                
+                trace_msg( parser, 3, "Adding binary clause " << lit << " | " << lit2 );
 
                 if( !solver.callSimplifications() )
                 {
@@ -1399,8 +1403,10 @@ GringoNumericFormat::computeCompletion()
                 assert( propagatedLiterals == solver.numberOfAssignedLiterals() );
             }
         }
+        trace_msg( parser, 3, "Adding clause " << *crule );
         solver.cleanAndAddClause( crule );
-        assert( propagatedLiterals == solver.numberOfAssignedLiterals() );
+        trace_msg( parser, 4, "Actually added " << *crule );
+        assert_msg( propagatedLiterals == solver.numberOfAssignedLiterals(), "difference is " << ( solver.numberOfAssignedLiterals() - propagatedLiterals ) );
     }    
 }
 //void
