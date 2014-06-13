@@ -117,19 +117,9 @@ class Clause : public Reason
         bool isTautology() const;
         
     private:
-        
         Vector< Literal > literals;
-        ostream& print( ostream& out ) const;  
-        
-        Clause( const Clause& )
-        {
-            assert( "The copy constructor has been disabled." && 0 );
-        }
-
-        inline void setWatchesInRandomPositions();        
-        
-        inline bool updateWatch();
-        void notifyImplication( Solver& solver );
+        ostream& print( ostream& out ) const;        
+        Clause( const Clause& );
         
         union SignatureAct
         {
@@ -197,22 +187,6 @@ Clause::removeLiteral(
     literals.pop_back();
     
     recomputeSignature();
-}
-
-void
-Clause::setWatchesInRandomPositions()
-{
-    assert( "Unary clauses must be removed." && literals.size() > 1 );
-    unsigned int first = rand() % literals.size();
-    unsigned int second = rand() % ( literals.size() - 1 );
-
-    if( second >= first )
-        second++;    
-
-    assert( "First watch is not in range." && first < literals.size() );
-    assert( "Second watch is not in range." && second < literals.size() );
-    swapLiterals( 0, first );
-    swapLiterals( 1, second );    
 }
 
 unsigned int

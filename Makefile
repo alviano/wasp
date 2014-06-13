@@ -174,7 +174,7 @@ tests/sat/Intensive3: $(TESTS_OUT_sat_Intensive3)
 $(TESTS_OUT_sat_Intensive3):
 	@$(TESTS_TESTER) "$(TESTS_COMMAND_SatModel)" $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_SatModels) $(TESTS_REPORT_text)
 
-tests/asp: tests/asp/AllAnswerSets/tight tests/asp/AllAnswerSets/nontight tests/asp/AllAnswerSets/aggregates tests/asp/AllAnswerSetsIntensive
+tests/asp: tests/asp/gringo tests/asp/AllAnswerSets/tight tests/asp/AllAnswerSets/nontight tests/asp/AllAnswerSets/aggregates tests/asp/weakConstraints
 
 tests/asp/gringo: $(TESTS_OUT_asp_gringo)
 tests/asp/AllAnswerSets/tight: $(TESTS_OUT_asp_AllAnswerSetsTight)

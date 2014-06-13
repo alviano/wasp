@@ -535,8 +535,13 @@ void
 Solver::propagateAtLevelZero(
     Var variable )
 {
-    assert( !conflictDetected() );    
+    assert( !conflictDetected() );
     trace_msg( solving, 2, "Propagating " << variables.createLiteralFromAssignedVariable( variable ) << " as true at level 0" );
+    
+    shortPropagation( variable );
+    if( conflictDetected() )
+        return;    
+    
     {        
         Literal literal = variables.createLiteralFromAssignedVariable( variable );
 //        Vector< Clause* >& wl = variableAllOccurrences[ 1 - ( getTruthValue( variable ) >> 1 ) ];       

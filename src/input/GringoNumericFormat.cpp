@@ -40,6 +40,9 @@ GringoNumericFormat::parse(
             cleanData();
         }
         
+        if( solver.callSimplifications() && solver.numberOfClauses() + value > 1000000 )
+            solver.turnOffSimplifications();
+
         switch( type )
         {
         case GRINGO_NORMAL_RULE_ID:
@@ -1395,17 +1398,7 @@ GringoNumericFormat::computeCompletion()
                 
                 trace_msg( parser, 3, "Adding binary clause " << lit << " | " << lit2 );
 
-                if( !solver.callSimplifications() )
-                {
-                    solver.addClause( lit, lit2 );
-                }
-                else
-                {
-                    Clause* bin = solver.newClause();
-                    bin->addLiteral( lit );
-                    bin->addLiteral( lit2 );
-                    solver.addClause( bin );
-                }
+                solver.addClause( lit, lit2 );
                 assert( propagatedLiterals == solver.numberOfAssignedLiterals() );
             }
         }

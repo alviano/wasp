@@ -81,7 +81,7 @@ class Solver
         inline bool cleanAndAddClause( Clause* clause );
         inline bool addClause( Literal literal );
         inline bool addClause( Clause* clause );
-        inline void addClause( Literal lit1, Literal lit2 );
+        inline bool addClause( Literal lit1, Literal lit2 );
         
         inline bool addClauseFromModel( Clause* clause );
         inline void addLearnedClause( Clause* learnedClause );
@@ -580,6 +580,14 @@ Solver::cleanAndAddClause(
         return false;
     }
     
+    if( clause->size() == 2 )
+    {
+        Literal lit1 = clause->getAt( 0 );
+        Literal lit2 = clause->getAt( 1 );
+        releaseClause( clause );
+        return addClause( lit1, lit2 );
+    }
+    
     assert( allUndefined( *clause ) );
     return addClause( clause );
 }
@@ -595,13 +603,25 @@ Solver::addClause(
     return false;
 }
 
-void
+bool
 Solver::addClause(
     Literal lit1,
     Literal lit2 )
-{
-    addLiteralInShortClause( lit1, lit2 );
-    addLiteralInShortClause( lit2, lit1 );        
+{    
+    if( !callSimplifications() )
+    {
+        addLiteralInShortClause( lit1, lit2 );
+        addLiteralInShortClause( lit2, lit1 );
+    }
+    else
+    {
+        Clause* bin = newClause();
+        bin->addLiteral( lit1 );
+        bin->addLiteral( lit2 );
+        return addClause( bin );
+    }
+    
+    return true;
 }
 
 bool
@@ -616,7 +636,7 @@ Solver::addClause(
     if( size > 1 )
     {
         statistics( onAddingClause( size ) );
-        if( callSimplifications() )
+        if( callSimplifications() || clause->size() != 2 )
             attachClauseToAllLiterals( *clause );
         clause->setPositionInSolver( clauses.size() );
         clauses.push_back( clause );
