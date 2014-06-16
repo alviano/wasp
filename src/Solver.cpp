@@ -661,8 +661,8 @@ Solver::deleteClauses()
     ClauseIterator j = learnedClauses_begin();
     Activity threshold = deletionCounters.increment / numberOfLearnedClauses();
     
-    sort( learnedClauses.begin(), learnedClauses.end(), compareClauses );
-    
+    stable_sort( learnedClauses.begin(), learnedClauses.end(), compareClauses );    
+        
     unsigned int numberOfDeletions = 0;
     unsigned int size = numberOfLearnedClauses();
     unsigned int toDelete = size / 2;

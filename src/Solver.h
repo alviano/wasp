@@ -1005,10 +1005,45 @@ Solver::propagateLiteralAsDeterministicConsequenceSatelite(
 void
 Solver::clearVariableOccurrences()
 {
-    if( callSimplifications() )
+    for( unsigned int i = 1; i <= numberOfVariables(); i++ )
     {
-        for( unsigned int i = 1; i <= numberOfVariables(); i++ )
+        if( !variables.hasBeenEliminatedByDistribution( i ) )
             clearOccurrences( i );
+        
+        Literal pos( i, POSITIVE );
+        Literal neg( i, NEGATIVE );
+        if( !isUndefined( i ) )
+        {
+            getDataStructure( pos ).variableBinaryClauses.clearAndDelete();
+            getDataStructure( neg ).variableBinaryClauses.clearAndDelete();
+            continue;
+        }        
+        
+        Vector< Literal >& posBinaryClauses = getDataStructure( pos ).variableBinaryClauses;
+        
+        unsigned int k = 0;
+        for( unsigned int j = 0; j < posBinaryClauses.size(); ++j )
+        {
+            posBinaryClauses[ k ] = posBinaryClauses[ j ];
+            assert( !isFalse( posBinaryClauses[ j ] ) );
+            assert( isUndefined( posBinaryClauses[ j ] ) || getDecisionLevel( posBinaryClauses[ j ] ) == 0 );
+            if( !isTrue( posBinaryClauses[ j ] ) )
+                k++;
+        }
+        posBinaryClauses.shrink( k );        
+   
+        Vector< Literal >& negBinaryClauses = getDataStructure( neg ).variableBinaryClauses;
+        k = 0;
+        for( unsigned int j = 0; j < negBinaryClauses.size(); ++j )
+        {
+            negBinaryClauses[ k ] = negBinaryClauses[ j ];
+            assert( !isFalse( negBinaryClauses[ j ] ) );
+            assert( isUndefined( negBinaryClauses[ j ] ) || getDecisionLevel( negBinaryClauses[ j ] ) == 0 );
+            if( !isTrue( negBinaryClauses[ j ] ) )
+                k++;
+        }
+        negBinaryClauses.shrink( k );
+        
     }
 //    #ifndef NDEBUG    
 //    for( unsigned int i = 1; i <= numberOfVariables(); i++ )

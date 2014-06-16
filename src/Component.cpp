@@ -62,6 +62,17 @@ Component::getClauseToPropagate(
     {
         assert( clauseToPropagate != NULL );
         
+        for( unsigned int i = 0; i < unfoundedSet.size(); i++ )
+        {
+            Var tmp = unfoundedSet[ i ];                
+            if( solver.isTrue( tmp ) )
+            {
+                unfoundedSet[ i ] = unfoundedSet.back();
+                unfoundedSet.back() = tmp;
+                break;
+            }
+        }
+        
         Var variable;
         do
         {
