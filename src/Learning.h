@@ -69,7 +69,7 @@ class Learning
          * The literal added by this method is a literal which should be navigated.
          * @param literal the literal to navigate.
          */
-        inline void addLiteralToNavigate( Literal literal );     
+        inline void addLiteralToNavigate( Literal literal );                     
         
         /**
          * The decision level of the conflict.
@@ -110,6 +110,8 @@ class Learning
         vector< unsigned int > visited;
         
         inline bool sameDecisionLevelOfSolver( Literal lit ) const;
+        
+        Vector< Var > lastDecisionLevel;
 };
 
 Learning::Learning( Solver& s ) : solver( s ), decisionLevel( 0 ), learnedClause( NULL ), pendingVisitedVariables( 0 ), numberOfCalls( 0 ), maxDecisionLevel( 0 ), maxPosition( 0 )
@@ -131,6 +133,7 @@ Learning::clearDataStructures()
     {
         resetVariablesNumberOfCalls();
     }
+    lastDecisionLevel.clear();
 }
 
 void

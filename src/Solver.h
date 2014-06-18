@@ -41,6 +41,7 @@ using namespace std;
 #include "Aggregate.h"
 #include "util/Constants.h"
 #include "WatchedList.h"
+#include "stl/BoundedQueue.h"
 
 struct DataStructures
 {    
@@ -164,12 +165,14 @@ class Solver
         inline void deleteLearnedClause( ClauseIterator iterator );
         inline void deleteClause( Clause* clause );
         inline void removeClauseNoDeletion( Clause* clause );
-        void deleteClauses();
-        void updateActivity( Clause* learnedClause );
+        inline void deleteClauses() { glucoseHeuristic_ ? glucoseDeletion() : minisatDeletion(); }
+        void minisatDeletion();
+        void glucoseDeletion();
         inline void decrementActivity(){ deletionCounters.increment *= deletionCounters.decrement; }
-        inline void onLearning( Clause* learnedClause );
-        inline bool hasToDelete();
+        inline void onLearning( Clause* learnedClause );        
         inline void markClauseForDeletion( Clause* clause ){ satelite->onDeletingClause( clause ); clause->markAsDeleted(); }
+        
+        inline void deleteClausesIfNecessary();
         
         void printProgram() const;
         void printDimacs() const;
@@ -327,8 +330,17 @@ class Solver
         inline const DataStructures& getDataStructure( Literal lit ) const { return *variableDataStructures[ lit.getIndex() ]; }
         inline DataStructures& getDataStructure( Literal lit ) { return *variableDataStructures[ lit.getIndex() ]; }        
 
+        inline void learnedClauseUsedForConflict( Clause* clause );
+        inline unsigned int computeLBD( const Clause& clause );
+        
+        inline void bumpActivity( Var v ) { minisatHeuristic->bumpActivity( v ); }
+        
+        inline bool glucoseHeuristic() const { return glucoseHeuristic_; }
+        inline void minimisationWithBinaryResolution( Clause& learnedClause );
+        
     private:
-        inline void addVariableInternal();
+        void updateActivity( Clause* learnedClause );
+        inline void addVariableInternal();        
         
         bool checkVariablesState();
         
@@ -379,6 +391,11 @@ class Solver
         unsigned int precomputedCost;                
         
         bool callSimplifications_;
+        
+        bool glucoseHeuristic_;
+        uint64_t conflicts;
+        uint64_t conflictsRestarts;
+
         struct OptimizationLiteralData
         {
             Literal lit;
@@ -411,7 +428,63 @@ class Solver
                 learnedSizeAdjustCnt = 0;
                 learnedSizeAdjustIncrement = 1.5;
             }
-        } deletionCounters; 
+        } deletionCounters;
+        
+        struct GlucoseData
+        {
+            double sizeLBDQueue;
+            double sizeTrailQueue;
+            double K;
+            double R;
+            
+            //constants for reduce DB
+            int nbclausesBeforeReduce;
+            int incReduceDB;
+            int specialIncReduceDB;
+            unsigned int lbLBDFrozenClause;
+            
+            //constants for reducing clause
+            int lbSizeMinimizingClause;
+            unsigned int lbLBDMinimizingClause;
+            
+            float sumLBD;
+            
+            Vector< unsigned int > permDiff;
+            
+            unsigned int currRestart;
+            
+            unsigned int MYFLAG;
+            
+            bqueue< unsigned int > lbdQueue;
+            bqueue< unsigned int > trailQueue;            
+            
+            void init()
+            {
+                sizeLBDQueue = 50;
+                sizeTrailQueue = 5000;
+                K = 0.8;
+                R = 1.4;
+                nbclausesBeforeReduce = 2000;
+                incReduceDB = 300;
+                specialIncReduceDB = 1000;
+                lbLBDFrozenClause = 30;
+                
+                lbSizeMinimizingClause = 30;
+                lbLBDMinimizingClause = 6;
+                
+                sumLBD = 0.0;
+                currRestart = 1;
+                
+                permDiff.push_back( 0 );
+                MYFLAG = 0;
+                
+                lbdQueue.initSize( sizeLBDQueue );
+                trailQueue.initSize( sizeTrailQueue );
+            }
+            
+            void onNewVariable() { permDiff.push_back( 0 ); }
+            
+        } glucoseData;
         
         vector< OptimizationLiteralData > optimizationLiterals;
         vector< unsigned int > maxCostOfLevelOfOptimizationRules;        
@@ -449,12 +522,16 @@ Solver::Solver()
     optimizationAggregate( NULL ),
     numberOfOptimizationLevels( 0 ),
     precomputedCost( 0 ),
-    callSimplifications_( true )
+    callSimplifications_( true ),
+    glucoseHeuristic_( true ),
+    conflicts( 0 ),
+    conflictsRestarts( 0 )
 {
     dependencyGraph = new DependencyGraph( *this );
     satelite = new Satelite( *this );
     minisatHeuristic = new MinisatHeuristic( *this );
     deletionCounters.init();
+    glucoseData.init();
     VariableNames::addVariable();
     variableDataStructures.push_back( NULL );
     variableDataStructures.push_back( NULL );
@@ -477,6 +554,7 @@ Solver::addVariableInternal()
     variables.push_back();    
     minisatHeuristic->onNewVariable( variables.numberOfVariables() );
     learning.onNewVariable();
+    glucoseData.onNewVariable();
     
     variableDataStructures.push_back( new DataStructures() );
     variableDataStructures.push_back( new DataStructures() );
@@ -736,7 +814,6 @@ Solver::unrollOne()
 void
 Solver::doRestart()
 {
-    statistics( onRestart() );
     trace( solving, 2, "Performing restart.\n" );
     restart->onRestart();
     unroll( 0 );
@@ -843,6 +920,16 @@ Solver::chooseLiteral()
 bool
 Solver::analyzeConflict()
 {
+    conflicts++;
+    conflictsRestarts++;
+    
+    if( glucoseHeuristic_ )
+    {
+        glucoseData.trailQueue.push( numberOfAssignedLiterals() );
+        if( conflictsRestarts > 10000 && glucoseData.lbdQueue.isValid() && numberOfAssignedLiterals() /*trail.size()*/ > glucoseData.R * glucoseData.trailQueue.getAvg() )
+            glucoseData.lbdQueue.fastClear();
+    }    
+
     Clause* learnedClause = learning.onConflict( conflictLiteral, conflictClause );
     assert( "Learned clause has not been calculated." && learnedClause != NULL );
     statistics( onLearning( learnedClause->size() ) );
@@ -876,11 +963,19 @@ Solver::analyzeConflict()
     {
         //Be careful. UIP should be always in position 0.
         assert( getDecisionLevel( learnedClause->getAt( 0 ) ) == currentDecisionLevel );
-        assert( getDecisionLevel( learnedClause->getAt( 1 ) ) == learnedClause->getMaxDecisionLevel( *this, 1, learnedClause->size() ) );
+        assert( getDecisionLevel( learnedClause->getAt( 1 ) ) == learnedClause->getMaxDecisionLevel( *this, 1, learnedClause->size() ) );        
+        if( glucoseHeuristic_ )
+        {
+            glucoseData.sumLBD += learnedClause->lbd();
+            glucoseData.lbdQueue.push( learnedClause->lbd() );
+        }
         addLearnedClause( learnedClause );
 
-        if( restart->hasToRestart() )
+        bool hasToRestart = glucoseHeuristic_ ? ( glucoseData.lbdQueue.isValid() && ( ( glucoseData.lbdQueue.getAvg() * glucoseData.K ) > ( glucoseData.sumLBD / conflictsRestarts ) ) ) : restart->hasToRestart();
+        if( hasToRestart )
         {
+            statistics( onRestart() );    
+            glucoseData.lbdQueue.fastClear();
             doRestart();
             simplifyOnRestart();
         }
@@ -1117,12 +1212,6 @@ Solver::onLearning(
 {
     updateActivity( learnedClause );
     decrementActivity();    
-}
-
-bool
-Solver::hasToDelete()
-{
-    return ( ( int ) ( numberOfLearnedClauses() - numberOfAssignedLiterals() ) >= deletionCounters.maxLearned );
 }
 
 void
@@ -1714,6 +1803,115 @@ Solver::onLiteralFalse(
     assert( "The other watched literal cannot be true." && !isTrue( clause[ 0 ] ) );    
     //Propagate clause[ 0 ];
     return true;
+}
+
+void
+Solver::learnedClauseUsedForConflict(
+    Clause* clausePointer )
+{
+    updateActivity( clausePointer );
+    if( glucoseHeuristic_ )
+    {
+        Clause& clause = *clausePointer;
+        if( clause.lbd() > 2 )
+        {
+            unsigned lbd = computeLBD( clause );
+            if( lbd + 1 < clause.lbd() )
+            {
+                if( clause.lbd() <= glucoseData.lbLBDFrozenClause )
+                {
+                    clause.setCanBeDeleted( false );
+                }
+                clause.setLbd( lbd );
+            }
+        }
+    }
+}
+
+unsigned int
+Solver::computeLBD(
+    const Clause& clause )
+{
+    assert( glucoseHeuristic_ );
+    unsigned int lbd = 0;
+    glucoseData.MYFLAG++;
+    for( unsigned int i = 0; i < clause.size(); i++ )
+    {
+        unsigned int level = getDecisionLevel( clause[ i ] );
+        if( glucoseData.permDiff[ level ] != glucoseData.MYFLAG )
+        {
+            glucoseData.permDiff[ level ] = glucoseData.MYFLAG;
+            lbd++;
+        }
+    }
+	return lbd;
+}
+
+void
+Solver::deleteClausesIfNecessary()
+{
+    if( glucoseHeuristic_ )
+    {
+        if( conflicts >= glucoseData.currRestart * glucoseData.nbclausesBeforeReduce )
+        {
+            assert( numberOfLearnedClauses() > 0 );
+            glucoseData.currRestart = ( conflicts / glucoseData.nbclausesBeforeReduce ) + 1;
+            deleteClauses();
+            glucoseData.nbclausesBeforeReduce += glucoseData.incReduceDB;
+        }
+    }
+    else
+    {
+        if( ( int ) ( numberOfLearnedClauses() - numberOfAssignedLiterals() ) >= deletionCounters.maxLearned )
+            deleteClauses();
+    }
+}
+
+void
+Solver::minimisationWithBinaryResolution(
+    Clause& learnedClause )
+{ 
+    assert( 0 && "IMPLEMENT CHECK FOR MAXPOSITION IN LEARNING" );
+    // Find the LBD measure                                                                                                         
+    unsigned int lbd = computeLBD( learnedClause );
+    Literal p = learnedClause[ 0 ].getOppositeLiteral();
+
+    if( lbd <= glucoseData.lbLBDMinimizingClause )
+    {
+        glucoseData.MYFLAG++;
+
+        for( unsigned int i = 1; i < learnedClause.size(); i++ )
+            glucoseData.permDiff[ learnedClause[ i ].getVariable() ] = glucoseData.MYFLAG;
+
+        Vector< Literal >& wbin = getDataStructure( p ).variableBinaryClauses;        
+        int nb = 0;
+        for( unsigned int k = 0; k < wbin.size(); k++ )
+        {
+            Literal imp = wbin[ k ];
+            if( glucoseData.permDiff[ imp.getVariable() ] == glucoseData.MYFLAG && isTrue( imp ) )
+            {
+                nb++;
+                glucoseData.permDiff[ imp.getVariable() ] = glucoseData.MYFLAG - 1;
+            }
+        }
+        
+        int l = learnedClause.size() - 1;
+        if( nb > 0 )
+        {
+            for( unsigned int i = 1; i < learnedClause.size() - nb; i++ )
+            {
+                if( glucoseData.permDiff[ learnedClause[ i ].getVariable() ] != glucoseData.MYFLAG )
+                {
+                    Literal p = learnedClause[ l ];
+                    learnedClause[ l ] = learnedClause[ i ];
+                    learnedClause[ i ] = p;
+                    l--;
+                    i--;
+                }
+            }
+            learnedClause.shrink( nb );
+        }
+    }
 }
 
 #endif

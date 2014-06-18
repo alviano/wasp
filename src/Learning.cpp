@@ -46,6 +46,7 @@ Learning::onConflict(
     assert( "The counter must be equal to 0." && pendingVisitedVariables == 0 );
     assert( isVisitedVariablesEmpty() );
     
+    assert( lastDecisionLevel.empty() );
     learnedClause = solver.newClause();
     learnedClause->setLearned();
     decisionLevel = solver.getCurrentDecisionLevel();
@@ -54,8 +55,8 @@ Learning::onConflict(
     trace_msg( learning, 2, "Conflict literal: " << conflictLiteral << " - Conflict implicant: " << *conflictClause << ( conflictClause->isLearned() ? " (learned)" : " (original)" ) );
 
     //Compute implicants of the conflicting literal.
-    if( conflictClause->isLearned() )    
-        solver.updateActivity( ( Clause* ) conflictClause );
+    if( conflictClause->isLearned() ) 
+        solver.learnedClauseUsedForConflict( ( Clause* ) conflictClause );
     
     conflictClause->onLearning( solver, this, conflictLiteral );
     //assert_msg( conflictLiteral.getVariable()->getImplicant() != NULL, "Conflict literal " << conflictLiteral << " has no implicant" ); // FIXME: I added this assert. Is it right? It is true only for tight programs.
@@ -72,16 +73,17 @@ Learning::onConflict(
     while( pendingVisitedVariables > 1 )
     {
         //Get next literal.
-        Literal currentLiteral = getNextLiteralToNavigate();
+        Literal currentLiteral = getNextLiteralToNavigate();        
         trace_msg( learning, 3, "Navigating " << currentLiteral << " for calculating the UIP" );
         
         Reason* implicant = solver.getImplicant( currentLiteral.getVariable() );        
         //Compute implicants of the literal.
         if( implicant != NULL )
         {
+            lastDecisionLevel.push_back( currentLiteral.getVariable() );
             trace_msg( learning, 4, "The implicant of " << currentLiteral << " is " << *implicant << ( implicant->isLearned() ? " (learned)" : " (original)" ) );
             if( implicant->isLearned() )
-                solver.updateActivity( ( Clause* ) implicant );
+                solver.learnedClauseUsedForConflict( ( Clause* ) implicant );
             implicant->onLearning( solver, this, currentLiteral );            
         }
         else
@@ -102,7 +104,7 @@ Learning::onConflict(
     
     assert_msg( sameDecisionLevelOfSolver( firstUIP ), "UIP " << firstUIP << " is not of the same level of the solver. UIP dl: " << solver.getDecisionLevel( firstUIP ) << " - solver dl: " << solver.getCurrentDecisionLevel() );
     
-    assert( learnedClause->size() > 0 );
+    assert( learnedClause->size() > 0 );    
     
     if( learnedClause->size() >= 2 )
     {
@@ -110,6 +112,26 @@ Learning::onConflict(
         learnedClause->swapLiterals( 0, learnedClause->size() - 1 );
         learnedClause->swapLiterals( 1, maxPosition != 0 ? maxPosition : learnedClause->size() - 1 );
         assert( sameDecisionLevelOfSolver( learnedClause->getAt( 0 ) ) );
+        
+        if( solver.glucoseHeuristic() )
+        {
+            unsigned int lbd = solver.computeLBD( *learnedClause );
+            learnedClause->setLbd( lbd );
+
+            for( unsigned int i = 0; i < lastDecisionLevel.size(); i++ )
+            {
+                Var v = lastDecisionLevel[ i ];
+                Reason* implicant = solver.getImplicant( v );
+
+                assert( solver.getDecisionLevel( v ) != 0 );
+                if( implicant != NULL && implicant->isLearned() )
+                {
+                    Clause* c = ( Clause* ) implicant;
+                    if( c->lbd() < lbd )
+                        solver.bumpActivity( v );
+                }
+            }        
+        }
     }
     
     trace_msg( learning, 1, "Learned Clause: " << *learnedClause );    

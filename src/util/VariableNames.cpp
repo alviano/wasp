@@ -32,6 +32,14 @@ const string&
 VariableNames::getName(
     Var v )
 {
+    #ifdef TRACE_ON
+    if( isHidden( v ) )
+    {
+        stringstream s;
+        s << v;
+        variables[ v ] = s.str();
+    }
+    #endif
     assert( !isHidden( v ) );
     return variables[ v ];
 }

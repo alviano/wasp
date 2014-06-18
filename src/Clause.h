@@ -116,6 +116,14 @@ class Clause : public Reason
         inline void recomputeSignature();                
         bool isTautology() const;
         
+        inline void setLbd( unsigned int lbd ) { lbd_ = lbd; }
+        inline unsigned int lbd() const { return lbd_; }
+        
+        inline void setCanBeDeleted( bool b ) { canBeDeleted_ = b; }
+        inline bool canBeDeleted() const { return canBeDeleted_; }
+        
+        inline void shrink( unsigned int value ) { literals.shrink( value ); } 
+        
     private:
         Vector< Literal > literals;
         ostream& print( ostream& out ) const;        
@@ -141,10 +149,13 @@ class Clause : public Reason
             unsigned learned                : 1;            
             unsigned positionInSolver       : 30;
         } clauseData;
+        
+        unsigned int lbd_ : 31;
+        unsigned int canBeDeleted_ : 1;
 };
 
 Clause::Clause(
-    unsigned reserve )
+    unsigned reserve ) : lbd_( 0 ), canBeDeleted_( 1 )
 {
     literals.reserve( reserve );
     clauseData.inQueue = 0;

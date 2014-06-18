@@ -50,9 +50,8 @@ class MinisatHeuristic
         inline void addPreferredChoice( Literal lit ){ assert( lit != Literal::null ); preferredChoices.push_back( lit ); }
         void removePrefChoices();
         void simplifyVariablesAtLevelZero();
-
-    private:
         inline bool bumpActivity( Var var ){ return ( ( act[ var ] += variableIncrement ) > 1e100 ); }
+    private:        
         inline void rescaleActivity();        
         inline void variableBumpActivity( Var variable );
         void randomChoice();

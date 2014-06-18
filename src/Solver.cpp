@@ -206,10 +206,7 @@ Solver::solve()
         }
         //*/
         
-        if( hasToDelete() )
-        {
-            deleteClauses();
-        }
+        deleteClausesIfNecessary();
 
         assert( !conflictDetected() );
         chooseLiteral();
@@ -262,8 +259,7 @@ Solver::solvePropagators()
     
     while( hasUndefinedLiterals() )
     {
-        if( hasToDelete() )
-            deleteClauses();
+        deleteClausesIfNecessary();
         
         assert( !conflictDetected() );
         chooseLiteral();
@@ -655,7 +651,7 @@ Solver::allClausesSatisfied() const
 bool compareClauses( Clause* c1, Clause* c2 ){ return c1->activity() < c2->activity(); }
 
 void
-Solver::deleteClauses()
+Solver::minisatDeletion()
 {
     ClauseIterator i = learnedClauses_begin();
     ClauseIterator j = learnedClauses_begin();
@@ -676,6 +672,96 @@ Solver::deleteClauses()
         }
         else
         {
+            *j = *i;
+            ++j;
+        }
+        
+        ++i;
+    }
+
+    finalizeDeletion( size - numberOfDeletions );
+    statistics( onDeletion( size, numberOfDeletions ) );
+}
+
+bool compareClausesGlucose( Clause* c1Pointer, Clause* c2Pointer )
+{
+    Clause& c1 = *c1Pointer;
+    Clause& c2 = *c2Pointer;
+    
+    if( c2.size() == 2 )
+        return c1.size() > 2;
+    else
+    {
+        assert( c2.size() > 2 );
+        if( c1.size() == 2 )
+            return false;
+        
+        assert( c1.size() > 2 );        
+        if( c1.lbd() != c2.lbd() )
+            return c1.lbd() > c2.lbd();            
+        else
+            return c1.activity() < c2.activity();
+    }
+    
+    assert( 0 );
+    
+    //GLUCOSE VERSION:
+    
+//    bool operator () (CRef x, CRef y) { 
+// 
+//    // Main criteria... Like in MiniSat we keep all binary clauses
+//    if(ca[x].size()> 2 && ca[y].size()==2) return 1;
+//    
+//    if(ca[y].size()>2 && ca[x].size()==2) return 0;
+//    if(ca[x].size()==2 && ca[y].size()==2) return 0;
+//    
+//    // Second one  based on literal block distance
+//    if(ca[x].lbd()> ca[y].lbd()) return 1;
+//    if(ca[x].lbd()< ca[y].lbd()) return 0;    
+//    
+//    
+//    // Finally we can use old activity or size, we choose the last one
+//        return ca[x].activity() < ca[y].activity();
+//	//return x->size() < y->size();
+//
+//        //return ca[x].size() > 2 && (ca[y].size() == 2 || ca[x].activity() < ca[y].activity()); } 
+//    } 
+}
+
+void
+Solver::glucoseDeletion()
+{
+    assert( glucoseHeuristic_ );
+    ClauseIterator i = learnedClauses_begin();
+    ClauseIterator j = learnedClauses_begin();
+    
+    stable_sort( learnedClauses.begin(), learnedClauses.end(), compareClausesGlucose );
+    
+    assert( !learnedClauses.empty() );
+    if( learnedClauses[ learnedClauses.size() / 2 ]->lbd() <= 3 )
+        glucoseData.nbclausesBeforeReduce += glucoseData.specialIncReduceDB;
+    
+    if( learnedClauses.back()->lbd() <= 5 )
+        glucoseData.nbclausesBeforeReduce += glucoseData.specialIncReduceDB;
+    
+    unsigned int numberOfDeletions = 0;
+    unsigned int size = numberOfLearnedClauses();
+    unsigned int toDelete = size / 2;
+    while( i != learnedClauses.end() )
+    {
+        Clause& clause = **i;
+        if( clause.lbd() > 2 && clause.size() > 2 && clause.canBeDeleted() && !isLocked( clause ) && ( numberOfDeletions < toDelete ) )
+        {
+            deleteLearnedClause( i );
+            numberOfDeletions++;
+        }
+        else
+        {
+            if( !clause.canBeDeleted() )
+            {
+                toDelete++;
+                clause.setCanBeDeleted( true );
+            }
             *j = *i;
             ++j;
         }
