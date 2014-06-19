@@ -127,6 +127,11 @@ Component::getClauseToPropagate(
 
                 trace_msg( unfoundedset, 2, "Adding loop formula: " << *loopFormula );                
                 loopFormula->setLearned();
+                if( solver.glucoseHeuristic() )
+                {
+                    unsigned int lbd = solver.computeLBD( *loopFormula );
+                    loopFormula->setLbd( lbd );
+                }
                 return loopFormula;
             }
         } while( solver.isFalse( variable ) && !unfoundedSet.empty() );

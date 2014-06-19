@@ -305,8 +305,9 @@ Solver::solvePropagators()
             }
             else
             {
+                conflicts++;
                 unsigned int size = clauseToPropagate->size();
-                statistics( onLearningFromPropagators( size ) );
+                statistics( onLearningFromPropagators( size ) );                
                 if( size == 0 )
                 {
                     clearConflictStatus();
@@ -330,6 +331,11 @@ Solver::solvePropagators()
                         clearConflictStatus();                    
                         trace( solving, 2, "Learned clause from propagator and backjumping to level %d.\n", getDecisionLevel( clauseToPropagate->getAt( 1 ) ) );            
                         unroll( getDecisionLevel( clauseToPropagate->getAt( 1 ) ) );
+                    }
+                    if( glucoseHeuristic_ )
+                    {
+                        glucoseData.sumLBD += clauseToPropagate->lbd();
+                        glucoseData.lbdQueue.push( clauseToPropagate->lbd() );
                     }
                     addLearnedClause( clauseToPropagate );
                     assert( !isTrue( clauseToPropagate->getAt( 0 ) ) );
