@@ -23,6 +23,7 @@
 #include <iostream>
 #include <vector>
 #include "stl/Vector.h"
+#include "Literal.h"
 using namespace std;
 
 class Clause;
@@ -91,6 +92,8 @@ class Learning
         
         void simplifyLearnedClause( Clause* lc );
         bool allMarked( Reason* clause, Literal literal );
+        
+        void computeMaxDecisionLevel( const Clause& lc );
         
         #ifndef NDEBUG
         /**

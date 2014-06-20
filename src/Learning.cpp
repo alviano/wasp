@@ -114,8 +114,19 @@ Learning::onConflict(
         assert( sameDecisionLevelOfSolver( learnedClause->getAt( 0 ) ) );
         
         if( solver.glucoseHeuristic() )
-        {
-            unsigned int lbd = solver.computeLBD( *learnedClause );
+        {            
+//            bool hasToComputeMaxDecisionLevel = solver.minimisationWithBinaryResolution( *learnedClause, lbd );
+//            assert( sameDecisionLevelOfSolver( learnedClause->getAt( 0 ) ) );
+//            if( learnedClause->size() == 1 )
+//                return learnedClause;
+//            
+//            if( hasToComputeMaxDecisionLevel )            
+//            {
+//                computeMaxDecisionLevel( *learnedClause );
+//                learnedClause->swapLiterals( 1, maxPosition );
+//                lbd = solver.computeLBD( *learnedClause );            
+//            }
+            unsigned int lbd = solver.computeLBD( *learnedClause );            
             learnedClause->setLbd( lbd );
 
             for( unsigned int i = 0; i < lastDecisionLevel.size(); i++ )
@@ -393,4 +404,22 @@ Learning::sameDecisionLevelOfSolver(
     Literal lit ) const
 {
     return solver.getDecisionLevel( lit.getVariable() ) == solver.getCurrentDecisionLevel();
+}
+
+void
+Learning::computeMaxDecisionLevel(
+    const Clause& lc )
+{
+    assert( lc.size() >= 2 );
+    maxDecisionLevel = solver.getDecisionLevel( lc[ 1 ] );
+    maxPosition = 1;
+    for( unsigned int i = 2; i < lc.size(); i++ )
+    {
+        unsigned int dl = solver.getDecisionLevel( lc[ i ] );
+        if( dl > maxDecisionLevel )
+        {
+            maxDecisionLevel = dl;
+            maxPosition = i;
+        }
+    }
 }

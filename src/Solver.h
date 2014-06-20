@@ -336,7 +336,7 @@ class Solver
         inline void bumpActivity( Var v ) { minisatHeuristic->bumpActivity( v ); }
         
         inline bool glucoseHeuristic() const { return glucoseHeuristic_; }
-        inline void minimisationWithBinaryResolution( Clause& learnedClause );
+        inline bool minimisationWithBinaryResolution( Clause& learnedClause, unsigned int lbd );
         
     private:
         void updateActivity( Clause* learnedClause );
@@ -1867,17 +1867,14 @@ Solver::deleteClausesIfNecessary()
     }
 }
 
-void
+bool
 Solver::minimisationWithBinaryResolution(
-    Clause& learnedClause )
-{ 
-    assert( 0 && "IMPLEMENT CHECK FOR MAXPOSITION IN LEARNING" );
-    // Find the LBD measure                                                                                                         
-    unsigned int lbd = computeLBD( learnedClause );
-    Literal p = learnedClause[ 0 ].getOppositeLiteral();
-
+    Clause& learnedClause,
+    unsigned int lbd )
+{    
     if( lbd <= glucoseData.lbLBDMinimizingClause )
     {
+        Literal p = learnedClause[ 0 ];//.getOppositeLiteral();
         glucoseData.MYFLAG++;
 
         for( unsigned int i = 1; i < learnedClause.size(); i++ )
@@ -1909,9 +1906,12 @@ Solver::minimisationWithBinaryResolution(
                     i--;
                 }
             }
-            learnedClause.shrink( nb );
+            learnedClause.shrink( learnedClause.size() - nb );
+            return true;
         }
     }
+    
+    return false;
 }
 
 #endif
