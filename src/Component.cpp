@@ -54,6 +54,9 @@ Component::getClauseToPropagate(
         {
             assert( clauseToPropagate == NULL );
             clauseToPropagate = learning.learnClausesFromUnfoundedSet( unfoundedSet );
+            if( solver.glucoseHeuristic() )
+                clauseToPropagate->setLbd( solver.computeLBD( *clauseToPropagate ) );
+
             trace_msg( unfoundedset, 2, "Reasons of unfounded sets: " << *clauseToPropagate );
             goto begin;
         }
@@ -86,6 +89,8 @@ Component::getClauseToPropagate(
             {
                 Clause* loopFormula = new Clause();
                 loopFormula->copyLiterals( *clauseToPropagate );
+                if( solver.glucoseHeuristic() )
+                    loopFormula->setLbd( clauseToPropagate->lbd() );
 
                 if( solver.isTrue( variable ) )
                 {
@@ -110,6 +115,9 @@ Component::getClauseToPropagate(
                         
                         if( solver.getDecisionLevel( loopFormula->getAt( 0 ) ) <= solver.getDecisionLevel( loopFormula->getAt( 1 ) ) )
                             loopFormula->swapLiterals( 0, 1 );
+                        
+                        if( solver.glucoseHeuristic() )
+                            loopFormula->setLbd( solver.computeLBD( *loopFormula ) );
                     }                                        
                     
                     //unfoundedSet.clear();
@@ -121,17 +129,12 @@ Component::getClauseToPropagate(
                     if( loopFormula->size() >= 2 )
                     {
                         loopFormula->swapLiterals( 0, loopFormula->size() - 1 );
-                        loopFormula->swapLiterals( 1, loopFormula->size() - 1 );
+                        loopFormula->swapLiterals( 1, loopFormula->size() - 1 );                        
                     }
                 }
 
                 trace_msg( unfoundedset, 2, "Adding loop formula: " << *loopFormula );                
-                loopFormula->setLearned();
-                if( solver.glucoseHeuristic() )
-                {
-                    unsigned int lbd = solver.computeLBD( *loopFormula );
-                    loopFormula->setLbd( lbd );
-                }
+                loopFormula->setLearned();                                
                 return loopFormula;
             }
         } while( solver.isFalse( variable ) && !unfoundedSet.empty() );
