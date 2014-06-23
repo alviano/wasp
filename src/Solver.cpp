@@ -1014,3 +1014,23 @@ Solver::checkSubsumptionForClause(
     }    
     wl.shrink( j );
 }
+
+bool
+Solver::isSubsumed(    
+    Clause* clause )
+{    
+    Literal lit = getLiteralWithMinOccurrences( *clause );    
+    Vector< Clause* >& wl = getDataStructure( lit ).variableAllOccurrences;    
+    for( unsigned i = 0; i < wl.size(); ++i )
+    {
+        Clause& current = *wl[ i ];        
+        assert( !current.hasBeenDeleted() );
+        if( clause != wl[ i ] )
+        {
+            if( current.checkEquality( *clause ) )
+                return true;
+        }
+    }    
+    
+    return false;
+}

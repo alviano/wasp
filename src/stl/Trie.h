@@ -89,7 +89,7 @@ class Trie {
         inline void addElement( int );        
         inline bool endInsertion();
 
-        inline unsigned int addElements( const vector< int >& );
+//        inline unsigned int addElements( const vector< int >& );
     private:
         Node* root;
         Node* current;
@@ -135,16 +135,16 @@ Trie::endInsertion()
 //    return value;
 }
 
-unsigned int
-Trie::addElements(
-    const vector< int >& elements )
-{
-    startInsertion();
-    for( unsigned int i = 0; i < elements.size(); i++ )
-    {
-        addElement( elements[ i ] );
-    }
-    return endInsertion();
-}
+//unsigned int
+//Trie::addElements(
+//    const vector< int >& elements )
+//{
+//    startInsertion();
+//    for( unsigned int i = 0; i < elements.size(); i++ )
+//    {
+//        addElement( elements[ i ] );
+//    }
+//    return endInsertion();
+//}
 
 #endif

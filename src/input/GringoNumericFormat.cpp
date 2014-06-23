@@ -576,6 +576,11 @@ GringoNumericFormat::readConstraint(
         }
     }
     
+    if( clause->size() >= 3 && clause->size() <= 5 && solver.isSubsumed( clause ) )
+    {
+        solver.releaseClause( clause );
+        return;
+    }
     trace_msg( parser, 2, "Adding clause " << *clause );
 //    solver.addClause( clause );
     solver.cleanAndAddClause( clause );

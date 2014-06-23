@@ -104,6 +104,7 @@ class Clause : public Reason
         
         inline void free();
         inline SubsumptionData subsumes( Clause& other );        
+        inline bool checkEquality( Clause& other );        
         
         inline void resetInQueue(){ clauseData.inQueue = 0; }
         inline void setInQueue(){ clauseData.inQueue = 1; }
@@ -433,6 +434,30 @@ Clause::subsumes(
     }
 
     return ret;
+}
+
+bool
+Clause::checkEquality(
+    Clause& other )
+{
+    unsigned int size = this->size();
+    unsigned int otherSize = other.size();
+    if( size != otherSize || signature() != other.signature() )
+        return false;    
+    
+    for( unsigned int i = 0; i < size; i++ )
+    {
+        for( unsigned int j = 0; j < otherSize; j++ )
+        {
+            if( getAt( i ) == other.getAt( j ) )
+                goto ok;            
+        }
+        
+        return false;
+        ok:;
+    }    
+
+    return true;
 }
 
 void

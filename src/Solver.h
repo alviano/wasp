@@ -296,6 +296,7 @@ class Solver
         inline unsigned int cost( Var v ) const { Literal pos( v, POSITIVE ); return numberOfOccurrences( pos ) * numberOfOccurrences( pos.getOppositeLiteral() ); }
         
         void checkSubsumptionForClause( Clause* clause, Literal lit );
+        bool isSubsumed( Clause* clause );
         
         Literal createFromAssignedVariable( Var v ) const { assert( TRUE == 2 && FALSE == 1 ); return Literal( v, getTruthValue( v ) & 1 ); }
         Literal createOppositeFromAssignedVariable( Var v ) const { assert( TRUE == 2 && FALSE == 1 ); return Literal( v, ~( getTruthValue( v ) ) & 1 ); }
@@ -1694,12 +1695,12 @@ Solver::getLiteralWithMinOccurrences(
 {
     assert( clause.size() > 1 );
     Literal minLiteral = clause[ 0 ];
-    assert( numberOfOccurrences( minLiteral ) > 0 );
+//    assert( numberOfOccurrences( minLiteral ) > 0 );
 
     unsigned int i = 1;
     do
     {
-        assert( numberOfOccurrences( clause[ i ] ) > 0 );
+//        assert( numberOfOccurrences( clause[ i ] ) > 0 );
         if( numberOfOccurrences( clause[ i ] ) < numberOfOccurrences( minLiteral ) )
         {
             minLiteral = clause[ i ];
