@@ -152,7 +152,7 @@ GringoNumericFormat::readChoiceRule(
             ++i;
     }
     readBodySize( input, bodySize, negativeSize );
-    if( headSize == 0)
+    if( headSize == 0 )
     {
         skipLiterals( input, bodySize );
         return;
@@ -226,12 +226,12 @@ void
 GringoNumericFormat::readDisjunctiveRule(
     Istream& input )
 {
-    unsigned headSize;
+    unsigned headSize = 0;
     input.read( headSize );
     unsigned head[ headSize ];
     ++readNormalRule_numberOfCalls;
     for( unsigned i = 0; i < headSize; )
-    {
+    {        
         input.read( head[ i ] );
         createStructures( head[ i ] );
         if( solver.isFalse( head[ i ] ) )
@@ -242,7 +242,7 @@ GringoNumericFormat::readDisjunctiveRule(
             ++i;
         }
     }
-    if( headSize == 0)
+    if( headSize == 0 )
     {
         readConstraint( input );
         return;
@@ -336,6 +336,7 @@ GringoNumericFormat::readDisjunctiveRule(
                     r->addNegativeLiteral( head[ j ] );
             add( r );
         }
+        delete rule;
     }
 }
 

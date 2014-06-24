@@ -248,7 +248,7 @@ public:
 //            posConstraints.swap( tmpPosConstraints );
         }
 
-        AtomData( const AtomData& init ) : supported( init.supported ), numberOfHeadOccurrences( init.numberOfHeadOccurrences ), readNormalRule_negativeLiterals( init.readNormalRule_negativeLiterals ), readNormalRule_positiveLiterals( init.readNormalRule_positiveLiterals ), weightConstraintRule( init.weightConstraintRule )
+        AtomData( const AtomData& init ) : supported( init.supported ), numberOfHeadOccurrences( init.numberOfHeadOccurrences ), readNormalRule_headAtoms( init.readNormalRule_headAtoms ), readNormalRule_negativeLiterals( init.readNormalRule_negativeLiterals ), readNormalRule_positiveLiterals( init.readNormalRule_positiveLiterals ), weightConstraintRule( init.weightConstraintRule )
         {
             headOccurrences.initFrom( init.headOccurrences );
             posOccurrences.initFrom( init.posOccurrences );
@@ -264,6 +264,7 @@ public:
         {
             supported = right.supported;
             numberOfHeadOccurrences = right.numberOfHeadOccurrences;
+            readNormalRule_headAtoms = right.readNormalRule_headAtoms;
             readNormalRule_negativeLiterals = right.readNormalRule_negativeLiterals;
             readNormalRule_positiveLiterals = right.readNormalRule_positiveLiterals;
             weightConstraintRule = right.weightConstraintRule;
