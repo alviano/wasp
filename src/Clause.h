@@ -392,9 +392,14 @@ Clause::free()
 //    lastSwapIndex = 1;
     clauseData.inQueue = 0;
     clauseData.learned = 0;
-    signature() = 0;
+    if( isLearned() )
+        act() = 0;
+    else
+        signature() = 0;
 //    act = 0.0;
     literals.clear();
+    lbd_ = 0;
+    canBeDeleted_ = 1;    
 }
 
 SubsumptionData
