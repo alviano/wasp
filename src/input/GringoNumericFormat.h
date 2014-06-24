@@ -69,14 +69,10 @@ public:
         inline void addPositiveTrueLiteral( unsigned id ) { literals.push_back( Literal::newTruePositiveBodyLiteral( id ) ); }
         inline void addDoubleNegLiteral( unsigned id ) { literals.push_back( Literal::newDoubleNegatedBodyLiteral( id ) ); }
         
-//        inline unsigned int sizeOf()
-//        {
-//            return ( negBody.capacity() * sizeof( unsigned ) + sizeof( negBody ) +
-//            posBody.capacity() * sizeof( unsigned ) + sizeof( posBody ) +
-//            posBodyTrue.capacity() * sizeof( unsigned ) + sizeof( posBodyTrue )+
-//            doubleNegBody.capacity() * sizeof( unsigned ) + sizeof( doubleNegBody ) +
-//            sizeof( unsigned ) );
-//        }
+        inline unsigned int sizeOf()
+        {
+            return literals.capacity() * sizeof( Literal ) + sizeof( Vector< Literal > );
+        }
     };
     
     class WeightConstraintRule
@@ -292,6 +288,7 @@ public:
     };
     
 private:
+    void computeCost();
     inline void readChoiceRule( Istream& input );
     inline void readNormalRule( Istream& input );
     inline void readNormalRule( Istream& input, unsigned head, unsigned bodySize, unsigned negativeSize );
@@ -376,7 +373,8 @@ private:
     void computeLinearCostsForOptimizationRules( vector< unsigned int >& maxCostOfLevelOfOptimizationRules, vector< int >& literals, vector< unsigned int >& weights, vector< unsigned int >& levels, unsigned int& bound );
     
     void createCrule( Literal head, NormalRule* rule );
-    void clearDataStructures();    
+    void clearDataStructures();
+    void cleanNormalRules();
 
     Vector< NormalRule* > normalRules;
     Vector< WeightConstraintRule* > weightConstraintRules;
@@ -390,10 +388,12 @@ private:
     Vector< unsigned > atomsWithSupportInference;
     Vector< unsigned > facts;
     unordered_map< Var, unordered_set< PostPropagator* > > literalsPostPropagator[ 2 ];
+    
+    bool usedDictionary;
 };
 
 GringoNumericFormat::GringoNumericFormat(
-    Solver& s ) : solver( s ), propagatedLiterals( 0 ), readNormalRule_numberOfCalls( 0 )
+    Solver& s ) : solver( s ), propagatedLiterals( 0 ), readNormalRule_numberOfCalls( 0 ), usedDictionary( false )
 {
     atomData.push_back( AtomData( false ) );
     createStructures( 1 );

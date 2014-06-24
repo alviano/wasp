@@ -41,7 +41,11 @@ GringoNumericFormat::parse(
         }
         
         if( solver.callSimplifications() && solver.numberOfClauses() + value > 1000000 )
+        {
             solver.turnOffSimplifications();
+            if( !usedDictionary )
+                bodiesDictionary.disable();
+        }
 
         switch( type )
         {
@@ -519,6 +523,7 @@ GringoNumericFormat::readNormalRule(
 
     if( bodiesDictionary.endInsertion() )
     {
+        usedDictionary = true;
         delete rule;
         return;
     }
@@ -1323,7 +1328,7 @@ GringoNumericFormat::computeSCCs()
 {
     trace_msg( parser, 1, "Computing crules and SCCs" );
     assert( propagatedLiterals == solver.numberOfAssignedLiterals() );
-
+    
     for( unsigned i = 2; i < atomData.size(); ++i )
     {
         trace_msg( parser, 2, "Processing atom " << i );
@@ -2477,27 +2482,20 @@ GringoNumericFormat::addUndefinedLiteral(
     return true;
 }
 
-//void
-//GringoNumericFormat::computeCost()
-//{
-//    uint64_t sum = 0;
-//    for( unsigned int i = 0; i < normalRules.size(); i++ )
-//    {
-//        sum += normalRules[ i ]->sizeOf();
-//    }
-//    cout << "Normal Rules " << normalRules.size() << " " << ( sum / ( 1024 * 1024 ) ) << " " << ( ( normalRules.capacity() * sizeof( NormalRule* ) ) / ( 1024 * 1024 ) ) << endl;
-//    
-//    sum = 0;
-//    for( unsigned int i = 0; i < constraints.size(); i++ )
-//    {
-//        sum += constraints[ i ]->sizeOf();
-//    }
-//    cout << "Constraints " << constraints.size() << " " << ( sum / ( 1024 * 1024 ) ) << " " << ( ( constraints.capacity() * sizeof( NormalRule* ) ) / ( 1024 * 1024 ) ) << endl;
-//    
-//    sum = 0;
-//    for( unsigned int i = 0; i < atomData.size(); i++ )
-//    {
-//        sum += atomData[ i ].sizeOf();
-//    }
-//    cout << "AtomData " << atomData.size() << " " << ( sum / ( 1024 * 1024 ) ) << " " << ( ( atomData.capacity() * sizeof( AtomData ) ) / ( 1024 * 1024 ) ) << endl;       
-//}
+void
+GringoNumericFormat::computeCost()
+{
+    uint64_t sum = 0;
+    for( unsigned int i = 0; i < normalRules.size(); i++ )
+    {
+        sum += normalRules[ i ]->sizeOf();
+    }
+    cout << "Normal Rules " << normalRules.size() << " " << ( sum / ( 1024 * 1024 ) ) << " " << ( ( normalRules.capacity() * sizeof( NormalRule* ) ) / ( 1024 * 1024 ) ) << endl;
+       
+    sum = 0;
+    for( unsigned int i = 0; i < atomData.size(); i++ )
+    {
+        sum += atomData[ i ].sizeOf();
+    }
+    cout << "AtomData " << atomData.size() << " " << ( sum / ( 1024 * 1024 ) ) << " " << ( ( atomData.capacity() * sizeof( AtomData ) ) / ( 1024 * 1024 ) ) << endl;       
+}

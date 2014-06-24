@@ -67,7 +67,7 @@ class Node {
 
 class Trie {
     public:
-        Trie() : current( NULL ), numberOfLabels( 0 ){ root = new Node( UINT_MAX ); }
+        Trie() : current( NULL ), numberOfLabels( 0 ), disabled( false ) { root = new Node( UINT_MAX ); }
 
         ~Trie()
         { 
@@ -76,13 +76,21 @@ class Trie {
         }
         
         void clear()
-        {
+        {            
             delete root;
             root = NULL;
         }
         
+        void disable()
+        {
+            clear();
+            disabled = true;
+        }
+        
         void startInsertion()
         {
+            if( disabled )
+                return;
             assert( current == NULL );
             current = root;
         }
@@ -94,12 +102,15 @@ class Trie {
         Node* root;
         Node* current;
         unsigned int numberOfLabels;
+        bool disabled;
 };
 
 void
 Trie::addElement(
     int element )
 {
+    if( disabled )
+        return;
     Node* node = current->findChild( element );
     if( node == NULL )
     {
@@ -113,6 +124,9 @@ Trie::addElement(
 bool
 Trie::endInsertion()
 {
+    if( disabled )
+        return false;
+
     assert( current != NULL );
     
     bool tmp = true;
