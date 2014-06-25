@@ -74,6 +74,7 @@ class Solver
 
         inline bool preprocessing();
         inline void attachWatches();
+        inline void clearComponents();
         inline void clearVariableOccurrences();
         
 //        inline void addVariable( const string& name );
@@ -82,7 +83,7 @@ class Solver
         inline bool cleanAndAddClause( Clause* clause );
         inline bool addClause( Literal literal );
         inline bool addClause( Clause* clause );
-        inline bool addClause( Literal lit1, Literal lit2 );
+        inline bool addClause( Literal lit1, Literal lit2 );        
         
         inline bool addClauseFromModel( Clause* clause );
         inline void addLearnedClause( Clause* learnedClause );
@@ -277,7 +278,6 @@ class Solver
         
         inline const Clause* getDefinition( Var v ) const { return variables.getDefinition( v ); }
 //        inline void setEliminated( Var v, Clause* definition ) { variablesData[ v ].definition = definition; }
-        inline void setEliminated( Var v, unsigned int value, Clause* definition ) { variables.setEliminated( v, value, definition ); }
         inline unsigned int getSignOfEliminatedVariable( Var v ) const { return variables.getSignOfEliminatedVariable( v ); }
         inline bool hasBeenEliminated( Var v ) const { return variables.hasBeenEliminated( v ); }
         
@@ -287,8 +287,7 @@ class Solver
         inline Component* getComponent( Var v ) { return variables.getComponent( v ); }
         
         inline void addPropagator( Literal lit, Propagator* p, int position ) { getDataStructure( lit ).variablePropagators.push_back( pair< Propagator*, int >( p, position ) ); }
-        inline void addPostPropagator( Literal lit, PostPropagator* p, int position ) { getDataStructure( lit ).variablePostPropagators.push_back( pair< PostPropagator*, int >( p, position ) ); }
-        inline void addLiteralInShortClause( Literal firstLiteral, Literal secondLiteral ) { getDataStructure( firstLiteral ).variableBinaryClauses.push_back( secondLiteral ); }
+        inline void addPostPropagator( Literal lit, PostPropagator* p, int position ) { getDataStructure( lit ).variablePostPropagators.push_back( pair< PostPropagator*, int >( p, position ) ); }        
                 
         bool isFrozen( Var v ) const { return variables.isFrozen( v ); }
         void setFrozen( Var v ) { variables.setFrozen( v ); }
@@ -337,13 +336,16 @@ class Solver
         inline void bumpActivity( Var v ) { minisatHeuristic->bumpActivity( v ); }
         
         inline bool glucoseHeuristic() const { return glucoseHeuristic_; }
-        inline bool minimisationWithBinaryResolution( Clause& learnedClause, unsigned int lbd );
+        inline bool minimisationWithBinaryResolution( Clause& learnedClause, unsigned int lbd );        
         
     private:
         void updateActivity( Clause* learnedClause );
         inline void addVariableInternal();        
+        inline void addBinaryClause( Literal lit1, Literal lit2 );
+        inline void addLiteralInShortClause( Literal firstLiteral, Literal secondLiteral ) { getDataStructure( firstLiteral ).variableBinaryClauses.push_back( secondLiteral ); }
         
         bool checkVariablesState();
+        inline void setEliminated( Var v, unsigned int value, Clause* definition ) { variables.setEliminated( v, value, definition ); }        
         
         Solver( const Solver& ) : learning( *this ), dependencyGraph( NULL )
         {
@@ -689,8 +691,7 @@ Solver::addClause(
 {    
     if( !callSimplifications() )
     {
-        addLiteralInShortClause( lit1, lit2 );
-        addLiteralInShortClause( lit2, lit1 );
+        addBinaryClause( lit1, lit2 );
     }
     else
     {
@@ -701,6 +702,34 @@ Solver::addClause(
     }
     
     return true;
+}
+
+void
+Solver::addBinaryClause(
+    Literal lit1,
+    Literal lit2 )
+{
+    Vector< Literal >& lit1BinClauses = getDataStructure( lit1 ).variableBinaryClauses;
+    Vector< Literal >& lit2BinClauses = getDataStructure( lit2 ).variableBinaryClauses;
+    
+    if( lit1BinClauses.size() < lit2BinClauses.size() )
+    {
+        if( lit1BinClauses.findElement( lit2 ) != MAXUNSIGNEDINT )
+        {
+            assert( lit2BinClauses.findElement( lit1 ) != MAXUNSIGNEDINT );
+            return;
+        }
+    }
+    else
+    {
+        if( lit2BinClauses.findElement( lit1 ) != MAXUNSIGNEDINT )
+        {
+            assert( lit1BinClauses.findElement( lit2 ) != MAXUNSIGNEDINT );
+            return;
+        }
+    }
+    addLiteralInShortClause( lit1, lit2 );
+    addLiteralInShortClause( lit2, lit1 );
 }
 
 bool
@@ -1162,9 +1191,7 @@ Solver::attachWatches()
         {                    
             if( current.size() == 2 )
             {     
-                addLiteralInShortClause( current[ 0 ], current[ 1 ] );
-                addLiteralInShortClause( current[ 1 ], current[ 0 ] );
-        
+                addBinaryClause( current[ 0 ], current[ 1 ] );        
                 deleteClause( currentPointer );
             }
             else
@@ -1175,6 +1202,19 @@ Solver::attachWatches()
             }
         }
     }    
+}
+
+void
+Solver::clearComponents()
+{
+    unsigned int j = 0;
+    for( unsigned int i = 0; i < cyclicComponents.size(); i++ )
+    {
+        cyclicComponents[ j ] = cyclicComponents[ i ];
+        if( !cyclicComponents[ i ]->isRemoved() )
+            j++;
+    }
+    cyclicComponents.resize( j );
 }
 
 bool
@@ -1195,6 +1235,7 @@ Solver::preprocessing()
     minisatHeuristic->simplifyVariablesAtLevelZero();
     clearVariableOccurrences();
     attachWatches();
+    clearComponents();
     
     assignedVariablesAtLevelZero = numberOfAssignedLiterals();
     

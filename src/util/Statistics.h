@@ -46,7 +46,7 @@ using namespace std;
             max_literals( 0 ), tot_literals( 0 ), numberOfLearnedClausesFromPropagators( 0 ),
             numberOfLearnedUnaryClausesFromPropagators( 0 ),numberOfLearnedBinaryClausesFromPropagators( 0 ),
             numberOfLearnedTernaryClausesFromPropagators( 0 ), sumOfSizeLearnedClausesFromPropagators( 0 ),
-            minLearnedSizeFromPropagators( MAXUNSIGNEDINT ), maxLearnedSizeFromPropagators( 0 )
+            minLearnedSizeFromPropagators( MAXUNSIGNEDINT ), maxLearnedSizeFromPropagators( 0 ), removedComponents( 0 )
             {
             }
 
@@ -146,13 +146,14 @@ using namespace std;
                 cerr << "Variables after satelite       : " << vars << endl;
                 
                 cerr << separator << endl;
-                cerr << "Tight                          : " << ( cyclicComponents.empty() ? "yes" : "no" ) << endl;
-                if( !cyclicComponents.empty() )
+                cerr << "Tight                          : " << ( cyclicComponents.size() > removedComponents ? "no" : "yes" ) << endl;
+                if( cyclicComponents.size() > removedComponents )
                 {
-                cerr << "Cyclic components              : " << cyclicComponents.size() << endl;
+                cerr << "Cyclic components              : " << cyclicComponents.size() - removedComponents << endl;
                 for( unsigned int i = 0; i < cyclicComponents.size(); i++ )
                 {
-                cerr << "   Atoms in component " << ( i + 1 ) << "        : " << cyclicComponents[ i ] << endl;
+                    if( !cyclicComponents[ i ].second )
+                cerr << "   Atoms in component " << ( i + 1 ) << "        : " << cyclicComponents[ i ].first << endl;                
                 }
                 }
                 
@@ -177,7 +178,13 @@ using namespace std;
             
             inline void addCyclicComponent( unsigned int numberOfAtoms )
             {
-                cyclicComponents.push_back( numberOfAtoms );
+                cyclicComponents.push_back( pair< unsigned int, bool >( numberOfAtoms, false ) );
+            }
+            
+            inline void removeComponent( unsigned int id )
+            {
+                cyclicComponents[ id ].second = true;
+                removedComponents++;
             }
             
             inline static Statistics& inst(){ return instance; }
@@ -230,7 +237,8 @@ using namespace std;
             unsigned int minLearnedSizeFromPropagators;
             unsigned int maxLearnedSizeFromPropagators;            
             
-            vector< unsigned int > cyclicComponents;             
+            vector< pair< unsigned int, bool > > cyclicComponents;
+            unsigned int removedComponents;
             
             void printStatistics()
             {

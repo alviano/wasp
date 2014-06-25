@@ -185,8 +185,8 @@ public:
     class AtomData
     {
     public:        
-        unsigned supported:1;
-        unsigned numberOfHeadOccurrences:31;
+        unsigned supported : 1;
+        unsigned numberOfHeadOccurrences : 31;
         Vector< NormalRule* > headOccurrences;
         Vector< NormalRule* > posOccurrences;
         Vector< NormalRule* > negOccurrences;
@@ -203,8 +203,9 @@ public:
         unsigned readNormalRule_positiveLiterals;
         
         WeightConstraintRule* weightConstraintRule;
-        
-        inline AtomData( bool supported_ = false ) : supported( supported_ ), numberOfHeadOccurrences( 0 ), readNormalRule_headAtoms( 0 ), readNormalRule_negativeLiterals( 0 ), readNormalRule_positiveLiterals( 0 ), weightConstraintRule( NULL ) {}
+        Clause* crule;
+
+        inline AtomData( bool supported_ = false ) : supported( supported_ ), numberOfHeadOccurrences( 0 ), readNormalRule_headAtoms( 0 ), readNormalRule_negativeLiterals( 0 ), readNormalRule_positiveLiterals( 0 ), weightConstraintRule( NULL ), crule( NULL ) {}
         
         inline bool isSupported() const { return supported; }
         inline void setSupported() { supported = true; }
@@ -244,7 +245,7 @@ public:
 //            posConstraints.swap( tmpPosConstraints );
         }
 
-        AtomData( const AtomData& init ) : supported( init.supported ), numberOfHeadOccurrences( init.numberOfHeadOccurrences ), readNormalRule_headAtoms( init.readNormalRule_headAtoms ), readNormalRule_negativeLiterals( init.readNormalRule_negativeLiterals ), readNormalRule_positiveLiterals( init.readNormalRule_positiveLiterals ), weightConstraintRule( init.weightConstraintRule )
+        AtomData( const AtomData& init ) : supported( init.supported ), numberOfHeadOccurrences( init.numberOfHeadOccurrences ), readNormalRule_headAtoms( init.readNormalRule_headAtoms ), readNormalRule_negativeLiterals( init.readNormalRule_negativeLiterals ), readNormalRule_positiveLiterals( init.readNormalRule_positiveLiterals ), weightConstraintRule( init.weightConstraintRule ), crule( init.crule )
         {
             headOccurrences.initFrom( init.headOccurrences );
             posOccurrences.initFrom( init.posOccurrences );
@@ -264,6 +265,7 @@ public:
             readNormalRule_negativeLiterals = right.readNormalRule_negativeLiterals;
             readNormalRule_positiveLiterals = right.readNormalRule_positiveLiterals;
             weightConstraintRule = right.weightConstraintRule;
+            crule = right.crule;
             
             headOccurrences.clearAndDelete();
             posOccurrences.clearAndDelete();

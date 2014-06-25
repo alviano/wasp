@@ -122,7 +122,7 @@ class Variables
         
         inline bool inTheSameComponent( Var v1, Var v2 ) const { return variablesData[ v1 ].component != NULL && variablesData[ v1 ].component == variablesData[ v2 ].component; } 
         inline bool isInCyclicComponent( Var v ) const { return variablesData[ v ].component != NULL; }
-        inline void setComponent( Var v, Component* c ){ assert( variablesData[ v ].component == NULL ); variablesData[ v ].component = c; }
+        inline void setComponent( Var v, Component* c ){ assert( variablesData[ v ].component == NULL || c == NULL ); variablesData[ v ].component = c; }
         inline Component* getComponent( Var v ) { return variablesData[ v ].component; }
         
         inline ReasonForBinaryClauses* getReasonForBinaryClauses( Var v ) { return variablesData[ v ].reasonForBinaryClauses; }

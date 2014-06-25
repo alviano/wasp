@@ -1182,25 +1182,102 @@ GringoNumericFormat::computeGusStructures()
     for( unsigned int i = 0; i < solver.getNumberOfCyclicComponents(); i++ )
     {
         Component* component = solver.getCyclicComponent( i );
-
-        for( unsigned int j = 0; j < component->size(); j++ )
+        
+        bool trivial = true;
+        //Disable simplification in case of aggregates or weak constraints
+        if( weightConstraintRules.size() == 0 && optimizationRules.size() == 0 )
         {
-            unsigned int varId = component->getVariable( j );
-            assert( varId <= solver.numberOfVariables() );
-            trace_msg( parser, 2, "Variable " << varId << " is in the cyclic component " << i );
-            Var currentVariable = varId;
-            solver.setComponent( currentVariable, component );
-            component->variableHasNoSourcePointer( currentVariable );
+            for( unsigned int j = 0; j < component->size(); j++ )
+            {                
+                Var v = component->getVariable( j );
+                solver.setComponent( v, component );
+                Clause* crule = atomData[ v ].crule;
+                //aux atom: component is not trivial
+                if( crule == NULL )
+                {
+                    trivial = false;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            trivial = false;
         }
 
-        solver.addPostPropagator( component );
+        if( !trivial )
+        {
+            for( unsigned int j = 0; j < component->size(); j++ )
+            {
+                unsigned int varId = component->getVariable( j );
+                assert( varId <= solver.numberOfVariables() );
+                trace_msg( parser, 2, "Variable " << varId << " is in the cyclic component " << i );
+                Var currentVariable = varId;
+                if( solver.getComponent( currentVariable ) == NULL )
+                    solver.setComponent( currentVariable, component );
+                component->variableHasNoSourcePointer( currentVariable );
+            }
+
+            solver.addPostPropagator( component );
+        }
+        else
+        {
+            assert( component->size() > 0 );
+            Var first = component->getVariable( 0 );
+            Clause* crulePointer = atomData[ first ].crule;
+            assert( crulePointer != NULL );
+            Clause& crule = *crulePointer;            
+            unsigned int k = 1;
+            for( unsigned int j = 1; j < crule.size(); j++ )
+            {
+                crule[ k ] = crule[ j ];
+                Var var = crule[ j ].getVariable();
+                if( !solver.inTheSameComponent( first, var ) )
+                    k++;
+            }
+            crule.shrink( k );
+            
+            for( unsigned int j = 1; j < component->size(); j++ )
+            {
+                Var v = component->getVariable( j );
+                
+                Clause* c = atomData[ v ].crule;
+                
+                assert( c->getAt( 0 ).getVariable() == v );
+
+                for( unsigned int k = 1; k < c->size(); k++ )
+                {
+                    Var var = c->getAt( k ).getVariable();
+                    if( !solver.inTheSameComponent( first, var ) )
+                        crule.addLiteral( c->getAt( k ) );
+                }
+                
+                c->free();
+                c->addLiteral( Literal( v, POSITIVE ) );
+                c->addLiteral( Literal( first, NEGATIVE ) );                
+                solver.onEliminatingVariable( v, POSITIVE, c );
+                propagatedLiterals++;
+            }            
+            
+            for( unsigned int j = 0; j < component->size(); j++ )
+                solver.setComponent( component->getVariable( j ), NULL );
+            
+            component->remove();
+            statistics( removeComponent( component->getId() ) );
+        }
     }
 
+    unsigned int j = 0;
     for( unsigned int i = 0; i < crules.size(); i++ )
     {
-        Clause* crule = crules[ i ];
-        assert( crule != NULL );
-
+        crules[ j ] = crules[ i ];                        
+        Clause* crule = crules[ i ];        
+        assert( crule != NULL );            
+        
+        if( solver.hasBeenEliminated( crule->getAt( 0 ).getVariable() ) )
+            continue;
+        
+        j++;
         // skip acyclic variables
         if( !solver.isInCyclicComponent( crule->getAt( 0 ).getVariable() ) )
             continue;
@@ -1210,6 +1287,7 @@ GringoNumericFormat::computeGusStructures()
         else
             processRecursiveNegativeCrule( crule );
     }
+    crules.shrink( j );    
     
 //    unsigned count = 0;
 //    for( unsigned int i = 0; i < solver.getNumberOfCyclicComponents(); i++ )
@@ -1335,7 +1413,7 @@ GringoNumericFormat::computeSCCs()
         AtomData& data = atomData[ i ];
         Var var = i;
         if( data.isSupported() || solver.isFalse( var ) || data.isWeightConstraint() )
-            continue;
+            continue;        
         assert( data.numberOfHeadOccurrences > 0 );
         
         if( data.numberOfHeadOccurrences == 1 )
@@ -1352,8 +1430,8 @@ GringoNumericFormat::computeSCCs()
         }
         else
         {
-            trace_msg( parser, 3, "More than one defining rule" );
-            Clause* crule = solver.newClause( data.numberOfHeadOccurrences + 1 );
+            trace_msg( parser, 3, "More than one defining rule" );            
+            Clause* crule = solver.newClause( data.numberOfHeadOccurrences + 1 );            
             crule->addLiteral( Literal( i, NEGATIVE ) );
             for( unsigned j = 0; j < data.headOccurrences.size(); ++j )
             {
@@ -1378,6 +1456,7 @@ GringoNumericFormat::computeSCCs()
                     }
                 }
             }
+            data.crule = crule;
             crules.push_back( crule );
             trace_msg( parser, 5, "New crule: " << *crule );
         }

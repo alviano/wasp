@@ -46,7 +46,7 @@ using namespace std;
 class Component : public PostPropagator
 {
     public:
-        inline Component( vector< GUSData* >& gusData_, Solver& s ) : PostPropagator(), solver( s ), gusData( gusData_ ), clauseToPropagate( NULL ), id( 0 ) {}
+        inline Component( vector< GUSData* >& gusData_, Solver& s ) : PostPropagator(), solver( s ), gusData( gusData_ ), clauseToPropagate( NULL ), id( 0 ), removed( 0 ) {}
         inline ~Component() {}
         
         virtual bool onLiteralFalse( Literal lit, int );
@@ -72,6 +72,9 @@ class Component : public PostPropagator
         inline void variableHasNoSourcePointer( Var var );
         void onLearningForUnfounded( unsigned int id, Learning& );
         
+        void remove() { removed = 1; }
+        bool isRemoved() const { return removed; }
+        
     protected:
         virtual void reset();
 
@@ -84,7 +87,8 @@ class Component : public PostPropagator
         Vector< Var > unfoundedSet;
         Clause* clauseToPropagate;        
         
-        unsigned int id;
+        unsigned int id : 31;
+        unsigned int removed : 1;        
         
         inline bool propagateFalseForGUS( Literal lit );
         inline void propagateLiteralLostSourcePointer( Literal lit );
