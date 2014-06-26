@@ -1044,8 +1044,7 @@ GringoNumericFormat::readTrueAtoms(
     createStructures( nextAtom );
 
     while( nextAtom != 0 )
-    {
-        cout << nextAtom << endl;
+    {        
         solver.addClause( Literal( nextAtom, POSITIVE ) );
         input.read( nextAtom );
     }
