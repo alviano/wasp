@@ -1190,9 +1190,8 @@ GringoNumericFormat::computeGusStructures()
             {                
                 Var v = component->getVariable( j );
                 solver.setComponent( v, component );
-                Clause* crule = atomData[ v ].crule;
                 //aux atom: component is not trivial
-                if( crule == NULL )
+                if( v >= atomData.size() || atomData[ v ].crule == NULL )
                 {
                     trivial = false;
                     break;
