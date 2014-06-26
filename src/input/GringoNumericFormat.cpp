@@ -1252,11 +1252,10 @@ GringoNumericFormat::computeGusStructures()
                         crule.addLiteral( c->getAt( k ) );
                 }
                 
-                c->free();
-                c->addLiteral( Literal( v, POSITIVE ) );
-                c->addLiteral( Literal( first, NEGATIVE ) );                
-                solver.onEliminatingVariable( v, POSITIVE, c );
-                propagatedLiterals++;
+                c->markAsDeleted();
+                
+                solver.addClause( Literal( v, POSITIVE ), Literal( first, NEGATIVE ) );
+                solver.addClause( Literal( v, NEGATIVE ), Literal( first, POSITIVE ) );                
             }            
             
             for( unsigned int j = 0; j < component->size(); j++ )
@@ -1274,8 +1273,11 @@ GringoNumericFormat::computeGusStructures()
         Clause* crule = crules[ i ];        
         assert( crule != NULL );            
         
-        if( solver.hasBeenEliminated( crule->getAt( 0 ).getVariable() ) )
+        if( crule->hasBeenDeleted() )
+        {
+            solver.releaseClause( crule );
             continue;
+        }
         
         j++;
         // skip acyclic variables
@@ -1288,25 +1290,6 @@ GringoNumericFormat::computeGusStructures()
             processRecursiveNegativeCrule( crule );
     }
     crules.shrink( j );    
-    
-//    unsigned count = 0;
-//    for( unsigned int i = 0; i < solver.getNumberOfCyclicComponents(); i++ )
-//    {
-//        bool found = false;
-//        Component* component = solver.getCyclicComponent( i );
-//        for( unsigned int j = 0; j < component->size(); j++ )
-//        {
-//            unsigned int varId = component->getVariable( j );
-//            if( !component->isAuxVariable( varId ) )
-//            {
-//                cout << varId << endl;
-//                found = true;
-//                break;
-//            }
-//        }
-//        if( found ) count++;
-//    }
-//    cout << count << " " << solver.getNumberOfCyclicComponents() << endl;
 }
 
 void
