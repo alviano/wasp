@@ -709,25 +709,25 @@ Solver::addBinaryClause(
     Literal lit1,
     Literal lit2 )
 {
-    Vector< Literal >& lit1BinClauses = getDataStructure( lit1 ).variableBinaryClauses;
-    Vector< Literal >& lit2BinClauses = getDataStructure( lit2 ).variableBinaryClauses;
-    
-    if( lit1BinClauses.size() < lit2BinClauses.size() )
-    {
-        if( lit1BinClauses.findElement( lit2 ) != MAXUNSIGNEDINT )
-        {
-            assert( lit2BinClauses.findElement( lit1 ) != MAXUNSIGNEDINT );
-            return;
-        }
-    }
-    else
-    {
-        if( lit2BinClauses.findElement( lit1 ) != MAXUNSIGNEDINT )
-        {
-            assert( lit1BinClauses.findElement( lit2 ) != MAXUNSIGNEDINT );
-            return;
-        }
-    }
+//    Vector< Literal >& lit1BinClauses = getDataStructure( lit1 ).variableBinaryClauses;
+//    Vector< Literal >& lit2BinClauses = getDataStructure( lit2 ).variableBinaryClauses;
+//    
+//    if( lit1BinClauses.size() < lit2BinClauses.size() )
+//    {
+//        if( lit1BinClauses.findElement( lit2 ) != MAXUNSIGNEDINT )
+//        {
+//            assert( lit2BinClauses.findElement( lit1 ) != MAXUNSIGNEDINT );
+//            return;
+//        }
+//    }
+//    else
+//    {
+//        if( lit2BinClauses.findElement( lit1 ) != MAXUNSIGNEDINT )
+//        {
+//            assert( lit1BinClauses.findElement( lit2 ) != MAXUNSIGNEDINT );
+//            return;
+//        }
+//    }
     addLiteralInShortClause( lit1, lit2 );
     addLiteralInShortClause( lit2, lit1 );
 }
