@@ -1180,9 +1180,9 @@ GringoNumericFormat::computeGusStructures()
     trace_msg( parser, 2, "Program is not tight. Number of cyclic components " << solver.getNumberOfCyclicComponents() );
     for( unsigned int i = 0; i < solver.getNumberOfCyclicComponents(); i++ )
     {
-        Component* component = solver.getCyclicComponent( i );
-        
-        bool trivial = true;
+        Component* component = solver.getCyclicComponent( i );                
+
+        /*bool trivial = true;
         //Disable simplification in case of aggregates or weak constraints
         if( weightConstraintRules.size() == 0 && optimizationRules.size() == 0 )
         {
@@ -1201,10 +1201,10 @@ GringoNumericFormat::computeGusStructures()
         else
         {
             trivial = false;
-        }
+        }*/
 
-        if( !trivial )
-        {
+        /*if( !trivial )
+        {*/
             for( unsigned int j = 0; j < component->size(); j++ )
             {
                 unsigned int varId = component->getVariable( j );
@@ -1217,7 +1217,7 @@ GringoNumericFormat::computeGusStructures()
             }
 
             solver.addPostPropagator( component );
-        }
+        /*}
         else
         {
             assert( component->size() > 0 );
@@ -1230,7 +1230,7 @@ GringoNumericFormat::computeGusStructures()
             {
                 crule[ k ] = crule[ j ];
                 Var var = crule[ j ].getVariable();
-                if( !solver.inTheSameComponent( first, var ) )
+                if( !solver.inTheSameComponent( first, var ) || crule[ j ].isNegative() )
                     k++;
             }
             crule.shrink( k );
@@ -1261,7 +1261,7 @@ GringoNumericFormat::computeGusStructures()
             
             component->remove();
             statistics( removeComponent( component->getId() ) );
-        }
+        }*/
     }
 
     unsigned int j = 0;
