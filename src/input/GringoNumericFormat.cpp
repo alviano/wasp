@@ -1147,7 +1147,7 @@ GringoNumericFormat::processRecursiveNegativeCrule(
         if( literalsPostPropagator[ ruleLiteral.getSign() ][ ruleVar ].insert( component ).second )
         {
             Literal lit( ruleVar, ruleLiteral.getSign() );
-            solver.addPostPropagator( lit, component, -1 );
+            solver.addPostPropagator( lit, component );
         }
 
         if( ruleLiteral.isPositive() && solver.inTheSameComponent( variable, ruleVar ) && variable != ruleVar /* FIXME: variable == ruleVar if it is a double negated literal. Clauses lack this information */ )
@@ -1180,9 +1180,63 @@ GringoNumericFormat::computeGusStructures()
     trace_msg( parser, 2, "Program is not tight. Number of cyclic components " << solver.getNumberOfCyclicComponents() );
     for( unsigned int i = 0; i < solver.getNumberOfCyclicComponents(); i++ )
     {
-        Component* component = solver.getCyclicComponent( i );
-        
-        bool trivial = true;
+        Component* component = solver.getCyclicComponent( i );         
+        if( isHeadCycleFree( component ) )
+        {
+            for( unsigned int j = 0; j < component->size(); j++ )
+            {
+                Var currentVariable = component->getVariable( j );
+                assert( currentVariable <= solver.numberOfVariables() );
+                trace_msg( parser, 2, "Variable " << currentVariable << " is in the cyclic component " << i );             
+                if( solver.getComponent( currentVariable ) == NULL )
+                    solver.setComponent( currentVariable, component );
+                component->variableHasNoSourcePointer( currentVariable );
+            }        
+            solver.addPostPropagator( component );
+        }
+        else
+        {
+            HCComponent* hcComponent = new HCComponent( solver );            
+            for( unsigned int j = 0; j < component->size(); j++ )
+            {
+                Var v = component->getVariable( j );
+                solver.setFrozen( v );
+                hcComponent->addHCVariable( v );
+                solver.addPostPropagator( Literal( v, POSITIVE ), hcComponent );
+                solver.addPostPropagator( Literal( v, NEGATIVE ), hcComponent );
+                solver.setComponent( v, NULL );
+                solver.setHCComponent( v, hcComponent );
+            }
+            /*
+             * Implementare check dei duplicati. 
+             */
+            
+            for( unsigned int j = 0; j < component->size(); j++ )
+            {
+                Var v = component->getVariable( j );
+                Vector< NormalRule* >& headOccs = atomData[ v ].headOccurrences;
+                for( unsigned int j = 0; j < headOccs.size(); j++ )
+                {
+                    NormalRule* rule = headOccs[ j ];
+                    if( !rule->isRemoved() )
+                        for( unsigned int k = 0; k < rule->size(); k++ )
+                            if( solver.getHCComponent( rule->literals[ k ].getVariable() ) != hcComponent )
+                            {
+                                hcComponent->addExternalLiteral( rule->literals[ k ] );
+                                solver.setFrozen( rule->literals[ k ].getVariable() );
+                                solver.addPostPropagator( rule->literals[ k ], hcComponent );
+                                solver.addPostPropagator( rule->literals[ k ].getOppositeLiteral(), hcComponent );
+                            }
+                    Clause* c = normalRuleToClause( rule );
+                    hcComponent->addClauseToChecker( c );                                        
+                }                                
+            }
+
+            component->remove();
+            solver.addHCComponent( hcComponent );
+        }
+
+        /*bool trivial = true;
         //Disable simplification in case of aggregates or weak constraints
         if( weightConstraintRules.size() == 0 && optimizationRules.size() == 0 )
         {
@@ -1201,9 +1255,9 @@ GringoNumericFormat::computeGusStructures()
         else
         {
             trivial = false;
-        }
+        }*/
 
-        if( !trivial )
+        /*if( !trivial )
         {
             for( unsigned int j = 0; j < component->size(); j++ )
             {
@@ -1230,7 +1284,7 @@ GringoNumericFormat::computeGusStructures()
             {
                 crule[ k ] = crule[ j ];
                 Var var = crule[ j ].getVariable();
-                if( !solver.inTheSameComponent( first, var ) )
+                if( !solver.inTheSameComponent( first, var ) || crule[ j ].isNegative() )
                     k++;
             }
             crule.shrink( k );
@@ -1261,7 +1315,7 @@ GringoNumericFormat::computeGusStructures()
             
             component->remove();
             statistics( removeComponent( component->getId() ) );
-        }
+        }*/
     }
 
     unsigned int j = 0;
@@ -2558,4 +2612,41 @@ GringoNumericFormat::computeCost()
         sum += atomData[ i ].sizeOf();
     }
     cout << "AtomData " << atomData.size() << " " << ( sum / ( 1024 * 1024 ) ) << " " << ( ( atomData.capacity() * sizeof( AtomData ) ) / ( 1024 * 1024 ) ) << endl;       
+}
+
+bool
+GringoNumericFormat::isHeadCycleFree(
+    Component* componentPointer )
+{
+    Component& component = *componentPointer;
+    unordered_set< NormalRule* > visited;
+
+    for( unsigned int i = 0; i < component.size(); i++ )
+    {
+        Var v = component.getVariable( i );
+        if( v >= atomData.size() )
+            continue;
+
+        Vector< NormalRule* >& headOccs = atomData[ v ].headOccurrences;
+        for( unsigned int j = 0; j < headOccs.size(); j++ )
+        {
+            NormalRule* rule = headOccs[ j ];
+            assert( rule != NULL );
+            if( !rule->isRemoved() && !visited.insert( rule ).second )
+                return false;            
+        }
+    }
+
+    return true;
+}
+
+Clause*
+GringoNumericFormat::normalRuleToClause(
+    NormalRule* normalRule )
+{    
+    Clause* c = new Clause( normalRule->size() );
+    for( unsigned int i = 0; i < normalRule->size(); i++ )
+        c->addLiteral( normalRule->literals[ i ].isHeadAtom() ? normalRule->literals[ i ] : normalRule->literals[ i ].getOppositeLiteral() );
+
+    return c;
 }

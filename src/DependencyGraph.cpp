@@ -21,14 +21,12 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/strong_components.hpp>
 
-#include "util/Statistics.h"
-
 class AdjacencyList: public boost::adjacency_list<>
 {
 };
 
 DependencyGraph::DependencyGraph( Solver& s )
-: graph( *new AdjacencyList() ), solver( s )
+: graph( *new AdjacencyList() ), solver( s ), tight_( true )
 {
 }
 
@@ -52,8 +50,7 @@ DependencyGraph::addEdge(
 }
 
 void
-DependencyGraph::computeStrongConnectedComponents(
-    vector< GUSData* >& gd )
+DependencyGraph::computeStrongConnectedComponents()
 {
     vector< unsigned int > strongConnectedComponents( boost::num_vertices( graph ) ), discover_time( boost::num_vertices( graph ) );
     vector< boost::default_color_type > color( boost::num_vertices( graph ) );
@@ -61,30 +58,16 @@ DependencyGraph::computeStrongConnectedComponents(
     unsigned int numberOfStrongConnectedComponents = boost::strong_components( graph, &strongConnectedComponents[ 0 ] , boost::root_map( &root[ 0 ] ).color_map( &color[ 0 ] ).discover_time_map( &discover_time[ 0 ] ) );
 
     assert( numberOfStrongConnectedComponents > 0 );
-    vector< Component* > components( numberOfStrongConnectedComponents, NULL );
+    vector< vector< Var > > components( numberOfStrongConnectedComponents );
 
     for( vector< int >::size_type i = 0; i != strongConnectedComponents.size(); ++i )
     {
         unsigned int currentComponentId = strongConnectedComponents[ i ];
         assert( currentComponentId < components.size() );
-        if( components[ currentComponentId ] == NULL )
-            components[ currentComponentId ] = new Component( gd, solver );
     
-        components[ currentComponentId ]->addVariable( i );
-    }
-
-    unsigned int id = 0;
-    for( unsigned int i = 0; i < components.size(); i++ )
-    {
-        Component* currentComponent = components[ i ];
-        assert( currentComponent != NULL );
-        if( currentComponent->isCyclic() )
-        {
-            statistics( addCyclicComponent( currentComponent->size() ) );
-            cyclicComponents.push_back( currentComponent );
-            currentComponent->setId( id++ );
-        }
-        else
-            delete currentComponent;
-    }
+        components[ currentComponentId ].push_back( i );
+        tight_ = ( components[ currentComponentId ].size() > 1 ) ? false : tight_;        
+    }    
+    
+    components_.swap( components );
 }

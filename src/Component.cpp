@@ -226,8 +226,7 @@ Component::reset()
 
 bool
 Component::onLiteralFalse(
-    Literal lit,
-    int )
+    Literal lit )
 {
     trace_msg( unfoundedset, 1, "Literal " << lit << " is false" );
     return propagateFalseForGUS( lit );

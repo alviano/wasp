@@ -42,8 +42,8 @@ class Help
             cout << "--trace-heuristic=<verbosity>          - Trace heuristic." << endl;
             cout << "--trace-enumeration=<verbosity>        - Trace enumeration." << endl;
             cout << "--trace-satelite=<verbosity>           - Trace satelite simplifications." << endl;
-//            cout << "--trace-mc=<verbosity>                 - Trace model checker." << endl;
-//            cout << "--trace-us=<verbosity>                 - Trace unfounded set function." << endl;            
+            cout << "--trace-modelchecker=<verbosity>       - Trace model checker." << endl;
+            cout << "--trace-unfoundedset=<verbosity>       - Trace unfounded set function." << endl;            
             cout << separator << endl;
             #endif
 

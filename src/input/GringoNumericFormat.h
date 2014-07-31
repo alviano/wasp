@@ -44,7 +44,9 @@ public:
     *
     * @param input The istream input.
     */
-    void parse( Istream& input );    
+    void parse( Istream& input );
+    
+    inline bool isHeadCycleFree( Component* component );
 
     class NormalRule
     {
@@ -217,17 +219,17 @@ public:
         {
             return
             (
-                    headOccurrences.capacity() * sizeof( NormalRule* ) + sizeof( headOccurrences ) +
-                    posOccurrences.capacity() * sizeof( NormalRule* ) + sizeof( posOccurrences ) +
-                    negOccurrences.capacity() * sizeof( NormalRule* ) + sizeof( negOccurrences )+
-                    negWeightConstraintsOccurrences.capacity() * sizeof( WeightConstraintRule* ) + sizeof( negWeightConstraintsOccurrences ) +
-                    positionsInNegWeightConstraints.capacity() * sizeof( unsigned ) + sizeof( positionsInNegWeightConstraints ) +
-                    posWeightConstraintsOccurrences.capacity() * sizeof( WeightConstraintRule* ) + sizeof( posWeightConstraintsOccurrences ) +
-                    positionsInPosWeightConstraints.capacity() * sizeof( unsigned ) + sizeof( positionsInPosWeightConstraints ) +
-                    doubleNegOccurrences.capacity() * sizeof( NormalRule* ) + sizeof( doubleNegOccurrences ) +
+                headOccurrences.capacity() * sizeof( NormalRule* ) + sizeof( headOccurrences ) +
+                posOccurrences.capacity() * sizeof( NormalRule* ) + sizeof( posOccurrences ) +
+                negOccurrences.capacity() * sizeof( NormalRule* ) + sizeof( negOccurrences )+
+                negWeightConstraintsOccurrences.capacity() * sizeof( WeightConstraintRule* ) + sizeof( negWeightConstraintsOccurrences ) +
+                positionsInNegWeightConstraints.capacity() * sizeof( unsigned ) + sizeof( positionsInNegWeightConstraints ) +
+                posWeightConstraintsOccurrences.capacity() * sizeof( WeightConstraintRule* ) + sizeof( posWeightConstraintsOccurrences ) +
+                positionsInPosWeightConstraints.capacity() * sizeof( unsigned ) + sizeof( positionsInPosWeightConstraints ) +
+                doubleNegOccurrences.capacity() * sizeof( NormalRule* ) + sizeof( doubleNegOccurrences ) +
 //                    negConstraints.capacity() * sizeof( NormalRule* ) + sizeof( negConstraints ) +
 //                    posConstraints.capacity() * sizeof( NormalRule* ) + sizeof( posConstraints ) +
-                    sizeof( unsigned ) * 3 + sizeof( bool ) + sizeof( WeightConstraintRule* )
+                sizeof( unsigned ) * 3 + sizeof( bool ) + sizeof( WeightConstraintRule* )
             );
         }
         
@@ -377,6 +379,8 @@ private:
     void createCrule( Literal head, NormalRule* rule );
     void clearDataStructures();
     void cleanNormalRules();
+    
+    Clause* normalRuleToClause( NormalRule* );
 
     Vector< NormalRule* > normalRules;
     Vector< WeightConstraintRule* > weightConstraintRules;

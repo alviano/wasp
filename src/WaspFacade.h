@@ -49,7 +49,6 @@ class WaspFacade
     private:
         Solver solver;        
         
-        inline bool solveInternal();
         inline void algorithmOpt();
         
         unsigned int numberOfModels;
@@ -60,16 +59,6 @@ class WaspFacade
 
 WaspFacade::WaspFacade() : numberOfModels( 0 ), maxModels( 1 ), printProgram( false ), printDimacs( false )
 {    
-}
-
-bool
-WaspFacade::solveInternal()
-{
-    if( !solver.hasPropagators() )
-        return solver.solve();
-    else
-        return solver.solvePropagators();
-}
-        
+}       
 
 #endif

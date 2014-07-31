@@ -91,7 +91,7 @@ class TraceLevels
         unsigned heuristic() { return 5; }
         unsigned enumeration() { return 6; }
         unsigned satelite() { return 7; }
-        unsigned aggregates() { return 8; }
+        unsigned aggregates() { return 8; }        
 
     private:
         inline TraceLevels();

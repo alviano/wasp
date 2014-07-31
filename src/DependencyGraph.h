@@ -17,12 +17,11 @@
  */
 
 #ifndef _DEPENDENCYGRAPH_H
-#define    _DEPENDENCYGRAPH_H
+#define _DEPENDENCYGRAPH_H
 
-#include <unordered_set>
 #include <vector>
-#include "Component.h"
-
+#include <cassert>
+#include "util/Constants.h"
 using namespace std;
 
 class AdjacencyList;
@@ -35,19 +34,20 @@ class DependencyGraph
         ~DependencyGraph();    
 
         void addEdge( unsigned int v1, unsigned int v2 );
-        void computeStrongConnectedComponents( vector< GUSData* >& gd );        
+        void computeStrongConnectedComponents();        
 
-        Component* getCyclicComponent( unsigned int pos ){ assert( pos < cyclicComponents.size() ); return cyclicComponents[ pos ]; }
-        unsigned int numberOfCyclicComponents() const{ return cyclicComponents.size(); }
+        vector< Var >& getComponent( unsigned int pos ){ assert( pos < components_.size() ); return components_[ pos ]; }
+        unsigned int numberComponents() const{ return components_.size(); }
         
-        bool tight() const { return numberOfCyclicComponents() == 0; }
+        bool tight() const { return tight_; } //return numberOfCyclicComponents() == 0; }
 
     private:        
         DependencyGraph( const DependencyGraph& orig );
 
-        vector< Component* > cyclicComponents;
+        vector< vector< Var > > components_;
         AdjacencyList& graph;
         Solver& solver;
+        bool tight_;        
 };
 
 #endif

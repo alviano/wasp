@@ -84,7 +84,7 @@ WaspFacade::solve()
         
         if( !solver.hasOptimizationAggregate() )
         {            
-            while( solveInternal() )
+            while( solver.solve() )
             {
                 solver.printAnswerSet();
                 trace_msg( enumeration, 1, "Model number: " << numberOfModels + 1 );
@@ -225,7 +225,7 @@ void
 WaspFacade::algorithmOpt()
 {
     solver.addPreferredChoicesFromOptimizationLiterals();
-    while( solveInternal() )
+    while( solver.solve() )
     {
         numberOfModels++;
         solver.printAnswerSet();

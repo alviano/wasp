@@ -400,6 +400,48 @@ Learning::learnClausesFromUnfoundedSet(
     return learnedClause;
 }
 
+Clause*
+Learning::learnClausesFromDisjunctiveUnfoundedSet(
+    Vector< Var >& unfoundedSet,
+    vector< Literal >& externalLiterals )
+{
+    ++numberOfCalls;
+    clearDataStructures();
+    assert( "Learned clause has to be NULL in the beginning." && learnedClause == NULL );
+    assert( "The counter must be equal to 0." && pendingVisitedVariables == 0 );
+    assert( isVisitedVariablesEmpty() );
+
+    learnedClause = solver.newClause();
+    learnedClause->setLearned();
+    decisionLevel = solver.getCurrentDecisionLevel();
+
+    for( unsigned int i = 0; i < unfoundedSet.size(); i++ )
+    {
+        Var tmp = unfoundedSet[ i ];
+        assert( solver.isTrue( tmp ) );
+        if( solver.getDecisionLevel( tmp ) > 0 )            
+            onNavigatingLiteralForUnfoundedSetLearning( Literal( tmp, NEGATIVE ) );
+    }
+
+    for( unsigned int i = 0; i < externalLiterals.size(); i++ )
+    {
+        if( solver.isFalse( externalLiterals[ i ] ) && solver.getDecisionLevel( externalLiterals[ i ] ) )
+            onNavigatingLiteralForUnfoundedSetLearning( externalLiterals[ i ] );
+    }
+    
+    if( learnedClause->size() > 1 )
+        simplifyLearnedClause( learnedClause );
+
+    if( learnedClause->size() >= 2 )
+        learnedClause->swapLiterals( 0, maxPosition );
+    
+    if( solver.glucoseHeuristic() )
+        learnedClause->setLbd( solver.computeLBD( *learnedClause ) );
+    
+    trace( learning, 1, "Learned Clause: %s.\n", toString( *learnedClause ).c_str() );
+    return learnedClause;
+}
+
 bool
 Learning::sameDecisionLevelOfSolver(
     Literal lit ) const

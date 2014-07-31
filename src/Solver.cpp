@@ -20,6 +20,7 @@
 #include "input/Dimacs.h"
 #include <algorithm>
 #include <stdint.h>
+#include <vector>
 using namespace std;
 
 Solver::~Solver()
@@ -62,6 +63,12 @@ Solver::~Solver()
     {
         delete cyclicComponents.back();
         cyclicComponents.pop_back();
+    }
+    
+    while( !hcComponents.empty() )
+    {
+        delete hcComponents.back();
+        hcComponents.pop_back();
     }
     
     delete outputBuilder;
@@ -126,6 +133,9 @@ Solver::unroll(
         aggregates[ i ]->reset( *this );
     }
     
+    for( unsigned int i = 0; i < hcComponents.size(); i++ )
+        hcComponents[ i ]->reset();
+    
     if( optimizationAggregate != NULL )
     {
         optimizationAggregate->reset( *this );
@@ -177,7 +187,9 @@ Solver::addClauseFromModelAndRestart()
 }
 
 bool 
-Solver::solve()
+Solver::solveWithoutPropagators(
+    vector< Literal >& assumptionsAND,
+    vector< Literal >& assumptionsOR )
 {
     trace( solving, 1, "Starting solving.\n" );
     
@@ -209,7 +221,8 @@ Solver::solve()
         deleteClausesIfNecessary();
 
         assert( !conflictDetected() );
-        chooseLiteral();
+        if( !chooseLiteral( assumptionsAND, assumptionsOR ) )
+            return false;
         
         propagationLabel:;
         while( hasNextVariableToPropagate() )
@@ -244,11 +257,14 @@ Solver::solve()
     assert_msg( allClausesSatisfied(), "The model found is not correct." );
     
     statistics( endSolving() );
-    return true;
+    
+    return modelIsValidUnderAssumptionsOR( assumptionsOR );
 }
 
 bool 
-Solver::solvePropagators()
+Solver::solvePropagators(
+    vector< Literal >& assumptionsAND,
+    vector< Literal >& assumptionsOR )
 {
     trace( solving, 1, "Starting solving.\n" );
     if( hasNextVariableToPropagate() )
@@ -262,7 +278,8 @@ Solver::solvePropagators()
         deleteClausesIfNecessary();
         
         assert( !conflictDetected() );
-        chooseLiteral();
+        if( !chooseLiteral( assumptionsAND, assumptionsOR ) )
+            return false;
         
         propagationLabel:;
         Var variableToPropagate;
@@ -355,7 +372,7 @@ Solver::solvePropagators()
     assert_msg( allClausesSatisfied(), "The model found is not correct." );
     
     statistics( endSolving() );
-    return true;
+    return modelIsValidUnderAssumptionsOR( assumptionsOR );
 }
 
 void
@@ -452,13 +469,13 @@ Solver::postPropagation(
     Literal complement = variables.createOppositeLiteralFromAssignedVariable( variable );
     
 //    Vector< pair< PostPropagator*, int > >& wl = variablePostPropagators[ ( getTruthValue( variable ) >> 1 ) ];
-    Vector< pair< PostPropagator*, int > >& wl = getDataStructure( complement ).variablePostPropagators;    
+    Vector< PostPropagator* >& wl = getDataStructure( complement ).variablePostPropagators;    
     
     for( unsigned i = 0; i < wl.size(); ++i )
     {
-        PostPropagator* postPropagator = wl[ i ].first;
+        PostPropagator* postPropagator = wl[ i ];
         assert( "Post propagator is null." && postPropagator != NULL );
-        bool res = postPropagator->onLiteralFalse( complement, wl[ i ].second );
+        bool res = postPropagator->onLiteralFalse( complement );
         
         if( res )            
             addPostPropagator( postPropagator );
@@ -1033,4 +1050,27 @@ Solver::isSubsumed(
     }    
     
     return false;
+}
+
+void
+Solver::createCyclicComponents()
+{
+    assert( dependencyGraph != NULL );
+    unsigned int id = 0;
+    unsigned int numberOfComponents = dependencyGraph->numberComponents();    
+    for( unsigned int i = 0; i < numberOfComponents; i++ )
+    {
+        vector< Var >& current = dependencyGraph->getComponent( i );
+        unsigned int size = current.size();
+        if( size > 1 )
+        {            
+            statistics( addCyclicComponent( size ) );
+            Component* currentComponent = new Component( gusDataVector, *this );
+            cyclicComponents.push_back( currentComponent );
+            currentComponent->setId( id++ );
+            
+            for( unsigned int j = 0; j < size; j++ )
+                currentComponent->addVariable( current[ j ] );            
+        }
+    }
 }

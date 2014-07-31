@@ -30,12 +30,14 @@
 
 using namespace std;
 class Component;
+class HCComponent;
 class Reason;
 
 struct VariableData
 {
     Reason* implicant;
     Component* component;
+    HCComponent* hcComponent;
     ReasonForBinaryClauses* reasonForBinaryClauses;
     
     unsigned int decisionLevel : 29;
@@ -120,10 +122,14 @@ class Variables
         inline bool hasBeenEliminated( Var v ) const { return variablesData[ v ].signOfEliminatedVariable != NOT_ELIMINATED; }
         inline bool hasBeenEliminatedByDistribution( Var v ) const { return variablesData[ v ].signOfEliminatedVariable == ELIMINATED_BY_DISTRIBUTION; } 
         
-        inline bool inTheSameComponent( Var v1, Var v2 ) const { return variablesData[ v1 ].component != NULL && variablesData[ v1 ].component == variablesData[ v2 ].component; } 
+        inline bool inTheSameComponent( Var v1, Var v2 ) const { return variablesData[ v1 ].component != NULL && variablesData[ v1 ].component == variablesData[ v2 ].component; }
+        inline bool inTheSameHCComponent( Var v1, Var v2 ) const { return variablesData[ v1 ].hcComponent != NULL && variablesData[ v1 ].hcComponent == variablesData[ v2 ].hcComponent; }
         inline bool isInCyclicComponent( Var v ) const { return variablesData[ v ].component != NULL; }
+        inline bool isInCyclicHCComponent( Var v ) const { return variablesData[ v ].hcComponent != NULL; }
         inline void setComponent( Var v, Component* c ){ assert( variablesData[ v ].component == NULL || c == NULL ); variablesData[ v ].component = c; }
+        inline void setHCComponent( Var v, HCComponent* c ){ assert( variablesData[ v ].hcComponent == NULL || c == NULL ); variablesData[ v ].hcComponent = c; }
         inline Component* getComponent( Var v ) { return variablesData[ v ].component; }
+        inline HCComponent* getHCComponent( Var v ) { return variablesData[ v ].hcComponent; }
         
         inline ReasonForBinaryClauses* getReasonForBinaryClauses( Var v ) { return variablesData[ v ].reasonForBinaryClauses; }
         

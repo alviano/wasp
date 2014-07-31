@@ -72,8 +72,8 @@
 /* 
  * Error messages
  */
-#define ERRORPARSING WASP_STRING "\nError during parsing"
-#define ERRORGENERIC WASP_STRING "\nGeneric error"
+#define ERRORPARSING "Error during parsing"
+#define ERRORGENERIC "Generic error"
 #define ERRORPARSINGCODE 100
 #define ERRORGENERICCODE 110
 

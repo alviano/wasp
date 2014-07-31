@@ -29,7 +29,7 @@ class PostPropagator
         inline PostPropagator() : inserted( false ) {}
         virtual ~PostPropagator() {}
         
-        virtual bool onLiteralFalse( Literal literal, int pos ) = 0;
+        virtual bool onLiteralFalse( Literal literal ) = 0;
         virtual Clause* getClauseToPropagate( Learning& learning ) = 0;
         
         inline void onAdding();

@@ -49,13 +49,13 @@ class Component : public PostPropagator
         inline Component( vector< GUSData* >& gusData_, Solver& s ) : PostPropagator(), solver( s ), gusData( gusData_ ), clauseToPropagate( NULL ), id( 0 ), removed( 0 ) {}
         inline ~Component() {}
         
-        virtual bool onLiteralFalse( Literal lit, int );
+        virtual bool onLiteralFalse( Literal lit );
 
         inline bool isCyclic() const { return variablesInComponent.size() > 1; }
         inline unsigned int size() const { return variablesInComponent.size(); }
 
         inline void addVariable( unsigned int var ) { variablesInComponent.push_back( var ); }
-        inline unsigned int getVariable( unsigned int i ){ assert( i < variablesInComponent.size() ); return variablesInComponent[ i ]; }
+        inline Var getVariable( unsigned int i ){ assert( i < variablesInComponent.size() ); return variablesInComponent[ i ]; }
 
         inline void setId( unsigned int id ) { this->id = id; }
         inline unsigned int getId() const { return id; }

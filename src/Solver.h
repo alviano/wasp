@@ -42,12 +42,14 @@ using namespace std;
 #include "util/Constants.h"
 #include "WatchedList.h"
 #include "stl/BoundedQueue.h"
+#include "Component.h"
+#include "HCComponent.h"
 
 struct DataStructures
 {    
     WatchedList< Clause* > variableWatchedLists;
     Vector< Clause* > variableAllOccurrences;
-    Vector< pair< PostPropagator*, int > > variablePostPropagators;
+    Vector< PostPropagator* > variablePostPropagators;
     Vector< pair< Propagator*, int > > variablePropagators;
     Vector< Literal > variableBinaryClauses;
 };
@@ -60,9 +62,10 @@ class Solver
         
         inline void greetings(){ outputBuilder->greetings(); }
         
-        inline void init();
-        bool solve();
-        bool solvePropagators();
+        inline bool solve();
+        inline bool solve( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
+        
+        inline void init();        
         inline void propagate( Var v );
         inline void propagateWithPropagators( Var variable );                
         void propagateAtLevelZero( Var variable );
@@ -124,7 +127,7 @@ class Solver
         
         inline bool analyzeConflict();
         inline void clearConflictStatus();
-        inline void chooseLiteral();
+        inline bool chooseLiteral( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
         inline bool conflictDetected();
         inline void foundIncoherence();
         inline bool hasUndefinedLiterals();
@@ -198,20 +201,12 @@ class Solver
         inline void resetPostPropagators();
         
         inline void addEdgeInDependencyGraph( unsigned int v1, unsigned int v2 ){ trace_msg( parser, 10, "Add arc " << v1 << " -> " << v2 ); dependencyGraph->addEdge( v1, v2 ); }
-        inline void computeStrongConnectedComponents()
-        {
-            dependencyGraph->computeStrongConnectedComponents( gusDataVector );
-            if( !dependencyGraph->tight() )
-            {            
-                for( unsigned int i = 0; i < dependencyGraph->numberOfCyclicComponents(); i++ )
-                    cyclicComponents.push_back( dependencyGraph->getCyclicComponent( i ) );
-            }
-            
-            delete dependencyGraph;
-            dependencyGraph = NULL;
-        }
+        inline void computeStrongConnectedComponents();        
+        
+        void createCyclicComponents();
+        inline void addHCComponent( HCComponent* c ) { hcComponents.push_back( c ); }
 
-        inline bool tight() const { return cyclicComponents.empty(); }
+        inline bool tight() const { return cyclicComponents.empty() && hcComponents.empty(); }
         inline unsigned int getNumberOfCyclicComponents() const { return cyclicComponents.size(); }
         inline Component* getCyclicComponent( unsigned int position ) { return cyclicComponents[ position ]; }
         
@@ -286,8 +281,13 @@ class Solver
         inline void setComponent( Var v, Component* c ){ variables.setComponent( v, c ); }
         inline Component* getComponent( Var v ) { return variables.getComponent( v ); }
         
+        inline bool inTheSameHCComponent( Var v1, Var v2 ) const { return variables.inTheSameHCComponent( v1, v2 ); } 
+        inline bool isInCyclicHCComponent( Var v ) const { return variables.isInCyclicHCComponent( v ); }
+        inline void setHCComponent( Var v, HCComponent* c ){ variables.setHCComponent( v, c ); }
+        inline HCComponent* getHCComponent( Var v ) { return variables.getHCComponent( v ); }
+        
         inline void addPropagator( Literal lit, Propagator* p, int position ) { getDataStructure( lit ).variablePropagators.push_back( pair< Propagator*, int >( p, position ) ); }
-        inline void addPostPropagator( Literal lit, PostPropagator* p, int position ) { getDataStructure( lit ).variablePostPropagators.push_back( pair< PostPropagator*, int >( p, position ) ); }        
+        inline void addPostPropagator( Literal lit, PostPropagator* p ) { getDataStructure( lit ).variablePostPropagators.push_back( p ); }
                 
         bool isFrozen( Var v ) const { return variables.isFrozen( v ); }
         void setFrozen( Var v ) { variables.setFrozen( v ); }
@@ -336,9 +336,14 @@ class Solver
         inline void bumpActivity( Var v ) { minisatHeuristic->bumpActivity( v ); }
         
         inline bool glucoseHeuristic() const { return glucoseHeuristic_; }
-        inline bool minimisationWithBinaryResolution( Clause& learnedClause, unsigned int lbd );        
+        inline bool minimisationWithBinaryResolution( Clause& learnedClause, unsigned int lbd );
+        
+        inline bool modelIsValidUnderAssumptionsOR( vector< Literal >& assumptionsOR );
         
     private:
+        bool solveWithoutPropagators( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
+        bool solvePropagators( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
+
         void updateActivity( Clause* learnedClause );
         inline void addVariableInternal();        
         inline void addBinaryClause( Literal lit1, Literal lit2 );
@@ -495,6 +500,7 @@ class Solver
         Vector< DataStructures* > variableDataStructures;
         
         vector< Component* > cyclicComponents;
+        vector< HCComponent* > hcComponents;
         
         #ifndef NDEBUG
         bool checkStatusBeforePropagation( Var variable )
@@ -538,6 +544,28 @@ Solver::Solver()
     VariableNames::addVariable();
     variableDataStructures.push_back( NULL );
     variableDataStructures.push_back( NULL );
+}
+
+bool
+Solver::solve()
+{
+    vector< Literal > assumptionsAND;
+    vector< Literal > assumptionsOR;
+    if( !hasPropagators() )
+        return solveWithoutPropagators( assumptionsAND, assumptionsOR );
+    else
+        return solvePropagators( assumptionsAND, assumptionsOR );
+}
+
+bool
+Solver::solve(
+    vector< Literal >& assumptionsAND,
+    vector< Literal >& assumptionsOR )
+{
+    if( !hasPropagators() )
+        return solveWithoutPropagators( assumptionsAND, assumptionsOR );
+    else
+        return solvePropagators( assumptionsAND, assumptionsOR );
 }
 
 void
@@ -938,13 +966,50 @@ Solver::foundIncoherence()
     outputBuilder->onProgramIncoherent();
 }
 
-void
-Solver::chooseLiteral()
-{
-    Literal choice = minisatHeuristic->makeAChoice();
+bool
+Solver::chooseLiteral(
+    vector< Literal >& assumptionsAND,
+    vector< Literal >& assumptionsOR )
+{    
+    Literal choice = Literal::null;
+    for( unsigned int i = 0; i < assumptionsAND.size(); i++ )
+    {
+        if( isUndefined( assumptionsAND[ i ] ) )
+        {
+            choice = assumptionsAND[ i ];
+            goto end;
+        }
+        else if( isFalse( assumptionsAND[ i ] ) )
+            return false;
+    }
+        
+    if( !assumptionsOR.empty() )
+    {
+        bool found = false;
+        for( unsigned int i = 0; i < assumptionsOR.size(); i++ )
+        {
+            if( isUndefined( assumptionsOR[ i ] ) )
+            {
+                choice = assumptionsOR[ i ];
+                goto end;
+            }
+            else if( isTrue( assumptionsOR[ i ] ) )
+            {
+                found = true;
+                break;
+            }
+        }
+
+        if( !found )
+            return false;
+    }
+    choice = minisatHeuristic->makeAChoice();
     trace( solving, 1, "Choice: %s.\n", toString( choice ).c_str() );
+    
+    end:;
     setAChoice( choice );    
-    statistics( onChoice() );
+    statistics( onChoice() );    
+    return true;
 }
 
 bool
@@ -1211,6 +1276,7 @@ Solver::clearComponents()
     for( unsigned int i = 0; i < cyclicComponents.size(); i++ )
     {
         cyclicComponents[ j ] = cyclicComponents[ i ];
+        cyclicComponents[ j ]->setId( j );
         if( !cyclicComponents[ i ]->isRemoved() )
             j++;
     }
@@ -1951,6 +2017,33 @@ Solver::minimisationWithBinaryResolution(
             learnedClause.shrink( learnedClause.size() - nb );
             return true;
         }
+    }
+    
+    return false;
+}
+
+void
+Solver::computeStrongConnectedComponents()
+{
+    dependencyGraph->computeStrongConnectedComponents();
+    if( !dependencyGraph->tight() )
+        createCyclicComponents();
+
+    delete dependencyGraph;
+    dependencyGraph = NULL;    
+}
+
+bool
+Solver::modelIsValidUnderAssumptionsOR(
+    vector< Literal >& assumptionsOR )
+{
+    if( assumptionsOR.empty() )
+        return true;    
+    
+    for( unsigned int i = 0; i < assumptionsOR.size(); i++ )
+    {
+        if( isTrue( assumptionsOR[ i ] ) )
+            return true;
     }
     
     return false;
