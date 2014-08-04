@@ -61,11 +61,11 @@ public:
         inline bool isRemoved() const { return literals.empty(); }
         inline void remove() { literals.clearAndDelete(); }
         
-        inline bool isFact() const { assert( !literals.empty() ); assert( literals.size() != 1 || literals.back().isHeadAtom() ); return literals.size() == 1; }
+        inline bool isFact() const { assert( !literals.empty() ); return literals.size() == 1 && literals.back().isPossiblySupportedHeadAtom(); }
 //        inline bool isFiring() const { return posBody.empty() && negBody.empty() && doubleNegBody.empty(); }
-        inline unsigned size() const { return literals.size(); }
+        inline unsigned size() const { return literals.size(); }        
         
-        inline void addHeadAtom( unsigned id ) { literals.push_back( Literal::newHeadAtom( id ) ); }
+        inline void addHeadAtom( unsigned id ) { literals.push_back( Literal::newPossiblySupportedHeadAtom( id ) ); }
         inline void addNegativeLiteral( unsigned id ) { literals.push_back( Literal::newNegativeBodyLiteral( id ) ); }
         inline void addPositiveLiteral( unsigned id ) { literals.push_back( Literal::newUndefinedPositiveBodyLiteral( id ) ); }
         inline void addPositiveTrueLiteral( unsigned id ) { literals.push_back( Literal::newTruePositiveBodyLiteral( id ) ); }
@@ -215,23 +215,23 @@ public:
         inline bool isWeightConstraint() const { return weightConstraintRule != NULL; }
         inline void setWeightConstraint( WeightConstraintRule* rule ) { assert( rule != NULL ); weightConstraintRule = rule; }
         
-        inline unsigned int sizeOf()
-        {
-            return
-            (
-                headOccurrences.capacity() * sizeof( NormalRule* ) + sizeof( headOccurrences ) +
-                posOccurrences.capacity() * sizeof( NormalRule* ) + sizeof( posOccurrences ) +
-                negOccurrences.capacity() * sizeof( NormalRule* ) + sizeof( negOccurrences )+
-                negWeightConstraintsOccurrences.capacity() * sizeof( WeightConstraintRule* ) + sizeof( negWeightConstraintsOccurrences ) +
-                positionsInNegWeightConstraints.capacity() * sizeof( unsigned ) + sizeof( positionsInNegWeightConstraints ) +
-                posWeightConstraintsOccurrences.capacity() * sizeof( WeightConstraintRule* ) + sizeof( posWeightConstraintsOccurrences ) +
-                positionsInPosWeightConstraints.capacity() * sizeof( unsigned ) + sizeof( positionsInPosWeightConstraints ) +
-                doubleNegOccurrences.capacity() * sizeof( NormalRule* ) + sizeof( doubleNegOccurrences ) +
-//                    negConstraints.capacity() * sizeof( NormalRule* ) + sizeof( negConstraints ) +
-//                    posConstraints.capacity() * sizeof( NormalRule* ) + sizeof( posConstraints ) +
-                sizeof( unsigned ) * 3 + sizeof( bool ) + sizeof( WeightConstraintRule* )
-            );
-        }
+//        inline unsigned int sizeOf()
+//        {
+//            return
+//            (
+//                headOccurrences.capacity() * sizeof( NormalRule* ) + sizeof( headOccurrences ) +                
+//                posOccurrences.capacity() * sizeof( NormalRule* ) + sizeof( posOccurrences ) +
+//                negOccurrences.capacity() * sizeof( NormalRule* ) + sizeof( negOccurrences )+
+//                negWeightConstraintsOccurrences.capacity() * sizeof( WeightConstraintRule* ) + sizeof( negWeightConstraintsOccurrences ) +
+//                positionsInNegWeightConstraints.capacity() * sizeof( unsigned ) + sizeof( positionsInNegWeightConstraints ) +
+//                posWeightConstraintsOccurrences.capacity() * sizeof( WeightConstraintRule* ) + sizeof( posWeightConstraintsOccurrences ) +
+//                positionsInPosWeightConstraints.capacity() * sizeof( unsigned ) + sizeof( positionsInPosWeightConstraints ) +
+//                doubleNegOccurrences.capacity() * sizeof( NormalRule* ) + sizeof( doubleNegOccurrences ) +
+////                    negConstraints.capacity() * sizeof( NormalRule* ) + sizeof( negConstraints ) +
+////                    posConstraints.capacity() * sizeof( NormalRule* ) + sizeof( posConstraints ) +
+//                sizeof( unsigned ) * 3 + sizeof( bool ) + sizeof( WeightConstraintRule* )
+//            );
+//        }
         
         inline void clear()
         {
@@ -334,6 +334,7 @@ private:
     void propagateFalse( Var var );
     void propagateFact( Var var );
     
+//    bool ruleToConstraint( NormalRule* rule );    
     void bodyToConstraint( NormalRule* rule );    
     
     void cleanData();
@@ -350,14 +351,18 @@ private:
     
     unsigned propagatedLiterals;
     
-    void add( NormalRule* rule );
+    void add( NormalRule* rule, unsigned int numberOfTrueHeadAtoms );
     void add( WeightConstraintRule* rule );
     bool addUndefinedLiteral( Clause* clause, Literal lit );
     void removeAndCheckSupport( NormalRule* rule );
     bool shrinkPos( NormalRule* rule, unsigned lit );
     void shrinkNeg( NormalRule* rule, unsigned lit );
+    void shrinkHead( NormalRule* rule, unsigned lit );
     void shrinkDoubleNeg( NormalRule* rule, unsigned lit );
-    void onShrinking( NormalRule* rule );
+    void onShrinkingBody( NormalRule* rule );
+    void onShrinkingHead( NormalRule* rule );
+    void onTrueHeadAtom( NormalRule* rule, Var headAtom );
+    bool isSupporting( NormalRule* rule, Var headAtom );
     
     void updateMaxPossibleValueWeightConstraint( WeightConstraintRule* rule, unsigned int position );
     void updateCurrentValueWeightConstraint( WeightConstraintRule* rule, unsigned int position );
@@ -376,7 +381,7 @@ private:
     void addOptimizationRule( WeightConstraintRule* rule );
     void computeLinearCostsForOptimizationRules( vector< unsigned int >& maxCostOfLevelOfOptimizationRules, vector< int >& literals, vector< unsigned int >& weights, vector< unsigned int >& levels, unsigned int& bound );
     
-    void createCrule( Literal head, NormalRule* rule );
+    void createCrule( Literal head, Var varToSkip, NormalRule* rule );
     void clearDataStructures();
     void cleanNormalRules();
     

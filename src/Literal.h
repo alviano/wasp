@@ -60,16 +60,20 @@ class Literal
         static Literal newTruePositiveBodyLiteral( Var v ) { return Literal( v, NEGATIVE, true, true ); }
         static Literal newDoubleNegatedBodyLiteral( Var v ) { return Literal( v, NEGATIVE, false, false ); }
         static Literal newNegativeBodyLiteral( Var v ) { return Literal( v, POSITIVE, false, false ); }
-        static Literal newHeadAtom( Var v ) { return Literal( v, POSITIVE, true, false ); }
+        static Literal newPossiblySupportedHeadAtom( Var v ) { return Literal( v, POSITIVE, true, false ); }
+        static Literal newUnsupportedHeadAtom( Var v ) { return Literal( v, POSITIVE, true, true ); }
         
         inline bool isUndefinedPositiveBodyLiteral() const { return sign & ~toBeRemoved & relevantForDependencyGraph; }
         inline bool isTruePositiveBodyLiteral() const { return sign & toBeRemoved; }
         inline bool isDoubleNegatedBodyLiteral() const { return sign & ~relevantForDependencyGraph; }
         inline bool isNegativeBodyLiteral() const { return ( ~sign & ~relevantForDependencyGraph ) & 1; }
         inline bool isHeadAtom() const { return ~sign & relevantForDependencyGraph; }
+        inline bool isPossiblySupportedHeadAtom() const { return ~sign & relevantForDependencyGraph & ~toBeRemoved; }
+        inline bool isUnsupportedHeadAtom() const { return ~sign & relevantForDependencyGraph & toBeRemoved; }
         
         inline bool isToBeRemoved() const { return toBeRemoved; }
         inline bool isPositiveBodyLiteral() const { return sign & ( relevantForDependencyGraph | toBeRemoved ); }
+        inline void setUnsupportedHeadAtom() { assert( isPossiblySupportedHeadAtom() ); toBeRemoved = 1; assert( isUnsupportedHeadAtom() ); }
         
     private:
         inline Literal( Var v, bool s, bool d, bool r ) : variable( v ), sign( s ), relevantForDependencyGraph( d ), toBeRemoved( r ) {}

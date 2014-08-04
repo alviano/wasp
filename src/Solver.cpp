@@ -18,6 +18,7 @@
 
 #include "Solver.h"
 #include "input/Dimacs.h"
+#include "HCComponent.h"
 #include <algorithm>
 #include <stdint.h>
 #include <vector>
@@ -258,7 +259,7 @@ Solver::solveWithoutPropagators(
     
     statistics( endSolving() );
     
-    return modelIsValidUnderAssumptionsOR( assumptionsOR );
+    return modelIsValidUnderAssumptions( assumptionsAND, assumptionsOR );
 }
 
 bool 
@@ -372,7 +373,7 @@ Solver::solvePropagators(
     assert_msg( allClausesSatisfied(), "The model found is not correct." );
     
     statistics( endSolving() );
-    return modelIsValidUnderAssumptionsOR( assumptionsOR );
+    return modelIsValidUnderAssumptions( assumptionsAND, assumptionsOR );
 }
 
 void

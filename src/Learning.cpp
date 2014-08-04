@@ -425,8 +425,8 @@ Learning::learnClausesFromDisjunctiveUnfoundedSet(
 
     for( unsigned int i = 0; i < externalLiterals.size(); i++ )
     {
-        if( solver.isFalse( externalLiterals[ i ] ) && solver.getDecisionLevel( externalLiterals[ i ] ) )
-            onNavigatingLiteralForUnfoundedSetLearning( externalLiterals[ i ] );
+        if( solver.isTrue( externalLiterals[ i ] ) && solver.getDecisionLevel( externalLiterals[ i ] ) > 0 )
+            onNavigatingLiteralForUnfoundedSetLearning( externalLiterals[ i ].getOppositeLiteral() );
     }
     
     if( learnedClause->size() > 1 )

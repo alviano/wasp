@@ -29,7 +29,6 @@ using namespace std;
 
 class Clause;
 class Learning;
-class Solver;
 
 class HCComponent : public PostPropagator
 {
@@ -52,7 +51,7 @@ class HCComponent : public PostPropagator
 
         Vector< Literal > trail;
         Solver& solver;
-        Solver* checker;
+        Solver checker;
 
         vector< Var > hcVariables;
         vector< Literal > externalLiterals;

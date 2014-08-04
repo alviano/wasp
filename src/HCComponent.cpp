@@ -10,22 +10,18 @@
 
 HCComponent::HCComponent(
     Solver& s ) : PostPropagator(), solver( s ), first( true )
-{
-    checker = new Solver();
-    
+{   
     unsigned int i = 0;
     while( i++ < s.numberOfVariables() )
-        checker->addVariable();    
-    assert( checker->numberOfVariables() == s.numberOfVariables() );
+        checker.addVariable();    
+    assert( checker.numberOfVariables() == s.numberOfVariables() );
     
-    checker->setOutputBuilder( new WaspOutputBuilder() );
-    checker->init();    
+    checker.setOutputBuilder( new WaspOutputBuilder() );
+    checker.init();    
 }
 
 HCComponent::~HCComponent()
 {
-    delete checker;
-    checker = NULL;
 }
 
 void
@@ -54,8 +50,6 @@ HCComponent::onLiteralFalse(
 void
 HCComponent::testModel()
 {
-    assert( checker != NULL );
-
     vector< Literal > assumptionsAND;
     vector< Literal > assumptionsOR;    
 
@@ -66,38 +60,41 @@ HCComponent::testModel()
     if( first )
     {
         first = false;
-        bool result = checker->preprocessing();
+        bool result = checker.preprocessing();
         assert( result );
     }    
 
     trace_action( modelchecker, 2,
     {
+        trace_tag( cerr, modelchecker, 2 );
         cerr << "Assumptions AND:";
         for( unsigned int i = 0; i < assumptionsAND.size(); i++ )
             cerr << " " << assumptionsAND[ i ];
         cerr << endl;
+        trace_tag( cerr, modelchecker, 2 );
         cerr << "Assumptions OR:";
         for( unsigned int i = 0; i < assumptionsOR.size(); i++ )
             cerr << " " << assumptionsOR[ i ];
         cerr << endl;
     } );
     
-    if( checker->solve( assumptionsAND, assumptionsOR ) )
+    if( checker.solve( assumptionsAND, assumptionsOR ) )
     {
         trace_msg( modelchecker, 1, "The SAT formula is satisfiable: the model is not stable." );                
         for( unsigned int i = 0; i < assumptionsOR.size(); i++ )
-            if( checker->isTrue( assumptionsOR[ i ] ) )
+            if( checker.isTrue( assumptionsOR[ i ] ) )
                 unfoundedSet.push_back( assumptionsOR[ i ].getVariable() );
 
         trace_action( modelchecker, 2,
-        {
+        {            
+            trace_tag( cerr, modelchecker, 2 );
             cerr << "The unfounded set is: ";
             for( unsigned int i = 0; i < unfoundedSet.size(); i++ )
-                cerr << " " << unfoundedSet[ i ];
+                cerr << " " << Literal( unfoundedSet[ i ], POSITIVE );
             cerr << endl;
         } );
         assert( !unfoundedSet.empty() );
-    }
+    }    
 }
 
 void
@@ -118,9 +115,9 @@ HCComponent::computeAssumptions(
     {
         Literal lit = externalLiterals[ i ];
         if( solver.isTrue( lit ) )
-            assumptionsAND.push_back( lit.getOppositeLiteral() );
-        else
             assumptionsAND.push_back( lit );
+        else
+            assumptionsAND.push_back( lit.getOppositeLiteral() );
     }
 }
 
@@ -130,7 +127,7 @@ HCComponent::addClauseToChecker(
 {
     assert( c != NULL );
     trace_msg( modelchecker, 2, "Adding clause " << *c );
-    checker->addClause( c );
+    checker.addClause( c );
 }
 
 Clause*
@@ -142,7 +139,7 @@ HCComponent::getClauseToPropagate(
         return NULL;
     }
     else
-    {        
+    {
         Clause* loopFormula = learning.learnClausesFromDisjunctiveUnfoundedSet( unfoundedSet, externalLiterals );
         
         trace_msg( modelchecker, 1, "Adding loop formula: " << *loopFormula );        

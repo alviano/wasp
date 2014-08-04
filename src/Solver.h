@@ -43,7 +43,7 @@ using namespace std;
 #include "WatchedList.h"
 #include "stl/BoundedQueue.h"
 #include "Component.h"
-#include "HCComponent.h"
+class HCComponent;
 
 struct DataStructures
 {    
@@ -338,7 +338,7 @@ class Solver
         inline bool glucoseHeuristic() const { return glucoseHeuristic_; }
         inline bool minimisationWithBinaryResolution( Clause& learnedClause, unsigned int lbd );
         
-        inline bool modelIsValidUnderAssumptionsOR( vector< Literal >& assumptionsOR );
+        inline bool modelIsValidUnderAssumptions( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
         
     private:
         bool solveWithoutPropagators( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
@@ -976,32 +976,41 @@ Solver::chooseLiteral(
     {
         if( isUndefined( assumptionsAND[ i ] ) )
         {
-            choice = assumptionsAND[ i ];
-            goto end;
+            if( choice == Literal::null )
+                choice = assumptionsAND[ i ];
         }
         else if( isFalse( assumptionsAND[ i ] ) )
             return false;
     }
+    
+    if( choice != Literal::null )
+        goto end;        
         
     if( !assumptionsOR.empty() )
     {
-        bool found = false;
+        bool satisfied = false;
         for( unsigned int i = 0; i < assumptionsOR.size(); i++ )
         {
             if( isUndefined( assumptionsOR[ i ] ) )
             {
-                choice = assumptionsOR[ i ];
-                goto end;
+                if( choice == Literal::null )
+                    choice = assumptionsOR[ i ];                
             }
             else if( isTrue( assumptionsOR[ i ] ) )
             {
-                found = true;
+                satisfied = true;
                 break;
             }
         }
-
-        if( !found )
-            return false;
+        
+        if( !satisfied )
+        {
+            //at least one undefined
+            if( choice != Literal::null )
+                goto end;
+            else
+                return false;
+        }
     }
     choice = minisatHeuristic->makeAChoice();
     trace( solving, 1, "Choice: %s.\n", toString( choice ).c_str() );
@@ -2034,17 +2043,20 @@ Solver::computeStrongConnectedComponents()
 }
 
 bool
-Solver::modelIsValidUnderAssumptionsOR(
+Solver::modelIsValidUnderAssumptions(
+    vector< Literal >& assumptionsAND,
     vector< Literal >& assumptionsOR )
-{
+{    
+    for( unsigned int i = 0; i < assumptionsAND.size(); i++ )
+        if( isFalse( assumptionsAND[ i ] ) )
+            return false;
+    
     if( assumptionsOR.empty() )
-        return true;    
+        return true;
     
     for( unsigned int i = 0; i < assumptionsOR.size(); i++ )
-    {
         if( isTrue( assumptionsOR[ i ] ) )
             return true;
-    }
     
     return false;
 }
