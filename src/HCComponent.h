@@ -44,8 +44,8 @@ class HCComponent : public PostPropagator
 
         void addClauseToChecker( Clause* c, Var headAtom );
         
-        inline void addHCVariable( Var v ) { hcVariables.push_back( v ); }
-        inline void addExternalLiteral( Literal lit ) { externalLiterals.push_back( lit ); }
+        inline void addHCVariable( Var v ) { inUnfoundedSet[ v ] |= 1; hcVariables.push_back( v ); }
+        bool addExternalLiteral( Literal lit );
         
         inline unsigned int size() const { return hcVariables.size(); }
         inline Var getVariable( unsigned int pos ) const { assert( pos < hcVariables.size() ); return hcVariables[ pos ]; }
@@ -60,8 +60,8 @@ class HCComponent : public PostPropagator
     private:
         inline HCComponent( const HCComponent& orig );
 
-        bool isInUnfoundedSet( Var v ) { assert( v < inUnfoundedSet.size() ); return inUnfoundedSet[ v ] == numberOfCalling; }
-        void setInUnfoundedSet( Var v ) { assert_msg( v < inUnfoundedSet.size(), "v = " << v << "; inUnfoundedSet.size() = " << inUnfoundedSet.size() ); inUnfoundedSet[ v ] = numberOfCalling; }
+        bool isInUnfoundedSet( Var v ) { assert( v < inUnfoundedSet.size() ); return inUnfoundedSet[ v ] == numberOfCalls; }
+        void setInUnfoundedSet( Var v ) { assert_msg( v < inUnfoundedSet.size(), "v = " << v << "; inUnfoundedSet.size() = " << inUnfoundedSet.size() ); inUnfoundedSet[ v ] = numberOfCalls; }
         
         vector< GUSData* >& gusData;
         Vector< Literal > trail;
@@ -73,11 +73,10 @@ class HCComponent : public PostPropagator
         Vector< Var > unfoundedSet;
         
         Vector< unsigned int > inUnfoundedSet;
-        unsigned int numberOfCalling;
-        bool first;
+        unsigned int numberOfCalls;
 
         void testModel();
-        void computeAssumptions( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );                
+        void computeAssumptions( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
 };
 
 #endif

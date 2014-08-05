@@ -18,12 +18,12 @@ ostream& operator<<( ostream& out, const HCComponent& component )
 
 HCComponent::HCComponent(
     vector< GUSData* >& gusData_,
-    Solver& s ) : PostPropagator(), gusData( gusData_ ), solver( s ), numberOfCalling( 0 ), first( true )
+    Solver& s ) : PostPropagator(), gusData( gusData_ ), solver( s ), numberOfCalls( 0 )
 {   
     // variable 0 is not used
     inUnfoundedSet.push_back( 0 );
     
-    unsigned int i = 0;    
+    unsigned int i = 0;
     while( i++ < s.numberOfVariables() )
     {
         checker.addVariable();
@@ -39,6 +39,30 @@ HCComponent::HCComponent(
 HCComponent::~HCComponent()
 {
 }
+
+bool
+HCComponent::addExternalLiteral(
+    Literal lit ) 
+{
+    if( lit.isPositive() )
+    {
+        if( inUnfoundedSet[ lit.getVariable() ] & 1 )
+            return false;
+//        if( inUnfoundedSet[ lit.getVariable() ] == 2 ) // TODO: external support is guaranteed!
+        inUnfoundedSet[ lit.getVariable() ] |= 1;
+    }
+    else
+    {
+        assert( lit.isNegative() );
+        if( inUnfoundedSet[ lit.getVariable() ] & 2 )
+            return false;
+//        if( inUnfoundedSet[ lit.getVariable() ] == 1 ) // TODO: external support is guaranteed!
+        inUnfoundedSet[ lit.getVariable() ] |= 2;
+    }
+    externalLiterals.push_back( lit );
+    return true;
+}
+
 
 void
 HCComponent::reset()
@@ -78,12 +102,17 @@ HCComponent::testModel()
         return;
     }
     
-    if( first )
+    if( numberOfCalls++ == 0 )
     {
-        first = false;
+        trace_msg( modelchecker, 2, "First call. Removing unused variables" );
+        for( unsigned i = 1; i < solver.numberOfVariables(); ++i )
+            if( inUnfoundedSet[ i ] == 0 )
+                checker.addClause( Literal( i ) );
+            else
+                inUnfoundedSet[ i ] = 0;
         bool result = checker.preprocessing();
         assert( result );
-    }    
+    }
 
     trace_action( modelchecker, 2,
     {
@@ -103,7 +132,6 @@ HCComponent::testModel()
         checker.doRestart();
     if( checker.solve( assumptionsAND, assumptionsOR ) )
     {
-        numberOfCalling++;
         trace_msg( modelchecker, 1, "SATISFIABLE: the model is not stable." );                
         for( unsigned int i = 0; i < assumptionsOR.size(); i++ )
             if( checker.isTrue( assumptionsOR[ i ] ) )

@@ -1286,10 +1286,12 @@ GringoNumericFormat::computeGusStructures()
                         {
                             if( solver.getHCComponent( rule->literals[ k ].getVariable() ) != hcComponent )
                             {
-                                hcComponent->addExternalLiteral( rule->literals[ k ] );
-                                solver.setFrozen( rule->literals[ k ].getVariable() );
-                                solver.addPostPropagator( rule->literals[ k ], hcComponent );
-                                solver.addPostPropagator( rule->literals[ k ].getOppositeLiteral(), hcComponent );                                                                
+                                if( hcComponent->addExternalLiteral( rule->literals[ k ] ) )
+                                {
+                                    solver.setFrozen( rule->literals[ k ].getVariable() );
+                                    solver.addPostPropagator( rule->literals[ k ], hcComponent );
+                                    solver.addPostPropagator( rule->literals[ k ].getOppositeLiteral(), hcComponent );                                                                
+                                }
                             }
                         }
                         Clause* c = normalRuleToClause( rule );
