@@ -55,6 +55,8 @@ HCComponent::onLiteralFalse(
 void
 HCComponent::testModel()
 {
+    trace_msg( modelchecker, 1, "Check model" );
+    
     vector< Literal > assumptionsAND;
     vector< Literal > assumptionsOR;    
 

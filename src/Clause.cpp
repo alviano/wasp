@@ -34,16 +34,18 @@ ostream&
 Clause::print(
     ostream& out ) const
 {
-    if( literals.empty() || hasBeenDeleted() )
-        return out;
+    if( literals.empty() )
+        return out << "[]";
+    if( hasBeenDeleted() )
+        return out << "-";
 
-    out << literals[ 0 ];
+    out << "[ " << literals[ 0 ];
     for( unsigned int i = 1; i < literals.size(); i++ )
     {
         out << " | " << literals[ i ];
     }
 
-    return out;
+    return out << " ]";
 }
 
 unsigned
