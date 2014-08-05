@@ -232,7 +232,11 @@ Solver::solveWithoutPropagators(
 
         assert( !conflictDetected() );
         if( !chooseLiteral( assumptionsAND, assumptionsOR ) )
+        {
+            trace_msg( solving, 1, "INCONSISTENT" );
+            statistics( endSolving() );
             return false;
+        }
         
         propagationLabel:;
         while( hasNextVariableToPropagate() )
@@ -253,10 +257,11 @@ Solver::solveWithoutPropagators(
                 
                 if( !analyzeConflict() )
                 {
+                    trace_msg( solving, 1, "INCONSISTENT" );
                     statistics( endSolving() );
                     return false;
                 }
-                minisatHeuristic->variableDecayActivity();                
+                minisatHeuristic->variableDecayActivity();
                 assert( hasNextVariableToPropagate() || getCurrentDecisionLevel() == 0 );
             }
         }

@@ -8,6 +8,14 @@
 
 #include <vector>
 
+ostream& operator<<( ostream& out, const HCComponent& component )
+{
+    out << "[ ";
+    for( unsigned i = 0; i < component.hcVariables.size(); ++i )
+        out << component.solver.getLiteral( component.hcVariables[ i ] ) << " ";
+    return out << "]";
+}
+
 HCComponent::HCComponent(
     vector< GUSData* >& gusData_,
     Solver& s ) : PostPropagator(), gusData( gusData_ ), solver( s ), numberOfCalling( 0 ), first( true )
@@ -55,14 +63,17 @@ HCComponent::onLiteralFalse(
 void
 HCComponent::testModel()
 {
-    trace_msg( modelchecker, 1, "Check model" );
+    trace_msg( modelchecker, 1, "Check component " << *this );
     
     vector< Literal > assumptionsAND;
     vector< Literal > assumptionsOR;    
 
     computeAssumptions( assumptionsAND, assumptionsOR );
     if( assumptionsOR.empty() )
+    {
+        trace_msg( modelchecker, 2, "Nothing to check here!" );
         return;
+    }
     
     if( first )
     {
@@ -85,10 +96,12 @@ HCComponent::testModel()
         cerr << endl;
     } );
     
+    if( checker.numberOfAssignedLiterals() > 1 )
+        checker.doRestart();
     if( checker.solve( assumptionsAND, assumptionsOR ) )
     {
         numberOfCalling++;
-        trace_msg( modelchecker, 1, "The SAT formula is satisfiable: the model is not stable." );                
+        trace_msg( modelchecker, 1, "SATISFIABLE: the model is not stable." );                
         for( unsigned int i = 0; i < assumptionsOR.size(); i++ )
             if( checker.isTrue( assumptionsOR[ i ] ) )
             {
@@ -100,13 +113,13 @@ HCComponent::testModel()
         trace_action( modelchecker, 2,
         {            
             trace_tag( cerr, modelchecker, 2 );
-            cerr << "The unfounded set is: ";
+            cerr << "The unfounded set is:";
             for( unsigned int i = 0; i < unfoundedSet.size(); i++ )
                 cerr << " " << Literal( unfoundedSet[ i ], POSITIVE );
             cerr << endl;
         } );
         assert( !unfoundedSet.empty() );
-    }    
+    }
 }
 
 void

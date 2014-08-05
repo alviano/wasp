@@ -430,9 +430,8 @@ Satelite::tryToSubstitute(
     assert_msg( solver.numberOfOccurrences( variable ) == 0, "Variable " << VariableNames::getName( variable ) << " has been eliminated but has still " << solver.numberOfOccurrences( variable ) << " occurrences" );    
     trace_msg( satelite, 2, "Eliminated variable " << VariableNames::getName( variable ) );
     
-    ok = propagateTopLevel();
-    
     solver.onEliminatingVariable( variable, lit.getSign(), definition );
+    ok = propagateTopLevel();
     return true;
 }
 

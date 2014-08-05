@@ -1351,10 +1351,11 @@ Solver::onEliminatingVariable(
 void
 Solver::completeModel()
 {
-    trace_msg( satelite, 5, "Completing the model for eliminated variables" );  
-    for( int i = eliminatedVariables.size() - 1; i >= 0; i-- )    
+    trace_msg( solving, 1, "Completing the model for eliminated variables (" << eliminatedVariables.size() << " variables)" );
+    for( int i = eliminatedVariables.size() - 1; i >= 0; i-- )
     {
         Var back = eliminatedVariables[ i ];
+        trace_msg( satelite, 2, "Processing " << back );
 
         assert( hasBeenEliminated( back ) );
         unsigned int sign = getSignOfEliminatedVariable( back );
@@ -2041,18 +2042,36 @@ bool
 Solver::modelIsValidUnderAssumptions(
     vector< Literal >& assumptionsAND,
     vector< Literal >& assumptionsOR )
-{    
+{
+    trace_msg( solving, 1, "Check assumptions AND" );
     for( unsigned int i = 0; i < assumptionsAND.size(); i++ )
+    {
+        trace_msg( solving, 2, "Checking " << assumptionsAND[ i ] );
         if( isFalse( assumptionsAND[ i ] ) )
+        {
+            trace_msg( solving, 3, "Assumptions AND not satisfied" );
             return false;
+        }
+    }
+    trace_msg( solving, 2, "Assumptions AND satisfied" );
     
+    trace_msg( solving, 1, "Check assumptions OR" );
     if( assumptionsOR.empty() )
+    {
+        trace_msg( solving, 2, "Assumptions OR satisfied" );
         return true;
+    }
     
     for( unsigned int i = 0; i < assumptionsOR.size(); i++ )
+    {
+        trace_msg( solving, 2, "Checking " << assumptionsOR[ i ] );
         if( isTrue( assumptionsOR[ i ] ) )
+        {
+            trace_msg( solving, 3, "Assumptions OR satisfied" );
             return true;
-    
+        }
+    }
+    trace_msg( solving, 2, "Assumptions OR not satisfied" );
     return false;
 }
 

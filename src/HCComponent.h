@@ -32,6 +32,7 @@ class Learning;
 
 class HCComponent : public PostPropagator
 {
+    friend ostream& operator<<( ostream& out, const HCComponent& component );
     public:
         HCComponent( vector< GUSData* >& gusData_, Solver& s );
         ~HCComponent();
