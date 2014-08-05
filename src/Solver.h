@@ -43,7 +43,6 @@ using namespace std;
 #include "WatchedList.h"
 #include "stl/BoundedQueue.h"
 #include "Component.h"
-#include "HCComponent.h"
 class HCComponent;
 
 struct DataStructures
@@ -342,7 +341,7 @@ class Solver
         
         void initFrom( Solver& solver );
         
-        HCComponent* createHCComponent() { return new HCComponent( gusDataVector, *this ); }
+        HCComponent* createHCComponent();
         
     private:
         bool solveWithoutPropagators( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );

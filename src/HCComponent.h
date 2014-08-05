@@ -41,7 +41,7 @@ class HCComponent : public PostPropagator
         virtual Clause* getClauseToPropagate( Learning& learning );
         virtual bool onLiteralFalse( Literal literal );
 
-        void addClauseToChecker( Clause* c, Var headAtom );        
+        void addClauseToChecker( Clause* c, Var headAtom );
         
         inline void addHCVariable( Var v ) { hcVariables.push_back( v ); }
         inline void addExternalLiteral( Literal lit ) { externalLiterals.push_back( lit ); }
@@ -52,7 +52,7 @@ class HCComponent : public PostPropagator
         inline unsigned int externalLiteralsSize() const { return externalLiterals.size(); }
         inline Literal getExternalLiteral( unsigned int pos ) const { assert( pos < externalLiterals.size() ); return externalLiterals[ pos ]; }
         
-        void computeReasonForUnfoundedAtom( Var v );
+        void computeReasonForUnfoundedAtom( Var v, Learning& learning );
         
         GUSData& getGUSData( Var v ) { assert( v < gusData.size() ); return *( gusData[ v ] ); }
 

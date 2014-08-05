@@ -1293,7 +1293,7 @@ GringoNumericFormat::computeGusStructures()
                             }
                         }
                         Clause* c = normalRuleToClause( rule );
-                        hcComponent->addClauseToChecker( c );
+                        hcComponent->addClauseToChecker( c, v );
                     }
                 }
             }

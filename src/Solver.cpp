@@ -1084,3 +1084,9 @@ Solver::createCyclicComponents()
         }
     }
 }
+
+HCComponent*
+Solver::createHCComponent()
+{
+    return new HCComponent( gusDataVector, *this );
+}

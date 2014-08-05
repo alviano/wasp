@@ -20,6 +20,7 @@
 #include "Clause.h"
 #include "Literal.h"
 #include "Solver.h"
+#include "HCComponent.h"
 
 #include <cassert>
 
@@ -422,7 +423,7 @@ Learning::learnClausesFromDisjunctiveUnfoundedSet(
         assert( solver.isTrue( tmp ) );
         
         HCComponent* component = solver.getHCComponent( tmp );
-        component->computeReasonForUnfoundedAtom( tmp );
+        component->computeReasonForUnfoundedAtom( tmp, *this );
         
         unsigned int dl = solver.getDecisionLevel( tmp );
         if( dl < minDecisionLevel )
@@ -484,10 +485,10 @@ Learning::sortClause(
     Clause* clause )
 {
     assert( clause->size() > 1 );
-    unsigned int max1 = clause->getAt( 0 );
+    unsigned int max1 = solver.getDecisionLevel( clause->getAt( 0 ) );
     unsigned int max2 = 0;
     unsigned int posMax1 = 0;
-    unsigned int posMax2 = 0;        
+    unsigned int posMax2 = 0;
     
     for( unsigned int i = 1; i < clause->size(); i++ )
     {
@@ -497,7 +498,7 @@ Learning::sortClause(
             max2 = max1;
             posMax2 = posMax1;
             max1 = dl;
-            posMax1 = i;            
+            posMax1 = i;
         }
         else if( dl > max2 )
         {
