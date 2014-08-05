@@ -203,7 +203,7 @@ GringoNumericFormat::readChoiceRule(
         {
             if( solver.isUndefined( tmp ) )
                 rule->addPositiveLiteral( tmp );
-            else
+            else if( !atomData[ tmp ].isSupported() )
                 rule->addPositiveTrueLiteral( tmp );
             atomData[ tmp ].readNormalRule_positiveLiterals = readNormalRule_numberOfCalls;
         }
@@ -302,7 +302,7 @@ GringoNumericFormat::readDisjunctiveRule(
         {
             if( solver.isUndefined( tmp ) )
                 rule->addPositiveLiteral( tmp );
-            else
+            else if( !atomData[ tmp ].isSupported() )
                 rule->addPositiveTrueLiteral( tmp );
             atomData[ tmp ].readNormalRule_positiveLiterals = readNormalRule_numberOfCalls;
         }
@@ -532,7 +532,7 @@ GringoNumericFormat::readNormalRule(
                 rule->addPositiveLiteral( tmp );
                 firing = false;
             }
-            else
+            else if( !atomData[ tmp ].isSupported() )
                 rule->addPositiveTrueLiteral( tmp );
             atomData[ tmp ].readNormalRule_positiveLiterals = readNormalRule_numberOfCalls;
         }
@@ -1232,6 +1232,8 @@ GringoNumericFormat::computeGusStructures()
     {
         Component* component = solver.getCyclicComponent( i );
         trace_msg( parser, 3, "Processing component " << ( i + 1 ) << " with size " << component->size() );
+        trace_msg( parser, 7, "Component: " << *component );
+        
         if( isHeadCycleFree( component ) )
         {
             trace_msg( parser, 4, "The component is HCF" );
@@ -1249,28 +1251,35 @@ GringoNumericFormat::computeGusStructures()
         else
         {
             trace_msg( parser, 4, "The component is non HCF" );            
-            HCComponent* hcComponent = new HCComponent( solver );            
+            HCComponent* hcComponent = solver.createHCComponent(); //new HCComponent( solver );
+            
             for( unsigned int j = 0; j < component->size(); j++ )
             {
                 Var v = component->getVariable( j );
                 solver.setFrozen( v );
-                hcComponent->addHCVariable( v );
+                
+                if( v >= atomData.size() )
+                    continue;
+                hcComponent->addHCVariable( v );                                
                 solver.addPostPropagator( Literal( v, POSITIVE ), hcComponent );
                 solver.addPostPropagator( Literal( v, NEGATIVE ), hcComponent );
                 solver.setComponent( v, NULL );
                 solver.setHCComponent( v, hcComponent );
             }
+            component->remove();
             /*
              * Implementare check dei duplicati. 
              */
             
-            for( unsigned int j = 0; j < component->size(); j++ )
+            for( unsigned int j = 0; j < hcComponent->size(); j++ )
             {
-                Var v = component->getVariable( j );
+                Var v = hcComponent->getVariable( j );
+                assert( v < atomData.size() );
                 Vector< NormalRule* >& headOccs = atomData[ v ].headOccurrences;
-                for( unsigned int j = 0; j < headOccs.size(); j++ )
+                for( unsigned int t = 0; t < headOccs.size(); t++ )
                 {
-                    NormalRule* rule = headOccs[ j ];
+                    NormalRule* rule = headOccs[ t ];
+                    assert( rule != NULL );
                     if( !rule->isRemoved() )
                     {
                         for( unsigned int k = 0; k < rule->size(); k++ )
@@ -1280,16 +1289,34 @@ GringoNumericFormat::computeGusStructures()
                                 hcComponent->addExternalLiteral( rule->literals[ k ] );
                                 solver.setFrozen( rule->literals[ k ].getVariable() );
                                 solver.addPostPropagator( rule->literals[ k ], hcComponent );
-                                solver.addPostPropagator( rule->literals[ k ].getOppositeLiteral(), hcComponent );
+                                solver.addPostPropagator( rule->literals[ k ].getOppositeLiteral(), hcComponent );                                                                
                             }
                         }
                         Clause* c = normalRuleToClause( rule );
                         hcComponent->addClauseToChecker( c );
                     }
-                }                                
+                }
             }
-
-            component->remove();
+            
+            for( unsigned int j = 0; j < hcComponent->size(); j++ )
+            {
+                Var v = hcComponent->getVariable( j );
+                if( solver.isTrue( v ) )
+                    hcComponent->onLiteralFalse( Literal( v, NEGATIVE ) );
+                else if( solver.isFalse( v ) )
+                    hcComponent->onLiteralFalse( Literal( v, POSITIVE ) );
+            }
+            
+            for( unsigned int j = 0; j < hcComponent->externalLiteralsSize(); j++ )
+            {
+                Literal lit = hcComponent->getExternalLiteral( j );
+                if( solver.isTrue( lit ) )
+                    hcComponent->onLiteralFalse( lit.getOppositeLiteral() );
+                else if( solver.isFalse( lit ) )
+                    hcComponent->onLiteralFalse( lit );
+            }
+            
+            solver.addPostPropagator( hcComponent );
             solver.addHCComponent( hcComponent );
         }
 
@@ -1444,21 +1471,23 @@ GringoNumericFormat::simplify()
                 assert( solver.isTrue( atomsWithSupportInference.back() ) );
                 assert( !data.isSupported() );
                 
-                for( unsigned i = 0; i < data.headOccurrences.size(); ++i )
+                unsigned int i = 0;
+                for( ; i < data.headOccurrences.size(); ++i )
                 {
-                    if( !data.headOccurrences[ i ]->isRemoved() )
+                    if( !data.headOccurrences[ i ]->isRemoved() && isSupporting( data.headOccurrences[ i ], atomsWithSupportInference.back() ) )
                     {
-                        data.headOccurrences[ 0 ] = data.headOccurrences[ i ];
+                        //data.headOccurrences[ 0 ] = data.headOccurrences[ i ];
                         break;
                     }
                 }
-                data.headOccurrences.shrink( 1 );
-                NormalRule* rule = data.headOccurrences[ 0 ];
+                //data.headOccurrences.shrink( 1 );
+                assert( i < data.headOccurrences.size() );
+                NormalRule* rule = data.headOccurrences[ i ];
                 assert( !rule->isRemoved() );
                 trace_msg( parser, 2, "Infer truth of the body literals and falsity of the head atoms of " << *rule << " (unique support of true head)" );
-                for( unsigned i = 0; i < rule->literals.size(); ++i )
-                    if( rule->literals[ i ].getVariable() != atomsWithSupportInference.back() ) //if( !rule->literals[ i ].isHeadAtom() )
-                        solver.addClause( rule->literals[ i ].getOppositeLiteral() );
+                for( unsigned j = 0; j < rule->literals.size(); ++j )
+                    if( rule->literals[ j ].getVariable() != atomsWithSupportInference.back() ) //if( !rule->literals[ i ].isHeadAtom() )
+                        solver.addClause( rule->literals[ j ].getOppositeLiteral() );
             }
         }
         atomsWithSupportInference.pop_back();

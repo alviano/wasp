@@ -33,7 +33,7 @@ class Learning;
 class HCComponent : public PostPropagator
 {
     public:
-        HCComponent( Solver& s );
+        HCComponent( vector< GUSData* >& gusData_, Solver& s );
         ~HCComponent();
 
         virtual void reset();
@@ -41,14 +41,28 @@ class HCComponent : public PostPropagator
         virtual Clause* getClauseToPropagate( Learning& learning );
         virtual bool onLiteralFalse( Literal literal );
 
-        void addClauseToChecker( Clause* c );
+        void addClauseToChecker( Clause* c, Var headAtom );        
         
         inline void addHCVariable( Var v ) { hcVariables.push_back( v ); }
         inline void addExternalLiteral( Literal lit ) { externalLiterals.push_back( lit ); }
+        
+        inline unsigned int size() const { return hcVariables.size(); }
+        inline Var getVariable( unsigned int pos ) const { assert( pos < hcVariables.size() ); return hcVariables[ pos ]; }
+        
+        inline unsigned int externalLiteralsSize() const { return externalLiterals.size(); }
+        inline Literal getExternalLiteral( unsigned int pos ) const { assert( pos < externalLiterals.size() ); return externalLiterals[ pos ]; }
+        
+        void computeReasonForUnfoundedAtom( Var v );
+        
+        GUSData& getGUSData( Var v ) { assert( v < gusData.size() ); return *( gusData[ v ] ); }
 
     private:
         inline HCComponent( const HCComponent& orig );
 
+        bool isInUnfoundedSet( Var v ) { assert( v < inUnfoundedSet.size() ); return inUnfoundedSet[ v ] == numberOfCalling; }
+        void setInUnfoundedSet( Var v ) { assert( v < inUnfoundedSet.size() ); inUnfoundedSet[ v ] = numberOfCalling; }
+        
+        vector< GUSData* >& gusData;
         Vector< Literal > trail;
         Solver& solver;
         Solver checker;
@@ -57,10 +71,12 @@ class HCComponent : public PostPropagator
         vector< Literal > externalLiterals;
         Vector< Var > unfoundedSet;
         
+        Vector< unsigned int > inUnfoundedSet;
+        unsigned int numberOfCalling;
         bool first;
 
         void testModel();
-        void computeAssumptions( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
+        void computeAssumptions( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );                
 };
 
 #endif

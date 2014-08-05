@@ -9,15 +9,20 @@
 #include <vector>
 
 HCComponent::HCComponent(
-    Solver& s ) : PostPropagator(), solver( s ), first( true )
+    vector< GUSData* >& gusData_,
+    Solver& s ) : PostPropagator(), gusData( gusData_ ), solver( s ), numberOfCalling( 0 ), first( true )
 {   
-    unsigned int i = 0;
+    unsigned int i = 0;    
     while( i++ < s.numberOfVariables() )
-        checker.addVariable();    
+    {
+        checker.addVariable();
+        inUnfoundedSet.push_back( 0 );
+    }
     assert( checker.numberOfVariables() == s.numberOfVariables() );
+    assert( checker.numberOfVariables() == inUnfoundedSet.size() );
     
     checker.setOutputBuilder( new WaspOutputBuilder() );
-    checker.init();    
+    checker.initFrom( solver );
 }
 
 HCComponent::~HCComponent()
@@ -80,10 +85,15 @@ HCComponent::testModel()
     
     if( checker.solve( assumptionsAND, assumptionsOR ) )
     {
+        numberOfCalling++;
         trace_msg( modelchecker, 1, "The SAT formula is satisfiable: the model is not stable." );                
         for( unsigned int i = 0; i < assumptionsOR.size(); i++ )
             if( checker.isTrue( assumptionsOR[ i ] ) )
-                unfoundedSet.push_back( assumptionsOR[ i ].getVariable() );
+            {
+                Var curr = assumptionsOR[ i ].getVariable();
+                unfoundedSet.push_back( curr );
+                setInUnfoundedSet( curr );
+            }
 
         trace_action( modelchecker, 2,
         {            
@@ -123,11 +133,16 @@ HCComponent::computeAssumptions(
 
 void
 HCComponent::addClauseToChecker(
-    Clause* c )
+    Clause* c,
+    Var headAtom )
 {
     assert( c != NULL );
     trace_msg( modelchecker, 2, "Adding clause " << *c );
     checker.addClause( c );
+    
+    Clause* clause = new Clause( c->size() );
+    clause->copyLiterals( *c );
+    getGUSData( headAtom ).definingRulesForNonHCFAtom.push_back( clause );
 }
 
 Clause*
@@ -140,10 +155,63 @@ HCComponent::getClauseToPropagate(
     }
     else
     {
-        Clause* loopFormula = learning.learnClausesFromDisjunctiveUnfoundedSet( unfoundedSet, externalLiterals );
+        Clause* loopFormula = learning.learnClausesFromDisjunctiveUnfoundedSet( unfoundedSet );
         
         trace_msg( modelchecker, 1, "Adding loop formula: " << *loopFormula );        
         unfoundedSet.clear();
         return loopFormula;            
     }    
+}
+
+void
+HCComponent::computeReasonForUnfoundedAtom(
+    Var v,
+    Learning& learning )
+{
+    vector< Clause* >& definingRules = getGUSData( v ).definingRulesForNonHCFAtom;        
+    for( unsigned int i = 0; i < definingRules.size(); i++ )
+    {
+        Clause* rule = definingRules[ i ];
+        
+        bool skipRule = false;
+        
+        unsigned int min = UINT_MAX;
+        unsigned int pos = UINT_MAX;
+        for( unsigned int j = 0; j < rule->size(); j++ )
+        {
+            Literal lit = rule->getAt( j );
+            if( !solver.isTrue( lit ) )
+                continue;
+
+            Var curr = lit.getVariable();            
+            if( isInUnfoundedSet( curr ) )
+            {
+                if( lit.isHeadAtom() )
+                    continue;
+                else if( lit.isPositiveBodyLiteral() )
+                {
+                    skipRule = true;
+                    break;
+                }
+            }
+            
+            unsigned int dl = solver.getDecisionLevel( lit );            
+            if( dl == 0 )
+            {
+                skipRule = true;
+                break;
+            }
+            if( dl < min )
+            {
+                min = dl;
+                pos = j;
+            }
+        }
+        
+        if( !skipRule )
+        {
+            assert( pos < rule->size() );
+            learning.onNavigatingLiteralForUnfoundedSetLearning( rule->getAt( pos ).getOppositeLiteral() );
+        }
+    }
 }

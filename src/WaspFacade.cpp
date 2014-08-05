@@ -70,9 +70,7 @@ WaspFacade::solve()
     {
         solver.printProgram();
         return;
-    }
-    
-    solver.init();
+    }   
     
     if( solver.preprocessing() )
     {

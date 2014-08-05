@@ -20,12 +20,17 @@
 #define _GUSDATA
 
 #include "Literal.h"
+#include <vector>
+#include "stl/Vector.h"
+using namespace std;
+
+class Clause;
 
 class GUSData
 {
     public:
         inline GUSData();
-        inline ~GUSData();
+        ~GUSData();
         
         vector< Literal > externalLiterals;
         vector< Literal > internalLiterals;
@@ -33,6 +38,8 @@ class GUSData
         Vector< Var > supportedByThisInternalRule[ 2 ];
         vector< Var > auxVariablesSupportedByThis[ 2 ];
         vector< Var > possiblySupportedByThis[ 2 ];
+        
+        vector< Clause* > definingRulesForNonHCFAtom;
         
         bool aux;
         bool founded;
@@ -49,10 +56,6 @@ class GUSData
 };
 
 GUSData::GUSData() : aux( false ), founded( true ), inQueue( false ), variable( 0 ), numberOfSupporting( 0 ), sourcePointer( Literal::null )
-{
-}
-
-GUSData::~GUSData()
 {
 }
 

@@ -43,6 +43,7 @@ using namespace std;
 #include "WatchedList.h"
 #include "stl/BoundedQueue.h"
 #include "Component.h"
+#include "HCComponent.h"
 class HCComponent;
 
 struct DataStructures
@@ -65,7 +66,6 @@ class Solver
         inline bool solve();
         inline bool solve( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
         
-        inline void init();        
         inline void propagate( Var v );
         inline void propagateWithPropagators( Var variable );                
         void propagateAtLevelZero( Var variable );
@@ -339,6 +339,10 @@ class Solver
         inline bool minimisationWithBinaryResolution( Clause& learnedClause, unsigned int lbd );
         
         inline bool modelIsValidUnderAssumptions( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
+        
+        void initFrom( Solver& solver );
+        
+        HCComponent* createHCComponent() { return new HCComponent( gusDataVector, *this ); }
         
     private:
         bool solveWithoutPropagators( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
@@ -623,12 +627,6 @@ Solver::getLiteral(
 //    assert_msg( ( var > 0 && var <= variables.numberOfVariables() ), "Variable id " << var << " is greater than the number of variables: " << numberOfVariables() );
 //    return variables[ var ];
 //}
-
-void
-Solver::init()
-{
-    variables.init();    
-}
 
 void
 Solver::assignLiteral(
@@ -1335,9 +1333,7 @@ void
 Solver::setRestart(
     Restart* r )
 {
-    if( restart != NULL )
-        delete restart;
-    
+    delete restart;    
     assert( r != NULL );    
     restart = r;
 }

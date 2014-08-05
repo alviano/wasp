@@ -56,7 +56,7 @@ public:
 
         inline NormalRule() {}
         inline NormalRule( unsigned head_ ) { addHeadAtom( head_ ); }
-        NormalRule( const NormalRule& init ) { literals.initFrom( init.literals ); }
+        NormalRule( const NormalRule& init ) { literals.initFrom( init.literals ); }        
         
         inline bool isRemoved() const { return literals.empty(); }
         inline void remove() { literals.clearAndDelete(); }

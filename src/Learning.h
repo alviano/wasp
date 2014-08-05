@@ -46,7 +46,7 @@ class Learning
         inline void onNewVariable();
         
         Clause* learnClausesFromUnfoundedSet( Vector< Var >& unfoundedSet );
-        Clause* learnClausesFromDisjunctiveUnfoundedSet( Vector< Var >& unfoundedSet, vector< Literal >& externalLiterals );
+        Clause* learnClausesFromDisjunctiveUnfoundedSet( Vector< Var >& unfoundedSet );
         
         bool isVisited( Var v, unsigned int value ) const { assert( v < visited.size() ); return visited[ v ] == value; }
         void setVisited( Var v, unsigned int value ) { assert( v < visited.size() ); visited[ v ] = value; }                
@@ -95,6 +95,8 @@ class Learning
         bool allMarked( Reason* clause, Literal literal );
         
         void computeMaxDecisionLevel( const Clause& lc );
+        
+        void sortClause( Clause* clause );
         
         #ifndef NDEBUG
         /**

@@ -28,8 +28,9 @@ class Restart
         inline Restart( unsigned int threshold = 100, bool lubyRestars = true );
         inline bool hasToRestart();
         inline void onRestart(){ conflictsCount = 0; }
+        inline Restart* clone() const { return new Restart( *this ); }
 
-    private:
+    private:                
         inline double luby( double, int );
         inline void computeRestartBase();
         inline void computeNextRestartValue();

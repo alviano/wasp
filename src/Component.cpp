@@ -24,6 +24,15 @@
 #include "Solver.h"
 #include "outputBuilders/CompetitionOutputBuilder.h"
 
+ostream& operator<<( ostream& o, const Component& c )
+{
+    o << "[";
+    for( unsigned int i = 0; i < c.size(); i++ )
+        o << " " << VariableNames::getName( c.getVariable( i ) );
+    o << " ]";
+    return o;
+}
+
 Clause*
 Component::getClauseToPropagate(
     Learning& learning )

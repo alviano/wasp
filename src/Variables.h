@@ -49,9 +49,7 @@ class Variables
 {
     public:
         inline Variables();
-        inline ~Variables();
-    
-        inline void init();
+        inline ~Variables();    
     
         inline void push_back();
         
@@ -170,11 +168,6 @@ Variables::~Variables()
             delete variablesData[ i ].implicant;
         delete variablesData[ i ].reasonForBinaryClauses;
     }
-}
-
-void
-Variables::init()
-{
 }
 
 void

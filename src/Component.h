@@ -45,6 +45,7 @@ using namespace std;
 
 class Component : public PostPropagator
 {
+    friend ostream& operator<<( ostream& o, const Component& c );
     public:
         inline Component( vector< GUSData* >& gusData_, Solver& s ) : PostPropagator(), solver( s ), gusData( gusData_ ), clauseToPropagate( NULL ), id( 0 ), removed( 0 ) {}
         inline ~Component() {}
@@ -55,7 +56,7 @@ class Component : public PostPropagator
         inline unsigned int size() const { return variablesInComponent.size(); }
 
         inline void addVariable( unsigned int var ) { variablesInComponent.push_back( var ); }
-        inline Var getVariable( unsigned int i ){ assert( i < variablesInComponent.size() ); return variablesInComponent[ i ]; }
+        inline Var getVariable( unsigned int i ) const { assert( i < variablesInComponent.size() ); return variablesInComponent[ i ]; }
 
         inline void setId( unsigned int id ) { this->id = id; }
         inline unsigned int getId() const { return id; }

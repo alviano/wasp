@@ -103,6 +103,15 @@ Solver::~Solver()
 }
 
 void
+Solver::initFrom(
+    Solver& solver )
+{   
+    assert( solver.restart != NULL );
+    assert( this->restart == NULL );    
+    this->restart = solver.restart->clone();    
+}
+
+void
 Solver::unroll(
     unsigned int level )
 {
@@ -267,10 +276,10 @@ Solver::solvePropagators(
     vector< Literal >& assumptionsAND,
     vector< Literal >& assumptionsOR )
 {
-    trace( solving, 1, "Starting solving.\n" );
+    trace( solving, 1, "Starting solving.\n" );    
     if( hasNextVariableToPropagate() )
         goto propagationLabel;
-
+    
     if( !postPropagators.empty() )
         goto postPropagationLabel;
     
