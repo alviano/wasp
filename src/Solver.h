@@ -1355,15 +1355,14 @@ Solver::completeModel()
     for( int i = eliminatedVariables.size() - 1; i >= 0; i-- )
     {
         Var back = eliminatedVariables[ i ];
-        trace_msg( satelite, 2, "Processing " << back );
+        trace_msg( satelite, 2, "Processing variable " << back );
 
         assert( hasBeenEliminated( back ) );
         unsigned int sign = getSignOfEliminatedVariable( back );
     
-        trace_msg( satelite, 5, "Processing variable " << back );
         if( sign == ELIMINATED_BY_DISTRIBUTION )
         {
-            trace_msg( satelite, 5, "Eliminated by distribution " << back );
+            trace_msg( satelite, 3, "Eliminated by distribution " << back );
             bool found = false;            
             Literal positiveLiteral( back, POSITIVE );
             for( unsigned j = 0; j < numberOfOccurrences( positiveLiteral ); ++j )
@@ -1380,7 +1379,7 @@ Solver::completeModel()
                     assert( result );
                     found = true;
                     
-                    trace_msg( satelite, 5, "Clause " << *clause << " is not satisfied: inferring " << positiveLiteral );
+                    trace_msg( satelite, 3, "Clause " << *clause << " is not satisfied: inferring " << positiveLiteral );
                     break;
                 }
             }            
@@ -1401,7 +1400,7 @@ Solver::completeModel()
                         setTrue( negativeLiteral );                            
                         assert( result );
                         
-                        trace_msg( satelite, 5, "Clause " << *clause << " is not satisfied: inferring " << negativeLiteral );
+                        trace_msg( satelite, 3, "Clause " << *clause << " is not satisfied: inferring " << negativeLiteral );
                         break;
                     }
                 }
@@ -1414,14 +1413,14 @@ Solver::completeModel()
             Literal literal( back, sign );
             setUndefinedBrutal( back );
             const Clause* definition = getDefinition( back );
-            trace_msg( satelite, 5, "Considering variable " << back << " and its definition " << *definition << " which is " << ( isSatisfied( *definition ) ? "satisfied" : "unsatisfied" ) );
+            trace_msg( satelite, 3, "Considering variable " << back << " and its definition " << *definition << " which is " << ( isSatisfied( *definition ) ? "satisfied" : "unsatisfied" ) );
             #ifndef NDEBUG
             bool result =
             #endif
             isSatisfied( *definition ) ? setTrue( literal.getOppositeLiteral() ) : setTrue( literal );                
 
             assert( result );
-            trace_msg( satelite, 5, "Inferring " << ( isSatisfied( *definition ) ? literal.getOppositeLiteral() : literal ) );            
+            trace_msg( satelite, 4, "Inferring " << ( isSatisfied( *definition ) ? literal.getOppositeLiteral() : literal ) );            
         }
     }
 }

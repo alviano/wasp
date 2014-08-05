@@ -61,7 +61,7 @@ class HCComponent : public PostPropagator
         inline HCComponent( const HCComponent& orig );
 
         bool isInUnfoundedSet( Var v ) { assert( v < inUnfoundedSet.size() ); return inUnfoundedSet[ v ] == numberOfCalling; }
-        void setInUnfoundedSet( Var v ) { assert( v < inUnfoundedSet.size() ); inUnfoundedSet[ v ] = numberOfCalling; }
+        void setInUnfoundedSet( Var v ) { assert_msg( v < inUnfoundedSet.size(), "v = " << v << "; inUnfoundedSet.size() = " << inUnfoundedSet.size() ); inUnfoundedSet[ v ] = numberOfCalling; }
         
         vector< GUSData* >& gusData;
         Vector< Literal > trail;
