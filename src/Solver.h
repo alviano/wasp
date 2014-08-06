@@ -677,12 +677,14 @@ Solver::cleanAndAddClause(
     
     if( clause->removeDuplicatesAndFalseAndCheckIfTautological( *this ) )
     {
+        trace_msg( solving, 10, "Found tautological clause: " << *clause );
         releaseClause( clause );
         return true;
     }
     
     if( clause->size() == 0 )
     {
+        trace_msg( solving, 10, "Found contradictory (empty) clause" );
         conflictLiteral = Literal::conflict;
         releaseClause( clause );
         return false;
@@ -690,11 +692,14 @@ Solver::cleanAndAddClause(
     
     if( clause->size() == 2 )
     {
+        trace_msg( solving, 10, "Replace by binary clause: " << *clause );
         Literal lit1 = clause->getAt( 0 );
         Literal lit2 = clause->getAt( 1 );
         releaseClause( clause );
         return addClause( lit1, lit2 );
     }
+    
+    trace_msg( solving, 10, "Clause after simplification: " << *clause );
     
     assert( allUndefined( *clause ) );
     return addClause( clause );

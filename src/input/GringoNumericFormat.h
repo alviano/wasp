@@ -382,6 +382,7 @@ private:
     void computeLinearCostsForOptimizationRules( vector< unsigned int >& maxCostOfLevelOfOptimizationRules, vector< int >& literals, vector< unsigned int >& weights, vector< unsigned int >& levels, unsigned int& bound );
     
     void createCrule( Literal head, Var varToSkip, NormalRule* rule );
+    void addDependencies( Literal head, NormalRule* rule );
     void clearDataStructures();
     void cleanNormalRules();
     
