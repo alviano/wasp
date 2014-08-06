@@ -1091,7 +1091,8 @@ Solver::createCyclicComponents()
 }
 
 HCComponent*
-Solver::createHCComponent()
+Solver::createHCComponent(
+    unsigned numberOfInputAtoms )
 {
-    return new HCComponent( gusDataVector, *this );
+    return new HCComponent( gusDataVector, *this, numberOfInputAtoms );
 }

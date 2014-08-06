@@ -341,7 +341,7 @@ class Solver
         
         void initFrom( Solver& solver );
         
-        HCComponent* createHCComponent();
+        HCComponent* createHCComponent( unsigned numberOfInputAtoms );
         
     private:
         bool solveWithoutPropagators( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );

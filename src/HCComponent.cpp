@@ -18,18 +18,17 @@ ostream& operator<<( ostream& out, const HCComponent& component )
 
 HCComponent::HCComponent(
     vector< GUSData* >& gusData_,
-    Solver& s ) : PostPropagator(), gusData( gusData_ ), solver( s ), numberOfCalls( 0 )
+    Solver& s,
+    unsigned numberOfInputAtoms ) : PostPropagator(), gusData( gusData_ ), solver( s ), numberOfCalls( 0 )
 {   
-    // variable 0 is not used
     inUnfoundedSet.push_back( 0 );
-    
-    unsigned int i = 0;
-    while( i++ < s.numberOfVariables() )
+    while( checker.numberOfVariables() < numberOfInputAtoms )
     {
-        checker.addVariable();
         inUnfoundedSet.push_back( 0 );
+        checker.addVariable();
     }
-    assert( checker.numberOfVariables() == s.numberOfVariables() );
+        
+    assert_msg( checker.numberOfVariables() == numberOfInputAtoms, checker.numberOfVariables() << " != " << numberOfInputAtoms );
     assert( checker.numberOfVariables() == inUnfoundedSet.size() - 1 );
     
     checker.setOutputBuilder( new WaspOutputBuilder() );
@@ -48,7 +47,6 @@ HCComponent::addExternalLiteral(
     {
         if( inUnfoundedSet[ lit.getVariable() ] & 1 )
             return false;
-//        if( inUnfoundedSet[ lit.getVariable() ] == 2 ) // TODO: external support is guaranteed!
         inUnfoundedSet[ lit.getVariable() ] |= 1;
     }
     else
@@ -56,7 +54,6 @@ HCComponent::addExternalLiteral(
         assert( lit.isNegative() );
         if( inUnfoundedSet[ lit.getVariable() ] & 2 )
             return false;
-//        if( inUnfoundedSet[ lit.getVariable() ] == 1 ) // TODO: external support is guaranteed!
         inUnfoundedSet[ lit.getVariable() ] |= 2;
     }
     externalLiterals.push_back( lit );
@@ -105,7 +102,7 @@ HCComponent::testModel()
     if( numberOfCalls++ == 0 )
     {
         trace_msg( modelchecker, 2, "First call. Removing unused variables" );
-        for( unsigned i = 1; i < solver.numberOfVariables(); ++i )
+        for( unsigned i = 1; i < checker.numberOfVariables(); ++i )
             if( inUnfoundedSet[ i ] == 0 )
                 checker.addClause( Literal( i ) );
             else

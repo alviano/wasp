@@ -1251,7 +1251,7 @@ GringoNumericFormat::computeGusStructures()
         else
         {
             trace_msg( parser, 4, "The component is non HCF" );            
-            HCComponent* hcComponent = solver.createHCComponent(); //new HCComponent( solver );
+            HCComponent* hcComponent = solver.createHCComponent( atomData.size() - 1 ); //new HCComponent( solver );
             
             for( unsigned int j = 0; j < component->size(); j++ )
             {
@@ -1284,7 +1284,7 @@ GringoNumericFormat::computeGusStructures()
                     {
                         for( unsigned int k = 0; k < rule->size(); k++ )
                         {
-                            if( solver.getHCComponent( rule->literals[ k ].getVariable() ) != hcComponent )
+                            if( solver.getHCComponent( rule->literals[ k ].getVariable() ) != hcComponent && rule->literals[ k ].getVariable() < atomData.size() )
                             {
                                 if( hcComponent->addExternalLiteral( rule->literals[ k ] ) )
                                 {
