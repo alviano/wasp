@@ -110,7 +110,7 @@ WaspFacade::solve()
         solver.foundIncoherence();
     }
     
-    solver.printLearnedClauses();
+//    solver.printLearnedClauses();
 }
 
 void

@@ -210,7 +210,6 @@ HCComponent::getClauseToPropagate(
     {
         trace_msg( modelchecker, 1, "Learning unfounded set rule for component " << *this );
         Clause* loopFormula = learning.learnClausesFromDisjunctiveUnfoundedSet( unfoundedSet );
-        
         trace_msg( modelchecker, 1, "Adding loop formula: " << *loopFormula );        
         unfoundedSet.clear();        
         return loopFormula;            

@@ -389,7 +389,7 @@ Learning::learnClausesFromUnfoundedSet(
         Component* component = solver.getComponent( v );
         assert( component != NULL );
         component->onLearningForUnfounded( v, *this );        
-    }
+    }        
     
     if( learnedClause->size() > 1 )
         simplifyLearnedClause( learnedClause );
@@ -397,7 +397,7 @@ Learning::learnClausesFromUnfoundedSet(
     if( learnedClause->size() >= 2 )
         learnedClause->swapLiterals( 0, maxPosition );
     
-    trace( learning, 1, "Learned Clause: %s.\n", toString( *learnedClause ).c_str() );
+    trace_msg( learning, 1, "Reason for loop formula: " << *learnedClause );
     return learnedClause;
 }
 
@@ -431,7 +431,7 @@ Learning::learnClausesFromDisjunctiveUnfoundedSet(
             minDecisionLevel = dl;
             pos = i;
         }
-    }
+    }    
     
     assert( minDecisionLevel != UINT_MAX );
     if( minDecisionLevel != 0 )
@@ -451,7 +451,7 @@ Learning::learnClausesFromDisjunctiveUnfoundedSet(
     if( solver.glucoseHeuristic() )
         learnedClause->setLbd( solver.computeLBD( *learnedClause ) );
     
-    trace( learning, 1, "Learned Clause: %s.\n", toString( *learnedClause ).c_str() );
+    trace_msg( learning, 1, "Reason for disjunctive loop formula: " << *learnedClause );
     return learnedClause;
 }
 

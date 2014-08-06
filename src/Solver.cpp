@@ -1102,6 +1102,7 @@ Solver::printLearnedClauses()
 {
     for( unsigned int i = 0; i < learnedClauses.size(); i++ )
     {
+        cout << learnedClauses[ i ]->size() << " ";
         learnedClauses[ i ]->printOrderedById();
         cout << " " << this << endl;
     }
