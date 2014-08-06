@@ -90,7 +90,6 @@ TESTS_COMMAND_AllAnswerSets = $(BINARY) -n 0 --silent #gringo | $(BINARY)
 TESTS_COMMAND_gringo = gringo | $(BINARY) -n 0 --silent
 TESTS_COMMAND_SatModel = $(BINARY)
 TESTS_COMMAND_WeakConstraints = $(BINARY) -n 0 --silent
-TESTS_COMMAND_modelchecker = gringo | $(BINARY) -n 0 --silent
 
 TESTS_CHECKER_AllAnswerSets = $(TESTS_DIR)/allAnswerSets.checker.py
 TESTS_CHECKER_SatModels = $(TESTS_DIR)/satModels.checker.py
@@ -122,10 +121,6 @@ TESTS_DIR_asp_WeakConstraints = $(TESTS_DIR)/asp/weakConstraints
 TESTS_SRC_asp_WeakConstraints = $(sort $(shell find $(TESTS_DIR_asp_WeakConstraints) -name '*.test.py'))
 TESTS_OUT_asp_WeakConstraints = $(patsubst %.test.py,%.test.py.text, $(TESTS_SRC_asp_WeakConstraints))
 
-TESTS_DIR_asp_modelchecker = $(TESTS_DIR)/asp/modelchecker
-TESTS_SRC_asp_modelchecker = $(sort $(shell find $(TESTS_DIR_asp_modelchecker) -name '*.test.py'))
-TESTS_OUT_asp_modelchecker = $(patsubst %.test.py,%.test.py.text, $(TESTS_SRC_asp_modelchecker))
-
 TESTS_DIR_asp_gringo = $(TESTS_DIR)/asp/gringo
 TESTS_SRC_asp_gringo = $(sort $(shell find $(TESTS_DIR_asp_gringo) -name '*.test.py'))
 TESTS_OUT_asp_gringo = $(patsubst %.test.py,%.test.py.text, $(TESTS_SRC_asp_gringo))
@@ -148,7 +143,7 @@ TESTS_OUT_sat_Intensive3 = $(patsubst %.test.py,%.test.py.text, $(TESTS_SRC_sat_
 
 tests: tests/wasp1 tests/sat tests/asp
 
-test: tests/sat/Models tests/asp/gringo tests/asp/AllAnswerSets/tight tests/asp/AllAnswerSets/nontight tests/asp/AllAnswerSets/aggregates tests/asp/weakConstraints tests/asp/modelchecker
+test: tests/sat/Models tests/asp/gringo tests/asp/AllAnswerSets/tight tests/asp/AllAnswerSets/nontight tests/asp/AllAnswerSets/aggregates tests/asp/weakConstraints
 
 tests/wasp1: tests/wasp1/AllAnswerSets
 
@@ -179,14 +174,13 @@ tests/sat/Intensive3: $(TESTS_OUT_sat_Intensive3)
 $(TESTS_OUT_sat_Intensive3):
 	@$(TESTS_TESTER) "$(TESTS_COMMAND_SatModel)" $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_SatModels) $(TESTS_REPORT_text)
 
-tests/asp: tests/asp/gringo tests/asp/AllAnswerSets/tight tests/asp/AllAnswerSets/nontight tests/asp/AllAnswerSets/aggregates tests/asp/weakConstraints tests/asp/modelchecker
+tests/asp: tests/asp/gringo tests/asp/AllAnswerSets/tight tests/asp/AllAnswerSets/nontight tests/asp/AllAnswerSets/aggregates tests/asp/weakConstraints
 
 tests/asp/gringo: $(TESTS_OUT_asp_gringo)
 tests/asp/AllAnswerSets/tight: $(TESTS_OUT_asp_AllAnswerSetsTight)
 tests/asp/AllAnswerSets/nontight: $(TESTS_OUT_asp_AllAnswerSetsNonTight)
 tests/asp/AllAnswerSets/aggregates: $(TESTS_OUT_asp_AllAnswerSetsAggregates)
 tests/asp/weakConstraints: $(TESTS_OUT_asp_WeakConstraints)
-tests/asp/modelchecker: $(TESTS_OUT_asp_modelchecker)
 
 tests/asp/AllAnswerSetsIntensive: $(TESTS_OUT_asp_AllAnswerSetsIntensive)
 
@@ -207,9 +201,6 @@ $(TESTS_OUT_asp_WeakConstraints):
 
 $(TESTS_OUT_asp_gringo):
 	@$(TESTS_TESTER) "$(TESTS_COMMAND_gringo)" $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_AllAnswerSets) $(TESTS_REPORT_text)
-
-$(TESTS_OUT_asp_modelchecker):
-	@$(TESTS_TESTER) "$(TESTS_COMMAND_modelchecker)" $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_AllAnswerSets) $(TESTS_REPORT_text)
 
 ########## Clean
 
