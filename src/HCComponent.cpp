@@ -110,7 +110,10 @@ HCComponent::testModel()
                 checker.addClause( Literal( i ) );
             else
                 inUnfoundedSet[ i ] = 0;
-        bool result = checker.preprocessing();
+        #ifndef NDEBUG
+        bool result = 
+        #endif
+        checker.preprocessing();
         assert( result );
     }
 
