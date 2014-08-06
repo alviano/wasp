@@ -343,6 +343,8 @@ class Solver
         
         HCComponent* createHCComponent( unsigned numberOfInputAtoms );
         
+        void printLearnedClauses();        
+        
     private:
         bool solveWithoutPropagators( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
         bool solvePropagators( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );

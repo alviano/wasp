@@ -1096,3 +1096,16 @@ Solver::createHCComponent(
 {
     return new HCComponent( gusDataVector, *this, numberOfInputAtoms );
 }
+
+void
+Solver::printLearnedClauses()
+{
+    for( unsigned int i = 0; i < learnedClauses.size(); i++ )
+    {
+        learnedClauses[ i ]->printOrderedById();
+        cout << " " << this << endl;
+    }
+
+    for( unsigned int i = 0; i < hcComponents.size(); i++ )
+        hcComponents[ i ]->printLearnedClausesOfChecker();
+}

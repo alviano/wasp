@@ -47,7 +47,7 @@ class Clause : public Reason
     friend Clause* Learning::onConflict( Literal conflictLiteral, Reason* conflictClause );
     friend Clause* Learning::learnClausesFromUnfoundedSet( Vector< Var >& unfoundedSet );
 
-    public:        
+    public:                
         inline ~Clause(){}
         inline Clause( unsigned reserve = 8 );
 
@@ -124,6 +124,21 @@ class Clause : public Reason
         inline bool canBeDeleted() const { return canBeDeleted_; }
         
         inline void shrink( unsigned int value ) { literals.shrink( value ); } 
+        
+        /* USE ONLY FOR DEBUG */
+        inline void printOrderedById()
+        {
+            vector< int > tmp;
+            for( unsigned int i = 0; i < literals.size(); i++ )
+                tmp.push_back( literals[ i ].getId() );
+            
+            sort( tmp.begin(), tmp.end() );
+            
+            cout << "[";
+            for( unsigned int i = 0; i < tmp.size(); i++ )
+                cout << " " << tmp[ i ];
+            cout << "]";
+        }
         
     private:
         Vector< Literal > literals;

@@ -109,6 +109,8 @@ WaspFacade::solve()
         trace_msg( enumeration, 1, "No model found." );
         solver.foundIncoherence();
     }
+    
+    solver.printLearnedClauses();
 }
 
 void

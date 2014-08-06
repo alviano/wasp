@@ -19,7 +19,7 @@ ostream& operator<<( ostream& out, const HCComponent& component )
 HCComponent::HCComponent(
     vector< GUSData* >& gusData_,
     Solver& s,
-    unsigned numberOfInputAtoms ) : PostPropagator(), gusData( gusData_ ), solver( s ), numberOfCalls( 0 )
+    unsigned numberOfInputAtoms ) : PostPropagator(), gusData( gusData_ ), solver( s ), numberOfCalls( 0 ), hasToTestModel( false )
 {   
     inUnfoundedSet.push_back( 0 );
     while( checker.numberOfVariables() < numberOfInputAtoms )
@@ -65,8 +65,11 @@ void
 HCComponent::reset()
 {    
     while( !trail.empty() && solver.isUndefined( trail.back() ) )
+    {
+        hasToTestModel = false;
         trail.pop_back();
-    
+    }
+
     unfoundedSet.clear();
 }
 
@@ -77,7 +80,8 @@ HCComponent::onLiteralFalse(
     trail.push_back( literal );    
     if( trail.size() == ( hcVariables.size() + externalLiterals.size() ) )
     {
-        testModel();
+        //testModel();
+        hasToTestModel = true;
         return true;
     }
     
@@ -102,16 +106,16 @@ HCComponent::testModel()
     if( numberOfCalls++ == 0 )
     {
         trace_msg( modelchecker, 2, "First call. Removing unused variables" );
-        for( unsigned i = 1; i < checker.numberOfVariables(); ++i )
+        for( unsigned i = 1; i <= checker.numberOfVariables(); ++i )
             if( inUnfoundedSet[ i ] == 0 )
-                checker.addClause( Literal( i ) );
+                checker.addClause( Literal( i ) );                
             else
-                inUnfoundedSet[ i ] = 0;
+                inUnfoundedSet[ i ] = 0;        
         #ifndef NDEBUG
         bool result = 
         #endif
         checker.preprocessing();
-        assert( result );
+        assert( result );                
     }
 
     trace_action( modelchecker, 2,
@@ -194,9 +198,12 @@ HCComponent::addClauseToChecker(
 Clause*
 HCComponent::getClauseToPropagate(
     Learning& learning )
-{   
+{
+    assert( unfoundedSet.empty() );
+    if( hasToTestModel )
+        testModel();
     if( unfoundedSet.empty() )
-    {        
+    {               
         return NULL;
     }
     else
@@ -205,9 +212,9 @@ HCComponent::getClauseToPropagate(
         Clause* loopFormula = learning.learnClausesFromDisjunctiveUnfoundedSet( unfoundedSet );
         
         trace_msg( modelchecker, 1, "Adding loop formula: " << *loopFormula );        
-        unfoundedSet.clear();
+        unfoundedSet.clear();        
         return loopFormula;            
-    }    
+    }        
 }
 
 void

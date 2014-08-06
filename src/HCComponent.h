@@ -56,6 +56,7 @@ class HCComponent : public PostPropagator
         void computeReasonForUnfoundedAtom( Var v, Learning& learning );
         
         GUSData& getGUSData( Var v ) { assert( v < gusData.size() ); return *( gusData[ v ] ); }
+        void printLearnedClausesOfChecker() { checker.printLearnedClauses(); }
 
     private:
         inline HCComponent( const HCComponent& orig );
@@ -74,6 +75,8 @@ class HCComponent : public PostPropagator
         
         Vector< unsigned int > inUnfoundedSet;
         unsigned int numberOfCalls;
+        
+        bool hasToTestModel;
 
         void testModel();
         void computeAssumptions( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
