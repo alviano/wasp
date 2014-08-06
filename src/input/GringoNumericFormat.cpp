@@ -1252,7 +1252,7 @@ GringoNumericFormat::computeGusStructures()
         {
             trace_msg( parser, 4, "The component is non HCF" );            
             HCComponent* hcComponent = solver.createHCComponent( atomData.size() - 1 ); //new HCComponent( solver );
-            
+
             for( unsigned int j = 0; j < component->size(); j++ )
             {
                 Var v = component->getVariable( j );
@@ -1527,6 +1527,23 @@ GringoNumericFormat::createCrule(
 }
 
 void
+GringoNumericFormat::addDependencies(
+    Literal head,
+    NormalRule* rule )
+{
+    assert( head.isPositive() );
+    for( unsigned k = 0; k < rule->literals.size(); ++k )
+    {
+        Literal lit = rule->literals[ k ];
+        if( lit == head )
+            continue;
+
+        if( lit.isPositiveBodyLiteral() )
+            solver.addEdgeInDependencyGraph( head.getVariable(), lit.getVariable() );
+    }
+}
+
+void
 GringoNumericFormat::computeSCCs()
 {
     trace_msg( parser, 1, "Computing crules and SCCs" );
@@ -1546,11 +1563,12 @@ GringoNumericFormat::computeSCCs()
             trace_msg( parser, 3, "Only one defining rule" );
             for( unsigned j = 0; j < data.headOccurrences.size(); ++j )
             {
-                if( !data.headOccurrences[ j ]->isRemoved() && isSupporting( data.headOccurrences[ j ], var ) )
-                {                    
+                if( data.headOccurrences[ j ]->isRemoved() )
+                    continue;
+                if( isSupporting( data.headOccurrences[ j ], var ) )
                     createCrule( Literal( i, POSITIVE ), var, data.headOccurrences[ j ] );
-                    break;
-                }
+                else
+                    addDependencies( Literal( i, POSITIVE ), data.headOccurrences[ j ] );
             }
         }
         else
@@ -1560,7 +1578,9 @@ GringoNumericFormat::computeSCCs()
             crule->addLiteral( Literal( i, NEGATIVE ) );
             for( unsigned j = 0; j < data.headOccurrences.size(); ++j )
             {
-                if( !data.headOccurrences[ j ]->isRemoved() && isSupporting( data.headOccurrences[ j ], var ) )
+                if( data.headOccurrences[ j ]->isRemoved() )
+                    continue;
+                if( isSupporting( data.headOccurrences[ j ], var ) )
                 {
                     // TODO: MALVI: handle disjunctive rules
                     if( data.headOccurrences[ j ]->literals.size() == 2 )
@@ -1580,6 +1600,8 @@ GringoNumericFormat::computeSCCs()
                         createCrule( Literal( solver.numberOfVariables(), POSITIVE ), var, data.headOccurrences[ j ] );
                     }
                 }
+                else
+                    addDependencies( Literal( i, POSITIVE ), data.headOccurrences[ j ] );
             }
             data.crule = crule;
             crules.push_back( crule );
@@ -1620,7 +1642,9 @@ GringoNumericFormat::computeCompletion()
         trace_msg( parser, 3, "Adding clause " << *crule );
         solver.cleanAndAddClause( crule );
         trace_msg( parser, 4, "Actually added " << *crule );
-        assert_msg( propagatedLiterals == solver.numberOfAssignedLiterals(), "difference is " << ( solver.numberOfAssignedLiterals() - propagatedLiterals ) );
+        
+        assert_msg( propagatedLiterals == solver.numberOfAssignedLiterals() || ( propagatedLiterals + 1 == solver.numberOfAssignedLiterals() && solver.getAssignedVariable( propagatedLiterals ) == lit.getVariable() && lit.getVariable() >= atomData.size() ), "difference is " << ( solver.numberOfAssignedLiterals() - propagatedLiterals ) );
+        propagatedLiterals = solver.numberOfAssignedLiterals();
     }    
 }
 //void
