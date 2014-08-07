@@ -343,9 +343,17 @@ class Solver
         
         HCComponent* createHCComponent( unsigned numberOfInputAtoms );
         
-        void printLearnedClauses();        
+        void printLearnedClauses();
+        
+        bool cleanAndAddLearnedClause( Clause* c );
+        inline void setExchangeClauses( bool ex ) { exchangeClauses = ex; }
+        inline void setGenerator( bool gen ) { generator = gen; }        
         
     private:
+        bool exchangeClauses;
+        bool generator;
+        static vector< Clause* > learnedFromAllSolvers;
+
         bool solveWithoutPropagators( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
         bool solvePropagators( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
 
@@ -523,6 +531,8 @@ class Solver
 
 Solver::Solver() 
 : 
+    exchangeClauses( false ),
+    generator( true ),
     currentDecisionLevel( 0 ),
     conflictLiteral( Literal::null ),
     conflictClause( NULL ),
@@ -539,7 +549,7 @@ Solver::Solver()
     callSimplifications_( true ),
     glucoseHeuristic_( true ),
     conflicts( 0 ),
-    conflictsRestarts( 0 )
+    conflictsRestarts( 0 )        
 {
     dependencyGraph = new DependencyGraph( *this );
     satelite = new Satelite( *this );
@@ -830,6 +840,12 @@ Solver::addLearnedClause(
     assert( learnedClause != NULL );
     attachClause( *learnedClause );
     learnedClauses.push_back( learnedClause );
+    if( exchangeClauses && !generator && learnedClause->size() <= 8 )
+    {        
+        Clause* c = new Clause( learnedClause->size() );
+        c->copyLiterals( *learnedClause );
+        learnedFromAllSolvers.push_back( c );
+    }
     literalsInLearnedClauses += learnedClause->size();
 }
 
@@ -879,6 +895,16 @@ Solver::doRestart()
     trace( solving, 2, "Performing restart.\n" );
     restart->onRestart();
     unroll( 0 );
+
+    if( generator && exchangeClauses )
+    {
+        while( !learnedFromAllSolvers.empty() )
+        {
+            Clause* c = learnedFromAllSolvers.back();
+            learnedFromAllSolvers.pop_back();            
+            cleanAndAddLearnedClause( c );
+        }
+    }
 }
 
 void
@@ -1003,6 +1029,9 @@ Solver::chooseLiteral(
             else if( isTrue( assumptionsOR[ i ] ) )
             {
                 satisfied = true;
+                Literal tmp = assumptionsOR[ 0 ];
+                assumptionsOR[ 0 ] = assumptionsOR[ i ];
+                assumptionsOR[ i ] = tmp;
                 break;
             }
         }

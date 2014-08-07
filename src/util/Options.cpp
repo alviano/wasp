@@ -79,6 +79,7 @@ namespace wasp
 #define OPTIONID_stdin ( 'z' + 100 )
 #define OPTIONID_time_limit ( 'z' + 101 )
 #define OPTIONID_max_cost ( 'z' + 102 )
+#define OPTIONID_exchange_clauses ( 'z' + 103 )
     
 #ifdef TRACE_ON
 TraceLevels Options::traceLevels;
@@ -113,6 +114,8 @@ unsigned int Options::maxModels = 1;
 unsigned int Options::deletionThreshold = 8;
 
 unsigned int Options::maxCost = MAXUNSIGNEDINT;
+
+bool Options::exchangeClauses = false;
     
 void
 Options::parse(
@@ -178,6 +181,8 @@ Options::parse(
                 { "stdin", no_argument, NULL, OPTIONID_stdin },
                 { "time-limit", required_argument, NULL, OPTIONID_time_limit },
                 { "max-cost", required_argument, NULL, OPTIONID_max_cost },
+                
+                { "exchange-clauses", no_argument, NULL, OPTIONID_exchange_clauses },
 
                 // The NULL-option indicates the end of the array.
                 { NULL, 0, NULL, 0 }
@@ -366,6 +371,10 @@ Options::parse(
                 if( optarg )
                     maxCost = atoi( optarg );
                 break;
+                
+            case OPTIONID_exchange_clauses:
+                exchangeClauses = true;
+                break;
 
             default:
                 ErrorMessage::errorGeneric( "This option is not supported." );
@@ -392,6 +401,7 @@ Options::setOptions(
     waspFacade.setMaxModels( maxModels );
     waspFacade.setPrintProgram( printProgram );
     waspFacade.setPrintDimacs( printDimacs);
+    waspFacade.setExchangeClauses( exchangeClauses );
 }
 
 };

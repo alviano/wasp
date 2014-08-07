@@ -24,6 +24,8 @@
 #include <vector>
 using namespace std;
 
+vector< Clause* > Solver::learnedFromAllSolvers;
+
 Solver::~Solver()
 {
     while( !clauses.empty() )
@@ -108,7 +110,8 @@ Solver::initFrom(
 {   
     assert( solver.restart != NULL );
     assert( this->restart == NULL );    
-    this->restart = solver.restart->clone();    
+    this->restart = solver.restart->clone();
+    this->exchangeClauses = solver.exchangeClauses;
 }
 
 void
@@ -1109,4 +1112,55 @@ Solver::printLearnedClauses()
 
     for( unsigned int i = 0; i < hcComponents.size(); i++ )
         hcComponents[ i ]->printLearnedClausesOfChecker();
+}
+
+bool
+Solver::cleanAndAddLearnedClause(    
+    Clause* clause )
+{
+    assert( clause != NULL );
+        
+    if( clause->removeDuplicatesAndFalseAndCheckIfTautological( *this ) )
+    {        
+        trace_msg( solving, 10, "Found tautological clause: " << *clause );
+        delete clause;
+        return true;
+    }
+    
+    if( clause->size() == 0 )
+    {        
+        trace_msg( solving, 10, "Found contradictory (empty) clause" );
+        conflictLiteral = Literal::conflict;
+        delete clause;
+        return false;
+    }
+    
+    assert( allUndefined( *clause ) );
+    if( clause->size() == 1 )
+    {
+        clearConflictStatus();
+        assignLiteral( clause->getAt( 0 ) );
+        assert( isTrue( clause->getAt( 0 ) ) );
+        assert( !conflictDetected() );
+        
+        delete clause;
+
+        while( hasNextVariableToPropagate() )
+        {
+            nextValueOfPropagation--;            
+            Var variableToPropagate = getNextVariableToPropagate();
+            if( hasPropagators() )
+                propagateWithPropagators( variableToPropagate );
+            else
+                propagate( variableToPropagate );
+
+            if( conflictDetected() )
+                return false;
+        }
+        
+        simplifyOnRestart();
+    }
+    else
+        addLearnedClause( clause );    
+    return true;
 }

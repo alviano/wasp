@@ -44,7 +44,8 @@ class WaspFacade
 
         inline void setMaxModels( unsigned int max ) { maxModels = max; }
         inline void setPrintProgram( bool printProgram ) { this->printProgram = printProgram; }
-        inline void setPrintDimacs( bool printDimacs) { this->printDimacs = printDimacs; }
+        inline void setPrintDimacs( bool printDimacs ) { this->printDimacs = printDimacs; }
+        void setExchangeClauses( bool exchangeClauses ) { solver.setExchangeClauses( exchangeClauses ); }
         
     private:
         Solver solver;        

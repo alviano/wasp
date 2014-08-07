@@ -1266,13 +1266,12 @@ GringoNumericFormat::computeGusStructures()
                 solver.setComponent( v, NULL );
                 solver.setHCComponent( v, hcComponent );
             }
+            statistics( removeComponent( component->getId() ) );            
             component->remove();
-            /*
-             * Implementare check dei duplicati. 
-             */
+            statistics( addCyclicHCComponent( hcComponent->size() ) );            
             
             for( unsigned int j = 0; j < hcComponent->size(); j++ )
-            {
+            {                
                 Var v = hcComponent->getVariable( j );
                 assert( v < atomData.size() );
                 Vector< NormalRule* >& headOccs = atomData[ v ].headOccurrences;

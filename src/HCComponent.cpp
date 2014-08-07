@@ -33,6 +33,7 @@ HCComponent::HCComponent(
     
     checker.setOutputBuilder( new WaspOutputBuilder() );
     checker.initFrom( solver );
+    checker.setGenerator( false );
 }
 
 HCComponent::~HCComponent()
@@ -133,9 +134,9 @@ HCComponent::testModel()
     } );
     
     if( checker.getCurrentDecisionLevel() > 0 )
-        checker.doRestart();
+        checker.doRestart();        
     if( checker.solve( assumptionsAND, assumptionsOR ) )
-    {
+    {        
         trace_msg( modelchecker, 1, "SATISFIABLE: the model is not stable." );                
         for( unsigned int i = 0; i < assumptionsOR.size(); i++ )
             if( checker.isTrue( assumptionsOR[ i ] ) )

@@ -146,7 +146,7 @@ using namespace std;
                 cerr << "Variables after satelite       : " << vars << endl;
                 
                 cerr << separator << endl;
-                cerr << "Tight                          : " << ( cyclicComponents.size() > removedComponents ? "no" : "yes" ) << endl;
+                cerr << "Tight                          : " << ( ( cyclicHCComponents.size() + cyclicComponents.size() ) > removedComponents ? "no" : "yes" ) << endl;
                 if( cyclicComponents.size() > removedComponents )
                 {
                 cerr << "Cyclic components              : " << cyclicComponents.size() - removedComponents << endl;
@@ -154,6 +154,15 @@ using namespace std;
                 {
                     if( !cyclicComponents[ i ].second )
                 cerr << "   Atoms in component " << ( i + 1 ) << "        : " << cyclicComponents[ i ].first << endl;                
+                }
+                }
+                if( !cyclicHCComponents.empty() )
+                {
+                cerr << "Cyclic HCComponents            : " << cyclicHCComponents.size() << endl;
+                for( unsigned int i = 0; i < cyclicHCComponents.size(); i++ )
+                {
+                    if( !cyclicHCComponents[ i ].second )
+                cerr << "   Atoms in component " << ( i + 1 ) << "        : " << cyclicHCComponents[ i ].first << endl;                
                 }
                 }
                 
@@ -186,6 +195,11 @@ using namespace std;
                 cyclicComponents[ id ].second = true;
                 removedComponents++;
             }
+            
+            inline void addCyclicHCComponent( unsigned int numberOfAtoms )
+            {
+                cyclicHCComponents.push_back( pair< unsigned int, bool >( numberOfAtoms, false ) );
+            }                        
             
             inline static Statistics& inst(){ return instance; }
             
@@ -238,6 +252,7 @@ using namespace std;
             unsigned int maxLearnedSizeFromPropagators;            
             
             vector< pair< unsigned int, bool > > cyclicComponents;
+            vector< pair< unsigned int, bool > > cyclicHCComponents;
             unsigned int removedComponents;
             
             void printStatistics()

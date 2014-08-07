@@ -67,7 +67,9 @@ namespace wasp
             
             static unsigned int restartsThreshold;            
 
-            static unsigned int timeLimit;            
+            static unsigned int timeLimit;
+            
+            static bool exchangeClauses;
     };
 }
 
