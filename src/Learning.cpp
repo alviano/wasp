@@ -420,7 +420,7 @@ Learning::learnClausesFromDisjunctiveUnfoundedSet(
     for( unsigned int i = 0; i < unfoundedSet.size(); i++ )
     {
         Var tmp = unfoundedSet[ i ];
-        assert( solver.isTrue( tmp ) );
+        assert( solver.isTrue( tmp ) || solver.isUndefined( tmp ) );
         
         HCComponent* component = solver.getHCComponent( tmp );
         component->computeReasonForUnfoundedAtom( tmp, *this );

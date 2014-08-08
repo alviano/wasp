@@ -24,7 +24,9 @@ bool
 VariableNames::isHidden(
     Var v )
 {
-    assert_msg( v < variables.size(), "Var " << v << " is out of index: " << variables.size() );
+    //assert_msg( v < variables.size(), "Var " << v << " is out of index: " << variables.size() );
+    if( v >= variables.size() )
+        return true;
     return variables[ v ] == "";
 }
 

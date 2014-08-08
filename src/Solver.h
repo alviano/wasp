@@ -346,11 +346,15 @@ class Solver
         void printLearnedClauses();
         
         bool cleanAndAddLearnedClause( Clause* c );
-        inline void setExchangeClauses( bool ex ) { exchangeClauses = ex; }
+        inline void setExchangeClauses( bool ex ) { exchangeClauses_ = ex; }
+        inline bool exchangeClauses() const { return exchangeClauses_; }
         inline void setGenerator( bool gen ) { generator = gen; }        
+        inline void setAfterConflictPropagator( PostPropagator* p ) { assert( afterConflictPropagator == NULL ); afterConflictPropagator = p; }
         
+        static void addClauseInLearnedFromAllSolvers( Clause* c ) { learnedFromAllSolvers.push_back( c ); }        
     private:
-        bool exchangeClauses;
+        PostPropagator* afterConflictPropagator;
+        bool exchangeClauses_;
         bool generator;
         static vector< Clause* > learnedFromAllSolvers;
 
@@ -530,8 +534,9 @@ class Solver
 };
 
 Solver::Solver() 
-: 
-    exchangeClauses( false ),
+:
+    afterConflictPropagator( NULL ),
+    exchangeClauses_( false ),
     generator( true ),
     currentDecisionLevel( 0 ),
     conflictLiteral( Literal::null ),
@@ -839,13 +844,7 @@ Solver::addLearnedClause(
 {
     assert( learnedClause != NULL );
     attachClause( *learnedClause );
-    learnedClauses.push_back( learnedClause );
-    if( exchangeClauses && !generator && learnedClause->size() <= 8 )
-    {        
-        Clause* c = new Clause( learnedClause->size() );
-        c->copyLiterals( *learnedClause );
-        learnedFromAllSolvers.push_back( c );
-    }
+    learnedClauses.push_back( learnedClause );    
     literalsInLearnedClauses += learnedClause->size();
 }
 
@@ -896,7 +895,7 @@ Solver::doRestart()
     restart->onRestart();
     unroll( 0 );
 
-    if( generator && exchangeClauses )
+    if( generator && exchangeClauses_ )
     {
         while( !learnedFromAllSolvers.empty() )
         {

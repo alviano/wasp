@@ -44,7 +44,8 @@ class HCComponent : public PostPropagator
 
         void addClauseToChecker( Clause* c, Var headAtom );
         
-        inline void addHCVariable( Var v ) { inUnfoundedSet[ v ] |= 1; hcVariables.push_back( v ); }
+        inline void addHCVariable( Var v ) { inUnfoundedSet[ v ] |= 4; hcVariables.push_back( v ); }
+        inline bool isExternal( Var v ) const { assert( numberOfCalls == 0 ); assert( v < inUnfoundedSet.size() ); return inUnfoundedSet[ v ] & 3; }
         bool addExternalLiteral( Literal lit );
         
         inline unsigned int size() const { return hcVariables.size(); }
@@ -57,12 +58,15 @@ class HCComponent : public PostPropagator
         
         GUSData& getGUSData( Var v ) { assert( v < gusData.size() ); return *( gusData[ v ] ); }
         void printLearnedClausesOfChecker() { checker.printLearnedClauses(); }
+        void setHasToTestModel() { hasToTestModel = true; }
 
     private:
         inline HCComponent( const HCComponent& orig );
 
-        bool isInUnfoundedSet( Var v ) { assert( v < inUnfoundedSet.size() ); return inUnfoundedSet[ v ] == numberOfCalls; }
+        bool isInUnfoundedSet( Var v ) { assert_msg( v < inUnfoundedSet.size(), "v = " << v << "; inUnfoundedSet.size() = " << inUnfoundedSet.size() ); return inUnfoundedSet[ v ] == numberOfCalls; }
         void setInUnfoundedSet( Var v ) { assert_msg( v < inUnfoundedSet.size(), "v = " << v << "; inUnfoundedSet.size() = " << inUnfoundedSet.size() ); inUnfoundedSet[ v ] = numberOfCalls; }
+        
+        void addClausesForPartialModelChecks();
         
         vector< GUSData* >& gusData;
         Vector< Literal > trail;
@@ -77,9 +81,40 @@ class HCComponent : public PostPropagator
         unsigned int numberOfCalls;
         
         bool hasToTestModel;
+        
+        unsigned int numberOfAtoms;
 
         void testModel();
         void computeAssumptions( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
+        
+        inline Var getCheckerVarFromExternalLiteral( Literal l )
+        {
+            assert( isExternal( l.getVariable() ) );
+            if( l.isPositive() )
+                return l.getVariable();
+            else
+            {
+                for( unsigned int i = 0; i < externalLiterals.size(); i++ )
+                {
+                    if( externalLiterals[ i ] == l )
+                        return getCheckerFalseVar( l.getVariable(), i );
+                }
+            }
+            
+            assert( 0 );
+            return 0;
+        }
+        inline Var getCheckerTrueVar( Var v, unsigned int ) const { return v; }
+        inline Var getCheckerFalseVar( Var, unsigned int posInExternalLiterals ) const { return numberOfAtoms + posInExternalLiterals + 1; }
+        inline Literal getGeneratorLiteralFromCheckerLiteral( Literal l )
+        {
+            if( l.getVariable() <= solver.numberOfVariables() )
+                return l;
+            
+            unsigned int posInExternalLiterals = l.getVariable() - numberOfAtoms - 1;
+            assert_msg( posInExternalLiterals < externalLiterals.size(), posInExternalLiterals << " != " << externalLiterals.size() );
+            return Literal( externalLiterals[ posInExternalLiterals ].getVariable(), NEGATIVE );            
+        }
 };
 
 #endif

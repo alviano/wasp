@@ -571,7 +571,10 @@ Satelite::substitute(
 bool
 Satelite::simplificationsMinisat2()
 {
-    assert( solver.callSimplifications() );    
+    assert( solver.callSimplifications() ); 
+    if( solver.numberOfVariables() > 250000 )
+        return true;
+    
     for( unsigned int i = 1; i <= solver.numberOfVariables(); i++ )
     {
         assert( touchedVariables.size() == i );

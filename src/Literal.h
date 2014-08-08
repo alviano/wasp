@@ -45,6 +45,7 @@ class Literal
         inline bool operator!=( const Literal& ) const;
 
         inline Var getVariable() const;
+        inline void setVariable( Var v );
         
         /**
          * This function returns 0 if the literal is positive, 1 otherwise.
@@ -55,6 +56,8 @@ class Literal
 
         inline bool isPositive() const;
         inline bool isNegative() const;
+        
+        inline void setPositive();
         
         static Literal newUndefinedPositiveBodyLiteral( Var v ) { return Literal( v, NEGATIVE, true, false ); }
         static Literal newTruePositiveBodyLiteral( Var v ) { return Literal( v, NEGATIVE, true, true ); }
@@ -133,6 +136,19 @@ Var
 Literal::getVariable() const
 {
     return variable;
+}
+
+void
+Literal::setVariable(
+    Var v )
+{
+    variable = v;
+}
+
+void
+Literal::setPositive()
+{
+    sign = POSITIVE;
 }
 
 bool

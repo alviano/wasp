@@ -123,6 +123,9 @@ class Clause : public Reason
         inline void setCanBeDeleted( bool b ) { canBeDeleted_ = b; }
         inline bool canBeDeleted() const { return canBeDeleted_; }
         
+        inline void setAddedInSolver( bool b ) { addedInSolver_ = b; }
+        inline bool addedInSolver() const { return addedInSolver_; }
+        
         inline void shrink( unsigned int value ) { literals.shrink( value ); } 
         
         /* USE ONLY FOR DEBUG */
@@ -166,12 +169,13 @@ class Clause : public Reason
             unsigned positionInSolver       : 30;
         } clauseData;
         
-        unsigned int lbd_ : 31;
+        unsigned int lbd_ : 30;
         unsigned int canBeDeleted_ : 1;
+        unsigned int addedInSolver_ : 1;
 };
 
 Clause::Clause(
-    unsigned reserve ) : lbd_( 0 ), canBeDeleted_( 1 )
+    unsigned reserve ) : lbd_( 0 ), canBeDeleted_( 1 ), addedInSolver_( 0 )
 {
     literals.reserve( reserve );
     clauseData.inQueue = 0;
@@ -414,7 +418,8 @@ Clause::free()
 //    act = 0.0;
     literals.clear();
     lbd_ = 0;
-    canBeDeleted_ = 1;    
+    canBeDeleted_ = 1;
+    addedInSolver_ = 0;
 }
 
 SubsumptionData

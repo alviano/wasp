@@ -19,7 +19,7 @@ ostream& operator<<( ostream& out, const HCComponent& component )
 HCComponent::HCComponent(
     vector< GUSData* >& gusData_,
     Solver& s,
-    unsigned numberOfInputAtoms ) : PostPropagator(), gusData( gusData_ ), solver( s ), numberOfCalls( 0 ), hasToTestModel( false )
+    unsigned numberOfInputAtoms ) : PostPropagator(), gusData( gusData_ ), solver( s ), numberOfCalls( 0 ), hasToTestModel( false ), numberOfAtoms( numberOfInputAtoms )
 {   
     inUnfoundedSet.push_back( 0 );
     while( checker.numberOfVariables() < numberOfInputAtoms )
@@ -33,7 +33,7 @@ HCComponent::HCComponent(
     
     checker.setOutputBuilder( new WaspOutputBuilder() );
     checker.initFrom( solver );
-    checker.setGenerator( false );
+    checker.setGenerator( false );    
 }
 
 HCComponent::~HCComponent()
@@ -43,7 +43,7 @@ HCComponent::~HCComponent()
 bool
 HCComponent::addExternalLiteral(
     Literal lit ) 
-{
+{    
     if( lit.isPositive() )
     {
         if( inUnfoundedSet[ lit.getVariable() ] & 1 )
@@ -57,10 +57,11 @@ HCComponent::addExternalLiteral(
             return false;
         inUnfoundedSet[ lit.getVariable() ] |= 2;
     }
+    checker.addVariable();
     externalLiterals.push_back( lit );
+    assert( checker.numberOfVariables() == numberOfAtoms + externalLiterals.size() );
     return true;
 }
-
 
 void
 HCComponent::reset()
@@ -106,17 +107,21 @@ HCComponent::testModel()
     
     if( numberOfCalls++ == 0 )
     {
+        addClausesForPartialModelChecks();
         trace_msg( modelchecker, 2, "First call. Removing unused variables" );
-        for( unsigned i = 1; i <= checker.numberOfVariables(); ++i )
+//        for( unsigned i = 1; i <= checker.numberOfVariables(); ++i )        
+        for( unsigned i = 1; i < inUnfoundedSet.size(); ++i )
+        {            
             if( inUnfoundedSet[ i ] == 0 )
-                checker.addClause( Literal( i ) );                
+                checker.addClause( Literal( i, POSITIVE ) );                
             else
                 inUnfoundedSet[ i ] = 0;        
+        }        
         #ifndef NDEBUG
         bool result = 
         #endif
         checker.preprocessing();
-        assert( result );                
+        assert( result );
     }
 
     trace_action( modelchecker, 2,
@@ -156,6 +161,26 @@ HCComponent::testModel()
         } );
         assert( !unfoundedSet.empty() );
     }
+    
+    if( solver.exchangeClauses() )
+    {
+        for( Solver::ClauseIterator it = checker.learnedClauses_begin(); it != checker.learnedClauses_end(); it++ )
+        {            
+            Clause* learnedClause = *it;
+            if( learnedClause->addedInSolver() || learnedClause->size() > 8 )
+                continue;
+            Clause* c = new Clause( learnedClause->size() );
+            
+            for( unsigned int i = 0; i < learnedClause->size(); i++ )
+            {
+                Literal current = getGeneratorLiteralFromCheckerLiteral( learnedClause->getAt( i ) );
+                c->addLiteral( current );
+            }
+            
+            learnedClause->setAddedInSolver( true );
+            solver.addClauseInLearnedFromAllSolvers( c );
+        }
+    }
 }
 
 void
@@ -164,21 +189,33 @@ HCComponent::computeAssumptions(
     vector< Literal >& assumptionsOR )
 {    
     for( unsigned int i = 0; i < hcVariables.size(); i++ )
-    {
+    {        
         Var v = hcVariables[ i ];
-        if( solver.isTrue( v ) )
+        if( !solver.isFalse( v ) )
             assumptionsOR.push_back( Literal( v, NEGATIVE ) );
         else
-            assumptionsAND.push_back( Literal( v, NEGATIVE ) );
+            assumptionsAND.push_back( Literal( v, NEGATIVE ) );        
     }
 
     for( unsigned int i = 0; i < externalLiterals.size(); i++ )
     {
         Literal lit = externalLiterals[ i ];
-        if( solver.isTrue( lit ) )
-            assumptionsAND.push_back( lit );
+        Var v = lit.getVariable();        
+        if( solver.isTrue( v ) )
+        {
+            assumptionsAND.push_back( Literal( getCheckerTrueVar( v, i ), POSITIVE ) );
+            assumptionsAND.push_back( Literal( getCheckerFalseVar( v, i ), NEGATIVE ) );            
+        }
+        else if( solver.isFalse( v ) )
+        {
+            assumptionsAND.push_back( Literal( getCheckerTrueVar( v, i ), NEGATIVE ) );
+            assumptionsAND.push_back( Literal( getCheckerFalseVar( v, i ), POSITIVE ) );            
+        }
         else
-            assumptionsAND.push_back( lit.getOppositeLiteral() );
+        {
+            assumptionsAND.push_back( Literal( getCheckerTrueVar( v, i ), NEGATIVE ) );
+            assumptionsAND.push_back( Literal( getCheckerFalseVar( v, i ), NEGATIVE ) );
+        }
     }
 }
 
@@ -189,11 +226,24 @@ HCComponent::addClauseToChecker(
 {
     assert( c != NULL );
     trace_msg( modelchecker, 2, "Adding clause " << *c );
-    checker.addClause( c );
-    
-    Clause* clause = new Clause( c->size() );
-    clause->copyLiterals( *c );
-    getGUSData( headAtom ).definingRulesForNonHCFAtom.push_back( clause );
+    Clause& orig = *c;
+    Clause* clause = new Clause( c->size() );    
+    for( unsigned int i = 0; i < orig.size(); i++ )
+    {        
+        clause->addLiteral( orig[ i ] );        
+        Var v = orig[ i ].getVariable();
+        if( isExternal( v ) )
+        {
+            Var newVar = getCheckerVarFromExternalLiteral( orig[ i ] );
+            if( newVar != v )
+            {
+                orig[ i ].setVariable( newVar );
+                orig[ i ].setPositive();
+            }
+        }
+    }
+    getGUSData( headAtom ).definingRulesForNonHCFAtom.push_back( clause );    
+    checker.addClause( c );    
 }
 
 Clause*
@@ -211,9 +261,11 @@ HCComponent::getClauseToPropagate(
     {
         trace_msg( modelchecker, 1, "Learning unfounded set rule for component " << *this );
         Clause* loopFormula = learning.learnClausesFromDisjunctiveUnfoundedSet( unfoundedSet );
-        trace_msg( modelchecker, 1, "Adding loop formula: " << *loopFormula );        
-        unfoundedSet.clear();        
-        return loopFormula;            
+        trace_msg( modelchecker, 1, "Adding loop formula: " << *loopFormula );
+        unfoundedSet.clear();
+        
+        solver.setAfterConflictPropagator( this );
+        return loopFormula;
     }        
 }
 
@@ -236,26 +288,32 @@ HCComponent::computeReasonForUnfoundedAtom(
         for( unsigned int j = 0; j < rule->size(); j++ )
         {
             Literal lit = rule->getAt( j );
-            Var curr = lit.getVariable();
-            if( isInUnfoundedSet( curr ) )
+            if( isInUnfoundedSet( lit.getVariable() ) )
             {
+                trace_msg( modelchecker, 4, "Literal " << lit << " is in the unfounded set" );
                 if( lit.isHeadAtom() )
+                {
+                    trace_msg( modelchecker, 5, "Skip " << lit << " because it is in the head" );
                     continue;
+                }
                 else if( lit.isPositiveBodyLiteral() )
                 {
-                    trace_msg( modelchecker, 4, "Skip rule because of an unfounded positive body literal: " << lit );
+                    trace_msg( modelchecker, 5, "Skip rule because of an unfounded positive body literal: " << lit );
                     skipRule = true;
                     break;
                 }
             }
             
             if( !solver.isTrue( lit ) )
+            {
+                trace_msg( modelchecker, 5, "Skip " << lit << " because it is not true" );
                 continue;
+            }
             
             unsigned int dl = solver.getDecisionLevel( lit );
             if( dl == 0 )
             {
-                trace_msg( modelchecker, 4, "Skip rule because of a literal of level 0: " << lit );
+                trace_msg( modelchecker, 5, "Skip rule because of a literal of level 0: " << lit );
                 skipRule = true;
                 break;
             }
@@ -268,9 +326,44 @@ HCComponent::computeReasonForUnfoundedAtom(
         
         if( !skipRule )
         {
-            assert( pos < rule->size() );
+            assert_msg( pos < rule->size(), "Trying to access " << pos << " in " << *rule );
             trace_msg( modelchecker, 4, "The reason is: " << rule->getAt( pos ) );
             learning.onNavigatingLiteralForUnfoundedSetLearning( rule->getAt( pos ).getOppositeLiteral() );
         }
     }
+}
+
+void
+HCComponent::addClausesForPartialModelChecks()
+{
+    return;
+//    for( unsigned int i = 0; i < hcVariables.size(); i++ )
+//    {
+//        Var v = hcVariables[ i ];
+//        Clause* c = new Clause( 3 );
+//        c->addLiteral( Literal( v, POSITIVE ) );
+//        c->addLiteral( Literal( getCheckerTrueVar( v ), NEGATIVE ) );
+//        c->addLiteral( Literal( getCheckerFalseVar( v ), NEGATIVE ) );
+//        checker.addClause( c );
+//        
+//        c = new Clause( 3 );
+//        c->addLiteral( Literal( v, POSITIVE ) );
+//        c->addLiteral( Literal( getCheckerTrueVar( v ), POSITIVE ) );
+//        c->addLiteral( Literal( getCheckerFalseVar( v ), POSITIVE ) );
+//        checker.addClause( c );
+//        
+////        checker.addClause( Literal( getCheckerTrueVar( v ), POSITIVE ), Literal( getCheckerFalseVar( v ), POSITIVE ) );
+//    }
+    
+//    for( unsigned int i = 0; i < externalLiterals.size(); i++ )
+//    {
+//        Var v = externalLiterals[ i ].getVariable();
+//        Clause* c = new Clause( 3 );
+//        c->addLiteral( Literal( v, POSITIVE ) );
+//        c->addLiteral( Literal( getCheckerTrueVar( v ), NEGATIVE ) );
+//        c->addLiteral( Literal( getCheckerFalseVar( v ), NEGATIVE ) );
+//        checker.addClause( c );
+//        
+//        checker.addClause( Literal( getCheckerTrueVar( v ), POSITIVE ), Literal( getCheckerFalseVar( v ), POSITIVE ) );
+//    }
 }

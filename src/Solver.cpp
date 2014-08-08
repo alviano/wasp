@@ -111,7 +111,7 @@ Solver::initFrom(
     assert( solver.restart != NULL );
     assert( this->restart == NULL );    
     this->restart = solver.restart->clone();
-    this->exchangeClauses = solver.exchangeClauses;
+    this->exchangeClauses_ = solver.exchangeClauses_;
 }
 
 void
@@ -329,6 +329,14 @@ Solver::solvePropagators(
         }
         
         postPropagationLabel:;
+        if( afterConflictPropagator != NULL )
+        {
+            postPropagators.push_back( afterConflictPropagator );
+            HCComponent* comp = dynamic_cast< HCComponent* >( afterConflictPropagator );
+            comp->setHasToTestModel();
+            afterConflictPropagator = NULL;
+        }
+        
         while( !postPropagators.empty() )
         {
             PostPropagator* postPropagator = postPropagators.back();
