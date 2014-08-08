@@ -164,22 +164,22 @@ HCComponent::testModel()
     
     if( solver.exchangeClauses() )
     {
-        for( Solver::ClauseIterator it = checker.learnedClauses_begin(); it != checker.learnedClauses_end(); it++ )
-        {            
-            Clause* learnedClause = *it;
-            if( learnedClause->addedInSolver() || learnedClause->size() > 8 )
-                continue;
-            Clause* c = new Clause( learnedClause->size() );
-            
-            for( unsigned int i = 0; i < learnedClause->size(); i++ )
-            {
-                Literal current = getGeneratorLiteralFromCheckerLiteral( learnedClause->getAt( i ) );
-                c->addLiteral( current );
-            }
-            
-            learnedClause->setAddedInSolver( true );
-            solver.addClauseInLearnedFromAllSolvers( c );
-        }
+//        for( Solver::ClauseIterator it = checker.learnedClauses_begin(); it != checker.learnedClauses_end(); it++ )
+//        {            
+//            Clause* learnedClause = *it;
+//            if( learnedClause->addedInSolver() || learnedClause->size() > 8 )
+//                continue;
+//            Clause* c = new Clause( learnedClause->size() );
+//            
+//            for( unsigned int i = 0; i < learnedClause->size(); i++ )
+//            {
+//                Literal current = getGeneratorLiteralFromCheckerLiteral( learnedClause->getAt( i ) );
+//                c->addLiteral( current );
+//            }
+//            
+//            learnedClause->setAddedInSolver( true );
+//            solver.addClauseInLearnedFromAllSolvers( c );
+//        }
     }
 }
 
