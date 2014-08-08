@@ -471,7 +471,7 @@ class Solver;
     };
 
 #else
-    #define statistics( METHOD )
+    #define statistics( solver, METHOD )
 #endif
 
 #endif
