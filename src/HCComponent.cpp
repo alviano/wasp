@@ -40,7 +40,7 @@ HCComponent::HCComponent(
 HCComponent::~HCComponent()
 {
     checker.enableStatistics();
-    statistics( &checker, onDeletingChecker( 0 ) );
+    statistics( &checker, onDeletingChecker( id ) );
 }
 
 bool
