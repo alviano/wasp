@@ -59,6 +59,9 @@ class HCComponent : public PostPropagator
         GUSData& getGUSData( Var v ) { assert( v < gusData.size() ); return *( gusData[ v ] ); }
         void printLearnedClausesOfChecker() { checker.printLearnedClauses(); }
         void setHasToTestModel() { hasToTestModel = true; }
+        
+        void setId( unsigned int i ) { id = i; }
+        unsigned int getId() const { return id; }
 
     private:
         inline HCComponent( const HCComponent& orig );
@@ -83,6 +86,7 @@ class HCComponent : public PostPropagator
         bool hasToTestModel;
         
         unsigned int numberOfAtoms;
+        unsigned int id;
 
         void testModel();
         void computeAssumptions( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );

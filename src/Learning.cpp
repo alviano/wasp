@@ -236,7 +236,7 @@ Learning::simplifyLearnedClause(
     assert( lc != NULL );
     assert( lc->size() > 1 );
 
-    statistics( startShrinkingLearnedClause( lc->size() + 1 ) );
+    statistics( &solver, startShrinkingLearnedClause( lc->size() + 1 ) );
     Clause& learnedClause = *lc;
     learnedClause.swapLiteralsNoWatches( 0, maxPosition );
     maxPosition = 0;
@@ -277,7 +277,7 @@ Learning::simplifyLearnedClause(
         }
     }
     
-    statistics( endShrinkingLearnedClause( lc->size() + 1 ) );
+    statistics( &solver, endShrinkingLearnedClause( lc->size() + 1 ) );
 }
 
 //bool

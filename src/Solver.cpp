@@ -237,7 +237,7 @@ Solver::solveWithoutPropagators(
         if( !chooseLiteral( assumptionsAND, assumptionsOR ) )
         {
             trace_msg( solving, 1, "INCONSISTENT" );
-            statistics( endSolving() );
+            statistics( this, endSolving() );
             return false;
         }
         
@@ -254,14 +254,14 @@ Solver::solveWithoutPropagators(
                 if( getCurrentDecisionLevel() == 0 )
                 {
                     trace( solving, 1, "Conflict at level 0: return. \n");
-                    statistics( endSolving() );
+                    statistics( this, endSolving() );
                     return false;
                 }
                 
                 if( !analyzeConflict() )
                 {
                     trace_msg( solving, 1, "INCONSISTENT" );
-                    statistics( endSolving() );
+                    statistics( this, endSolving() );
                     return false;
                 }
                 minisatHeuristic->variableDecayActivity();
@@ -274,7 +274,7 @@ Solver::solveWithoutPropagators(
     assert_msg( getNumberOfUndefined() == 0, "Found a model with " << getNumberOfUndefined() << " undefined variables." );
     assert_msg( allClausesSatisfied(), "The model found is not correct." );
     
-    statistics( endSolving() );
+    statistics( this, endSolving() );
     
     return modelIsValidUnderAssumptions( assumptionsAND, assumptionsOR );
 }
@@ -314,13 +314,13 @@ Solver::solvePropagators(
                 if( getCurrentDecisionLevel() == 0 )
                 {
                     trace( solving, 1, "Conflict at level 0: return. \n");
-                    statistics( endSolving() );
+                    statistics( this, endSolving() );
                     return false;
                 }
                 
                 if( !analyzeConflict() )
                 {
-                    statistics( endSolving() );
+                    statistics( this, endSolving() );
                     return false;
                 }
                 minisatHeuristic->variableDecayActivity();                
@@ -349,7 +349,7 @@ Solver::solvePropagators(
             else
             {
                 unsigned int size = clauseToPropagate->size();
-                statistics( onLearningFromPropagators( size ) );                
+                statistics( this, onLearningFromPropagators( size ) );                
                 if( size == 0 )
                 {
                     clearConflictStatus();
@@ -397,7 +397,7 @@ Solver::solvePropagators(
     assert_msg( getNumberOfUndefined() == 0, "Found a model with " << getNumberOfUndefined() << " undefined variables." );
     assert_msg( allClausesSatisfied(), "The model found is not correct." );
     
-    statistics( endSolving() );
+    statistics( this, endSolving() );
     return modelIsValidUnderAssumptions( assumptionsAND, assumptionsOR );
 }
 
@@ -728,7 +728,7 @@ Solver::minisatDeletion()
     }
 
     finalizeDeletion( size - numberOfDeletions );
-    statistics( onDeletion( size, numberOfDeletions ) );
+    statistics( this, onDeletion( size, numberOfDeletions ) );
 }
 
 bool compareClausesGlucose( Clause* c1Pointer, Clause* c2Pointer )
@@ -818,7 +818,7 @@ Solver::glucoseDeletion()
     }
 
     finalizeDeletion( size - numberOfDeletions );
-    statistics( onDeletion( size, numberOfDeletions ) );
+    statistics( this, onDeletion( size, numberOfDeletions ) );
 }
 
 //void
@@ -903,7 +903,7 @@ Solver::glucoseDeletion()
 //    }
 //    
 //    finalizeDeletion( size - numberOfDeletions );
-//    statistics( onDeletion( size, numberOfDeletions ) );
+//    statistics( this, onDeletion( size, numberOfDeletions ) );
 //}
 
 void
@@ -1090,7 +1090,7 @@ Solver::createCyclicComponents()
         unsigned int size = current.size();
         if( size > 1 )
         {            
-            statistics( addCyclicComponent( size ) );
+            statistics( this, addCyclicComponent( size ) );
             Component* currentComponent = new Component( gusDataVector, *this );
             cyclicComponents.push_back( currentComponent );
             currentComponent->setId( id++ );

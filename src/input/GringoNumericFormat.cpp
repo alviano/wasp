@@ -29,7 +29,7 @@ GringoNumericFormat::parse(
     bool loop = true;
 
     uint64_t value = 0;
-    statistics( startParsing() );
+    statistics( &solver, startParsing() );
     while( loop )
     {
         unsigned int type;
@@ -110,10 +110,10 @@ GringoNumericFormat::parse(
     if( solver.numberOfClauses() + normalRules.size() > 1000000 )
         solver.turnOffSimplifications();
 
-    statistics( endParsing() );
-    statistics( startSCCs() );
+    statistics( &solver, endParsing() );
+    statistics( &solver, startSCCs() );
     computeSCCs();
-    statistics( endSCCs() );
+    statistics( &solver, endSCCs() );
     if( !solver.tight() )
     {
         trace_msg( parser, 1, "Program is not tight" );
@@ -126,9 +126,9 @@ GringoNumericFormat::parse(
     addWeightConstraints();
     addOptimizationRules();
     clearDataStructures();
-    statistics( startCompletion() );
+    statistics( &solver, startCompletion() );
     computeCompletion();    
-    statistics( endCompletion() );
+    statistics( &solver, endCompletion() );
     //TODO: remove
 //    cout << solver.numberOfVariables() << endl;
 //    unsigned c[1024] = {0};
@@ -1253,6 +1253,7 @@ GringoNumericFormat::computeGusStructures()
             trace_msg( parser, 4, "The component is non HCF" );            
             HCComponent* hcComponent = solver.createHCComponent( atomData.size() - 1 ); //new HCComponent( solver );
 
+            hcComponent->setId( solver.numberOfHCComponents() );
             for( unsigned int j = 0; j < component->size(); j++ )
             {
                 Var v = component->getVariable( j );
@@ -1266,9 +1267,9 @@ GringoNumericFormat::computeGusStructures()
                 solver.setComponent( v, NULL );
                 solver.setHCComponent( v, hcComponent );
             }
-            statistics( removeComponent( component->getId() ) );            
+            statistics( &solver, removeComponent( component->getId() ) );            
             component->remove();
-            statistics( addCyclicHCComponent( hcComponent->size() ) );            
+            statistics( &solver, addCyclicHCComponent( hcComponent->size() ) );            
             
             for( unsigned int j = 0; j < hcComponent->size(); j++ )
             {                
@@ -1399,7 +1400,7 @@ GringoNumericFormat::computeGusStructures()
                 solver.setComponent( component->getVariable( j ), NULL );
             
             component->remove();
-            statistics( removeComponent( component->getId() ) );
+            statistics( &solver, removeComponent( component->getId() ) );
         }*/
     }
 

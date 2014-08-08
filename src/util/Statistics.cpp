@@ -18,5 +18,6 @@
 #include "Statistics.h"
 
 #ifdef STATS_ON
-    Statistics Statistics::instance;
+    vector< Statistics* > Statistics::instances;
+    unordered_map< Solver*, unsigned int > Statistics::solverToStats;
 #endif

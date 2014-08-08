@@ -348,10 +348,15 @@ class Solver
         bool cleanAndAddLearnedClause( Clause* c );
         inline void setExchangeClauses( bool ex ) { exchangeClauses_ = ex; }
         inline bool exchangeClauses() const { return exchangeClauses_; }
-        inline void setGenerator( bool gen ) { generator = gen; }        
+        inline void setGenerator( bool gen ) { generator = gen; statistics( this, setGenerator( gen ) ); }        
         inline void setAfterConflictPropagator( PostPropagator* p ) { assert( afterConflictPropagator == NULL ); afterConflictPropagator = p; }
         
-        static void addClauseInLearnedFromAllSolvers( Clause* c ) { learnedFromAllSolvers.push_back( c ); }        
+        static void addClauseInLearnedFromAllSolvers( Clause* c ) { learnedFromAllSolvers.push_back( c ); }
+        
+        inline void disableStatistics() { statistics( this, disable() ); }
+        inline void enableStatistics() { statistics( this, enable() ); }
+        
+        inline unsigned int numberOfHCComponents() const { return hcComponents.size(); }
     private:
         PostPropagator* afterConflictPropagator;
         bool exchangeClauses_;
@@ -790,7 +795,7 @@ Solver::addClause(
     unsigned int size = clause->size();    
     if( size > 1 )
     {
-        statistics( onAddingClause( size ) );
+        statistics( this, onAddingClause( size ) );
         if( callSimplifications() || clause->size() != 2 )
             attachClauseToAllLiterals( *clause );
         clause->setPositionInSolver( clauses.size() );
@@ -822,7 +827,7 @@ Solver::addClauseFromModel(
     
     if( size > 1 )
     {
-        statistics( onAddingClause( size ) );
+        statistics( this, onAddingClause( size ) );
         attachClause( *clause );
         clause->setPositionInSolver( clauses.size() );
         clauses.push_back( clause );
@@ -1049,7 +1054,7 @@ Solver::chooseLiteral(
     
     end:;
     setAChoice( choice );    
-    statistics( onChoice() );    
+    statistics( this, onChoice() );    
     return true;
 }
 
@@ -1068,7 +1073,7 @@ Solver::analyzeConflict()
 
     Clause* learnedClause = learning.onConflict( conflictLiteral, conflictClause );
     assert( "Learned clause has not been calculated." && learnedClause != NULL );
-    statistics( onLearning( learnedClause->size() ) );
+    statistics( this, onLearning( learnedClause->size() ) );
     
     if( learnedClause->size() == 1 )
     {
@@ -1110,7 +1115,7 @@ Solver::analyzeConflict()
         bool hasToRestart = glucoseHeuristic_ ? ( glucoseData.lbdQueue.isValid() && ( ( glucoseData.lbdQueue.getAvg() * glucoseData.K ) > ( glucoseData.sumLBD / conflictsRestarts ) ) ) : restart->hasToRestart();
         if( hasToRestart )
         {
-            statistics( onRestart() );    
+            statistics( this, onRestart() );    
             glucoseData.lbdQueue.fastClear();
             doRestart();
             simplifyOnRestart();
@@ -1333,7 +1338,7 @@ Solver::preprocessing()
         return false;
     }    
 
-    statistics( beforePreprocessing( numberOfVariables() - numberOfAssignedLiterals(), numberOfClauses() ) );
+    statistics( this, beforePreprocessing( numberOfVariables() - numberOfAssignedLiterals(), numberOfClauses() ) );
     assert( satelite != NULL );
     assert( checkVariablesState() );    
     if( callSimplifications() && !satelite->simplify() )
@@ -1350,7 +1355,7 @@ Solver::preprocessing()
     deletionCounters.learnedSizeAdjustConfl = deletionCounters.learnedSizeAdjustStartConfl;
     deletionCounters.learnedSizeAdjustCnt = ( unsigned int ) deletionCounters.learnedSizeAdjustConfl;
     
-    statistics( afterPreprocessing( numberOfVariables() - numberOfAssignedLiterals(), numberOfClauses() ) );
+    statistics( this, afterPreprocessing( numberOfVariables() - numberOfAssignedLiterals(), numberOfClauses() ) );
 
     return true;
 }

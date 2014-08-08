@@ -19,7 +19,7 @@ ostream& operator<<( ostream& out, const HCComponent& component )
 HCComponent::HCComponent(
     vector< GUSData* >& gusData_,
     Solver& s,
-    unsigned numberOfInputAtoms ) : PostPropagator(), gusData( gusData_ ), solver( s ), numberOfCalls( 0 ), hasToTestModel( false ), numberOfAtoms( numberOfInputAtoms )
+    unsigned numberOfInputAtoms ) : PostPropagator(), gusData( gusData_ ), solver( s ), numberOfCalls( 0 ), hasToTestModel( false ), numberOfAtoms( numberOfInputAtoms ), id( 0 )
 {   
     inUnfoundedSet.push_back( 0 );
     while( checker.numberOfVariables() < numberOfInputAtoms )
@@ -33,11 +33,14 @@ HCComponent::HCComponent(
     
     checker.setOutputBuilder( new WaspOutputBuilder() );
     checker.initFrom( solver );
-    checker.setGenerator( false );    
+    checker.setGenerator( false ); 
+    checker.disableStatistics();
 }
 
 HCComponent::~HCComponent()
 {
+    checker.enableStatistics();
+    statistics( &checker, onDeletingChecker( 0 ) );
 }
 
 bool
@@ -139,7 +142,8 @@ HCComponent::testModel()
     } );
     
     if( checker.getCurrentDecisionLevel() > 0 )
-        checker.doRestart();        
+        checker.doRestart();
+    statistics( &checker, startCheckerInvokation( trail.size() != ( hcVariables.size() + externalLiterals.size() ), time( 0 ) ) );
     if( checker.solve( assumptionsAND, assumptionsOR ) )
     {        
         trace_msg( modelchecker, 1, "SATISFIABLE: the model is not stable." );                
@@ -159,8 +163,10 @@ HCComponent::testModel()
                 cerr << " " << Literal( unfoundedSet[ i ], POSITIVE );
             cerr << endl;
         } );
+        statistics( &checker, foundUS( unfoundedSet.size() ) );
         assert( !unfoundedSet.empty() );
     }
+    statistics( &checker, endCheckerInvokation( time( 0 ) ) );
     
     if( solver.exchangeClauses() )
     {
@@ -217,6 +223,9 @@ HCComponent::computeAssumptions(
             assumptionsAND.push_back( Literal( getCheckerFalseVar( v, i ), NEGATIVE ) );
         }
     }
+    
+    statistics( &checker, assumptionsAND( assumptionsAND.size() ) );
+    statistics( &checker, assumptionsOR( assumptionsOR.size() ) );
 }
 
 void
