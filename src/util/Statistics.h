@@ -201,6 +201,8 @@ class Solver;
 
             inline void endSolving()
             {
+                if( generator )
+                    cout << "SONO QUI " << disabled << endl;
                 printStatistics();
             }
             
@@ -381,6 +383,8 @@ class Solver;
             
             void printStatistics()
             {
+                if( generator )
+                    cout << "SONO QUI " << generator << endl;
                 if( disabled )
                     return;
                 cerr << separator << endl;

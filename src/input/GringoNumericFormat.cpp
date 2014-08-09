@@ -1284,7 +1284,8 @@ GringoNumericFormat::computeGusStructures()
                     {
                         for( unsigned int k = 0; k < rule->size(); k++ )
                         {
-                            if( solver.getHCComponent( rule->literals[ k ].getVariable() ) != hcComponent && rule->literals[ k ].getVariable() < atomData.size() )
+                            assert( rule->literals[ k ].getVariable() < atomData.size() );
+                            if( solver.getHCComponent( rule->literals[ k ].getVariable() ) != hcComponent )
                             {
                                 if( hcComponent->addExternalLiteral( rule->literals[ k ] ) )
                                 {
@@ -1991,7 +1992,7 @@ GringoNumericFormat::onShrinkingHead(
             if( lit.isHeadAtom() )
             {
                 headCount++;
-                assert( !solver.isFalse( lit.getVariable() ) );
+//                assert_msg( !solver.isFalse( lit.getVariable() ), lit.getVariable() << " is false" );
                 head = lit.getVariable();
             }
             else if( !lit.isTruePositiveBodyLiteral() )

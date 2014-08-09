@@ -357,6 +357,9 @@ class Solver
         inline void enableStatistics() { statistics( this, enable() ); }
         
         inline unsigned int numberOfHCComponents() const { return hcComponents.size(); }
+        
+        inline void printInterpretation() const { variables.printInterpretation(); }
+
     private:
         PostPropagator* afterConflictPropagator;
         bool exchangeClauses_;

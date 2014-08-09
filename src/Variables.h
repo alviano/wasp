@@ -131,8 +131,9 @@ class Variables
         
         inline ReasonForBinaryClauses* getReasonForBinaryClauses( Var v ) { return variablesData[ v ].reasonForBinaryClauses; }
         
-        bool isFrozen( Var v ) const { return variablesData[ v ].frozen; }
-        void setFrozen( Var v ) { variablesData[ v ].frozen = 1; }
+        inline bool isFrozen( Var v ) const { return variablesData[ v ].frozen; }
+        inline void setFrozen( Var v ) { variablesData[ v ].frozen = 1; }
+        inline void printInterpretation() const;
         
     private:
         vector< Var > assignedVariables;
@@ -375,6 +376,24 @@ Variables::setEliminated(
     #endif
     setTruthValue( v, TRUE );    
     assert( result );
+}
+
+void
+Variables::printInterpretation() const
+{
+    cout << "Interpretation: [";
+    for( unsigned int i = 2; i < this->numberOfVariables(); i++ )
+    {        
+        if( hasBeenEliminated( i ) || hasBeenEliminatedByDistribution( i ) )
+            cout << " R" << Literal( i, POSITIVE );            
+        else if( isTrue( i ) )
+            cout << " T" << Literal( i, POSITIVE );
+        else if( isFalse( i ) )
+            cout << " F" << Literal( i, POSITIVE );
+        else
+            cout << " U" << Literal( i, POSITIVE );
+    }
+    cout << " ]" << endl;
 }
 
 #endif

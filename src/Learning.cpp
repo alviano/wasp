@@ -181,7 +181,8 @@ Learning::addLiteralInLearnedClause(
     if( !isVisited( v, numberOfCalls ) )
     {
         setVisited( v, numberOfCalls );
-        assert( !solver.isUndefined( v ) );
+        //This assert is not true in case of partial checks
+//        assert( !solver.isUndefined( v ) );
         
         unsigned int dl = solver.getDecisionLevel( v );
         if( dl > maxDecisionLevel )
@@ -321,7 +322,7 @@ Learning::allMarked(
     Reason* clause,
     Literal literal )
 {
-    if( clause == NULL )
+    if( clause == NULL || solver.isUndefined( literal ) )
     {
         trace_msg( learning, 5, "All marked on NULL clause" );
         return false;
@@ -444,9 +445,7 @@ Learning::learnClausesFromDisjunctiveUnfoundedSet(
         simplifyLearnedClause( learnedClause );
 
     if( learnedClause->size() >= 2 )
-    {
         sortClause( learnedClause );
-    }
     
     if( solver.glucoseHeuristic() )
         learnedClause->setLbd( solver.computeLBD( *learnedClause ) );
@@ -492,7 +491,12 @@ Learning::sortClause(
     
     for( unsigned int i = 1; i < clause->size(); i++ )
     {
-        unsigned int dl = solver.getDecisionLevel( clause->getAt( i ) );
+        Literal lit = clause->getAt( i );
+        unsigned int dl = solver.getDecisionLevel( lit );        
+        
+        if( solver.isUndefined( lit ) )
+            dl = UINT_MAX;
+        
         if( dl > max1 )
         {
             max2 = max1;

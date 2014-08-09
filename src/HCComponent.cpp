@@ -119,7 +119,7 @@ HCComponent::testModel()
                 checker.addClause( Literal( i, POSITIVE ) );                
             else
                 inUnfoundedSet[ i ] = 0;        
-        }        
+        }
         #ifndef NDEBUG
         bool result = 
         #endif
@@ -130,15 +130,27 @@ HCComponent::testModel()
     trace_action( modelchecker, 2,
     {
         trace_tag( cerr, modelchecker, 2 );
-        cerr << "Assumptions AND:";
-        for( unsigned int i = 0; i < assumptionsAND.size(); i++ )
-            cerr << " " << assumptionsAND[ i ];
+        cerr << "Assumptions AND: ";
+        if( !assumptionsAND.empty() )
+        {
+            cerr << assumptionsAND[ 0 ];
+            for( unsigned int i = 1; i < assumptionsAND.size(); i++ )
+                cerr << ", " << assumptionsAND[ i ];
+        }
+        else
+            cerr << "empty";
         cerr << endl;
         trace_tag( cerr, modelchecker, 2 );
-        cerr << "Assumptions OR:";
-        for( unsigned int i = 0; i < assumptionsOR.size(); i++ )
-            cerr << " " << assumptionsOR[ i ];
-        cerr << endl;
+        cerr << "Assumptions OR: ";
+        if( !assumptionsOR.empty() )
+        {
+            cerr << assumptionsOR[ 0 ];
+            for( unsigned int i = 1; i < assumptionsOR.size(); i++ )
+                cerr << ", " << assumptionsOR[ i ];
+        }
+        else
+            cerr << "empty";
+        cerr << endl;        
     } );
     
     if( checker.getCurrentDecisionLevel() > 0 )
@@ -200,7 +212,7 @@ HCComponent::computeAssumptions(
         if( !solver.isFalse( v ) )
             assumptionsOR.push_back( Literal( v, NEGATIVE ) );
         else
-            assumptionsAND.push_back( Literal( v, NEGATIVE ) );        
+            assumptionsAND.push_back( Literal( v, NEGATIVE ) );                
     }
 
     for( unsigned int i = 0; i < externalLiterals.size(); i++ )
@@ -243,14 +255,14 @@ HCComponent::addClauseToChecker(
         Var v = orig[ i ].getVariable();
         if( isExternal( v ) )
         {
-            Var newVar = getCheckerVarFromExternalLiteral( orig[ i ] );
+            Var newVar = getCheckerVarFromExternalLiteral( orig[ i ] );            
             if( newVar != v )
             {
                 orig[ i ].setVariable( newVar );
                 orig[ i ].setPositive();
             }
         }
-    }
+    }    
     getGUSData( headAtom ).definingRulesForNonHCFAtom.push_back( clause );    
     checker.addClause( c );    
 }
@@ -270,10 +282,9 @@ HCComponent::getClauseToPropagate(
     {
         trace_msg( modelchecker, 1, "Learning unfounded set rule for component " << *this );
         Clause* loopFormula = learning.learnClausesFromDisjunctiveUnfoundedSet( unfoundedSet );
-        trace_msg( modelchecker, 1, "Adding loop formula: " << *loopFormula );
-        unfoundedSet.clear();
-        
-        solver.setAfterConflictPropagator( this );
+        trace_msg( modelchecker, 1, "Adding loop formula: " << *loopFormula );        
+        unfoundedSet.clear();        
+        solver.setAfterConflictPropagator( this );        
         return loopFormula;
     }        
 }
@@ -311,6 +322,15 @@ HCComponent::computeReasonForUnfoundedAtom(
                     skipRule = true;
                     break;
                 }
+            }
+            
+            assert( !isInUnfoundedSet( lit.getVariable() ) );
+            //If the variable is in the HCC component and it is undefined can be a reason during partial checks
+            if( solver.isUndefined( lit ) && solver.getHCComponent( lit.getVariable() ) == this )
+            {
+                if( pos == UINT_MAX )
+                    pos = j;
+                continue;
             }
             
             if( !solver.isTrue( lit ) )

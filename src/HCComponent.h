@@ -58,7 +58,7 @@ class HCComponent : public PostPropagator
         
         GUSData& getGUSData( Var v ) { assert( v < gusData.size() ); return *( gusData[ v ] ); }
         void printLearnedClausesOfChecker() { checker.printLearnedClauses(); }
-        void setHasToTestModel() { hasToTestModel = true; }
+        void setHasToTestModel( bool b ) { hasToTestModel = b; }
         
         void setId( unsigned int i ) { id = i; }
         unsigned int getId() const { return id; }

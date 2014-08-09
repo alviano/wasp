@@ -297,7 +297,11 @@ Solver::solvePropagators(
         
         assert( !conflictDetected() );
         if( !chooseLiteral( assumptionsAND, assumptionsOR ) )
+        {
+            trace_msg( solving, 1, "INCONSISTENT" );
+            statistics( this, endSolving() );
             return false;
+        }
         
         propagationLabel:;
         Var variableToPropagate;
@@ -333,7 +337,7 @@ Solver::solvePropagators(
         {
             postPropagators.push_back( afterConflictPropagator );
             HCComponent* comp = dynamic_cast< HCComponent* >( afterConflictPropagator );
-            comp->setHasToTestModel();
+            comp->setHasToTestModel( true );
             afterConflictPropagator = NULL;
         }
         
@@ -348,12 +352,13 @@ Solver::solvePropagators(
             }
             else
             {
-                unsigned int size = clauseToPropagate->size();
+                unsigned int size = clauseToPropagate->size();               
                 statistics( this, onLearningFromPropagators( size ) );                
                 if( size == 0 )
                 {
                     clearConflictStatus();
                     delete clauseToPropagate;
+                    statistics( this, endSolving() );
                     return false;
                 }
                 else if( size == 1 )
@@ -368,7 +373,7 @@ Solver::solvePropagators(
                 }
                 else
                 {
-                    if( getDecisionLevel( clauseToPropagate->getAt( 1 ) ) < getCurrentDecisionLevel() )
+                    if( !isUndefined( clauseToPropagate->getAt( 1 ) ) && getDecisionLevel( clauseToPropagate->getAt( 1 ) ) < getCurrentDecisionLevel() )
                     {
                         clearConflictStatus();                    
                         trace( solving, 2, "Learned clause from propagator and backjumping to level %d.\n", getDecisionLevel( clauseToPropagate->getAt( 1 ) ) );            
@@ -379,9 +384,18 @@ Solver::solvePropagators(
 //                        glucoseData.sumLBD += clauseToPropagate->lbd();
 //                        glucoseData.lbdQueue.push( clauseToPropagate->lbd() );
 //                    }
-                    addLearnedClause( clauseToPropagate );
-                    assert( !isTrue( clauseToPropagate->getAt( 0 ) ) );
-                    assignLiteral( clauseToPropagate );
+                    addLearnedClause( clauseToPropagate );                    
+                    if( !isUndefined( clauseToPropagate->getAt( 1 ) ) )
+                    {
+                        assert( !isTrue( clauseToPropagate->getAt( 0 ) ) );
+                        assignLiteral( clauseToPropagate );
+                    }
+                    else if( afterConflictPropagator != NULL )
+                    {
+                        HCComponent* comp = dynamic_cast< HCComponent* >( afterConflictPropagator );
+                        comp->setHasToTestModel( false );
+                        afterConflictPropagator = NULL;
+                    }                    
                     onLearning( clauseToPropagate );
                 }
                 
