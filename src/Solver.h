@@ -898,7 +898,6 @@ Solver::doRestart()
 
     if( generator && exchangeClauses_ )
     {
-        cout << "ADDING " << learnedFromAllSolvers.size() << " From checkers." << endl;
         while( !learnedFromAllSolvers.empty() )
         {
             Clause* c = learnedFromAllSolvers.back();
