@@ -82,6 +82,9 @@ class HCComponent : public PostPropagator
         
         Vector< Clause* > learnedClausesFromChecker;
         
+        vector< Var > generatorToCheckerId;
+        vector< Var > checkerToGeneratorId;
+        
         Vector< unsigned int > inUnfoundedSet;
         unsigned int numberOfCalls;
         
@@ -93,43 +96,25 @@ class HCComponent : public PostPropagator
         void testModel();
         void computeAssumptions( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
         
-        inline Var getCheckerVarFromExternalLiteral( Literal l )
+        inline Var getCheckerVarFromExternalLiteral( Literal l ) const { return l.isPositive() ? l.getVariable() : generatorToCheckerId[ l.getVariable() ]; }
+        inline Var getCheckerTrueVar( Var v ) const { return v; }
+        inline Var getCheckerFalseVar( Var v ) const
         {
-            assert( isExternal( l.getVariable() ) );
-            if( l.isPositive() )
-                return l.getVariable();
-            else
-            {
-                for( unsigned int i = 0; i < externalLiterals.size(); i++ )
-                {
-                    if( externalLiterals[ i ] == l )
-                        return getCheckerFalseVar( l.getVariable(), i );
-                }
-            }
+            assert( v < generatorToCheckerId.size() );
+            assert( generatorToCheckerId[ v ] > 0 );
             
-            assert( 0 );
-            return 0;
+            //Can be UINT_MAX;
+            return generatorToCheckerId[ v ];
         }
-        inline Var getCheckerTrueVar( Var v, unsigned int ) const { return v; }
-        inline Var getCheckerFalseVar( Var, unsigned int posInExternalLiterals ) const { return numberOfAtoms + posInExternalLiterals + 1; }
+
         inline Literal getGeneratorLiteralFromCheckerLiteral( Literal l )
         {
             if( l.getVariable() <= solver.numberOfVariables() )
                 return l;
                         
-            unsigned int posInExternalLiterals = UINT_MAX;
-            for( unsigned int i = 0; i < externalLiterals.size(); i++ )
-            {
-                Literal lit( l.getVariable() - i - 1, NEGATIVE );
-                if( lit == externalLiterals[ i ] )
-                {
-                    posInExternalLiterals = i;
-                    break;
-                }
-            }
-                
-            assert_msg( posInExternalLiterals < externalLiterals.size(), posInExternalLiterals << " != " << externalLiterals.size() );
-            return Literal( externalLiterals[ posInExternalLiterals ].getVariable(), NEGATIVE );            
+            assert( l.getVariable() < checkerToGeneratorId.size() );
+            assert( checkerToGeneratorId[ l.getVariable() ] > 0 );
+            return Literal( checkerToGeneratorId[ l.getVariable() ], NEGATIVE );           
         }
 };
 

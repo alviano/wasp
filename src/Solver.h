@@ -335,6 +335,7 @@ class Solver
         inline void bumpActivity( Var v ) { minisatHeuristic->bumpActivity( v ); }
         
         inline bool glucoseHeuristic() const { return glucoseHeuristic_; }
+        inline void disableGlucoseHeuristic() { glucoseHeuristic_ = false; }
         inline bool minimisationWithBinaryResolution( Clause& learnedClause, unsigned int lbd );
         
         inline bool modelIsValidUnderAssumptions( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
@@ -529,6 +530,7 @@ class Solver
         vector< Component* > cyclicComponents;
         vector< HCComponent* > hcComponents;
         
+        unsigned int numberOfAssumptions;        
         #ifndef NDEBUG
         bool checkStatusBeforePropagation( Var variable )
         {
@@ -544,7 +546,7 @@ class Solver
 };
 
 Solver::Solver() 
-:
+:    
     hcComponentForChecker( NULL ),
     afterConflictPropagator( NULL ),
     exchangeClauses_( false ),
@@ -565,7 +567,8 @@ Solver::Solver()
     callSimplifications_( true ),
     glucoseHeuristic_( true ),
     conflicts( 0 ),
-    conflictsRestarts( 0 )        
+    conflictsRestarts( 0 ),
+    numberOfAssumptions( 0 )
 {
     dependencyGraph = new DependencyGraph( *this );
     satelite = new Satelite( *this );
@@ -593,6 +596,7 @@ Solver::solve(
     vector< Literal >& assumptionsAND,
     vector< Literal >& assumptionsOR )
 {
+    numberOfAssumptions = assumptionsAND.size();
     if( !hasPropagators() )
         return solveWithoutPropagators( assumptionsAND, assumptionsOR );
     else
@@ -1988,8 +1992,10 @@ Solver::computeLBD(
     unsigned int lbd = 0;
     glucoseData.MYFLAG++;
     for( unsigned int i = 0; i < clause.size(); i++ )
-    {
+    {        
         unsigned int level = getDecisionLevel( clause[ i ] );
+//        if( level <= numberOfAssumptions )
+//            continue;
         if( glucoseData.permDiff[ level ] != glucoseData.MYFLAG )
         {
             glucoseData.permDiff[ level ] = glucoseData.MYFLAG;
@@ -2023,7 +2029,7 @@ bool
 Solver::minimisationWithBinaryResolution(
     Clause& learnedClause,
     unsigned int lbd )
-{    
+{
     if( lbd <= glucoseData.lbLBDMinimizingClause )
     {
         Literal p = learnedClause[ 0 ];//.getOppositeLiteral();

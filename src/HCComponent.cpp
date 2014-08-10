@@ -22,10 +22,14 @@ HCComponent::HCComponent(
     unsigned numberOfInputAtoms ) : PostPropagator(), gusData( gusData_ ), solver( s ), numberOfCalls( 0 ), hasToTestModel( false ), numberOfAtoms( numberOfInputAtoms ), id( 0 )
 {   
     inUnfoundedSet.push_back( 0 );
+    generatorToCheckerId.push_back( UINT_MAX );
+    checkerToGeneratorId.push_back( 0 );
     while( checker.numberOfVariables() < numberOfInputAtoms )
     {
         inUnfoundedSet.push_back( 0 );
         checker.addVariable();
+        generatorToCheckerId.push_back( UINT_MAX );
+        checkerToGeneratorId.push_back( 0 );
     }
         
     assert_msg( checker.numberOfVariables() == numberOfInputAtoms, checker.numberOfVariables() << " != " << numberOfInputAtoms );
@@ -60,10 +64,12 @@ HCComponent::addExternalLiteral(
         if( inUnfoundedSet[ lit.getVariable() ] & 2 )
             return false;
         inUnfoundedSet[ lit.getVariable() ] |= 2;
-    }
-    checker.addVariable();
+        checker.addVariable();
+        generatorToCheckerId[ lit.getVariable() ] = checker.numberOfVariables();
+        checkerToGeneratorId.push_back( lit.getVariable() );    
+    }    
     externalLiterals.push_back( lit );
-    assert( checker.numberOfVariables() == numberOfAtoms + externalLiterals.size() );
+    //assert( checker.numberOfVariables() == numberOfAtoms + externalLiterals.size() );
     return true;
 }
 
@@ -114,7 +120,7 @@ HCComponent::testModel()
         trace_msg( modelchecker, 2, "First call. Removing unused variables" );
 //        for( unsigned i = 1; i <= checker.numberOfVariables(); ++i )        
         for( unsigned i = 1; i < inUnfoundedSet.size(); ++i )
-        {            
+        {
             if( inUnfoundedSet[ i ] == 0 )
                 checker.addClause( Literal( i, POSITIVE ) );                
             else
@@ -124,7 +130,7 @@ HCComponent::testModel()
         bool result = 
         #endif
         checker.preprocessing();
-        assert( result );
+        assert( result );        
     }
 
     trace_action( modelchecker, 2,
@@ -166,7 +172,6 @@ HCComponent::testModel()
                 unfoundedSet.push_back( curr );
                 setInUnfoundedSet( curr );
             }
-
         trace_action( modelchecker, 2,
         {            
             trace_tag( cerr, modelchecker, 2 );
@@ -212,21 +217,27 @@ HCComponent::computeAssumptions(
         Var v = lit.getVariable();        
         if( solver.isTrue( v ) )
         {
-            assumptionsAND.push_back( Literal( getCheckerTrueVar( v, i ), POSITIVE ) );
-            assumptionsAND.push_back( Literal( getCheckerFalseVar( v, i ), NEGATIVE ) );            
+            assumptionsAND.push_back( Literal( getCheckerTrueVar( v ), POSITIVE ) );            
+            Var checkerVar = getCheckerFalseVar( v );
+            if( checkerVar != UINT_MAX )
+                assumptionsAND.push_back( Literal( checkerVar, NEGATIVE ) );            
         }
         else if( solver.isFalse( v ) )
         {
-            assumptionsAND.push_back( Literal( getCheckerTrueVar( v, i ), NEGATIVE ) );
-            assumptionsAND.push_back( Literal( getCheckerFalseVar( v, i ), POSITIVE ) );            
+            assumptionsAND.push_back( Literal( getCheckerTrueVar( v ), NEGATIVE ) );
+            Var checkerVar = getCheckerFalseVar( v );
+            if( checkerVar != UINT_MAX )
+                assumptionsAND.push_back( Literal( checkerVar, POSITIVE ) );            
         }
         else
         {
-            assumptionsAND.push_back( Literal( getCheckerTrueVar( v, i ), NEGATIVE ) );
-            assumptionsAND.push_back( Literal( getCheckerFalseVar( v, i ), NEGATIVE ) );
+            assumptionsAND.push_back( Literal( getCheckerTrueVar( v ), NEGATIVE ) );
+            Var checkerVar = getCheckerFalseVar( v );
+            if( checkerVar != UINT_MAX )
+                assumptionsAND.push_back( Literal( checkerVar, NEGATIVE ) );
         }
     }
-    
+
     statistics( &checker, assumptionsAND( assumptionsAND.size() ) );
     statistics( &checker, assumptionsOR( assumptionsOR.size() ) );
 }
@@ -266,7 +277,7 @@ HCComponent::getClauseToPropagate(
     if( hasToTestModel )
         testModel();
     if( unfoundedSet.empty() )
-    {               
+    {
         return NULL;
     }
     else
