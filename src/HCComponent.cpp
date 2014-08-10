@@ -35,6 +35,7 @@ HCComponent::HCComponent(
     checker.initFrom( solver );
     checker.setGenerator( false ); 
     checker.disableStatistics();
+    checker.setHCComponentForChecker( this );
 }
 
 HCComponent::~HCComponent()
@@ -110,7 +111,6 @@ HCComponent::testModel()
     
     if( numberOfCalls++ == 0 )
     {
-        addClausesForPartialModelChecks();
         trace_msg( modelchecker, 2, "First call. Removing unused variables" );
 //        for( unsigned i = 1; i <= checker.numberOfVariables(); ++i )        
         for( unsigned i = 1; i < inUnfoundedSet.size(); ++i )
@@ -182,22 +182,13 @@ HCComponent::testModel()
     
     if( solver.exchangeClauses() )
     {
-//        for( Solver::ClauseIterator it = checker.learnedClauses_begin(); it != checker.learnedClauses_end(); it++ )
-//        {            
-//            Clause* learnedClause = *it;
-//            if( learnedClause->addedInSolver() || learnedClause->size() > 8 )
-//                continue;
-//            Clause* c = new Clause( learnedClause->size() );
-//            
-//            for( unsigned int i = 0; i < learnedClause->size(); i++ )
-//            {
-//                Literal current = getGeneratorLiteralFromCheckerLiteral( learnedClause->getAt( i ) );
-//                c->addLiteral( current );
-//            }
-//            
-//            learnedClause->setAddedInSolver( true );
-//            solver.addClauseInLearnedFromAllSolvers( c );
-//        }
+        while( !learnedClausesFromChecker.empty() )
+        {            
+            Clause* c = learnedClausesFromChecker.back();
+            learnedClausesFromChecker.pop_back();
+            assert( c->size() <= 8 );            
+            solver.addClauseInLearnedFromAllSolvers( c );
+        }        
     }
 }
 
@@ -363,36 +354,17 @@ HCComponent::computeReasonForUnfoundedAtom(
 }
 
 void
-HCComponent::addClausesForPartialModelChecks()
+HCComponent::addLearnedClausesFromChecker(
+    Clause* learnedClause )
 {
-    return;
-//    for( unsigned int i = 0; i < hcVariables.size(); i++ )
-//    {
-//        Var v = hcVariables[ i ];
-//        Clause* c = new Clause( 3 );
-//        c->addLiteral( Literal( v, POSITIVE ) );
-//        c->addLiteral( Literal( getCheckerTrueVar( v ), NEGATIVE ) );
-//        c->addLiteral( Literal( getCheckerFalseVar( v ), NEGATIVE ) );
-//        checker.addClause( c );
-//        
-//        c = new Clause( 3 );
-//        c->addLiteral( Literal( v, POSITIVE ) );
-//        c->addLiteral( Literal( getCheckerTrueVar( v ), POSITIVE ) );
-//        c->addLiteral( Literal( getCheckerFalseVar( v ), POSITIVE ) );
-//        checker.addClause( c );
-//        
-////        checker.addClause( Literal( getCheckerTrueVar( v ), POSITIVE ), Literal( getCheckerFalseVar( v ), POSITIVE ) );
-//    }
-    
-//    for( unsigned int i = 0; i < externalLiterals.size(); i++ )
-//    {
-//        Var v = externalLiterals[ i ].getVariable();
-//        Clause* c = new Clause( 3 );
-//        c->addLiteral( Literal( v, POSITIVE ) );
-//        c->addLiteral( Literal( getCheckerTrueVar( v ), NEGATIVE ) );
-//        c->addLiteral( Literal( getCheckerFalseVar( v ), NEGATIVE ) );
-//        checker.addClause( c );
-//        
-//        checker.addClause( Literal( getCheckerTrueVar( v ), POSITIVE ), Literal( getCheckerFalseVar( v ), POSITIVE ) );
-//    }
+    assert( solver.exchangeClauses() );
+    if( learnedClause->size() > 8 )
+        return;
+    Clause* c = new Clause( learnedClause->size() );
+    for( unsigned int i = 0; i < learnedClause->size(); i++ )
+    {
+        Literal current = getGeneratorLiteralFromCheckerLiteral( learnedClause->getAt( i ) );
+        c->addLiteral( current );
+    }
+    learnedClausesFromChecker.push_back( c );
 }

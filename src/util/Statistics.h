@@ -201,8 +201,6 @@ class Solver;
 
             inline void endSolving()
             {
-                if( generator )
-                    cout << "SONO QUI " << disabled << endl;
                 printStatistics();
             }
             

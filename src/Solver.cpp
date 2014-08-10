@@ -192,7 +192,8 @@ Solver::addClauseFromModelAndRestart()
         return false;
     }
     
-    this->doRestart();
+    if( !this->doRestart() )
+        return false;
     simplifyOnRestart();    
     clearConflictStatus();
     
@@ -366,7 +367,8 @@ Solver::solvePropagators(
                     if( getCurrentDecisionLevel() != 0 )
                     {
                         clearConflictStatus();                    
-                        doRestart();
+                        if( !doRestart() )
+                            return false;
                     }
                     assignLiteral( clauseToPropagate->getAt( 0 ) );
                     delete clauseToPropagate;
@@ -1141,7 +1143,6 @@ Solver::cleanAndAddLearnedClause(
     Clause* clause )
 {
     assert( clause != NULL );
-        
     if( clause->removeDuplicatesAndFalseAndCheckIfTautological( *this ) )
     {        
         trace_msg( solving, 10, "Found tautological clause: " << *clause );
@@ -1152,7 +1153,7 @@ Solver::cleanAndAddLearnedClause(
     if( clause->size() == 0 )
     {        
         trace_msg( solving, 10, "Found contradictory (empty) clause" );
-        conflictLiteral = Literal::conflict;
+        conflictLiteral = Literal::conflict;        
         delete clause;
         return false;
     }
@@ -1185,4 +1186,20 @@ Solver::cleanAndAddLearnedClause(
     else
         addLearnedClause( clause );    
     return true;
+}
+
+void
+Solver::addLearnedClause( 
+    Clause* learnedClause )
+{
+    assert( learnedClause != NULL );
+    attachClause( *learnedClause );
+    if( hcComponentForChecker != NULL && exchangeClauses_ )
+    {
+        assert( !generator );
+        hcComponentForChecker->addLearnedClausesFromChecker( learnedClause );
+    }
+    
+    learnedClauses.push_back( learnedClause );    
+    literalsInLearnedClauses += learnedClause->size();
 }

@@ -88,7 +88,7 @@ class Solver
         inline bool addClause( Literal lit1, Literal lit2 );        
         
         inline bool addClauseFromModel( Clause* clause );
-        inline void addLearnedClause( Clause* learnedClause );
+        void addLearnedClause( Clause* learnedClause );
         bool addClauseFromModelAndRestart();
         
         inline Literal getLiteral( int lit );
@@ -113,7 +113,7 @@ class Solver
         
         inline void onLearningClause( Literal literalToPropagate, Clause* learnedClause, unsigned int backjumpingLevel );
         inline void onLearningUnaryClause( Literal literalToPropagate, Clause* learnedClause );        
-        inline void doRestart();        
+        inline bool doRestart();        
         
         inline unsigned int numberOfClauses() const { return clauses.size(); }
         inline unsigned int numberOfLearnedClauses() const;         
@@ -359,8 +359,10 @@ class Solver
         inline unsigned int numberOfHCComponents() const { return hcComponents.size(); }
         
         inline void printInterpretation() const { variables.printInterpretation(); }
+        inline void setHCComponentForChecker( HCComponent* hc ) { assert( hcComponentForChecker == NULL ); hcComponentForChecker = hc; }
 
     private:
+        HCComponent* hcComponentForChecker;
         PostPropagator* afterConflictPropagator;
         bool exchangeClauses_;
         bool generator;
@@ -543,6 +545,7 @@ class Solver
 
 Solver::Solver() 
 :
+    hcComponentForChecker( NULL ),
     afterConflictPropagator( NULL ),
     exchangeClauses_( false ),
     generator( true ),
@@ -846,16 +849,6 @@ Solver::addClauseFromModel(
     return true;
 }
 
-void
-Solver::addLearnedClause( 
-    Clause* learnedClause )
-{
-    assert( learnedClause != NULL );
-    attachClause( *learnedClause );
-    learnedClauses.push_back( learnedClause );    
-    literalsInLearnedClauses += learnedClause->size();
-}
-
 Var
 Solver::getNextVariableToPropagate()
 {
@@ -896,7 +889,7 @@ Solver::unrollOne()
     unroll( currentDecisionLevel - 1 );
 }
 
-void
+bool
 Solver::doRestart()
 {
     trace( solving, 2, "Performing restart.\n" );
@@ -905,13 +898,16 @@ Solver::doRestart()
 
     if( generator && exchangeClauses_ )
     {
+        cout << "ADDING " << learnedFromAllSolvers.size() << " From checkers." << endl;
         while( !learnedFromAllSolvers.empty() )
         {
             Clause* c = learnedFromAllSolvers.back();
             learnedFromAllSolvers.pop_back();            
-            cleanAndAddLearnedClause( c );
+            if( !cleanAndAddLearnedClause( c ) )
+                return false;
         }
     }
+    return true;
 }
 
 void
@@ -1080,7 +1076,8 @@ Solver::analyzeConflict()
     
     if( learnedClause->size() == 1 )
     {
-        doRestart();
+        if( !doRestart() )
+            return false;
         clearConflictStatus();
         assignLiteral( learnedClause->getAt( 0 ) );
         assert( isTrue( learnedClause->getAt( 0 ) ) );
@@ -1120,7 +1117,8 @@ Solver::analyzeConflict()
         {
             statistics( this, onRestart() );    
             glucoseData.lbdQueue.fastClear();
-            doRestart();
+            if( !doRestart() )
+                return false;
             simplifyOnRestart();
         }
         else

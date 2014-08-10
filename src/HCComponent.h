@@ -62,14 +62,14 @@ class HCComponent : public PostPropagator
         
         void setId( unsigned int i ) { id = i; }
         unsigned int getId() const { return id; }
-
+        
+        void addLearnedClausesFromChecker( Clause* c );
+        
     private:
         inline HCComponent( const HCComponent& orig );
 
         bool isInUnfoundedSet( Var v ) { assert_msg( v < inUnfoundedSet.size(), "v = " << v << "; inUnfoundedSet.size() = " << inUnfoundedSet.size() ); return inUnfoundedSet[ v ] == numberOfCalls; }
         void setInUnfoundedSet( Var v ) { assert_msg( v < inUnfoundedSet.size(), "v = " << v << "; inUnfoundedSet.size() = " << inUnfoundedSet.size() ); inUnfoundedSet[ v ] = numberOfCalls; }
-        
-        void addClausesForPartialModelChecks();
         
         vector< GUSData* >& gusData;
         Vector< Literal > trail;
@@ -79,6 +79,8 @@ class HCComponent : public PostPropagator
         vector< Var > hcVariables;
         vector< Literal > externalLiterals;
         Vector< Var > unfoundedSet;
+        
+        Vector< Clause* > learnedClausesFromChecker;
         
         Vector< unsigned int > inUnfoundedSet;
         unsigned int numberOfCalls;
@@ -114,8 +116,18 @@ class HCComponent : public PostPropagator
         {
             if( l.getVariable() <= solver.numberOfVariables() )
                 return l;
-            
-            unsigned int posInExternalLiterals = l.getVariable() - numberOfAtoms - 1;
+                        
+            unsigned int posInExternalLiterals = UINT_MAX;
+            for( unsigned int i = 0; i < externalLiterals.size(); i++ )
+            {
+                Literal lit( l.getVariable() - i - 1, NEGATIVE );
+                if( lit == externalLiterals[ i ] )
+                {
+                    posInExternalLiterals = i;
+                    break;
+                }
+            }
+                
             assert_msg( posInExternalLiterals < externalLiterals.size(), posInExternalLiterals << " != " << externalLiterals.size() );
             return Literal( externalLiterals[ posInExternalLiterals ].getVariable(), NEGATIVE );            
         }
