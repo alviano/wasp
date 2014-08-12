@@ -54,7 +54,7 @@ class Solver;
             disabled( false ), generator( true ), numberOfUS( 0 ), maxSizeUS( 0 ), minSizeUS( 0 ), avgUS( 0 ),
             numberOfOR( 0 ), maxSizeOR( 0 ), minSizeOR( MAXUNSIGNEDINT ), avgOR( 0 ), numberOfAND( 0 ), maxSizeAND( 0 ), 
             minSizeAND( MAXUNSIGNEDINT ), avgAND( 0 ), numberOfCalling( 0 ), minTime( MAXUNSIGNEDINT ), 
-            maxTime( 0 ), avgTime( 0 ), currentTime( 0 ), numberOfPartialChecks( 0 )           
+            maxTime( 0 ), avgTime( 0 ), currentTime( 0 ), numberOfPartialChecks( 0 ), partialCheckWithUS( 0 )
             {
             }
 
@@ -268,8 +268,10 @@ class Solver;
                     maxTime = c;
             }
             
-            inline void foundUS( unsigned int size )
+            inline void foundUS( bool isPartial, unsigned int size )
             {
+                if( isPartial )
+                    partialCheckWithUS++;
                 numberOfUS++;
                 avgUS += size;
                 
@@ -378,11 +380,10 @@ class Solver;
             time_t currentTime;
             
             unsigned int numberOfPartialChecks;
+            unsigned int partialCheckWithUS;
             
             void printStatistics()
             {
-                if( generator )
-                    cout << "SONO QUI " << generator << endl;
                 if( disabled )
                     return;
                 cerr << separator << endl;
@@ -455,8 +456,9 @@ class Solver;
                 cerr << "       Sum Time(s)             : " << avgTime << endl;
                 cerr << "       Min Time(s)             : " << minTime << endl;
                 cerr << "       Max Time(s)             : " << maxTime << endl;
-                cerr << "       Avg Time(s)             : " << ( numberOfCalling == 0 ? -1 : avgTime / numberOfCalling ) << endl;
-                cerr << "       Partial checks          : " << numberOfPartialChecks << endl;
+                cerr << "       Avg Time(s)             : " << ( numberOfCalling == 0 ? -1 : avgTime / numberOfCalling ) << endl;                
+                cerr << "       Partial checks          : " << numberOfPartialChecks << "(" << ( numberOfCalling == 0 ? -1 : ( ( double ) numberOfPartialChecks / ( double ) numberOfCalling ) * 100 ) << "% of total)" << endl;
+                cerr << "           Found USs           : " << partialCheckWithUS << "(" << ( numberOfPartialChecks == 0 ? -1 : ( ( double ) partialCheckWithUS / ( double ) numberOfPartialChecks ) * 100 ) << "% of total)" << endl;
                 cerr << "UnfoundedSets                  : " << endl;
                 cerr << "       Min Size                : " << minSizeUS << endl;
                 cerr << "       Max Size                : " << maxSizeUS << endl;

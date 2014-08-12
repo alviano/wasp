@@ -315,6 +315,7 @@ Solver::solvePropagators(
             conflict:;
             if( conflictDetected() )
             {
+                learnedFromConflicts++;
                 trace( solving, 1, "Conflict detected.\n" );                
                 if( getCurrentDecisionLevel() == 0 )
                 {
@@ -336,9 +337,12 @@ Solver::solvePropagators(
         postPropagationLabel:;
         if( afterConflictPropagator != NULL )
         {
-            postPropagators.push_back( afterConflictPropagator );
-            HCComponent* comp = dynamic_cast< HCComponent* >( afterConflictPropagator );
-            comp->setHasToTestModel( true );
+            if( partialChecks )
+            {
+                postPropagators.push_back( afterConflictPropagator );
+                HCComponent* comp = dynamic_cast< HCComponent* >( afterConflictPropagator );
+                comp->setHasToTestModel( true );
+            }
             afterConflictPropagator = NULL;
         }
         
@@ -353,6 +357,10 @@ Solver::solvePropagators(
             }
             else
             {
+                if( learnedFromPropagators > ( learnedFromConflicts * 0.5 ) )
+                    partialChecks = false;
+                else
+                    partialChecks = true;
                 unsigned int size = clauseToPropagate->size();               
                 statistics( this, onLearningFromPropagators( size ) );                
                 if( size == 0 )

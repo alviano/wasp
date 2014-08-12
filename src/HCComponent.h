@@ -115,7 +115,7 @@ class HCComponent : public PostPropagator
             assert( l.getVariable() < checkerToGeneratorId.size() );
             assert( checkerToGeneratorId[ l.getVariable() ] > 0 );
             return Literal( checkerToGeneratorId[ l.getVariable() ], NEGATIVE );           
-        }
+        }        
 };
 
 #endif

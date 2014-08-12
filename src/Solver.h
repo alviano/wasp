@@ -361,6 +361,9 @@ class Solver
         
         inline void printInterpretation() const { variables.printInterpretation(); }
         inline void setHCComponentForChecker( HCComponent* hc ) { assert( hcComponentForChecker == NULL ); hcComponentForChecker = hc; }
+        
+        inline void onLearningALoopFormulaFromModelChecker() { learnedFromPropagators++; }
+        inline void onLearningALoopFormulaFromGus() { learnedFromConflicts++; }
 
     private:
         HCComponent* hcComponentForChecker;
@@ -430,7 +433,7 @@ class Solver
         
         bool glucoseHeuristic_;
         uint64_t conflicts;
-        uint64_t conflictsRestarts;
+        uint64_t conflictsRestarts;                
 
         struct OptimizationLiteralData
         {
@@ -530,7 +533,10 @@ class Solver
         vector< Component* > cyclicComponents;
         vector< HCComponent* > hcComponents;
         
-        unsigned int numberOfAssumptions;        
+        unsigned int numberOfAssumptions;
+        unsigned int learnedFromPropagators;
+        unsigned int learnedFromConflicts;
+        bool partialChecks;
         #ifndef NDEBUG
         bool checkStatusBeforePropagation( Var variable )
         {
@@ -568,7 +574,10 @@ Solver::Solver()
     glucoseHeuristic_( true ),
     conflicts( 0 ),
     conflictsRestarts( 0 ),
-    numberOfAssumptions( 0 )
+    numberOfAssumptions( 0 ),
+    learnedFromPropagators( 0 ),
+    learnedFromConflicts( 0 ),
+    partialChecks( true )
 {
     dependencyGraph = new DependencyGraph( *this );
     satelite = new Satelite( *this );

@@ -144,6 +144,7 @@ Component::getClauseToPropagate(
 
                 trace_msg( unfoundedset, 2, "Adding loop formula: " << *loopFormula );                
                 loopFormula->setLearned();                                
+                solver.onLearningALoopFormulaFromGus();
                 return loopFormula;
             }
         } while( solver.isFalse( variable ) && !unfoundedSet.empty() );

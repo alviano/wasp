@@ -130,7 +130,7 @@ HCComponent::testModel()
         bool result = 
         #endif
         checker.preprocessing();
-        assert( result );        
+        assert( result );
     }
 
     trace_action( modelchecker, 2,
@@ -180,7 +180,7 @@ HCComponent::testModel()
                 cerr << " " << Literal( unfoundedSet[ i ], POSITIVE );
             cerr << endl;
         } );
-        statistics( &checker, foundUS( unfoundedSet.size() ) );
+        statistics( &checker, foundUS( trail.size() != ( hcVariables.size() + externalLiterals.size() ), unfoundedSet.size() ) );
         assert( !unfoundedSet.empty() );
     }
     statistics( &checker, endCheckerInvokation( time( 0 ) ) );
@@ -206,10 +206,10 @@ HCComponent::computeAssumptions(
     {        
         Var v = hcVariables[ i ];
         if( !solver.isFalse( v ) )
-            assumptionsOR.push_back( Literal( v, NEGATIVE ) );
+            assumptionsOR.push_back( Literal( v, NEGATIVE ) );            
         else
             assumptionsAND.push_back( Literal( v, NEGATIVE ) );                
-    }
+    }        
 
     for( unsigned int i = 0; i < externalLiterals.size(); i++ )
     {
@@ -286,7 +286,8 @@ HCComponent::getClauseToPropagate(
         Clause* loopFormula = learning.learnClausesFromDisjunctiveUnfoundedSet( unfoundedSet );
         trace_msg( modelchecker, 1, "Adding loop formula: " << *loopFormula );        
         unfoundedSet.clear();        
-        solver.setAfterConflictPropagator( this );        
+        solver.setAfterConflictPropagator( this ); 
+        solver.onLearningALoopFormulaFromModelChecker();
         return loopFormula;
     }        
 }
