@@ -1192,7 +1192,10 @@ Solver::cleanAndAddLearnedClause(
         simplifyOnRestart();
     }
     else
+    {
+        clause->setLearned();
         addLearnedClause( clause );    
+    }
     return true;
 }
 

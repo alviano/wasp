@@ -57,6 +57,8 @@ class Satelite
         inline void addTrueLiteral( Literal l ) { trueLiterals.push_back( l ); }
         unsigned int cost( Var v ) const;
         
+        inline void disableVariableElimination() { enabledVariableElimination = false; }
+        
     private:
         inline void onAddingClause( Clause* clause );
         inline bool subset( const Clause* c1, const Clause* c2 );
@@ -98,12 +100,15 @@ class Satelite
         unsigned int numberOfTouched;        
         unsigned int clauseLimit; //A variable is not eliminated if it produces a resolvent with a length above this limit.
         unsigned int subsumptionLimit; //Do not check if subsumption against a clause larger than this.        
-
+        bool enabledVariableElimination;
         Heap< EliminationComparator > elim_heap;
 };
 
 Satelite::Satelite(
-    Solver& s ) : solver( s ), ok( true ), active( false ), numberOfTouched( 0 ), clauseLimit( 0 ), subsumptionLimit( 1000 ), elim_heap( EliminationComparator( *this ) )
+    Solver& s ) : solver( s ), ok( true ), active( false ), 
+                  numberOfTouched( 0 ), clauseLimit( 0 ), 
+                  subsumptionLimit( 1000 ), enabledVariableElimination( true ),
+                  elim_heap( EliminationComparator( *this ) )
 {
     touchedVariables.push_back( false );
 }

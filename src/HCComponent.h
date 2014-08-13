@@ -109,7 +109,7 @@ class HCComponent : public PostPropagator
 
         inline Literal getGeneratorLiteralFromCheckerLiteral( Literal l )
         {
-            if( l.getVariable() <= solver.numberOfVariables() )
+            if( l.getVariable() <= numberOfAtoms )
                 return l;
                         
             assert( l.getVariable() < checkerToGeneratorId.size() );

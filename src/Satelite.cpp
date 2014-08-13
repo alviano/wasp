@@ -600,7 +600,7 @@ Satelite::simplificationsMinisat2()
         while( !elim_heap.empty() )
         {
             Var v = elim_heap.removeMin();            
-            if( !solver.isUndefined( v ) || solver.hasBeenEliminated( v ) || solver.isFrozen( v ) )
+            if( !solver.isUndefined( v ) || solver.hasBeenEliminated( v ) || solver.isFrozen( v ) || !enabledVariableElimination )
                 continue;
             
             if( !eliminateVariable( v ) )

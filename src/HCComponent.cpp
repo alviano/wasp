@@ -40,6 +40,7 @@ HCComponent::HCComponent(
     checker.setGenerator( false ); 
     checker.disableStatistics();
     checker.setHCComponentForChecker( this );
+    checker.disableVariableElimination();
 }
 
 HCComponent::~HCComponent()
@@ -182,6 +183,10 @@ HCComponent::testModel()
         } );
         statistics( &checker, foundUS( trail.size() != ( hcVariables.size() + externalLiterals.size() ), unfoundedSet.size() ) );
         assert( !unfoundedSet.empty() );
+    }
+    else
+    {
+        trace_msg( modelchecker, 1, "UNSATISFIABLE: the model is stable." );    
     }
     statistics( &checker, endCheckerInvokation( time( 0 ) ) );
     
@@ -371,7 +376,7 @@ HCComponent::addLearnedClausesFromChecker(
 {
     assert( solver.exchangeClauses() );
     if( learnedClause->size() > 8 )
-        return;
+        return;        
     Clause* c = new Clause( learnedClause->size() );
     for( unsigned int i = 0; i < learnedClause->size(); i++ )
     {

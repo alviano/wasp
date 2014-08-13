@@ -364,6 +364,8 @@ class Solver
         
         inline void onLearningALoopFormulaFromModelChecker() { learnedFromPropagators++; }
         inline void onLearningALoopFormulaFromGus() { learnedFromConflicts++; }
+        
+        inline void disableVariableElimination() { assert( satelite != NULL ); satelite->disableVariableElimination(); }
 
     private:
         HCComponent* hcComponentForChecker;
@@ -1060,10 +1062,10 @@ Solver::chooseLiteral(
                 return false;
         }
     }
-    choice = minisatHeuristic->makeAChoice();
-    trace( solving, 1, "Choice: %s.\n", toString( choice ).c_str() );
+    choice = minisatHeuristic->makeAChoice();    
     
     end:;
+    trace_msg( solving, 1, "Choice: " << choice );
     setAChoice( choice );    
     statistics( this, onChoice() );    
     return true;
