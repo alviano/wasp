@@ -159,11 +159,11 @@ Options::parse(
 //                { "heuristic-berkmin", optional_argument, NULL, OPTIONID_berkminheuristic },
 //                { "heuristic-berkmin-cache", optional_argument, NULL, OPTIONID_berkminheuristiccache },
 //                { "heuristic-firstundefined", no_argument, NULL, OPTIONID_fuheuristic },
-//                { "heuristic-minisat", no_argument, NULL, OPTIONID_minisatheuristic },
+                { "heuristic-minisat", no_argument, NULL, OPTIONID_minisatheuristic },
                 
                 /* RESTART OPTIONS */                
 //                { "geometric-restarts", optional_argument, NULL, OPTIONID_geometric_restarts },
-                { "minisat-restarts", optional_argument, NULL, OPTIONID_minisat_restarts },
+//                { "minisat-restarts", optional_argument, NULL, OPTIONID_minisat_restarts },
 //                { "disable-restarts", no_argument, NULL, OPTIONID_disable_restarts },
 //                { "sequence-based-restarts", optional_argument, NULL, OPTIONID_sequence_based_restarts },
                 

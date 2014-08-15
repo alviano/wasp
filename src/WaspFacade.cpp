@@ -160,9 +160,9 @@ WaspFacade::setDecisionPolicy(
 //            heuristic->setDecisionStrategy( new FirstUndefinedHeuristic( solver ) );
 //            break;
 //            
-//        case HEURISTIC_MINISAT:
-//            heuristic->setDecisionStrategy( new MinisatHeuristic( solver ) );
-//            break;
+        case HEURISTIC_MINISAT:
+            solver.setMinisatHeuristic();
+            break;
 //    
 //        default:
 //            heuristic->setDecisionStrategy( new BerkminHeuristic( solver, 512 ) );

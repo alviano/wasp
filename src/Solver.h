@@ -367,6 +367,7 @@ class Solver
         
         inline void disableVariableElimination() { assert( satelite != NULL ); satelite->disableVariableElimination(); }
 
+        inline void setMinisatHeuristic() { glucoseHeuristic_ = false; }
     private:
         HCComponent* hcComponentForChecker;
         PostPropagator* afterConflictPropagator;

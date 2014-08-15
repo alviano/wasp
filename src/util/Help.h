@@ -47,10 +47,10 @@ class Help
             cout << separator << endl;
             #endif
 
-            cout << "Restart options                       " << endl << endl;
+//            cout << "Restart options                       " << endl << endl;
 //            cout << "--sequence-based-restarts=<N>          - Luby et al. sequence using N as number of conflicts." << endl;
 //            cout << "--geometric-restarts=<N>               - Geometric restarts." << endl;
-            cout << "--minisat-restarts=<N>                 - Minisat restarts." << endl;
+//            cout << "--minisat-restarts=<N>                 - Minisat restarts." << endl;
 //            cout << "--disable-restarts                     - Disable restarts." << endl;
 //            cout << separator << endl;
 //            
@@ -68,13 +68,16 @@ class Help
             cout << "--competition-output                   - Print models according to the fourth competition output." << endl;
             cout << separator << endl;
 
-//            cout << "Heuristics options                     " << endl << endl;
+            cout << "Heuristics options                     " << endl << endl;
 //            cout << "--heuristic-berkmin                    - Berkmin-like heuristic with look ahead for choosing polarity." << endl;
 //            cout << "--heuristic-berkmin-cache              - Berkmin-like heuristic with cache for choosing polarity." << endl;
 //            cout << "--heuristic-firstundefined             - Choose always the first undefined literal." << endl;
-//            cout << "--heuristic-minisat                    - Enable minisat heuristic." << endl;
-//            cout << separator << endl;
+            cout << "--heuristic-minisat                    - Enable minisat heuristic." << endl;
+            cout << separator << endl;
 
+            cout << "Model Checker options                     " << endl << endl;
+            cout << "--exchange-clauses                     - Exchange clauses from checker to generator." << endl;
+            
             cout << "General options                     " << endl << endl;
             cout << "--dimacs                               - Enable dimacs format as input and outputs." << endl;
             cout << "--help                                 - Print this guide and exit." << endl;
