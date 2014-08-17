@@ -1354,7 +1354,7 @@ Solver::preprocessing()
         return false;
     }    
 
-    statistics( this, beforePreprocessing( numberOfVariables() - numberOfAssignedLiterals(), numberOfClauses() ) );
+    statistics( this, beforePreprocessing( numberOfVariables(), numberOfAssignedLiterals(), numberOfClauses() ) );
     assert( satelite != NULL );
     assert( checkVariablesState() );    
     if( callSimplifications() && !satelite->simplify() )
@@ -1371,7 +1371,7 @@ Solver::preprocessing()
     deletionCounters.learnedSizeAdjustConfl = deletionCounters.learnedSizeAdjustStartConfl;
     deletionCounters.learnedSizeAdjustCnt = ( unsigned int ) deletionCounters.learnedSizeAdjustConfl;
     
-    statistics( this, afterPreprocessing( numberOfVariables() - numberOfAssignedLiterals(), numberOfClauses() ) );
+    statistics( this, afterPreprocessing( numberOfAssignedLiterals(), numberOfClauses() ) );
 
     return true;
 }

@@ -51,10 +51,11 @@ class Solver;
             numberOfLearnedUnaryClausesFromPropagators( 0 ),numberOfLearnedBinaryClausesFromPropagators( 0 ),
             numberOfLearnedTernaryClausesFromPropagators( 0 ), sumOfSizeLearnedClausesFromPropagators( 0 ),
             minLearnedSizeFromPropagators( MAXUNSIGNEDINT ), maxLearnedSizeFromPropagators( 0 ), removedComponents( 0 ),
-            disabled( false ), generator( true ), numberOfUS( 0 ), maxSizeUS( 0 ), minSizeUS( 0 ), avgUS( 0 ),
+            disabled( false ), generator( true ), numberOfUS( 0 ), maxSizeUS( 0 ), minSizeUS( MAXUNSIGNEDINT ), avgUS( 0 ),
             numberOfOR( 0 ), maxSizeOR( 0 ), minSizeOR( MAXUNSIGNEDINT ), avgOR( 0 ), numberOfAND( 0 ), maxSizeAND( 0 ), 
             minSizeAND( MAXUNSIGNEDINT ), avgAND( 0 ), numberOfCalling( 0 ), minTime( MAXUNSIGNEDINT ), 
-            maxTime( 0 ), avgTime( 0 ), currentTime( 0 ), numberOfPartialChecks( 0 ), partialCheckWithUS( 0 )
+            maxTime( 0 ), avgTime( 0 ), currentTime( 0 ), numberOfPartialChecks( 0 ), partialCheckWithUS( 0 ),
+            clausesAfterSimplifications( 0 ), variablesAfterSimplifications( 0 ), numberOfVars( 0 )
             {
             }
 
@@ -157,10 +158,12 @@ class Solver;
 
             inline void afterPreprocessing( unsigned int vars, unsigned int clauses )
             {
+                clausesAfterSimplifications = clauses;
+                variablesAfterSimplifications = vars;                
                 if( disabled )
                     return;
-                cerr << "Clauses after satelite         : " << clauses << endl;
-                cerr << "Variables after satelite       : " << vars << endl;
+                cerr << "Clauses after satelite         : " << clauses << " (original number was: " << ( numberOfClauses - numberOfBinaryClauses ) << ")" << endl;
+                cerr << "Assigned vars after satelite   : " << vars << endl;
                 
                 cerr << separator << endl;
                 cerr << "Tight                          : " << ( ( cyclicHCComponents.size() + cyclicComponents.size() ) > removedComponents ? "no" : "yes" ) << endl;
@@ -186,8 +189,9 @@ class Solver;
                 cerr << separator << endl;                
             }
 
-            inline void beforePreprocessing( unsigned int vars, unsigned int clauses )
+            inline void beforePreprocessing( unsigned int vars, unsigned int assignedVars, unsigned int clauses )
             {
+                numberOfVars = vars;
                 if( disabled )
                     return;
                 cerr << "Clauses after first propagation: " << clauses << endl;
@@ -195,6 +199,7 @@ class Solver;
                 cerr << "   Binary                      : " << numberOfBinaryClauses << " (" << ( ( double ) numberOfBinaryClauses * 100 / ( double )numberOfClauses ) << "%)" << endl;
                 cerr << "   Ternary                     : " << numberOfTernaryClauses << " (" << ( double )( numberOfTernaryClauses * 100 / ( double ) numberOfClauses ) << "%)" << endl;
                 cerr << "Variables                      : " << vars << endl;
+                cerr << "   Assigned                    : " << assignedVars << endl;
                 
                 cerr << separator << endl;
             }
@@ -381,6 +386,9 @@ class Solver;
             
             unsigned int numberOfPartialChecks;
             unsigned int partialCheckWithUS;
+            unsigned int clausesAfterSimplifications;
+            unsigned int variablesAfterSimplifications;
+            unsigned int numberOfVars;
             
             void printStatistics()
             {
@@ -447,7 +455,11 @@ class Solver;
                 
                 cerr << "Checker Number of Clauses      : " << numberOfClauses << endl;
                 cerr << "   Binary                      : " << numberOfBinaryClauses << " (" << ( ( double ) numberOfBinaryClauses * 100 / ( double )numberOfClauses ) << "%)" << endl;
-                cerr << "   Ternary                     : " << numberOfTernaryClauses << " (" << ( double )( numberOfTernaryClauses * 100 / ( double ) numberOfClauses ) << "%)" << endl;
+                cerr << "   Ternary                     : " << numberOfTernaryClauses << " (" << ( double )( numberOfTernaryClauses * 100 / ( double ) numberOfClauses ) << "%)" << endl;                                
+                cerr << "Clauses After Satelite         : " << clausesAfterSimplifications << " (original number was: " << ( numberOfClauses - numberOfBinaryClauses ) << ")" << endl;
+                
+                cerr << "Checker Number of Variables    : " << numberOfVars << endl;
+                cerr << "   Assigned after satelite     : " << variablesAfterSimplifications << endl;
                 
                 printStatistics();                
                 cerr << separator << endl;
