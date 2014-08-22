@@ -112,6 +112,7 @@ Solver::initFrom(
     assert( this->restart == NULL );    
     this->restart = solver.restart->clone();
     this->exchangeClauses_ = solver.exchangeClauses_;
+    this->glucoseHeuristic_ = solver.glucoseHeuristic_;
 }
 
 void
