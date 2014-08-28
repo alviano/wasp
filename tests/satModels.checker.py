@@ -26,11 +26,11 @@ def checker(actualOutput, actualError):
     global output
     
     if actualError:
-        reportFailure(expectedModels, actualError)
+        reportFailure(output, actualError)
         return
 
     if not actualOutput:
-        reportFailure(expectedModels, "No output stream!")
+        reportFailure(output, "No output stream!")
         return
             
     models = decodeModels(actualOutput)
