@@ -13,6 +13,15 @@ def decodeModels(string):
     
 def checker(actualOutput, actualError):
     global output
+
+    if actualError:
+        reportFailure(expectedModels, actualError)
+        return
+
+    if not actualOutput:
+        reportFailure(expectedModels, "No output stream!")
+        return
+    
     expectedModels = decodeModels(output)
     actualModels = decodeModels(actualOutput)
     #print(expectedModels)

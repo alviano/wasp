@@ -26,9 +26,13 @@ def checker(actualOutput, actualError):
     global output
     
     if actualError:
-        reportFailure(output, actualError)
+        reportFailure(expectedModels, actualError)
         return
-        
+
+    if not actualOutput:
+        reportFailure(expectedModels, "No output stream!")
+        return
+            
     models = decodeModels(actualOutput)
     if output.strip().lower() == "sat":
         if len(models) == 0:
