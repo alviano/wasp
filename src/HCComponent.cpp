@@ -219,28 +219,32 @@ HCComponent::computeAssumptions(
     for( unsigned int i = 0; i < externalLiterals.size(); i++ )
     {
         Literal lit = externalLiterals[ i ];
-        Var v = lit.getVariable();        
-        if( solver.isTrue( v ) )
-        {
-            assumptionsAND.push_back( Literal( getCheckerTrueVar( v ), POSITIVE ) );            
-            Var checkerVar = getCheckerFalseVar( v );
-            if( checkerVar != UINT_MAX )
-                assumptionsAND.push_back( Literal( checkerVar, NEGATIVE ) );            
-        }
-        else if( solver.isFalse( v ) )
-        {
-            assumptionsAND.push_back( Literal( getCheckerTrueVar( v ), NEGATIVE ) );
-            Var checkerVar = getCheckerFalseVar( v );
-            if( checkerVar != UINT_MAX )
-                assumptionsAND.push_back( Literal( checkerVar, POSITIVE ) );            
-        }
-        else
-        {
-            assumptionsAND.push_back( Literal( getCheckerTrueVar( v ), NEGATIVE ) );
-            Var checkerVar = getCheckerFalseVar( v );
-            if( checkerVar != UINT_MAX )
-                assumptionsAND.push_back( Literal( checkerVar, NEGATIVE ) );
-        }
+        assert( getCheckerVarFromExternalLiteral( lit ) != UINT_MAX );        
+        assumptionsAND.push_back( Literal( getCheckerVarFromExternalLiteral( lit ), solver.isTrue( lit ) ? POSITIVE : NEGATIVE ) );
+        
+//        Literal lit = externalLiterals[ i ];
+//        Var v = lit.getVariable();        
+//        if( solver.isTrue( v ) )
+//        {
+//            assumptionsAND.push_back( Literal( getCheckerTrueVar( v ), POSITIVE ) );            
+//            Var checkerVar = getCheckerFalseVar( v );
+//            if( checkerVar != UINT_MAX )
+//                assumptionsAND.push_back( Literal( checkerVar, NEGATIVE ) );            
+//        }
+//        else if( solver.isFalse( v ) )
+//        {
+//            assumptionsAND.push_back( Literal( getCheckerTrueVar( v ), NEGATIVE ) );
+//            Var checkerVar = getCheckerFalseVar( v );
+//            if( checkerVar != UINT_MAX )
+//                assumptionsAND.push_back( Literal( checkerVar, POSITIVE ) );            
+//        }
+//        else
+//        {
+//            assumptionsAND.push_back( Literal( getCheckerTrueVar( v ), NEGATIVE ) );
+//            Var checkerVar = getCheckerFalseVar( v );
+//            if( checkerVar != UINT_MAX )
+//                assumptionsAND.push_back( Literal( checkerVar, NEGATIVE ) );
+//        }
     }
 
     statistics( &checker, assumptionsAND( assumptionsAND.size() ) );

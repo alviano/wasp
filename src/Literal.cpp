@@ -31,32 +31,14 @@ operator<<(
     const Literal& lit )
 {
     if( !lit.isPositive() )
-        out << "not ";
+        out << "~";
 
     if( !VariableNames::isHidden( lit.getVariable() ) )
-    {
         out << VariableNames::getName( lit.getVariable() );
-    }
     #ifdef TRACE_ON
     else
-    {
         out << lit.getVariable();
-    }
     #endif
     
     return out;
 }
-
-//void
-//Literal::supportPropagation(
-//    Solver& solver )
-//{
-//    if( isTrue() )
-//    {
-//        for( unsigned int i = 0; i < allWaspRules.size(); i++ )
-//        {
-//            WaspRule* waspRule = allWaspRules[ i ];
-//            waspRule->onLiteralTrue( this, solver );
-//        }
-//    }
-//}
