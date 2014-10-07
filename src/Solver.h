@@ -400,7 +400,7 @@ class Solver
         inline Aggregate* createAggregate( const vector< Literal >& literals, const vector< unsigned int >& weights );
         
         inline bool isWeighted() const { return weighted_; }
-        inline void setWeighted() { weighted_ = true; }
+        inline void setWeighted() { weighted_ = true; }                
         
     private:
         HCComponent* hcComponentForChecker;
@@ -458,6 +458,10 @@ class Solver
 
         DependencyGraph* dependencyGraph;
         Vector< PostPropagator* > postPropagators;
+        Vector< Propagator* > propagatorsForUnroll;
+        Vector< unsigned > fromLevelToPropagators;
+        
+        inline void addInPropagatorsForUnroll( Propagator* prop );
         
         vector< GUSData* > gusDataVector;
         vector< Aggregate* > aggregates;
@@ -624,6 +628,7 @@ Solver::Solver()
     VariableNames::addVariable();
     variableDataStructures.push_back( NULL );
     variableDataStructures.push_back( NULL );
+    fromLevelToPropagators.push_back( 0 );
 }
 
 bool
@@ -2210,6 +2215,22 @@ Solver::createAggregate(
         aggregate->addLiteral( literals[ i ], weights[ i ] );    
     
     return aggregate;
+}
+
+void
+Solver::addInPropagatorsForUnroll(
+    Propagator* prop )
+{
+    assert( prop != NULL );
+    unsigned int dl = getCurrentDecisionLevel();
+    while( fromLevelToPropagators.size() <= dl )
+        fromLevelToPropagators.push_back( propagatorsForUnroll.size() );
+        
+    if( !prop->isInVectorOfUnroll( dl ) )
+    {
+        propagatorsForUnroll.push_back( prop );
+        prop->setInVectorOfUnroll( dl );
+    }
 }
 
 #endif

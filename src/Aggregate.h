@@ -43,7 +43,7 @@ class Aggregate : public Propagator, public Reason
         inline Aggregate();
         inline ~Aggregate() {}
         
-        virtual void onLiteralFalse( Solver& solver, Literal lit, int pos );
+        virtual bool onLiteralFalse( Solver& solver, Literal lit, int pos );
         
         inline unsigned int size() const { return literals.size() - 1; }
 

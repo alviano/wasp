@@ -124,7 +124,7 @@ Solver::unroll(
     assert_msg( currentDecisionLevel >= level, "Level " << level << " is greater than current decision level " << currentDecisionLevel );
     assert( "Vector for unroll is inconsistent" && variables.numberOfAssignedLiterals() >= unrollVector[ level ] );    
     unsigned int toUnroll = variables.numberOfAssignedLiterals() - unrollVector[ level ];
-    unsigned int toPop = currentDecisionLevel - level;
+    unsigned int toPop = currentDecisionLevel - level;    
     
     currentDecisionLevel = level;
     
@@ -142,18 +142,31 @@ Solver::unroll(
     
     variables.onUnroll();
     
-    for( unsigned int i = 0; i < aggregates.size(); i++ )
+//    for( unsigned int i = 0; i < aggregates.size(); i++ )
+//    {
+//        aggregates[ i ]->reset( *this );
+//    }
+        
+    while( fromLevelToPropagators.size() - 1 > level )
     {
-        aggregates[ i ]->reset( *this );
-    }
+        unsigned int oldSize = fromLevelToPropagators.back();
+        while( propagatorsForUnroll.size() > oldSize )
+        {
+            Propagator* prop = propagatorsForUnroll.back();
+            prop->reset( *this );
+            propagatorsForUnroll.pop_back();
+            prop->setInVectorOfUnroll( UINT_MAX );
+        }
+        fromLevelToPropagators.pop_back();
+    }    
     
     for( unsigned int i = 0; i < hcComponents.size(); i++ )
         hcComponents[ i ]->reset();
     
-    if( optimizationAggregate != NULL )
-    {
-        optimizationAggregate->reset( *this );
-    }
+//    if( optimizationAggregate != NULL )
+//    {
+//        optimizationAggregate->reset( *this );
+//    }
 }
 
 bool
@@ -507,7 +520,9 @@ Solver::propagation(
             break;
         Propagator* propagator = wl[ i ].first;
         assert( "Post propagator is null." && propagator != NULL );
-        propagator->onLiteralFalse( *this, complement, wl[ i ].second );        
+        bool res = propagator->onLiteralFalse( *this, complement, wl[ i ].second );        
+        if( res )
+            addInPropagatorsForUnroll( propagator );
     }
 }
 

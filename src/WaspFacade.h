@@ -119,7 +119,8 @@ WaspFacade::solveWithWeakConstraints()
 
         case OPT:
             algorithmOpt();
-            
+            break;
+
         case MGDOLL:    
         default:
             algorithmMgdOll();

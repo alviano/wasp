@@ -21,16 +21,37 @@
 
 class Literal;
 class Solver;
+#include "util/Constants.h"
 
 class Propagator
 {
     public:
-        inline Propagator(){}
+        inline Propagator() : inVectorOfUnroll( UINT_MAX ) {}
         virtual ~Propagator(){}
 
-        virtual void onLiteralFalse( Solver& solver, Literal literal, int pos ) = 0;
+        virtual bool onLiteralFalse( Solver& solver, Literal literal, int pos ) = 0;
         virtual void reset( const Solver& solver ) = 0;
+        
+        inline bool isInVectorOfUnroll( unsigned int dl ) const;
+        inline void setInVectorOfUnroll( unsigned int dl );
+
+    private:
+        unsigned int inVectorOfUnroll;
 };
+
+bool
+Propagator::isInVectorOfUnroll(
+    unsigned int dl ) const
+{
+    return inVectorOfUnroll == dl;
+}
+
+void
+Propagator::setInVectorOfUnroll(
+    unsigned int dl )
+{
+    inVectorOfUnroll = dl;
+}
 
 #endif
 

@@ -60,7 +60,7 @@ Aggregate::reset(
     } while( solver.isUndefined( literals[ pos ] ) || solver.getDecisionLevel( literals[ pos ] ) == 0 );
 }
 
-void
+bool
 Aggregate::onLiteralFalse(
     Solver& solver,
     Literal currentLiteral,
@@ -75,7 +75,7 @@ Aggregate::onLiteralFalse(
     if( solver.isTrue( aggrLiteral ) || active + ac == 0 )
     {        
         trace_msg( aggregates, 2, "Return. AggrLiteral: " << aggrLiteral << " - Active: " << active << " - Ac: " << ac );
-        return;
+        return false;
     }
     
     unsigned int index = ( position > 0 ? position : -position ); 
@@ -88,7 +88,7 @@ Aggregate::onLiteralFalse(
         assert_msg( solver.getDecisionLevel( currentLiteral ) == 0, "Literal " << currentLiteral << " in " << *this << " has a decision level " << solver.getDecisionLevel( currentLiteral ) );
         trace_msg( aggregates, 3, "A conflict happened." );        
         solver.assignLiteral( currentLiteral, this );
-        return;
+        return false;
     }
     assert( counter >= weights[ index ] );
     counter -= weights[ index ];
@@ -115,7 +115,7 @@ Aggregate::onLiteralFalse(
 //                createClauseFromTrail( lit );
                 solver.assignLiteral( lit, this );
                 if( solver.conflictDetected() )
-                    return;
+                    return true;
             }
             else
             {
@@ -126,6 +126,8 @@ Aggregate::onLiteralFalse(
         ++umax;
         trace_msg( aggregates, 3, "Updated umax. New Value: " << umax );        
     }
+    
+    return true;
 }
 
 #ifndef NDEBUG
