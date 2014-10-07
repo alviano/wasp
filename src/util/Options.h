@@ -70,6 +70,8 @@ namespace wasp
             static unsigned int timeLimit;
             
             static bool exchangeClauses;
+            
+            static WEAK_CONSTRAINTS_ALG weakConstraintsAlg;
     };
 }
 

@@ -20,11 +20,29 @@
 #define WASPFACADE_H
 
 #include <cassert>
+#include <vector>
+#include <unordered_map>
 using namespace std;
 
 #include "util/Constants.h"
 #include "Solver.h"
 #include "input/Dimacs.h"
+
+struct OllData
+{
+    unsigned int bound_;
+    unsigned int guardId_;
+    vector< Literal > literals_;
+    vector< unsigned int > weights_;
+
+    void addElement( unsigned int bound, unsigned int guard, vector< Literal >& literals, vector< unsigned int >& weights )
+    {
+        bound_ = bound;
+        guardId_ = guard;
+        literals_.swap( literals );
+        weights_.swap( weights );
+    }
+};
 
 class WaspFacade
 {
@@ -47,19 +65,111 @@ class WaspFacade
         inline void setPrintDimacs( bool printDimacs ) { this->printDimacs = printDimacs; }
         void setExchangeClauses( bool exchangeClauses ) { solver.setExchangeClauses( exchangeClauses ); }
         
+        inline void setWeakConstraintsAlgorithm( WEAK_CONSTRAINTS_ALG alg ) { weakConstraintsAlg = alg; }
+        
+        inline void solveWithWeakConstraints();        
+        
     private:
         Solver solver;        
         
-        inline void algorithmOpt();
+        void algorithmOpt();
+        void algorithmMgd();
+        void algorithmOll();
+        inline void algorithmMgdOll() { solver.isWeighted() ? algorithmMgd() : algorithmOll(); }
         
         unsigned int numberOfModels;
         unsigned int maxModels;
         bool printProgram;
         bool printDimacs;
+
+        WEAK_CONSTRAINTS_ALG weakConstraintsAlg;
+        
+        bool createFalseAggregate( const vector< Literal >& literals, const vector< unsigned int >& weights, unsigned int bound );
+        Aggregate* createAggregate( Var aggrId, const vector< Literal >& literals, const vector< unsigned int >& weights );
+        bool processAndAddAggregate( Aggregate* aggregate, unsigned int bound );
+        
+        inline void computeAssumptionsAND( vector< Literal >& assumptionsAND );
+        void processCoreOll( const vector< unsigned int >& inUnsatCore, unsigned int numberOfCalls, vector< Literal >& literals, vector< unsigned int >& weights, unsigned int minWeight );
+        bool addAggregateOll( vector< unsigned int >& inUnsatCore, unordered_map< Var, OllData* >& guardMap, vector< Literal >& literals, vector< unsigned int >& weights, unsigned int bound );
+        unsigned int computeMinWeight( const vector< unsigned int >& inUnsatCore, unsigned int numberOfCalls );
+        inline Var addAuxVariable( vector< unsigned int >& inUnsatCore );
+        inline Var addBinaryClauseForAggregateOll( vector< unsigned int >& inUnsatCore, Var aggrId );                
 };
 
-WaspFacade::WaspFacade() : numberOfModels( 0 ), maxModels( 1 ), printProgram( false ), printDimacs( false )
+WaspFacade::WaspFacade() : numberOfModels( 0 ), maxModels( 1 ), printProgram( false ), printDimacs( false ), weakConstraintsAlg( OPT )
 {    
-}       
+}
+
+void
+WaspFacade::solveWithWeakConstraints()
+{
+    switch( weakConstraintsAlg )
+    {
+        case BCD:
+            assert( 0 );
+            break;
+            
+        case OLL:
+            algorithmOll();
+            break;
+            
+        case MGD:
+            algorithmMgd();
+            break;
+
+        case OPT:
+            algorithmOpt();
+            
+        case MGDOLL:    
+        default:
+            algorithmMgdOll();
+            break;            
+    }
+}
+
+void
+WaspFacade::computeAssumptionsAND(
+    vector< Literal >& assumptionsAND )
+{    
+    for( unsigned int i = 0; i < solver.numberOfOptimizationLiterals(); i++ )
+    {
+        if( solver.getOptimizationLiteral( i ).isRemoved() )
+            continue;
+        assumptionsAND.push_back( solver.getOptimizationLiteral( i ).lit.getOppositeLiteral() );
+    }
+    trace_action( weakconstraints, 2, 
+    {
+        trace_tag( cerr, weakconstraints, 2 );
+        cerr << "AssumptionsAND: [";
+        for( unsigned int i = 0; i < assumptionsAND.size(); i++ )
+            cerr << " " << assumptionsAND[ i ];
+        cerr << " ]" << endl;
+    });
+}
+
+Var
+WaspFacade::addAuxVariable(
+    vector< unsigned int >& inUnsatCore )
+{
+    solver.addVariableRuntime();
+    inUnsatCore.push_back( 0 );
+    return solver.numberOfVariables();        
+}
+
+Var
+WaspFacade::addBinaryClauseForAggregateOll(
+    vector< unsigned int >& inUnsatCore,
+    Var aggrId )
+{    
+    Literal lit( addAuxVariable( inUnsatCore ), POSITIVE );
+    solver.addOptimizationLiteral( lit, 1, UINT_MAX, true );    
+    solver.addClause( lit, Literal( aggrId, NEGATIVE ) );
+    
+    assert( !solver.isFalse( aggrId ) );
+    if( solver.isTrue( aggrId ) )
+        solver.addClause( lit );
+    
+    return lit.getVariable();
+}
 
 #endif

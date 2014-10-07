@@ -41,6 +41,8 @@ struct VariableData
     ReasonForBinaryClauses* reasonForBinaryClauses;
     
     unsigned int decisionLevel : 29;
+    unsigned int isAssumptionAND : 1;
+    unsigned int isAssumptionOR : 1;
     unsigned int frozen : 1;
     unsigned int signOfEliminatedVariable : 2;
 };
@@ -135,6 +137,11 @@ class Variables
         inline void setFrozen( Var v ) { variablesData[ v ].frozen = 1; }
         inline void printInterpretation() const;
         
+        inline void setAssumptionAND( Var v, bool isAssumption ) { variablesData[ v ].isAssumptionAND = isAssumption ? 1 : 0; }
+        inline void setAssumptionOR( Var v, bool isAssumption ) { variablesData[ v ].isAssumptionOR = isAssumption ? 1 : 0; }
+        inline bool isAssumptionAND( Var v ) const { return variablesData[ v ].isAssumptionAND; }
+        inline bool isAssumptionOR( Var v ) const { return variablesData[ v ].isAssumptionOR; }
+        
     private:
         vector< Var > assignedVariables;
         Vector< TruthValue > assigns;
@@ -158,7 +165,7 @@ Variables::Variables()
     numOfVariables( 1 )
 {  
     assigns.push_back( UNDEFINED );
-    variablesData.push_back( VariableData() );
+    variablesData.push_back( VariableData() );    
 }
 
 Variables::~Variables()
@@ -184,6 +191,8 @@ Variables::push_back()
     vd.component = NULL;
     vd.signOfEliminatedVariable = NOT_ELIMINATED;
     vd.frozen = 0;
+    vd.isAssumptionAND = 0;
+    vd.isAssumptionOR = 0;
     vd.reasonForBinaryClauses = new ReasonForBinaryClauses( variablesData.size() - 1 );
     
     assigns.push_back( UNDEFINED );

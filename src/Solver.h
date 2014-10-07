@@ -51,7 +51,20 @@ struct DataStructures
     Vector< Clause* > variableAllOccurrences;
     Vector< PostPropagator* > variablePostPropagators;
     Vector< pair< Propagator*, int > > variablePropagators;
-    Vector< Literal > variableBinaryClauses;
+    Vector< Literal > variableBinaryClauses;    
+};
+
+struct OptimizationLiteralData
+{
+    Literal lit;
+    unsigned int weight;
+    unsigned int level : 30;
+    unsigned int removed : 1;
+    unsigned int aux : 1;
+
+    void remove() { removed = 1; }
+    bool isRemoved() { return removed; }    
+    bool isAux() { return aux; }
 };
 
 class Solver
@@ -80,7 +93,8 @@ class Solver
         inline void clearVariableOccurrences();
         
 //        inline void addVariable( const string& name );
-        inline void addVariable();        
+        inline void addVariable();
+        inline void addVariableRuntime();
         
         inline bool cleanAndAddClause( Clause* clause );
         inline bool addClause( Literal literal );
@@ -222,7 +236,7 @@ class Solver
         inline bool callSimplifications() const { return callSimplifications_; }
         
         inline void setOptimizationAggregate( Aggregate* optAggregate ) { assert( optAggregate != NULL ); optimizationAggregate = optAggregate; }
-        inline void addOptimizationLiteral( Literal lit, unsigned int weight, unsigned int level );
+        inline void addOptimizationLiteral( Literal lit, unsigned int weight, unsigned int level, bool isAux );
         inline unsigned int computeCostOfModel();
         inline bool updateOptimizationAggregate( unsigned int modelCost );
         inline bool hasOptimizationAggregate() const { return optimizationAggregate != NULL; }
@@ -368,6 +382,26 @@ class Solver
         inline void disableVariableElimination() { assert( satelite != NULL ); satelite->disableVariableElimination(); }
 
         inline void setMinisatHeuristic() { glucoseHeuristic_ = false; }
+        
+        void clearAfterSolveUnderAssumptions( const vector< Literal >& assumptionsAND, const vector< Literal >& assumptionsOR );
+        
+        inline void setAssumptionAND( Literal lit, bool isAssumption ) { variables.setAssumptionAND( lit.getVariable(), isAssumption ); }
+        inline void setAssumptionOR( Literal lit, bool isAssumption ) { variables.setAssumptionOR( lit.getVariable(), isAssumption ); }
+        inline bool isAssumptionAND( Literal lit ) const { return variables.isAssumptionAND( lit.getVariable() ); }
+        inline bool isAssumptionOR( Literal lit ) const { return variables.isAssumptionAND( lit.getVariable() ); }
+        
+        inline void computeUnsatCore();
+        inline void setComputeUnsatCores( bool b ) { computeUnsatCores_ = b; }
+        inline const Clause* getUnsatCore() const { return unsatCore; }
+        
+        inline OptimizationLiteralData& getOptimizationLiteral( unsigned int pos ) { assert( pos < optimizationLiterals.size() ); return optimizationLiterals[ pos ]; }
+        inline unsigned int numberOfOptimizationLiterals() const { return optimizationLiterals.size(); }
+        
+        inline Aggregate* createAggregate( const vector< Literal >& literals, const vector< unsigned int >& weights );
+        
+        inline bool isWeighted() const { return weighted_; }
+        inline void setWeighted() { weighted_ = true; }
+        
     private:
         HCComponent* hcComponentForChecker;
         PostPropagator* afterConflictPropagator;
@@ -436,14 +470,7 @@ class Solver
         
         bool glucoseHeuristic_;
         uint64_t conflicts;
-        uint64_t conflictsRestarts;                
-
-        struct OptimizationLiteralData
-        {
-            Literal lit;
-            unsigned int weight;
-            unsigned int level;
-        };
+        uint64_t conflictsRestarts;                        
         
         struct DeletionCounters
         {
@@ -538,8 +565,12 @@ class Solver
         
         unsigned int numberOfAssumptions;
         unsigned int learnedFromPropagators;
-        unsigned int learnedFromConflicts;
+        unsigned int learnedFromConflicts;                
         bool partialChecks;
+        bool computeUnsatCores_;
+        Clause* unsatCore;
+        bool weighted_;
+        
         #ifndef NDEBUG
         bool checkStatusBeforePropagation( Var variable )
         {
@@ -580,7 +611,10 @@ Solver::Solver()
     numberOfAssumptions( 0 ),
     learnedFromPropagators( 0 ),
     learnedFromConflicts( 0 ),
-    partialChecks( true )
+    partialChecks( true ),
+    computeUnsatCores_( false ),
+    unsatCore( NULL ),
+    weighted_( false )
 {
     dependencyGraph = new DependencyGraph( *this );
     satelite = new Satelite( *this );
@@ -609,10 +643,18 @@ Solver::solve(
     vector< Literal >& assumptionsOR )
 {
     numberOfAssumptions = assumptionsAND.size();
-    if( !hasPropagators() )
-        return solveWithoutPropagators( assumptionsAND, assumptionsOR );
-    else
-        return solvePropagators( assumptionsAND, assumptionsOR );
+    for( unsigned int i = 0; i < assumptionsAND.size(); i++ )
+        setAssumptionAND( assumptionsAND[ i ], true );
+    
+    for( unsigned int i = 0; i < assumptionsOR.size(); i++ )
+        setAssumptionOR( assumptionsOR[ i ], true );
+    
+    bool result = ( !hasPropagators() ) ? solveWithoutPropagators( assumptionsAND, assumptionsOR ) : solvePropagators( assumptionsAND, assumptionsOR );
+    if( computeUnsatCores_ && !result && conflictLiteral != Literal::null )
+        computeUnsatCore();
+    clearAfterSolveUnderAssumptions( assumptionsAND, assumptionsOR );
+    clearConflictStatus();    
+    return result;    
 }
 
 void
@@ -652,6 +694,13 @@ void
 Solver::addVariable()
 {
     addVariableInternal();
+}
+
+void
+Solver::addVariableRuntime()
+{
+    addVariableInternal();
+    minisatHeuristic->onNewVariableRuntime( numberOfVariables() );
 }
 
 Literal
@@ -1028,7 +1077,10 @@ Solver::chooseLiteral(
                 choice = assumptionsAND[ i ];
         }
         else if( isFalse( assumptionsAND[ i ] ) )
+        {
+            conflictLiteral = assumptionsAND[ i ];
             return false;
+        }
     }
     
     if( choice != Literal::null )
@@ -1561,8 +1613,11 @@ Solver::computeCostOfModel()
     unsigned int cost = 0;
     
     for( unsigned int i = 0; i < optimizationLiterals.size(); i++ )
-    {
+    {        
         assert( optimizationLiterals[ i ].lit != Literal::null );        
+        //This is the first aux
+        if( optimizationLiterals[ i ].isAux() )
+            continue;
         if( isTrue( optimizationLiterals[ i ].lit ) )
             cost += optimizationLiterals[ i ].weight;        
     }
@@ -1599,12 +1654,15 @@ void
 Solver::addOptimizationLiteral(
     Literal lit,
     unsigned int weight,
-    unsigned int level )
+    unsigned int level,
+    bool aux )
 {
     OptimizationLiteralData opt;
     opt.lit = lit;
     opt.weight = weight;
     opt.level = level;
+    opt.removed = 0;
+    opt.aux = aux ? 1 : 0;
     optimizationLiterals.push_back( opt );
 }
 
@@ -2107,6 +2165,7 @@ Solver::modelIsValidUnderAssumptions(
         if( isFalse( assumptionsAND[ i ] ) )
         {
             trace_msg( solving, 3, "Assumptions AND not satisfied" );
+            conflictLiteral = assumptionsAND[ i ];
             return false;
         }
     }
@@ -2130,6 +2189,27 @@ Solver::modelIsValidUnderAssumptions(
     }
     trace_msg( solving, 2, "Assumptions OR not satisfied" );
     return false;
+}
+
+void
+Solver::computeUnsatCore()
+{
+    assert( conflictLiteral != Literal::null );
+    delete unsatCore;
+    unsatCore = learning.analyzeFinal( conflictLiteral );
+}
+
+Aggregate*
+Solver::createAggregate(
+    const vector< Literal >& literals,
+    const vector< unsigned int >& weights )
+{
+    assert( literals.size() == weights.size() );    
+    Aggregate* aggregate = new Aggregate();
+    for( unsigned int i = 0; i < literals.size(); i++ )
+        aggregate->addLiteral( literals[ i ], weights[ i ] );    
+    
+    return aggregate;
 }
 
 #endif

@@ -44,13 +44,15 @@ class MinisatHeuristic
 
         Literal makeAChoice();
         inline void onNewVariable( Var v );
+        inline void onNewVariableRuntime( Var v );
         inline void onLiteralInvolvedInConflict( Literal literal );
         inline void onUnrollingVariable( Var var );
         inline void variableDecayActivity(){ trace_msg( heuristic, 1, "Calling decay activity" ); variableIncrement *= variableDecay; }
         inline void addPreferredChoice( Literal lit ){ assert( lit != Literal::null ); preferredChoices.push_back( lit ); }
         void removePrefChoices();
         void simplifyVariablesAtLevelZero();
-        inline bool bumpActivity( Var var ){ return ( ( act[ var ] += variableIncrement ) > 1e100 ); }
+        inline bool bumpActivity( Var var ){ return ( ( act[ var ] += variableIncrement ) > 1e100 ); }        
+        
     private:        
         inline void rescaleActivity();        
         inline void variableBumpActivity( Var variable );
@@ -103,6 +105,13 @@ MinisatHeuristic::onNewVariable(
 {    
     act.push_back( 0.0 );
     vars.push_back( v );
+}
+
+void
+MinisatHeuristic::onNewVariableRuntime(
+    Var v )
+{
+    heap.pushNoCheck( v );
 }
 
 void 

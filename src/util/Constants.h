@@ -54,10 +54,19 @@
 #define MINISAT_RESTARTS_POLICY 2
 #define NO_RESTARTS_POLICY 3
 
+#define OPT 0
+#define MGD 1
+#define OLL 2
+#define MGDOLL 3
+#define BCD 4
+
+
+#define VERSION "2.0"
+
 /*
  * Wasp constants
  */
-#define WASP_STRING "WASP 2.0\n"
+#define WASP_STRING "WASP " VERSION "\n"
 #define NOMODEL "INCOHERENT"
 #define NOMODEL_COMPETITION_OUTPUT "INCONSISTENT"
 #define ANSWER "ANSWER"
@@ -110,6 +119,7 @@ typedef unsigned int DELETION_POLICY;
 typedef unsigned int DECISION_POLICY;
 typedef unsigned int OUTPUT_POLICY;
 typedef unsigned int RESTARTS_POLICY;
+typedef unsigned int WEAK_CONSTRAINTS_ALG;
 
 #ifdef TRACE_ON
 #include <string>

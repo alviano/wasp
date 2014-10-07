@@ -158,7 +158,7 @@ Component::getClauseToPropagate(
 void
 Component::computeGUS()
 {
-    trace_msg( unfoundedset, 1, "Starting the computation of unfounded sets for component " << id );
+    trace_msg( unfoundedset, 1, "Starting the computation of unfounded sets for component " << id << " " << *this );
     for( unsigned int i = 0; i < variablesWithoutSourcePointer.size(); )
     {
         Var variable = variablesWithoutSourcePointer[ i ];
@@ -238,7 +238,7 @@ bool
 Component::onLiteralFalse(
     Literal lit )
 {
-    trace_msg( unfoundedset, 1, "Literal " << lit << " is false" );
+    trace_msg( unfoundedset, 1, "Literal " << lit << " is false " << *this );
     return propagateFalseForGUS( lit );
 }
 
@@ -414,6 +414,19 @@ Component::onLearningForUnfounded(
             }
         }
     }    
+}
+
+bool
+Component::propagateFalseForGUS(
+    Literal lit )
+{
+    bool res1 = iterationOnSupportedByThisExternal( lit );
+    
+    bool res2 = false;
+    if( solver.getComponent( lit.getVariable() ) == this )
+        res2 = iterationOnSupportedByThisInternal( lit );
+    
+    return res1 || res2;
 }
 
 #ifndef NDEBUG

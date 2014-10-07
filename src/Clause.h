@@ -69,6 +69,7 @@ class Clause : public Reason
         
         void onLearning( const Solver& solver, Learning* strategy, Literal lit );
         bool onNavigatingLiteralForAllMarked( const Solver& solver, Learning* strategy, Literal lit );
+        void onNavigatingForUnsatCore( const Solver& solver, vector< Literal >& toVisit, Literal lit );
 //        inline bool onLiteralFalse( Solver& solver, Literal literal );
 
         inline unsigned int size() const;

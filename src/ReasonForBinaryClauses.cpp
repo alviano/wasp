@@ -49,3 +49,14 @@ ReasonForBinaryClauses::print(
 {
     return o << VariableNames::getName( varId );
 }
+
+void
+ReasonForBinaryClauses::onNavigatingForUnsatCore(
+    const Solver& solver,
+    vector< Literal >& toVisit,
+    Literal )
+{
+    Literal lit = solver.createFromAssignedVariable( varId );
+//    toVisit.push_back( lit.getOppositeLiteral() );
+    toVisit.push_back( lit );
+}

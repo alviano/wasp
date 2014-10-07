@@ -29,7 +29,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #define HEAP_H
 
 #include "Vector.h"
-
+#include "../util/Assert.h"
 #include <iostream>
 using namespace std;
 
@@ -85,7 +85,7 @@ class Heap {
 
     int size() const { return heap.size(); }
     bool empty() const { return heap.empty(); }
-    bool inHeap ( Var v ) const { return indices[ v ] != -1; }
+    bool inHeap ( Var v ) const { assert_msg( v < indices.size(), v << " >= " << indices.size() ); return indices[ v ] != -1; }
     int  operator[]( int index ) const{ assert( index < heap.size() ); return heap[ index ]; }
 
     void decrease( Var v ) { assert( inHeap( v ) ); percolateUp( indices[ v ] ); }

@@ -398,6 +398,8 @@ GringoNumericFormat::readOptimizationRule(
     while( counter < negativeSize )
     {
         input.read( tmp );
+        if( tmp > 1 )
+            solver.setWeighted();
         weightConstraintRule->addNegativeLiteralWeight( tmp );
         bound += tmp;
         ++counter;
@@ -405,6 +407,8 @@ GringoNumericFormat::readOptimizationRule(
     while( counter < size )
     {
         input.read( tmp );
+        if( tmp > 1 )
+            solver.setWeighted();
         weightConstraintRule->addPositiveLiteralWeight( tmp );
         bound += tmp;
         ++counter;
@@ -1281,7 +1285,7 @@ GringoNumericFormat::computeGusStructures()
                     NormalRule* rule = headOccs[ t ];
                     assert( rule != NULL );
                     if( !rule->isRemoved() )
-                    {
+                    {                        
                         for( unsigned int k = 0; k < rule->size(); k++ )
                         {
                             assert( rule->literals[ k ].getVariable() < atomData.size() );
@@ -1291,7 +1295,16 @@ GringoNumericFormat::computeGusStructures()
                                 {
                                     solver.setFrozen( rule->literals[ k ].getVariable() );
                                     solver.addPostPropagator( rule->literals[ k ], hcComponent );
-                                    solver.addPostPropagator( rule->literals[ k ].getOppositeLiteral(), hcComponent );                                                                
+                                    solver.addPostPropagator( rule->literals[ k ].getOppositeLiteral(), hcComponent );
+                                }
+                            }
+                            else if( rule->literals[ k ].isNegativeBodyLiteral() )
+                            {
+                                if( hcComponent->addExternalLiteralForInternalVariable( rule->literals[ k ] ) )
+                                {
+                                    solver.setFrozen( rule->literals[ k ].getVariable() );
+                                    solver.addPostPropagator( rule->literals[ k ], hcComponent );
+                                    solver.addPostPropagator( rule->literals[ k ].getOppositeLiteral(), hcComponent );
                                 }
                             }
                         }
@@ -1804,6 +1817,8 @@ GringoNumericFormat::addOptimizationRule(
     weightConstraintRule->sort();
     trace_msg( parser, 2, "Sorted weight constraint rule " << *weightConstraintRule );
     optimizationRules.push_back( weightConstraintRule );
+    if( optimizationRules.size() > 1 )
+        solver.setWeighted();
 }
 
 void
@@ -2566,13 +2581,13 @@ GringoNumericFormat::addOptimizationRules()
 
         unsigned int weight = optimizationWeightConstraint->weights[ j ];
         Literal lit = solver.getLiteral( optimizationWeightConstraint->literals[ j ] );
-
+        
 //        assert( weight <= optimizationWeightConstraint->bound );
         
         if( solver.isTrue( lit ) )
         {
             assert( lit != Literal::null );
-            solver.addOptimizationLiteral( lit, weight, levels[ j ] );
+            solver.addOptimizationLiteral( lit, weight, levels[ j ], false );
 //            optimizationWeightConstraint->bound -= weight;
             precomputedCost += weight;
         }
@@ -2581,7 +2596,7 @@ GringoNumericFormat::addOptimizationRules()
             optimizationWeightConstraint->bound += weight;
             solver.setFrozen( lit.getVariable() );
             assert( lit != Literal::null );
-            solver.addOptimizationLiteral( lit, weight, levels[ j ] );
+            solver.addOptimizationLiteral( lit, weight, levels[ j ], false );
             ++k;
         }                
     }

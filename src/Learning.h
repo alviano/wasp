@@ -47,9 +47,10 @@ class Learning
         
         Clause* learnClausesFromUnfoundedSet( Vector< Var >& unfoundedSet );
         Clause* learnClausesFromDisjunctiveUnfoundedSet( Vector< Var >& unfoundedSet );
-        
+
         bool isVisited( Var v, unsigned int value ) const { assert( v < visited.size() ); return visited[ v ] == value; }
-        void setVisited( Var v, unsigned int value ) { assert( v < visited.size() ); visited[ v ] = value; }                
+        void setVisited( Var v, unsigned int value ) { assert( v < visited.size() ); visited[ v ] = value; }        
+        Clause* analyzeFinal( Literal lit );
         
     private:
     

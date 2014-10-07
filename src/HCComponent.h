@@ -45,8 +45,9 @@ class HCComponent : public PostPropagator
         void addClauseToChecker( Clause* c, Var headAtom );
         
         inline void addHCVariable( Var v ) { inUnfoundedSet[ v ] |= 4; hcVariables.push_back( v ); }
-        inline bool isExternal( Var v ) const { assert( numberOfCalls == 0 ); assert( v < inUnfoundedSet.size() ); return inUnfoundedSet[ v ] & 3; }
+//        inline bool isExternal( Var v ) const { assert( numberOfCalls == 0 ); assert( v < inUnfoundedSet.size() ); return inUnfoundedSet[ v ] & 3; }
         bool addExternalLiteral( Literal lit );
+        bool addExternalLiteralForInternalVariable( Literal lit );
         
         inline unsigned int size() const { return hcVariables.size(); }
         inline Var getVariable( unsigned int pos ) const { assert( pos < hcVariables.size() ); return hcVariables[ pos ]; }
@@ -71,6 +72,8 @@ class HCComponent : public PostPropagator
         bool isInUnfoundedSet( Var v ) { assert_msg( v < inUnfoundedSet.size(), "v = " << v << "; inUnfoundedSet.size() = " << inUnfoundedSet.size() ); return inUnfoundedSet[ v ] == numberOfCalls; }
         void setInUnfoundedSet( Var v ) { assert_msg( v < inUnfoundedSet.size(), "v = " << v << "; inUnfoundedSet.size() = " << inUnfoundedSet.size() ); inUnfoundedSet[ v ] = numberOfCalls; }
         
+        bool sameComponent( Var v ) const;
+        
         vector< GUSData* >& gusData;
         Vector< Literal > trail;
         Solver& solver;
@@ -84,6 +87,7 @@ class HCComponent : public PostPropagator
         
         vector< Var > generatorToCheckerId;
         vector< Var > checkerToGeneratorId;
+//        vector< bool > usedAuxVars;
         
         Vector< unsigned int > inUnfoundedSet;
         unsigned int numberOfCalls;
@@ -96,7 +100,14 @@ class HCComponent : public PostPropagator
         void testModel();
         void computeAssumptions( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
         
-        inline Var getCheckerVarFromExternalLiteral( Literal l ) const { return l.isPositive() ? l.getVariable() : generatorToCheckerId[ l.getVariable() ]; }
+        inline Var getCheckerVarFromExternalLiteral( Literal l ) const
+        { 
+            if( l.isNegative() || sameComponent( l.getVariable() ) )
+                return generatorToCheckerId[ l.getVariable() ];
+            else            
+                return l.getVariable();            
+//            return l.isPositive() ? l.getVariable() : generatorToCheckerId[ l.getVariable() ]; 
+        }
         inline Var getCheckerTrueVar( Var v ) const { return v; }
         inline Var getCheckerFalseVar( Var v ) const
         {
@@ -114,7 +125,10 @@ class HCComponent : public PostPropagator
                         
             assert( l.getVariable() < checkerToGeneratorId.size() );
             assert( checkerToGeneratorId[ l.getVariable() ] > 0 );
-            return Literal( checkerToGeneratorId[ l.getVariable() ], NEGATIVE );           
+            if( solver.getHCComponent( l.getVariable() ) != this )
+                return Literal( checkerToGeneratorId[ l.getVariable() ], NEGATIVE );
+            else
+                return Literal( checkerToGeneratorId[ l.getVariable() ], POSITIVE );
         }        
 };
 

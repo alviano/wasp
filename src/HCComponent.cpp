@@ -40,7 +40,7 @@ HCComponent::HCComponent(
     checker.setGenerator( false ); 
     checker.disableStatistics();
     checker.setHCComponentForChecker( this );
-    checker.disableVariableElimination();
+    checker.disableVariableElimination();    
 }
 
 HCComponent::~HCComponent()
@@ -69,8 +69,22 @@ HCComponent::addExternalLiteral(
         generatorToCheckerId[ lit.getVariable() ] = checker.numberOfVariables();
         checkerToGeneratorId.push_back( lit.getVariable() );    
     }    
+    externalLiterals.push_back( lit );    
+    return true;
+}
+
+bool
+HCComponent::addExternalLiteralForInternalVariable(
+    Literal lit )
+{
+    assert( lit.isPositive() );
+    if( inUnfoundedSet[ lit.getVariable() ] & 2 )
+        return false;
+    inUnfoundedSet[ lit.getVariable() ] |= 2;
+    checker.addVariable();
+    generatorToCheckerId[ lit.getVariable() ] = checker.numberOfVariables();
+    checkerToGeneratorId.push_back( lit.getVariable() );
     externalLiterals.push_back( lit );
-    //assert( checker.numberOfVariables() == numberOfAtoms + externalLiterals.size() );
     return true;
 }
 
@@ -119,7 +133,6 @@ HCComponent::testModel()
     if( numberOfCalls++ == 0 )
     {
         trace_msg( modelchecker, 2, "First call. Removing unused variables" );
-//        for( unsigned i = 1; i <= checker.numberOfVariables(); ++i )        
         for( unsigned i = 1; i < inUnfoundedSet.size(); ++i )
         {
             if( inUnfoundedSet[ i ] == 0 )
@@ -162,7 +175,7 @@ HCComponent::testModel()
     
     if( checker.getCurrentDecisionLevel() > 0 )
         checker.doRestart();
-    statistics( &checker, startCheckerInvokation( trail.size() != ( hcVariables.size() + externalLiterals.size() ), time( 0 ) ) );
+    statistics( &checker, startCheckerInvokation( trail.size() != ( hcVariables.size() + externalLiterals.size() ), time( 0 ) ) );    
     if( checker.solve( assumptionsAND, assumptionsOR ) )
     {        
         trace_msg( modelchecker, 1, "SATISFIABLE: the model is not stable." );                
@@ -211,40 +224,16 @@ HCComponent::computeAssumptions(
     {        
         Var v = hcVariables[ i ];
         if( !solver.isFalse( v ) )
-            assumptionsOR.push_back( Literal( v, NEGATIVE ) );            
+            assumptionsOR.push_back( Literal( v, NEGATIVE ) );
         else
-            assumptionsAND.push_back( Literal( v, NEGATIVE ) );                
+            assumptionsAND.push_back( Literal( v, NEGATIVE ) );        
     }        
 
     for( unsigned int i = 0; i < externalLiterals.size(); i++ )
     {
         Literal lit = externalLiterals[ i ];
         assert( getCheckerVarFromExternalLiteral( lit ) != UINT_MAX );        
-        assumptionsAND.push_back( Literal( getCheckerVarFromExternalLiteral( lit ), solver.isTrue( lit ) ? POSITIVE : NEGATIVE ) );
-        
-//        Literal lit = externalLiterals[ i ];
-//        Var v = lit.getVariable();        
-//        if( solver.isTrue( v ) )
-//        {
-//            assumptionsAND.push_back( Literal( getCheckerTrueVar( v ), POSITIVE ) );            
-//            Var checkerVar = getCheckerFalseVar( v );
-//            if( checkerVar != UINT_MAX )
-//                assumptionsAND.push_back( Literal( checkerVar, NEGATIVE ) );            
-//        }
-//        else if( solver.isFalse( v ) )
-//        {
-//            assumptionsAND.push_back( Literal( getCheckerTrueVar( v ), NEGATIVE ) );
-//            Var checkerVar = getCheckerFalseVar( v );
-//            if( checkerVar != UINT_MAX )
-//                assumptionsAND.push_back( Literal( checkerVar, POSITIVE ) );            
-//        }
-//        else
-//        {
-//            assumptionsAND.push_back( Literal( getCheckerTrueVar( v ), NEGATIVE ) );
-//            Var checkerVar = getCheckerFalseVar( v );
-//            if( checkerVar != UINT_MAX )
-//                assumptionsAND.push_back( Literal( checkerVar, NEGATIVE ) );
-//        }
+        assumptionsAND.push_back( Literal( getCheckerVarFromExternalLiteral( lit ), solver.isTrue( lit ) ? POSITIVE : NEGATIVE ) );        
     }
 
     statistics( &checker, assumptionsAND( assumptionsAND.size() ) );
@@ -264,13 +253,25 @@ HCComponent::addClauseToChecker(
     {        
         clause->addLiteral( orig[ i ] );        
         Var v = orig[ i ].getVariable();
-        if( isExternal( v ) )
+        if( !sameComponent( v ) )
         {
             Var newVar = getCheckerVarFromExternalLiteral( orig[ i ] );            
             if( newVar != v )
             {
                 orig[ i ].setVariable( newVar );
                 orig[ i ].setPositive();
+            }
+        }
+        else
+        {
+            if( orig[ i ].isNegativeBodyLiteral() )
+            {
+                Var newVar = getCheckerVarFromExternalLiteral( orig[ i ] );
+                if( newVar != v )
+                {
+                    orig[ i ].setVariable( newVar );
+                    orig[ i ].setPositive();
+                }
             }
         }
     }    
@@ -336,7 +337,8 @@ HCComponent::computeReasonForUnfoundedAtom(
                 }
             }
             
-            assert( !isInUnfoundedSet( lit.getVariable() ) );
+            //This should be not true anymore.
+//            assert( !isInUnfoundedSet( lit.getVariable() ) );
             //If the variable is in the HCC component and it is undefined can be a reason during partial checks
             if( solver.isUndefined( lit ) && solver.getHCComponent( lit.getVariable() ) == this )
             {
@@ -388,4 +390,11 @@ HCComponent::addLearnedClausesFromChecker(
         c->addLiteral( current );
     }
     learnedClausesFromChecker.push_back( c );
+}
+
+bool
+HCComponent::sameComponent(
+    Var v ) const
+{
+    return solver.getHCComponent( v ) == this;
 }

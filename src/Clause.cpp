@@ -163,6 +163,18 @@ Clause::onNavigatingLiteralForAllMarked(
 //    return true;
 }
 
+void
+Clause::onNavigatingForUnsatCore(
+    const Solver&,
+    vector< Literal >& toVisit,
+    Literal )
+{
+    //Navigating all literals in the clause.    
+    for( unsigned int i = 0; i < literals.size(); i++ )
+        toVisit.push_back( literals[ i ] );
+//        toVisit.push_back( literals[ i ].getOppositeLiteral() );    
+}
+
 bool
 Clause::removeDuplicatesAndFalseAndCheckIfTautological(
     Solver& solver )

@@ -91,7 +91,7 @@ class Component : public PostPropagator
         unsigned int id : 31;
         unsigned int removed : 1;        
         
-        inline bool propagateFalseForGUS( Literal lit );
+        bool propagateFalseForGUS( Literal lit );
         inline void propagateLiteralLostSourcePointer( Literal lit );
         bool iterationOnSupportedByThisExternal( Literal lit );
         bool iterationOnSupportedByThisInternal( Literal lit );
@@ -118,16 +118,6 @@ class Component : public PostPropagator
 };
 
 //bool ComponentComparator::operator()( const Component* c1, const Component* c2 ) const { return c1->getId() < c2->getId(); }
-
-bool
-Component::propagateFalseForGUS(
-    Literal lit )
-{
-    bool res1 = iterationOnSupportedByThisExternal( lit );
-    bool res2 = iterationOnSupportedByThisInternal( lit );
-    
-    return res1 || res2;
-}
 
 void
 Component::propagateLiteralLostSourcePointer(

@@ -46,6 +46,7 @@ namespace wasp
 #define OPTIONID_trace_enumeration ( 'z' + 7 )
 #define OPTIONID_trace_satelite ( 'z' + 8 )
 #define OPTIONID_trace_aggregates ( 'z' + 9 )
+#define OPTIONID_trace_weakconstraints ( 'z' + 10 )
 
 /* OUTPUT OPTIONS */
 #define OPTIONID_silent ( 'z' + 20 )
@@ -80,6 +81,14 @@ namespace wasp
 #define OPTIONID_time_limit ( 'z' + 101 )
 #define OPTIONID_max_cost ( 'z' + 102 )
 #define OPTIONID_exchange_clauses ( 'z' + 103 )
+    
+/* WEAK CONSTRAINTS OPTIONS */
+#define OPTIONID_opt ( 'z' + 200 )
+#define OPTIONID_mgd ( 'z' + 201 )
+#define OPTIONID_oll ( 'z' + 202 )
+#define OPTIONID_mgdoll ( 'z' + 203 )    
+#define OPTIONID_bcd ( 'z' + 204 )
+
     
 #ifdef TRACE_ON
 TraceLevels Options::traceLevels;
@@ -116,6 +125,8 @@ unsigned int Options::deletionThreshold = 8;
 unsigned int Options::maxCost = MAXUNSIGNEDINT;
 
 bool Options::exchangeClauses = false;
+
+WEAK_CONSTRAINTS_ALG Options::weakConstraintsAlg = MGDOLL;
     
 void
 Options::parse(
@@ -147,6 +158,7 @@ Options::parse(
                 { "trace-enumeration", required_argument, NULL, OPTIONID_trace_enumeration },
                 { "trace-satelite", required_argument, NULL, OPTIONID_trace_satelite },
                 { "trace-aggregates", required_argument, NULL, OPTIONID_trace_aggregates },
+                { "trace-weakconstraints", required_argument, NULL, OPTIONID_trace_weakconstraints },
 
                 /* OUTPUT OPTIONS */
                 { "competition-output", no_argument, NULL, OPTIONID_competition_output },
@@ -183,6 +195,13 @@ Options::parse(
                 { "max-cost", required_argument, NULL, OPTIONID_max_cost },
                 
                 { "exchange-clauses", no_argument, NULL, OPTIONID_exchange_clauses },
+                
+                /* WEAK CONSTRAINTS */
+                { "mgd", no_argument, NULL, OPTIONID_mgd },
+                { "opt", no_argument, NULL, OPTIONID_opt },
+                { "mgdoll", no_argument, NULL, OPTIONID_bcd },
+                { "oll", no_argument, NULL, OPTIONID_oll },
+                { "bcd", no_argument, NULL, OPTIONID_bcd },
 
                 // The NULL-option indicates the end of the array.
                 { NULL, 0, NULL, 0 }
@@ -243,6 +262,10 @@ Options::parse(
                 
             case OPTIONID_trace_aggregates:
                 setTraceLevel( aggregates, atoi( optarg ) );
+                break;
+            
+            case OPTIONID_trace_weakconstraints:
+                setTraceLevel( weakconstraints, atoi( optarg ) );
                 break;
 
             case OPTIONID_competition_output:
@@ -376,6 +399,26 @@ Options::parse(
                 exchangeClauses = true;
                 break;
 
+            case OPTIONID_opt:
+                weakConstraintsAlg = OPT;
+                break;
+                
+            case OPTIONID_mgd:
+                weakConstraintsAlg = MGD;
+                break;
+
+            case OPTIONID_oll:
+                weakConstraintsAlg = OLL;
+                break;
+
+            case OPTIONID_mgdoll:
+                weakConstraintsAlg = MGDOLL;
+                break;
+                
+            case OPTIONID_bcd:
+                weakConstraintsAlg = BCD;
+                break;
+                
             default:
                 ErrorMessage::errorGeneric( "This option is not supported." );
                 break;
@@ -402,6 +445,7 @@ Options::setOptions(
     waspFacade.setPrintProgram( printProgram );
     waspFacade.setPrintDimacs( printDimacs);
     waspFacade.setExchangeClauses( exchangeClauses );
+    waspFacade.setWeakConstraintsAlgorithm( weakConstraintsAlg );
 }
 
 };

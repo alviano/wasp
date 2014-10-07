@@ -53,17 +53,21 @@ class Aggregate : public Propagator, public Reason
         inline unsigned int getWeight( unsigned int i ) const { assert( i < weights.size() ); return weights[ i ]; }
         
         unsigned int getLevelOfBackjump( const Solver& solver, unsigned int bound );
-        bool updateBound( const Solver& solver, unsigned int bound );        
+        bool updateBound( Solver& solver, unsigned int bound );
+        inline bool isTrue() const;        
         
         inline Literal operator[]( unsigned int idx ) const { assert_msg( ( idx > 0 && idx < literals.size() ), "Index is " << idx << " - literals: " << literals.size() ); return literals[ idx ]; }
         inline Literal& operator[]( unsigned int idx ) { assert_msg( ( idx > 0 && idx < literals.size() ), "Index is " << idx << " - literals: " << literals.size() ); return literals[ idx ]; }
 
 //        inline void setCounterW1( unsigned int value ){ counterW1 = value; }
 //        inline void setCounterW2( unsigned int value ){ counterW2 = value; }
-        virtual void reset( const Solver& solver );                
+        virtual void reset( const Solver& solver );
         
         virtual void onLearning( const Solver& solver, Learning* strategy, Literal lit );
         virtual bool onNavigatingLiteralForAllMarked( const Solver& solver, Learning* strategy, Literal lit );
+        virtual void onNavigatingForUnsatCore( const Solver& solver, vector< Literal >& toVisit, Literal lit );
+        
+        inline void sort() { mergesort( 2, literals.size() - 1 ); }                
         
     protected:
         virtual ostream& print( ostream& out ) const;
@@ -84,11 +88,56 @@ class Aggregate : public Propagator, public Reason
         Vector< int > trail;
         
         Literal literalOfUnroll;
-        
+
 //        void createClauseFromTrail( Literal lit );
         #ifndef NDEBUG
         bool checkDecisionLevelsOrder( const Solver& solver, const Clause& clause ) const;        
         #endif
+
+        void mergesort( int left, int right )
+        {
+            if( left < right )
+            {
+                int center = ( left + right ) / 2;
+                mergesort( left, center );
+                mergesort( center + 1, right );
+                merge( left, center, right );
+            }
+        }
+
+        void merge( int left, int center, int right )
+        {
+            Literal* auxLiterals = new Literal[ right + 1 ];
+            unsigned int* auxWeights = new unsigned int[ right + 1 ];
+
+            int i, j;
+            for( i = center + 1; i > left; i-- )
+            {                    
+                auxLiterals[ i - 1 ] = literals[ i - 1 ];
+                auxWeights[ i - 1 ] = weights[ i - 1 ];
+            }
+            for( j = center; j < right; j++ )
+            {
+                auxLiterals[ right + center - j ] = literals[ j + 1 ];
+                auxWeights[ right + center - j ] = weights[ j + 1 ];
+            }
+            for( int k = left; k <= right; k++ )
+            {
+                if( auxWeights[ j ] > auxWeights[ i ] )
+                {
+                    literals[ k ] = auxLiterals[ j ];
+                    weights[ k ] = auxWeights[ j-- ];
+                }
+                else
+                {
+                    literals[ k ] = auxLiterals[ i ];
+                    weights[ k ] = auxWeights[ i++ ];
+                }
+            }
+
+            delete [] auxWeights;
+            delete [] auxLiterals;
+        }
 };
 
 Aggregate::Aggregate() : Propagator(), active( 0 ), counterW1( 0 ), counterW2( 0 ), umax( 1 ), literalOfUnroll( Literal::null )
@@ -96,6 +145,15 @@ Aggregate::Aggregate() : Propagator(), active( 0 ), counterW1( 0 ), counterW2( 0
     literals.push_back( Literal::null );
     weights.push_back( 0 );    
     watched.push_back( false );
+}
+
+bool
+Aggregate::isTrue() const
+{
+    int position = -1;
+    unsigned int index = 1; 
+    unsigned int counter = ( position > 0 ? counterW2 : counterW1 );
+    return ( counter < weights[ index ] );
 }
 
 #endif

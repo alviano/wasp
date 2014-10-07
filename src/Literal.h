@@ -52,7 +52,7 @@ class Literal
          */
         inline unsigned int getSign() const;
         
-        inline Literal getOppositeLiteral();
+        inline Literal getOppositeLiteral() const;
 
         inline bool isPositive() const;
         inline bool isNegative() const;
@@ -166,7 +166,7 @@ Literal::operator!=(
 }
 
 Literal
-Literal::getOppositeLiteral()
+Literal::getOppositeLiteral() const
 {
     return Literal( getVariable(), getOppositeSign() );
 }

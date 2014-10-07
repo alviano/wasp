@@ -317,7 +317,7 @@ Solver::solvePropagators(
             if( conflictDetected() )
             {
                 learnedFromConflicts++;
-                trace( solving, 1, "Conflict detected.\n" );                
+                trace( solving, 1, "Conflict detected.\n" );
                 if( getCurrentDecisionLevel() == 0 )
                 {
                     trace( solving, 1, "Conflict at level 0: return. \n");
@@ -330,7 +330,7 @@ Solver::solvePropagators(
                     statistics( this, endSolving() );
                     return false;
                 }
-                minisatHeuristic->variableDecayActivity();                
+                minisatHeuristic->variableDecayActivity();
                 assert( hasNextVariableToPropagate() || getCurrentDecisionLevel() == 0 );
             }
         }
@@ -714,7 +714,7 @@ Solver::allClausesSatisfied() const
     for( ConstClauseIterator it = clauses.begin(); it != clauses.end(); ++it )
     {
         Clause& clause = *( *it );
-        if( !isSatisfied( clause ) )        
+        if( !isSatisfied( clause ) )
             return false;
     }
 
@@ -1214,4 +1214,16 @@ Solver::addLearnedClause(
     
     learnedClauses.push_back( learnedClause );    
     literalsInLearnedClauses += learnedClause->size();
+}
+
+void
+Solver::clearAfterSolveUnderAssumptions(
+    const vector< Literal >& assumptionsAND,
+    const vector< Literal >& assumptionsOR )
+{
+    for( unsigned int i = 0; i < assumptionsAND.size(); i++ )
+        setAssumptionAND( assumptionsAND[ i ], false );
+    
+    for( unsigned int i = 0; i < assumptionsOR.size(); i++ )
+        setAssumptionOR( assumptionsOR[ i ], false );
 }
