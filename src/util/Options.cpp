@@ -199,7 +199,7 @@ Options::parse(
                 /* WEAK CONSTRAINTS */
                 { "mgd", no_argument, NULL, OPTIONID_mgd },
                 { "opt", no_argument, NULL, OPTIONID_opt },
-                { "mgdoll", no_argument, NULL, OPTIONID_bcd },
+                { "mgdoll", no_argument, NULL, OPTIONID_mgdoll },
                 { "oll", no_argument, NULL, OPTIONID_oll },
                 { "bcd", no_argument, NULL, OPTIONID_bcd },
 
