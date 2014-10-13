@@ -40,7 +40,7 @@ struct VariableData
     HCComponent* hcComponent;
     ReasonForBinaryClauses* reasonForBinaryClauses;
     
-    unsigned int decisionLevel : 29;
+    unsigned int decisionLevel : 27;
     unsigned int isAssumptionAND : 1;
     unsigned int isAssumptionOR : 1;
     unsigned int frozen : 1;
@@ -138,9 +138,9 @@ class Variables
         inline void printInterpretation() const;
         
         inline void setAssumptionAND( Var v, bool isAssumption ) { variablesData[ v ].isAssumptionAND = isAssumption ? 1 : 0; }
-        inline void setAssumptionOR( Var v, bool isAssumption ) { variablesData[ v ].isAssumptionOR = isAssumption ? 1 : 0; }
+        inline void setAssumptionOR( Var v, bool isAssumption ) { variablesData[ v ].isAssumptionOR = isAssumption ? 1 : 0; }        
         inline bool isAssumptionAND( Var v ) const { return variablesData[ v ].isAssumptionAND; }
-        inline bool isAssumptionOR( Var v ) const { return variablesData[ v ].isAssumptionOR; }
+        inline bool isAssumptionOR( Var v ) const { return variablesData[ v ].isAssumptionOR; }        
         
     private:
         vector< Var > assignedVariables;
@@ -192,7 +192,7 @@ Variables::push_back()
     vd.signOfEliminatedVariable = NOT_ELIMINATED;
     vd.frozen = 0;
     vd.isAssumptionAND = 0;
-    vd.isAssumptionOR = 0;
+    vd.isAssumptionOR = 0;    
     vd.reasonForBinaryClauses = new ReasonForBinaryClauses( variablesData.size() - 1 );
     
     assigns.push_back( UNDEFINED );

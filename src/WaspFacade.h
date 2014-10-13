@@ -27,22 +27,11 @@ using namespace std;
 #include "util/Constants.h"
 #include "Solver.h"
 #include "input/Dimacs.h"
-
-struct OllData
-{
-    unsigned int bound_;
-    unsigned int guardId_;
-    vector< Literal > literals_;
-    vector< unsigned int > weights_;
-
-    void addElement( unsigned int bound, unsigned int guard, vector< Literal >& literals, vector< unsigned int >& weights )
-    {
-        bound_ = bound;
-        guardId_ = guard;
-        literals_.swap( literals );
-        weights_.swap( weights );
-    }
-};
+#include "weakconstraints/WeakInterface.h"
+#include "weakconstraints/Bcd.h"
+#include "weakconstraints/Mgd.h"
+#include "weakconstraints/Oll.h"
+#include "weakconstraints/Opt.h"
 
 class WaspFacade
 {
@@ -67,110 +56,57 @@ class WaspFacade
         
         inline void setWeakConstraintsAlgorithm( WEAK_CONSTRAINTS_ALG alg ) { weakConstraintsAlg = alg; }
         
-        inline void solveWithWeakConstraints();        
+        inline unsigned int solveWithWeakConstraints();        
         
     private:
-        Solver solver;        
-        
-        void algorithmOpt();
-        void algorithmMgd();
-        void algorithmOll();
-        inline void algorithmMgdOll() { solver.isWeighted() ? algorithmMgd() : algorithmOll(); }
+        Solver solver;                
         
         unsigned int numberOfModels;
         unsigned int maxModels;
         bool printProgram;
         bool printDimacs;
 
-        WEAK_CONSTRAINTS_ALG weakConstraintsAlg;
-        
-        bool createFalseAggregate( const vector< Literal >& literals, const vector< unsigned int >& weights, unsigned int bound );
-        Aggregate* createAggregate( Var aggrId, const vector< Literal >& literals, const vector< unsigned int >& weights );
-        bool processAndAddAggregate( Aggregate* aggregate, unsigned int bound );
-        
-        inline void computeAssumptionsAND( vector< Literal >& assumptionsAND );
-        void processCoreOll( const vector< unsigned int >& inUnsatCore, unsigned int numberOfCalls, vector< Literal >& literals, vector< unsigned int >& weights, unsigned int minWeight );
-        bool addAggregateOll( vector< unsigned int >& inUnsatCore, unordered_map< Var, OllData* >& guardMap, vector< Literal >& literals, vector< unsigned int >& weights, unsigned int bound );
-        unsigned int computeMinWeight( const vector< unsigned int >& inUnsatCore, unsigned int numberOfCalls );
-        inline Var addAuxVariable( vector< unsigned int >& inUnsatCore );
-        inline Var addBinaryClauseForAggregateOll( vector< unsigned int >& inUnsatCore, Var aggrId );                
+        WEAK_CONSTRAINTS_ALG weakConstraintsAlg;                
 };
 
 WaspFacade::WaspFacade() : numberOfModels( 0 ), maxModels( 1 ), printProgram( false ), printDimacs( false ), weakConstraintsAlg( OPT )
 {    
 }
 
-void
+unsigned int
 WaspFacade::solveWithWeakConstraints()
 {
+    WeakInterface* w = NULL;
     switch( weakConstraintsAlg )
     {
         case BCD:
-            assert( 0 );
+            w = new Bcd( solver );
             break;
             
         case OLL:
-            algorithmOll();
+            w = new Oll( solver );
             break;
             
         case MGD:
-            algorithmMgd();
+            w = new Mgd( solver );
             break;
 
         case OPT:
-            algorithmOpt();
+            w = new Opt( solver );
             break;
 
         case MGDOLL:    
         default:
-            algorithmMgdOll();
-            break;            
+            if( solver.isWeighted() )
+                w = new Mgd( solver );
+            else
+                w = new Oll( solver );            
+            break;
     }
-}
-
-void
-WaspFacade::computeAssumptionsAND(
-    vector< Literal >& assumptionsAND )
-{    
-    for( unsigned int i = 0; i < solver.numberOfOptimizationLiterals(); i++ )
-    {
-        if( solver.getOptimizationLiteral( i ).isRemoved() )
-            continue;
-        assumptionsAND.push_back( solver.getOptimizationLiteral( i ).lit.getOppositeLiteral() );
-    }
-    trace_action( weakconstraints, 2, 
-    {
-        trace_tag( cerr, weakconstraints, 2 );
-        cerr << "AssumptionsAND: [";
-        for( unsigned int i = 0; i < assumptionsAND.size(); i++ )
-            cerr << " " << assumptionsAND[ i ];
-        cerr << " ]" << endl;
-    });
-}
-
-Var
-WaspFacade::addAuxVariable(
-    vector< unsigned int >& inUnsatCore )
-{
-    solver.addVariableRuntime();
-    inUnsatCore.push_back( 0 );
-    return solver.numberOfVariables();        
-}
-
-Var
-WaspFacade::addBinaryClauseForAggregateOll(
-    vector< unsigned int >& inUnsatCore,
-    Var aggrId )
-{    
-    Literal lit( addAuxVariable( inUnsatCore ), POSITIVE );
-    solver.addOptimizationLiteral( lit, 1, UINT_MAX, true );    
-    solver.addClause( lit, Literal( aggrId, NEGATIVE ) );
     
-    assert( !solver.isFalse( aggrId ) );
-    if( solver.isTrue( aggrId ) )
-        solver.addClause( lit );
-    
-    return lit.getVariable();
+    unsigned int res = w->run();    
+    delete w;
+    return res;
 }
 
 #endif

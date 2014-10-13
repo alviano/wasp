@@ -16,31 +16,16 @@
  *
  */
 
-#include "OutputBuilder.h"
-#include "../Solver.h"
+#ifndef MGD_H
+#define MGD_H
 
-extern int EXIT_CODE;
+#include "WeakInterface.h"
 
-void
-OutputBuilder::foundModelOptimization(
-    Solver& solver,
-    unsigned int cost,
-    unsigned int numberOfLevels )
+class Mgd : public WeakInterface
 {
-    cout << COST;
-    for( int i = numberOfLevels - 1; i >= 0; --i )
-    {
-        cout << " " << solver.getCostOfLevel( i, cost ) << WEIGHT_LEVEL_WEAKCONSTRAINT_SEPARATOR << ( i + 1 );
-    }
-    #ifdef TRACE_ON
-        cout << " = " << cost;
-    #endif
-    cout << endl;    
-}
+    public:
+        Mgd( Solver& s ) : WeakInterface( s ) {}
+        unsigned int run();    
+};
 
-void
-OutputBuilder::optimumFound()
-{
-    cout << OPTIMUM_STRING << endl;
-    EXIT_CODE = 30;
-}
+#endif

@@ -386,9 +386,11 @@ class Solver
         void clearAfterSolveUnderAssumptions( const vector< Literal >& assumptionsAND, const vector< Literal >& assumptionsOR );
         
         inline void setAssumptionAND( Literal lit, bool isAssumption ) { variables.setAssumptionAND( lit.getVariable(), isAssumption ); }
-        inline void setAssumptionOR( Literal lit, bool isAssumption ) { variables.setAssumptionOR( lit.getVariable(), isAssumption ); }
-        inline bool isAssumptionAND( Literal lit ) const { return variables.isAssumptionAND( lit.getVariable() ); }
-        inline bool isAssumptionOR( Literal lit ) const { return variables.isAssumptionAND( lit.getVariable() ); }
+        inline void setAssumptionOR( Literal lit, bool isAssumption ) { variables.setAssumptionOR( lit.getVariable(), isAssumption ); }        
+//        inline bool isAssumptionAND( Literal lit ) const { return variables.isAssumptionAND( lit.getVariable() ); }
+//        inline bool isAssumptionOR( Literal lit ) const { return variables.isAssumptionAND( lit.getVariable() ); }
+        inline bool isAssumptionAND( Var v ) const { return variables.isAssumptionAND( v ); }
+        inline bool isAssumptionOR( Var v ) const { return variables.isAssumptionAND( v ); }        
         
         inline void computeUnsatCore();
         inline void setComputeUnsatCores( bool b ) { computeUnsatCores_ = b; }

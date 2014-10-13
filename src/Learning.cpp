@@ -541,7 +541,8 @@ Learning::analyzeFinal(
         if( isVisited( currentVariable, numberOfCalls ) )
             continue;
         
-        if( ( solver.isAssumptionAND( currentLiteral ) || solver.isAssumptionAND( currentLiteral.getOppositeLiteral() ) ) )//|| solver.isAssumptionOR( currentLiteral ) ) )
+//        if( ( solver.isAssumptionAND( currentLiteral ) || solver.isAssumptionAND( currentLiteral.getOppositeLiteral() ) ) )//|| solver.isAssumptionOR( currentLiteral ) ) )
+        if( solver.isAssumptionAND( currentVariable ) )//|| solver.isAssumptionOR( currentLiteral ) ) )
             addLiteralInLearnedClause( currentLiteral );
         else
             setVisited( currentVariable, numberOfCalls );        

@@ -1,0 +1,140 @@
+/*
+ *
+ *  Copyright 2013 Mario Alviano, Carmine Dodaro, and Francesco Ricca.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+#include "Oll.h"
+
+unsigned int
+Oll::run()
+{    
+    trace_msg( weakconstraints, 1, "Starting algorithm OLL" );    
+    computeAssumptionsAND();        
+    
+    initInUnsatCore();    
+    unsigned int originalNumberOfVariables = solver.numberOfVariables();
+    
+    unordered_map< Var, OllData* > guardMap;
+
+    solver.setComputeUnsatCores( true );
+    solver.turnOffSimplifications();
+    while( !solver.solve( assumptionsAND, assumptionsOR ) )
+    {
+        vector< unsigned int > auxVariablesInUnsatCore;
+        ++numberOfCalls;
+        assert( solver.getUnsatCore() != NULL );
+        const Clause& unsatCore = *( solver.getUnsatCore() );
+
+        //The incoherence does not depend on weak constraints
+        if( unsatCore.size() == 0 )
+            return INCOHERENT;
+
+        solver.clearConflictStatus();
+        if( solver.getCurrentDecisionLevel() != 0 && !solver.doRestart() )
+            return INCOHERENT;
+        
+        for( unsigned int i = 0; i < unsatCore.size(); i++ )
+        {
+            Var v = unsatCore[ i ].getVariable();
+            visit( v );
+            if( v > originalNumberOfVariables )
+                auxVariablesInUnsatCore.push_back( v );
+        }
+        
+        vector< Literal > literals;
+        vector< unsigned int > weights;
+        
+        unsigned int minWeight = computeMinWeight();
+        processCoreOll( literals, weights, minWeight );
+        trace_msg( weakconstraints, 2, "Adding aggregate from unsat core" );
+        if( !addAggregateOll( guardMap, literals, weights, 2 ) )
+            return INCOHERENT;        
+        
+        for( unsigned int i = 0; i < auxVariablesInUnsatCore.size(); i++ )
+        {
+            Var guardId = auxVariablesInUnsatCore[ i ];
+            assert( guardMap.find( guardId ) != guardMap.end() );
+            
+            OllData* ollData = guardMap[ guardId ];
+            if( ollData->bound_ < ollData->literals_.size() )
+            {
+                trace_msg( weakconstraints, 3, "Incrementing by one bound (" << ollData->bound_ <<  ") of aggregate " << guardId );
+                assert( ollData->literals_.size() > 0 );
+                if( !addAggregateOll( guardMap, ollData->literals_, ollData->weights_, ollData->bound_ + 1 ) )
+                    return INCOHERENT;
+            }
+        }
+        
+        assumptionsAND.clear();
+        computeAssumptionsAND();        
+    }
+        
+    solver.printAnswerSet();
+    solver.printOptimizationValue( solver.computeCostOfModel() );
+    return OPTIMUM_FOUND;
+}
+
+void
+Oll::processCoreOll(
+    vector< Literal >& literals,
+    vector< unsigned int >& weights,
+    unsigned int minWeight )
+{
+    trace_msg( weakconstraints, 2, "Processing core for algorithm OLL" );
+    unsigned int originalSize = solver.numberOfOptimizationLiterals();
+    for( unsigned int i = 0; i < originalSize; i++ )
+    {
+        OptimizationLiteralData& optLitData = solver.getOptimizationLiteral( i );        
+        if( optLitData.isRemoved() )
+            continue;
+
+        trace_msg( weakconstraints, 3, "Considering literal " << optLitData.lit << " - weight " << optLitData.weight );
+        Var v = optLitData.lit.getVariable();
+        if( visited( v ) )
+        {
+            trace_msg( weakconstraints, 4, "is in unsat core" );
+            literals.push_back( optLitData.lit );
+//            weights.push_back( optLitData.weight );
+            weights.push_back( 1 );
+            optLitData.remove();
+            
+            if( optLitData.weight > minWeight )
+                solver.addOptimizationLiteral( optLitData.lit, optLitData.weight - minWeight, UINT_MAX, true );            
+        }
+    }
+}
+
+bool
+Oll::addAggregateOll(
+    unordered_map< Var, OllData* >& guardMap,    
+    vector< Literal >& literals,
+    vector< unsigned int >& weights,
+    unsigned int bound )
+{
+    Var aggrId = addAuxVariable();
+    Aggregate* aggregate = createAggregate( aggrId, literals, weights );     
+    if( !processAndAddAggregate( aggregate, bound ) )
+        return false;
+    
+    if( solver.isFalse( aggrId ) )
+        return true;
+    
+    Var guardId = addBinaryClauseForAggregateOll( aggrId );
+    OllData* ollData = new OllData();
+    ollData->addElement( bound, guardId, literals, weights );
+    guardMap[ guardId ] = ollData;
+    return true;
+}
