@@ -1041,8 +1041,6 @@ GringoNumericFormat::readAtomsTable(
     unsigned int nextAtom;
     input.read( nextAtom );
 
-    createStructures( nextAtom );
-
     char name[ 1024 ];
     while( nextAtom != 0 )
     {
