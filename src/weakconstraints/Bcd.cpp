@@ -220,7 +220,7 @@ Bcd::run()
         
         computeAssumptions();
         trace_msg( weakconstraints, 1, "Calling solver..." );
-        if( solver.solve( assumptionsAND, assumptionsOR ) )
+        if( solver.solve( assumptionsAND, assumptionsOR ) == COHERENT )
         {
             foundModel();
             if( solver.getCurrentDecisionLevel() != 0 && !solver.doRestart() )

@@ -23,7 +23,7 @@ Mgd::run()
 {
     unsigned int minCost = UINT_MAX;
     unsigned int numberOfModels = 0;
-    while( solver.solve() )
+    while( solver.solve() == COHERENT )
     {
         numberOfModels++;
         unsigned int modelCost = solver.computeCostOfModel();

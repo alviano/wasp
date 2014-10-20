@@ -16,19 +16,23 @@
  *
  */
 
-#ifndef OPT_H
-#define OPT_H
+#ifndef PMRES_H
+#define	PMRES_H
 
 #include "WeakInterface.h"
 
-class Opt : public WeakInterface
+class PMRes : public WeakInterface
 {
     public:
-        Opt( Solver& s, bool disable = false ) : WeakInterface( s ), disableprefchoices_( disable ) {}
+        inline PMRes( Solver& solver ) : WeakInterface( solver ) {}
         unsigned int run();
-        
+
     private:
-        bool disableprefchoices_;
+        bool addAuxClauses( vector< Literal >& optLiterals );
+        bool addAuxClausesCompressed( vector< Literal > &optLiterals );
+        bool addClauseToSolver( Clause* clause );
+        Var relaxClause( Clause* clause );
 };
 
 #endif
+

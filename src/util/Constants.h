@@ -59,10 +59,13 @@
 #define OLL 2
 #define MGDOLL 3
 #define BCD 4
+#define BB 5
+#define PMRES 6
 
-#define COHERENT 0
-#define INCOHERENT 1
+#define INCOHERENT 0
+#define COHERENT 1
 #define OPTIMUM_FOUND 2
+#define INTERRUPTED 3
 
 #define VERSION "2.0"
 

@@ -22,14 +22,15 @@ unsigned int
 Opt::run()
 {
     trace_msg( weakconstraints, 1, "Starting algorithm OPT" );
-    solver.addPreferredChoicesFromOptimizationLiterals();    
+    if( !disableprefchoices_ )
+        solver.addPreferredChoicesFromOptimizationLiterals();    
     unsigned int numberOfModels = 0;
-    while( solver.solve() )
+    while( solver.solve() == COHERENT )
     {
         numberOfModels++;
         solver.printAnswerSet();
         unsigned int modelCost = solver.computeCostOfModel(); 
-        
+
         solver.printOptimizationValue( modelCost );
         trace_msg( weakconstraints, 2, "Decision level of solver: " << solver.getCurrentDecisionLevel() );
         if( modelCost == 0 || solver.getCurrentDecisionLevel() == 0 )
@@ -42,11 +43,18 @@ Opt::run()
         
 //        solver.removePrefChoices();
         
+        trace_msg( weakconstraints, 2, "Updating bound of optimization aggregate. Model cost: " << modelCost );
         if( !solver.updateOptimizationAggregate( modelCost ) )
         {
-            trace_msg( weakconstraints, 2, "Failed updating of optimization aggregate: return" );
+            trace_msg( weakconstraints, 3, "Failed updating of optimization aggregate: return" );
             break;        
         }
+        
+        static int loop = 0;
+        if( ++loop > 15 )
+            exit( 0 );
+        
+        trace_msg( weakconstraints, 2, "Calling solver..." );
     }
     
     if( numberOfModels > 0 )

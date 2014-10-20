@@ -31,7 +31,7 @@ Oll::run()
 
     solver.setComputeUnsatCores( true );
     solver.turnOffSimplifications();
-    while( !solver.solve( assumptionsAND, assumptionsOR ) )
+    while( solver.solve( assumptionsAND, assumptionsOR ) == INCOHERENT )
     {
         vector< unsigned int > auxVariablesInUnsatCore;
         ++numberOfCalls;

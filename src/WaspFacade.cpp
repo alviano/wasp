@@ -82,7 +82,7 @@ WaspFacade::solve()
         
         if( !solver.hasOptimizationAggregate() )
         {            
-            while( solver.solve() )
+            while( solver.solve() == COHERENT )
             {
                 solver.printAnswerSet();
                 trace_msg( enumeration, 1, "Model number: " << numberOfModels + 1 );

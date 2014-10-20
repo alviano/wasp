@@ -32,6 +32,7 @@ using namespace std;
 #include "weakconstraints/Mgd.h"
 #include "weakconstraints/Oll.h"
 #include "weakconstraints/Opt.h"
+#include "weakconstraints/PMRes.h"
 
 class WaspFacade
 {
@@ -94,6 +95,14 @@ WaspFacade::solveWithWeakConstraints()
         case OPT:
             w = new Opt( solver );
             break;
+            
+        case BB:
+            w = new Opt( solver, true );
+            break;
+            
+        case PMRES:
+            w = new PMRes( solver );
+            break;
 
         case MGDOLL:    
         default:
@@ -101,6 +110,7 @@ WaspFacade::solveWithWeakConstraints()
                 w = new Mgd( solver );
             else
                 w = new Oll( solver );            
+//            w = new OptOll( solver );
             break;
     }
     

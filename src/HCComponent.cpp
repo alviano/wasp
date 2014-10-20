@@ -176,7 +176,7 @@ HCComponent::testModel()
     if( checker.getCurrentDecisionLevel() > 0 )
         checker.doRestart();
     statistics( &checker, startCheckerInvokation( trail.size() != ( hcVariables.size() + externalLiterals.size() ), time( 0 ) ) );    
-    if( checker.solve( assumptionsAND, assumptionsOR ) )
+    if( checker.solve( assumptionsAND, assumptionsOR ) == COHERENT )
     {        
         trace_msg( modelchecker, 1, "SATISFIABLE: the model is not stable." );                
         for( unsigned int i = 0; i < assumptionsOR.size(); i++ )

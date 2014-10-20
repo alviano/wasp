@@ -75,8 +75,8 @@ class Solver
         
         inline void greetings(){ outputBuilder->greetings(); }
         
-        inline bool solve();
-        inline bool solve( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
+        inline unsigned int solve();
+        inline unsigned int solve( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
         
         inline void propagate( Var v );
         inline void propagateWithPropagators( Var variable );                
@@ -396,13 +396,16 @@ class Solver
         inline void setComputeUnsatCores( bool b ) { computeUnsatCores_ = b; }
         inline const Clause* getUnsatCore() const { return unsatCore; }
         
-        inline OptimizationLiteralData& getOptimizationLiteral( unsigned int pos ) { assert( pos < optimizationLiterals.size() ); return optimizationLiterals[ pos ]; }
+        inline OptimizationLiteralData& getOptimizationLiteral( unsigned int pos ) { assert( pos < optimizationLiterals.size() ); return *optimizationLiterals[ pos ]; }
         inline unsigned int numberOfOptimizationLiterals() const { return optimizationLiterals.size(); }
         
         inline Aggregate* createAggregate( const vector< Literal >& literals, const vector< unsigned int >& weights );
         
         inline bool isWeighted() const { return weighted_; }
-        inline void setWeighted() { weighted_ = true; }                
+        inline void setWeighted() { weighted_ = true; }
+        
+        inline void setMaxNumberOfChoices( unsigned int max ) { maxNumberOfChoices = max; }
+        inline unsigned int getPrecomputedCost() const { return precomputedCost; }
         
     private:
         HCComponent* hcComponentForChecker;
@@ -411,8 +414,8 @@ class Solver
         bool generator;
         static vector< Clause* > learnedFromAllSolvers;
 
-        bool solveWithoutPropagators( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
-        bool solvePropagators( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
+        unsigned int solveWithoutPropagators( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
+        unsigned int solvePropagators( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
 
         void updateActivity( Clause* learnedClause );
         inline void addVariableInternal();        
@@ -561,7 +564,7 @@ class Solver
             
         } glucoseData;
         
-        vector< OptimizationLiteralData > optimizationLiterals;
+        vector< OptimizationLiteralData* > optimizationLiterals;
         vector< unsigned int > maxCostOfLevelOfOptimizationRules;        
         
         Vector< DataStructures* > variableDataStructures;
@@ -576,6 +579,7 @@ class Solver
         bool computeUnsatCores_;
         Clause* unsatCore;
         bool weighted_;
+        unsigned int maxNumberOfChoices;
         
         #ifndef NDEBUG
         bool checkStatusBeforePropagation( Var variable )
@@ -620,7 +624,8 @@ Solver::Solver()
     partialChecks( true ),
     computeUnsatCores_( false ),
     unsatCore( NULL ),
-    weighted_( false )
+    weighted_( false ),
+    maxNumberOfChoices( UINT_MAX )
 {
     dependencyGraph = new DependencyGraph( *this );
     satelite = new Satelite( *this );
@@ -633,7 +638,7 @@ Solver::Solver()
     fromLevelToPropagators.push_back( 0 );
 }
 
-bool
+unsigned int
 Solver::solve()
 {
     vector< Literal > assumptionsAND;
@@ -644,7 +649,7 @@ Solver::solve()
         return solvePropagators( assumptionsAND, assumptionsOR );
 }
 
-bool
+unsigned int
 Solver::solve(
     vector< Literal >& assumptionsAND,
     vector< Literal >& assumptionsOR )
@@ -656,11 +661,20 @@ Solver::solve(
     for( unsigned int i = 0; i < assumptionsOR.size(); i++ )
         setAssumptionOR( assumptionsOR[ i ], true );
     
-    bool result = ( !hasPropagators() ) ? solveWithoutPropagators( assumptionsAND, assumptionsOR ) : solvePropagators( assumptionsAND, assumptionsOR );
-    if( computeUnsatCores_ && !result && conflictLiteral != Literal::null )
-        computeUnsatCore();
+    unsigned int result = ( !hasPropagators() ) ? solveWithoutPropagators( assumptionsAND, assumptionsOR ) : solvePropagators( assumptionsAND, assumptionsOR );
+    delete unsatCore;
+    unsatCore = NULL;
+    if( computeUnsatCores_ && result == INCOHERENT )    
+    {
+        if( conflictLiteral != Literal::null )
+            computeUnsatCore();
+        
+//        assert( 0 && "RIVEDIMI" );
+//        else
+//            unsatCore = new Clause();
+    }
     clearAfterSolveUnderAssumptions( assumptionsAND, assumptionsOR );
-    clearConflictStatus();    
+    clearConflictStatus();
     return result;    
 }
 
@@ -872,7 +886,7 @@ Solver::addClause(
     
     unsigned int size = clause->size();    
     if( size > 1 )
-    {
+    {        
         statistics( this, onAddingClause( size ) );
         if( callSimplifications() || clause->size() != 2 )
             attachClauseToAllLiterals( *clause );
@@ -1086,6 +1100,7 @@ Solver::chooseLiteral(
         else if( isFalse( assumptionsAND[ i ] ) )
         {
             conflictLiteral = assumptionsAND[ i ];
+            trace_msg( solving, 1, "The assumption AND " << assumptionsAND[ i ] << " is false: stop" );
             return false;
         }
     }
@@ -1119,7 +1134,10 @@ Solver::chooseLiteral(
             if( choice != Literal::null )
                 goto end;
             else
+            {
+                trace_msg( solving, 1, "All assumptions OR are false: stop" );
                 return false;
+            }
         }
     }
     choice = minisatHeuristic->makeAChoice();    
@@ -1592,11 +1610,11 @@ Solver::propagate(
     Var variable )
 {
     assert( checkStatusBeforePropagation( variable ) );
-    trace_msg( solving, 1, "Propagating " << ( isTrue( variable ) ? "" : "not " ) << VariableNames::getName( variable ) << " at level " << currentDecisionLevel );
+    trace_msg( solving, 1, "Propagating " << ( isTrue( variable ) ? Literal( variable, POSITIVE ) : Literal( variable, NEGATIVE ) ) << " at level " << currentDecisionLevel );
     
     shortPropagation( variable );
-    if( conflictDetected() )
-        return;
+    if( conflictDetected() )    
+        return;    
     unitPropagation( variable );
 }
 
@@ -1604,6 +1622,7 @@ void
 Solver::propagateWithPropagators(
     Var variable )
 {
+    trace_msg( solving, 1, "Propagate with propagators" );
     propagate( variable );
     if( conflictDetected() )
         return;
@@ -1619,14 +1638,14 @@ Solver::computeCostOfModel()
 {
     unsigned int cost = 0;
     
-    for( unsigned int i = 0; i < optimizationLiterals.size(); i++ )
+    for( unsigned int i = 0; i < numberOfOptimizationLiterals(); i++ )
     {        
-        assert( optimizationLiterals[ i ].lit != Literal::null );        
+        assert( getOptimizationLiteral( i ).lit != Literal::null );        
         //This is the first aux
-        if( optimizationLiterals[ i ].isAux() )
+        if( getOptimizationLiteral( i ).isAux() )
             continue;
-        if( isTrue( optimizationLiterals[ i ].lit ) )
-            cost += optimizationLiterals[ i ].weight;        
+        if( isTrue( getOptimizationLiteral( i ).lit ) )
+            cost += getOptimizationLiteral( i ).weight;        
     }
     
     return cost;
@@ -1637,10 +1656,12 @@ Solver::updateOptimizationAggregate(
     unsigned int modelCost )
 {   
     assert( optimizationAggregate != NULL );
+    trace_msg( weakconstraints, 2, "Precomputed cost is " << precomputedCost );
     if( precomputedCost >= modelCost )
         return false;
-    
-    unsigned int backjumpingLevel = optimizationAggregate->getLevelOfBackjump( *this, modelCost - precomputedCost );
+        
+    unsigned int backjumpingLevel = 0; //optimizationAggregate->getLevelOfBackjump( *this, modelCost - precomputedCost );
+    trace_msg( weakconstraints, 2, "Backjumping level is " << backjumpingLevel );
     unroll( backjumpingLevel );
     clearConflictStatus();
     
@@ -1652,7 +1673,8 @@ Solver::updateOptimizationAggregate(
     
     if( conflictDetected() )
         return false;
-//        addPostPropagator( optimizationAggregate ); 
+    
+//    addInPropagatorsForUnroll( optimizationAggregate );
     
     return true;
 }
@@ -1664,13 +1686,14 @@ Solver::addOptimizationLiteral(
     unsigned int level,
     bool aux )
 {
-    OptimizationLiteralData opt;
+    OptimizationLiteralData* optPointer = new OptimizationLiteralData();
+    OptimizationLiteralData& opt = *optPointer;
     opt.lit = lit;
     opt.weight = weight;
     opt.level = level;
     opt.removed = 0;
     opt.aux = aux ? 1 : 0;
-    optimizationLiterals.push_back( opt );
+    optimizationLiterals.push_back( optPointer );
 }
 
 unsigned int
@@ -1686,10 +1709,10 @@ void
 Solver::addPreferredChoicesFromOptimizationLiterals()
 {
     assert( currentDecisionLevel == 0 );
-    for( unsigned int i = 0; i < optimizationLiterals.size(); i++ )
+    for( unsigned int i = 0; i < numberOfOptimizationLiterals(); i++ )
     {
-        if( isUndefined( optimizationLiterals[ i ].lit ) )
-            minisatHeuristic->addPreferredChoice( optimizationLiterals[ i ].lit.getOppositeLiteral() );
+        if( isUndefined( getOptimizationLiteral( i ).lit ) )
+            minisatHeuristic->addPreferredChoice( getOptimizationLiteral( i ).lit.getOppositeLiteral() );
     }
 }
 
@@ -2202,7 +2225,7 @@ void
 Solver::computeUnsatCore()
 {
     assert( conflictLiteral != Literal::null );
-    delete unsatCore;
+//    delete unsatCore;
     unsatCore = learning.analyzeFinal( conflictLiteral );
 }
 

@@ -102,6 +102,9 @@ Solver::~Solver()
                 delete allNegOccs[ j ];
         }
     }
+    
+    for( unsigned int i = 0; i < optimizationLiterals.size(); i++ )
+        delete optimizationLiterals[ i ];
 }
 
 void
@@ -214,7 +217,7 @@ Solver::addClauseFromModelAndRestart()
     return addClauseFromModel( clause );
 }
 
-bool 
+unsigned int 
 Solver::solveWithoutPropagators(
     vector< Literal >& assumptionsAND,
     vector< Literal >& assumptionsOR )
@@ -253,8 +256,11 @@ Solver::solveWithoutPropagators(
         {
             trace_msg( solving, 1, "INCONSISTENT" );
             statistics( this, endSolving() );
-            return false;
+            return INCOHERENT;
         }
+        static unsigned int choices = 0;
+        if( ++choices > maxNumberOfChoices )
+            return INTERRUPTED;        
         
         propagationLabel:;
         while( hasNextVariableToPropagate() )
@@ -270,14 +276,14 @@ Solver::solveWithoutPropagators(
                 {
                     trace( solving, 1, "Conflict at level 0: return. \n");
                     statistics( this, endSolving() );
-                    return false;
+                    return INCOHERENT;
                 }
                 
                 if( !analyzeConflict() )
                 {
                     trace_msg( solving, 1, "INCONSISTENT" );
                     statistics( this, endSolving() );
-                    return false;
+                    return INCOHERENT;
                 }
                 minisatHeuristic->variableDecayActivity();
                 assert( hasNextVariableToPropagate() || getCurrentDecisionLevel() == 0 );
@@ -291,10 +297,10 @@ Solver::solveWithoutPropagators(
     
     statistics( this, endSolving() );
     
-    return modelIsValidUnderAssumptions( assumptionsAND, assumptionsOR );
+    return modelIsValidUnderAssumptions( assumptionsAND, assumptionsOR ) ? COHERENT : INCOHERENT;
 }
 
-bool 
+unsigned int 
 Solver::solvePropagators(
     vector< Literal >& assumptionsAND,
     vector< Literal >& assumptionsOR )
@@ -313,11 +319,13 @@ Solver::solvePropagators(
         assert( !conflictDetected() );
         if( !chooseLiteral( assumptionsAND, assumptionsOR ) )
         {
-            trace_msg( solving, 1, "INCONSISTENT" );
+            trace_msg( solving, 1, "Failure occurs while choosing a new Literal" );
             statistics( this, endSolving() );
-            return false;
+            return INCOHERENT;
         }
-        
+        static unsigned int choices = 0;
+        if( ++choices > maxNumberOfChoices )
+            return INTERRUPTED; 
         propagationLabel:;
         Var variableToPropagate;
         while( hasNextVariableToPropagate() )
@@ -335,13 +343,14 @@ Solver::solvePropagators(
                 {
                     trace( solving, 1, "Conflict at level 0: return. \n");
                     statistics( this, endSolving() );
-                    return false;
+                    return INCOHERENT;
                 }
                 
                 if( !analyzeConflict() )
                 {
                     statistics( this, endSolving() );
-                    return false;
+                    trace_msg( solving, 1, "Failure occurs during the computation of the clause" );
+                    return INCOHERENT;
                 }
                 minisatHeuristic->variableDecayActivity();
                 assert( hasNextVariableToPropagate() || getCurrentDecisionLevel() == 0 );
@@ -382,7 +391,7 @@ Solver::solvePropagators(
                     clearConflictStatus();
                     delete clauseToPropagate;
                     statistics( this, endSolving() );
-                    return false;
+                    return INCOHERENT;
                 }
                 else if( size == 1 )
                 {
@@ -390,7 +399,7 @@ Solver::solvePropagators(
                     {
                         clearConflictStatus();                    
                         if( !doRestart() )
-                            return false;
+                            return INCOHERENT;
                     }
                     assignLiteral( clauseToPropagate->getAt( 0 ) );
                     delete clauseToPropagate;
@@ -436,7 +445,7 @@ Solver::solvePropagators(
     assert_msg( allClausesSatisfied(), "The model found is not correct." );
     
     statistics( this, endSolving() );
-    return modelIsValidUnderAssumptions( assumptionsAND, assumptionsOR );
+    return modelIsValidUnderAssumptions( assumptionsAND, assumptionsOR ) ? COHERENT : INCOHERENT;
 }
 
 void
@@ -449,7 +458,7 @@ Solver::shortPropagation(
 //    Vector< Literal >& binary = variableBinaryClauses[ ( getTruthValue( variable ) >> 1 ) ];    
     Vector< Literal >& binary = getDataStructure( complement ).variableBinaryClauses;
     
-    trace_msg( solving, 2, "Propagation of binary clauses for literal " << complement );
+    trace_msg( solving, 5, "Propagation of binary clauses for literal " << complement );
     for( unsigned i = 0; i < binary.size(); ++i )
     {
         if( conflictDetected() )
@@ -458,7 +467,7 @@ Solver::shortPropagation(
         Literal lit = binary[ i ];
         if( !isTrue( lit ) )
         {
-            trace_msg( solving, 5, "Inferring " << lit << " as true" );        
+            trace_msg( solving, 6, "Inferring " << lit << " as true" );        
             assignLiteral( lit, variables.getReasonForBinaryClauses( variable ) );
         }
     }
@@ -479,10 +488,10 @@ Solver::unitPropagation(
     {
         Clause* clause = wl[ j ] = wl[ i ];
         assert_msg( clause != NULL, "Next clause to propagate is null." );
-        trace_msg( solving, 5, "Considering clause " << *clause );
+        trace_msg( solving, 6, "Considering clause " << *clause );
         if( onLiteralFalse( *clause, complement ) )
         {
-            trace_msg( solving, 6, "Inferring literal " << clause->getAt( 0 ) << " using clause " << *clause );
+            trace_msg( solving, 7, "Inferring literal " << clause->getAt( 0 ) << " using clause " << *clause );
             assignLiteral( clause );
             if( conflictDetected() )
             {
@@ -513,7 +522,6 @@ Solver::propagation(
 
 //    Vector< pair< Propagator*, int > >& wl = variablePropagators[ ( getTruthValue( variable ) >> 1 ) ];
     Vector< pair< Propagator*, int > >& wl = getDataStructure( complement ).variablePropagators;
-    
     for( unsigned i = 0; i < wl.size(); ++i )
     {
         if( conflictDetected() )
@@ -555,7 +563,7 @@ Solver::propagateAtLevelZeroSatelite(
     if( hasBeenEliminated( variable ) )
         return;
     
-    trace_msg( solving, 2, "Propagating " << variables.createLiteralFromAssignedVariable( variable ) << " as true at level 0 (Satelite)" );
+    trace_msg( solving, 5, "Propagating " << variables.createLiteralFromAssignedVariable( variable ) << " as true at level 0 (Satelite)" );
     assert( !conflictDetected() );
     {
         Literal literal = variables.createLiteralFromAssignedVariable( variable );        
@@ -567,7 +575,7 @@ Solver::propagateAtLevelZeroSatelite(
         {
             Clause* clause = wl[ i ];            
             assert( !clause->hasBeenDeleted() );
-            trace_msg( solving, 5, "Considering clause " << *clause );
+            trace_msg( solving, 6, "Considering clause " << *clause );
             detachClauseFromAllLiterals( *clause, literal );            
             markClauseForDeletion( clause );
         }
@@ -585,13 +593,13 @@ Solver::propagateAtLevelZeroSatelite(
         {
             Clause* clause = wl[ i ];
             assert_msg( clause != NULL, "Next clause to propagate is null" );
-            trace_msg( solving, 5, "Considering clause " << *clause );
+            trace_msg( solving, 6, "Considering clause " << *clause );
             clause->removeLiteral( complement );
             if( clause->size() == 1 )
             {
                 if( !isTrue( clause->getAt( 0 ) ) )
                 {
-                    trace_msg( solving, 5, "Assigning literal " << clause->getAt( 0 ) << " as true" );
+                    trace_msg( solving, 7, "Assigning literal " << clause->getAt( 0 ) << " as true" );
                     assignLiteral( clause->getAt( 0 ) );
                     if( conflictDetected() )
                         break;
@@ -620,7 +628,7 @@ Solver::propagateAtLevelZero(
     Var variable )
 {
     assert( !conflictDetected() );
-    trace_msg( solving, 2, "Propagating " << variables.createLiteralFromAssignedVariable( variable ) << " as true at level 0" );
+    trace_msg( solving, 5, "Propagating " << variables.createLiteralFromAssignedVariable( variable ) << " as true at level 0" );
     
     shortPropagation( variable );
     if( conflictDetected() )
@@ -634,7 +642,7 @@ Solver::propagateAtLevelZero(
         for( unsigned i = 0; i < wl.size(); ++i )
         {
             Clause* clause = wl[ i ];
-            trace_msg( solving, 5, "Considering clause " << *clause );
+            trace_msg( solving, 6, "Considering clause " << *clause );
             detachClauseFromAllLiterals( *clause, literal );
             deleteClause( clause );
         }
@@ -652,13 +660,13 @@ Solver::propagateAtLevelZero(
         {
             Clause* clause = wl[ i ];
             assert_msg( clause != NULL, "Next clause to propagate is null" );
-            trace_msg( solving, 5, "Considering clause " << *clause );
+            trace_msg( solving, 6, "Considering clause " << *clause );
             clause->removeLiteral( complement );
             if( clause->size() == 1 )
             {
                 if( !isTrue( clause->getAt( 0 ) ) )
                 {
-                    trace_msg( solving, 5, "Assigning literal " << clause->getAt( 0 ) << " as true" );
+                    trace_msg( solving, 7, "Assigning literal " << clause->getAt( 0 ) << " as true" );
                     assignLiteral( clause->getAt( 0 ) );
                     if( conflictDetected() )
                         break;
@@ -730,7 +738,10 @@ Solver::allClausesSatisfied() const
     {
         Clause& clause = *( *it );
         if( !isSatisfied( clause ) )
+        {
+            cerr << "Clause " << clause << " is not satisfied"  << endl;
             return false;
+        }
     }
 
     return true;

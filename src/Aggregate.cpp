@@ -182,7 +182,7 @@ Aggregate::updateBound(
     for( unsigned int i = 2; i < weights.size(); i++ )
     {
         if( solver.getDecisionLevel( literals[ i ] ) != 0 )
-            continue;        
+            continue;                        
         if( solver.isTrue( literals[ i ] ) )
         {
             this->onLiteralFalse( solver, literals[ i ].getOppositeLiteral(), -i );
@@ -194,7 +194,7 @@ Aggregate::updateBound(
 //            counterW2 -= weights[ i ];
         }
     }
-    
+    trace_msg( aggregates, 1, "Counters final: " << counterW1 << "," << counterW2 );
     return ( sumOfWeights >= bound );
 }
 
@@ -202,7 +202,7 @@ unsigned int
 Aggregate::getLevelOfBackjump(
     const Solver& solver,
     unsigned int bound )
-{
+{    
     unsigned int sum = 0;
     unsigned int level = 1;
     for( int i = trail.size() - 1; i >= 0; i-- )

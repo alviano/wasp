@@ -321,14 +321,14 @@ bool
 Learning::allMarked(
     Reason* clause,
     Literal literal )
-{
-    if( clause == NULL || solver.isUndefined( literal ) )
+{    
+    if( clause == NULL || solver.isUndefined( literal ) || solver.getDecisionLevel( literal ) == 0 )
     {
         trace_msg( learning, 5, "All marked on NULL clause" );
         return false;
     }
     trace_msg( learning, 5, "All marked on clause " << *clause );
-    
+ 
     if( !clause->onNavigatingLiteralForAllMarked( solver, this, literal ) )
         return false;
     
