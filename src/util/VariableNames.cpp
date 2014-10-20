@@ -51,6 +51,7 @@ VariableNames::setName(
     Var v,
     string name )
 {
+    assert_msg( v < variables.size(), "Access element " << v << " in a vector of size " << variables.size() << "." );
     variables[ v ] = name;
 }
 
