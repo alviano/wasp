@@ -23,7 +23,7 @@
 #include <iostream>
 
 #define assert_action( condition, action ) \
-    assert( condition || ( action && false ) )
+    assert( ( condition ) || ( action && false ) )
 
 #define assert_msg( condition, msg ) \
     assert_action( condition, std::cerr << "[assert_msg] " << msg << std::endl )
