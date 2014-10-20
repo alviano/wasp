@@ -86,7 +86,7 @@ TESTS_DIR = tests
 
 TESTS_TESTER = $(TESTS_DIR)/pyregtest.py
 
-TESTS_COMMAND_AllAnswerSets = $(BINARY) -n 0 --silent #gringo | $(BINARY)
+TESTS_COMMAND_AllAnswerSets = $(BINARY) -n 0 --silent
 TESTS_COMMAND_gringo = gringo | $(BINARY) -n 0 --silent
 TESTS_COMMAND_SatModel = $(BINARY)
 TESTS_COMMAND_WeakConstraints = $(BINARY) -n 0 --silent
@@ -141,7 +141,7 @@ TESTS_DIR_sat_Intensive3 = $(TESTS_DIR)/sat/Intensive3
 TESTS_SRC_sat_Intensive3 = $(sort $(shell find $(TESTS_DIR_sat_Intensive3) -name '*.test.py'))
 TESTS_OUT_sat_Intensive3 = $(patsubst %.test.py,%.test.py.text, $(TESTS_SRC_sat_Intensive3))
 
-tests: tests/wasp1 tests/sat tests/asp
+#tests: tests/wasp1 tests/sat tests/asp
 
 test: tests/sat/Models tests/asp/gringo tests/asp/AllAnswerSets/tight tests/asp/AllAnswerSets/nontight tests/asp/AllAnswerSets/aggregates tests/asp/weakConstraints
 
@@ -150,7 +150,7 @@ tests/wasp1: tests/wasp1/AllAnswerSets
 tests/wasp1/AllAnswerSets: $(TESTS_OUT_wasp1_AllAnswerSets)
 
 $(TESTS_OUT_wasp1_AllAnswerSets):
-	@$(TESTS_TESTER) "$(TESTS_COMMAND_AllAnswerSets)" $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_AllAnswerSets) $(TESTS_REPORT_text)
+	@$(TESTS_TESTER) "$(TESTS_COMMAND_gringo)" $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_AllAnswerSets) $(TESTS_REPORT_text)
 
 tests/sat: tests/sat/Models tests/sat/Intensive tests/sat/Intensive2 tests/sat/Intensive3
 
