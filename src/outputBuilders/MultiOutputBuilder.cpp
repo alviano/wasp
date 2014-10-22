@@ -28,8 +28,7 @@ MultiOutputBuilder::foundModelOptimization(
     unsigned int numberOfLevels )
 {
     cout << "u " << cost << endl;
-    stringstream m;
-    modelStream.swap( m );
+    modelStream.str(std::string());
     modelStream << COST;
     for( int i = numberOfLevels - 1; i >= 0; --i )
     {
@@ -49,8 +48,7 @@ void
 MultiOutputBuilder::startModel()
 {
     EXIT_CODE = 10;
-    stringstream m;
-    modelStream.swap( m );
+    modelStream.str(std::string());
     modelStream << ANSWER << endl;
 }
 
@@ -80,8 +78,7 @@ MultiOutputBuilder::onProgramIncoherent()
     EXIT_CODE = 20;
     modelStream << NOMODEL_COMPETITION_OUTPUT << endl;
     lastModel = modelStream.str();
-    stringstream m;
-    modelStream.swap( m );
+    modelStream.str(std::string());
 }
 
 void
