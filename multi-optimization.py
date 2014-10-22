@@ -57,13 +57,7 @@ class Process(threading.Thread):
                 lock.release()
             elif line[0] == 'v':
                 lock.acquire()
-                if exitCode is None:
-                    while True:
-                        line = self._process.stdout.readline().decode()
-                        if not line:
-                            break
-                        print(line, end="")
-                exitCode = self._process.wait()
+                self.readModel()
                 terminate()
                 lock.release()
             else:
@@ -71,6 +65,7 @@ class Process(threading.Thread):
                 
             if lowerBound and lowerBound == upperBound:
                 lock.acquire()
+                self.readModel()
                 terminate()
                 lock.release()
 
@@ -82,12 +77,31 @@ class Process(threading.Thread):
         
     def terminate(self):
         self._process.terminate()
+        
+    def readModel(self):
+        global exitCode
+        
+        if exitCode is not None:
+            return
+        while True:
+            line = self._process.stdout.readline().decode()
+            if not line:
+                return
+            if line[0] == 'v':
+                break
+        while True:
+            line = self._process.stdout.readline().decode()
+            if not line:
+                break
+            print(line, end="")
+        exitCode = self._process.wait()
 
 if __name__ == "__main__":
     wasp = sys.argv[1] if len(sys.argv) == 2 else "wasp"
 
     processes.append(Process([wasp, "--multi", "--oll"]))
     processes.append(Process([wasp, "--multi", "--mgd"]))
+    #processes.append(Process([wasp, "--multi", "--opt"]))
     #processes.append(Process([wasp, "--multi", "--pmres"]))
 
     for line in fileinput.input("-"):
