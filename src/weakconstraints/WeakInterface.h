@@ -44,12 +44,12 @@ class WeakInterface
         inline bool visited( Var v, unsigned int value ) const { assert( v > 0 && v < inUnsatCore.size() ); return inUnsatCore[ v ] == value; }
         inline bool visited( Var v ) const { return visited( v, numberOfCalls ); }
         inline void visit( Var v ) { assert( v > 0 && v < inUnsatCore.size() ); inUnsatCore[ v ] = numberOfCalls; }
-        inline void initInUnsatCore();
+        inline void initInUnsatCore();        
         Solver& solver;
         vector< unsigned int > inUnsatCore;
         unsigned int numberOfCalls;
         vector< Literal > assumptionsAND;
-        vector< Literal > assumptionsOR;
+        vector< Literal > assumptionsOR;        
 };
 
 void

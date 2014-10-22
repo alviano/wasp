@@ -54,6 +54,7 @@ namespace wasp
 #define OPTIONID_third_competition_output ( 'z' + 22 )
 #define OPTIONID_printprogram ( 'z' + 23 )
 #define OPTIONID_printdimacs ( 'z' + 24 )
+#define OPTIONID_multi ( 'z' + 25 )
 
 /* HEURISTIC OPTIONS */
 #define OPTIONID_fuheuristic ( 'z' + 30 )
@@ -168,6 +169,7 @@ Options::parse(
                 { "third-competition-output", no_argument, NULL, OPTIONID_third_competition_output },
                 { "printprogram", no_argument, NULL, OPTIONID_printprogram },
                 { "printdimacs", no_argument, NULL, OPTIONID_printdimacs },
+                { "multi", no_argument, NULL, OPTIONID_multi },
 
                 /* HEURISTIC OPTIONS */
 //                { "heuristic-berkmin", optional_argument, NULL, OPTIONID_berkminheuristic },
@@ -290,6 +292,10 @@ Options::parse(
 
             case OPTIONID_printdimacs:
                 printDimacs = true;
+                break;
+                
+            case OPTIONID_multi:
+                outputPolicy = MULTI;
                 break;
 
             case OPTIONID_berkminheuristic:

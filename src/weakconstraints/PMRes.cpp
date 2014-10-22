@@ -47,8 +47,8 @@ PMRes::run()
 //    unsigned int originalNumberOfVariables = solver.numberOfVariables();    
 
     unsigned int result = solver.solve( assumptionsAND, assumptionsOR );
-    
-    
+
+    unsigned int lb = 0;
     while( result == INCOHERENT )
     {        
         ++numberOfCalls;
@@ -58,7 +58,7 @@ PMRes::run()
         //The incoherence does not depend on weak constraints
         if( unsatCore.size() == 0 )
             return INCOHERENT;
-        
+
         solver.clearConflictStatus();
         if( solver.getCurrentDecisionLevel() != 0 && !solver.doRestart() )
             return INCOHERENT;
@@ -67,15 +67,18 @@ PMRes::run()
         {
             Var v = unsatCore[ i ].getVariable();
             visit( v );
-        }
-
+        }        
         unsigned int minWeight = computeMinWeight();
+        lb += minWeight;
+        solver.foundLowerBound( lb );
         vector< Literal > optLiterals;
 
         bool trivial = false;
         Clause* clause = new Clause();
         trace_msg( weakconstraints, 1, "Computing hard clause " );
         unsigned int originalSize = solver.numberOfOptimizationLiterals();
+        
+        unsigned int atLevelZeroWeight = 0;
         for( unsigned int i = 0; i < originalSize; i++ )
         {
             OptimizationLiteralData& data = solver.getOptimizationLiteral( i );
@@ -101,7 +104,11 @@ PMRes::run()
 
                 if( data.weight > minWeight )
                     solver.addOptimizationLiteral( lit, data.weight - minWeight, UINT_MAX, true );
-            }            
+            }
+            else
+            {
+                atLevelZeroWeight += data.weight;
+            }
         }        
 
         if( clause->size() != 0 )
@@ -114,12 +121,14 @@ PMRes::run()
             #ifndef NDEBUG
             bool res =
             #endif
-            addAuxClausesCompressed( optLiterals );
+            addAuxClausesCompressed( optLiterals, minWeight );
             assert( res );
         }
         else
         {
             trace_msg( weakconstraints, 1, "Derived empty clause" );
+            if( atLevelZeroWeight > minWeight )
+                lb += atLevelZeroWeight - minWeight;
         }
 
         assumptionsAND.clear();
@@ -127,8 +136,11 @@ PMRes::run()
         result = solver.solve( assumptionsAND, assumptionsOR );
     }
 
+    unsigned int cost = solver.computeCostOfModel();
     solver.printAnswerSet();
-    solver.printOptimizationValue( solver.computeCostOfModel() );
+    solver.printOptimizationValue( cost );
+
+    assert_msg( lb == cost, lb << " != " << cost );    
     return OPTIMUM_FOUND;
 }
 
@@ -181,7 +193,8 @@ PMRes::addAuxClauses(
 
 bool
 PMRes::addAuxClausesCompressed(
-    vector< Literal >& optLiterals )
+    vector< Literal >& optLiterals,
+    unsigned int minWeight )
 {
     assert( !optLiterals.empty() );
     vector< Literal > auxLits;
@@ -205,7 +218,7 @@ PMRes::addAuxClausesCompressed(
         clause->addLiteral( auxLits[ i + 1 ].getOppositeLiteral() );
         Var relaxVar = relaxClause( clause );
 
-        solver.addOptimizationLiteral( Literal( relaxVar, POSITIVE ), 1, UINT_MAX, true );
+        solver.addOptimizationLiteral( Literal( relaxVar, POSITIVE ), minWeight, UINT_MAX, true );
         trace_msg( weakconstraints, 4, "Adding clause " << *clause );
         if( !addClauseToSolver( clause ) )
             return false;

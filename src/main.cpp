@@ -17,6 +17,7 @@
  */
 
 #include <cstdlib>
+#include <csignal>
 
 #include "WaspFacade.h"
 #include "util/Options.h"
@@ -24,15 +25,53 @@ using namespace std;
 
 int EXIT_CODE = 0;
 
+class SignalException : public runtime_error
+{
+    public:
+        SignalException( const string& _message ) : runtime_error( _message ) {}
+};
+
+class SignalHandler
+{
+    public:        
+        SignalHandler()
+        {            
+        }
+        
+        void init()
+        {
+            signal( SIGTERM, SignalHandler::interrupted );
+            signal( SIGINT, SignalHandler::interrupted );
+            signal( SIGXCPU, SignalHandler::interrupted );
+        }
+        
+        static void interrupted( int )
+        {
+            throw SignalException( "Killed. Bye!" );
+        }            
+};
+
 int main( int argc, char** argv )
 {
     wasp::Options::parse( argc, argv );    
-    WaspFacade waspFacade;
-    wasp::Options::setOptions( waspFacade );
-    waspFacade.greetings();
-    waspFacade.readInput();    
-    waspFacade.solve();
-
+    WaspFacade waspFacade;     
+    wasp::Options::setOptions( waspFacade );        
+    try
+    {
+        SignalHandler signalHandler;
+        signalHandler.init();
+        waspFacade.greetings();
+        waspFacade.readInput();
+        waspFacade.solve();
+        waspFacade.onFinish();
+    }
+    catch ( SignalException& exceptions )
+    {
+        waspFacade.onKill();
+        cerr << exceptions.what() << endl;
+        EXIT_CODE = 11;
+    }    
+    
     return EXIT_CODE;
 }
 

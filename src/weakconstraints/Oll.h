@@ -20,21 +20,26 @@
 #define OLL_H
 
 #include "WeakInterface.h"
+#include <unordered_map>
+using namespace std;
 
-struct OllData
+class OllData
 {
-    unsigned int bound_;
-    unsigned int guardId_;
-    vector< Literal > literals_;
-    vector< unsigned int > weights_;
-
-    void addElement( unsigned int bound, unsigned int guard, vector< Literal >& literals, vector< unsigned int >& weights )
-    {
-        bound_ = bound;
-        guardId_ = guard;
-        literals_.swap( literals );
-        weights_.swap( weights );
-    }
+    public:    
+        inline OllData( unsigned int bound, unsigned int guard, unsigned int weight, vector< Literal >& literals, vector< unsigned int >& weights )        
+        {
+            bound_ = bound;
+            guardId_ = guard;
+            weight_ = weight;
+            literals_.swap( literals );
+            weights_.swap( weights );
+        }
+        
+        unsigned int bound_;
+        unsigned int guardId_;
+        unsigned int weight_;
+        vector< Literal > literals_;
+        vector< unsigned int > weights_;    
 };
 
 class Oll : public WeakInterface
@@ -45,16 +50,17 @@ class Oll : public WeakInterface
 
     private:
         void processCoreOll( vector< Literal >& literals, vector< unsigned int >& weights, unsigned int minWeight );
-        bool addAggregateOll( unordered_map< Var, OllData* >& guardMap, vector< Literal >& literals, vector< unsigned int >& weights, unsigned int bound );
-        inline Var addBinaryClauseForAggregateOll( Var aggrId );        
+        bool addAggregateOll( unordered_map< Var, OllData* >& guardMap, vector< Literal >& literals, vector< unsigned int >& weights, unsigned int bound, unsigned int weightOfOptimizationLiteral );
+        inline Var addBinaryClauseForAggregateOll( Var aggrId, unsigned int weightOfOptimizationLiteral );        
 };
 
 Var
 Oll::addBinaryClauseForAggregateOll(
-    Var aggrId )
+    Var aggrId,
+    unsigned int weightOfOptimizationLiteral )
 {    
     Literal lit( addAuxVariable(), POSITIVE );
-    solver.addOptimizationLiteral( lit, 1, UINT_MAX, true );    
+    solver.addOptimizationLiteral( lit, weightOfOptimizationLiteral, UINT_MAX, true );    
     solver.addClause( lit, Literal( aggrId, NEGATIVE ) );
     
     assert( !solver.isFalse( aggrId ) );

@@ -74,6 +74,8 @@ class Solver
         ~Solver();
         
         inline void greetings(){ outputBuilder->greetings(); }
+        inline void onFinish() { outputBuilder->onFinish(); }
+        inline void onKill() { outputBuilder->onKill(); }
         
         inline unsigned int solve();
         inline unsigned int solve( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
@@ -406,6 +408,8 @@ class Solver
         
         inline void setMaxNumberOfChoices( unsigned int max ) { maxNumberOfChoices = max; }
         inline unsigned int getPrecomputedCost() const { return precomputedCost; }
+        
+        inline void foundLowerBound( unsigned int lb ) { outputBuilder->foundLowerBound( lb ); }
         
     private:
         HCComponent* hcComponentForChecker;

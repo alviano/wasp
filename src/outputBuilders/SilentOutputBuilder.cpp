@@ -18,7 +18,12 @@
 
 #include "SilentOutputBuilder.h"
 
+//void
+//SilentOutputBuilder::onProgramIncoherent()
+//{
+//}
+
 void
-SilentOutputBuilder::onProgramIncoherent()
+SilentOutputBuilder::greetings()
 {
 }

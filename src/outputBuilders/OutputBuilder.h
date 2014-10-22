@@ -38,6 +38,9 @@ class OutputBuilder
         virtual void greetings(){}
         virtual void foundModelOptimization( Solver& solver, unsigned int cost, unsigned int numberOfLevels );
         virtual void optimumFound();
+        virtual void foundLowerBound( unsigned int );
+        virtual void onKill();
+        virtual void onFinish();
 };
 
 #endif

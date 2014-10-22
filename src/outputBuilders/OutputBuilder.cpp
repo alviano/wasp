@@ -44,3 +44,19 @@ OutputBuilder::optimumFound()
     cout << OPTIMUM_STRING << endl;
     EXIT_CODE = 30;
 }
+
+void
+OutputBuilder::foundLowerBound(
+    unsigned int )
+{
+}
+
+void
+OutputBuilder::onKill()
+{
+}
+
+void
+OutputBuilder::onFinish()
+{
+}

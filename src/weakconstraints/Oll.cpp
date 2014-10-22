@@ -21,6 +21,7 @@
 unsigned int
 Oll::run()
 {    
+    unsigned int lb = 0;
     trace_msg( weakconstraints, 1, "Starting algorithm OLL" );    
     computeAssumptionsAND();        
     
@@ -32,7 +33,7 @@ Oll::run()
     solver.setComputeUnsatCores( true );
     solver.turnOffSimplifications();
     while( solver.solve( assumptionsAND, assumptionsOR ) == INCOHERENT )
-    {
+    {        
         vector< unsigned int > auxVariablesInUnsatCore;
         ++numberOfCalls;
         assert( solver.getUnsatCore() != NULL );
@@ -59,8 +60,10 @@ Oll::run()
         
         unsigned int minWeight = computeMinWeight();
         processCoreOll( literals, weights, minWeight );
+        lb += minWeight;
+        solver.foundLowerBound( lb );
         trace_msg( weakconstraints, 2, "Adding aggregate from unsat core" );
-        if( !addAggregateOll( guardMap, literals, weights, 2 ) )
+        if( !addAggregateOll( guardMap, literals, weights, 2, minWeight ) )
             return INCOHERENT;        
         
         for( unsigned int i = 0; i < auxVariablesInUnsatCore.size(); i++ )
@@ -73,17 +76,19 @@ Oll::run()
             {
                 trace_msg( weakconstraints, 3, "Incrementing by one bound (" << ollData->bound_ <<  ") of aggregate " << guardId );
                 assert( ollData->literals_.size() > 0 );
-                if( !addAggregateOll( guardMap, ollData->literals_, ollData->weights_, ollData->bound_ + 1 ) )
+                if( !addAggregateOll( guardMap, ollData->literals_, ollData->weights_, ollData->bound_ + 1, ollData->weight_ ) )
                     return INCOHERENT;
             }
         }
         
         assumptionsAND.clear();
-        computeAssumptionsAND();        
+        computeAssumptionsAND();
     }
         
+    unsigned int ub = solver.computeCostOfModel();
+    assert_msg( lb == ub, lb << " != " << ub );
     solver.printAnswerSet();
-    solver.printOptimizationValue( solver.computeCostOfModel() );
+    solver.printOptimizationValue( ub );
     return OPTIMUM_FOUND;
 }
 
@@ -122,7 +127,8 @@ Oll::addAggregateOll(
     unordered_map< Var, OllData* >& guardMap,    
     vector< Literal >& literals,
     vector< unsigned int >& weights,
-    unsigned int bound )
+    unsigned int bound,
+    unsigned int weightOfOptimizationLiteral )
 {
     Var aggrId = addAuxVariable();
     Aggregate* aggregate = createAggregate( aggrId, literals, weights );     
@@ -132,9 +138,8 @@ Oll::addAggregateOll(
     if( solver.isFalse( aggrId ) )
         return true;
     
-    Var guardId = addBinaryClauseForAggregateOll( aggrId );
-    OllData* ollData = new OllData();
-    ollData->addElement( bound, guardId, literals, weights );
+    Var guardId = addBinaryClauseForAggregateOll( aggrId, weightOfOptimizationLiteral );
+    OllData* ollData = new OllData( bound, guardId, weightOfOptimizationLiteral, literals, weights );
     guardMap[ guardId ] = ollData;
     return true;
 }

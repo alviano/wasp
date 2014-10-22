@@ -29,6 +29,7 @@
 #include "outputBuilders/DimacsOutputBuilder.h"
 
 #include "MinisatHeuristic.h"
+#include "outputBuilders/MultiOutputBuilder.h"
 
 void
 WaspFacade::readInput()
@@ -206,6 +207,10 @@ WaspFacade::setOutputPolicy(
             
         case THIRD_COMPETITION_OUTPUT:
             solver.setOutputBuilder( new ThirdCompetitionOutputBuilder() );
+            break;
+            
+        case MULTI:
+            solver.setOutputBuilder( new MultiOutputBuilder() );
             break;
             
         case WASP_OUTPUT:

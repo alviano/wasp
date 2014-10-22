@@ -42,6 +42,8 @@ class WaspFacade
         
         void readInput();
         void solve();
+        inline void onFinish() { solver.onFinish(); }
+        inline void onKill() { solver.onKill(); }
         
         inline void greetings(){ solver.greetings(); }
         
@@ -58,9 +60,9 @@ class WaspFacade
         inline void setWeakConstraintsAlgorithm( WEAK_CONSTRAINTS_ALG alg ) { weakConstraintsAlg = alg; }
         
         inline unsigned int solveWithWeakConstraints();        
-        
+
     private:
-        Solver solver;                
+        Solver solver;
         
         unsigned int numberOfModels;
         unsigned int maxModels;
@@ -71,7 +73,7 @@ class WaspFacade
 };
 
 WaspFacade::WaspFacade() : numberOfModels( 0 ), maxModels( 1 ), printProgram( false ), printDimacs( false ), weakConstraintsAlg( OPT )
-{    
+{
 }
 
 unsigned int

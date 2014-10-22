@@ -25,7 +25,8 @@ class SilentOutputBuilder : public WaspOutputBuilder
 {
     public:
         inline SilentOutputBuilder();
-        virtual void onProgramIncoherent();
+//        virtual void onProgramIncoherent();        
+        virtual void greetings();        
 };
 
 SilentOutputBuilder::SilentOutputBuilder()
