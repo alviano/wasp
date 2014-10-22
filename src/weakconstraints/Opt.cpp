@@ -48,11 +48,7 @@ Opt::run()
         {
             trace_msg( weakconstraints, 3, "Failed updating of optimization aggregate: return" );
             break;        
-        }
-        
-        static int loop = 0;
-        if( ++loop > 15 )
-            exit( 0 );
+        }                
         
         trace_msg( weakconstraints, 2, "Calling solver..." );
     }
