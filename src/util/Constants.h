@@ -62,6 +62,8 @@
 #define BCD 4
 #define BB 5
 #define PMRES 6
+#define OLLBB 7
+#define OLLBBREST 8
 
 #define INCOHERENT 0
 #define COHERENT 1

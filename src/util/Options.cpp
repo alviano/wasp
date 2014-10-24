@@ -91,6 +91,7 @@ namespace wasp
 #define OPTIONID_bcd ( 'z' + 204 )
 #define OPTIONID_bb ( 'z' + 205 )
 #define OPTIONID_pmres ( 'z' + 206 )
+#define OPTIONID_ollbb ( 'z' + 207 )
 
     
 #ifdef TRACE_ON
@@ -208,6 +209,7 @@ Options::parse(
                 { "bcd", no_argument, NULL, OPTIONID_bcd },
                 { "bb", no_argument, NULL, OPTIONID_bb },
                 { "pmres", no_argument, NULL, OPTIONID_pmres },
+                { "ollbb", optional_argument, NULL, OPTIONID_ollbb },
 
                 // The NULL-option indicates the end of the array.
                 { NULL, 0, NULL, 0 }
@@ -435,6 +437,16 @@ Options::parse(
                 
             case OPTIONID_pmres:
                 weakConstraintsAlg = PMRES;
+                break;
+                
+            case OPTIONID_ollbb:
+                weakConstraintsAlg = OLLBB;
+                if( optarg )
+                {                    
+                    unsigned int value = atoi( optarg );
+                    if( value == 1 )
+                        weakConstraintsAlg = OLLBBREST;
+                }
                 break;
                 
             default:

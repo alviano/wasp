@@ -258,8 +258,7 @@ Solver::solveWithoutPropagators(
             statistics( this, endSolving() );
             return INCOHERENT;
         }
-        static unsigned int choices = 0;
-        if( ++choices > maxNumberOfChoices )
+        if( ++numberOfChoices > maxNumberOfChoices  || numberOfRestarts > maxNumberOfRestarts )
             return INTERRUPTED;        
         
         propagationLabel:;
@@ -323,8 +322,7 @@ Solver::solvePropagators(
             statistics( this, endSolving() );
             return INCOHERENT;
         }
-        static unsigned int choices = 0;
-        if( ++choices > maxNumberOfChoices )
+        if( ++numberOfChoices > maxNumberOfChoices || numberOfRestarts > maxNumberOfRestarts )
             return INTERRUPTED; 
         propagationLabel:;
         Var variableToPropagate;
@@ -384,8 +382,8 @@ Solver::solvePropagators(
                     partialChecks = false;
                 else
                     partialChecks = true;
-                unsigned int size = clauseToPropagate->size();               
-                statistics( this, onLearningFromPropagators( size ) );                
+                unsigned int size = clauseToPropagate->size();
+                statistics( this, onLearningFromPropagators( size ) );                                
                 if( size == 0 )
                 {
                     clearConflictStatus();

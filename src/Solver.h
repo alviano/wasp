@@ -407,6 +407,7 @@ class Solver
         inline void setWeighted() { weighted_ = true; }
         
         inline void setMaxNumberOfChoices( unsigned int max ) { maxNumberOfChoices = max; }
+        inline void setMaxNumberOfRestarts( unsigned int max ) { maxNumberOfRestarts = max; }
         inline unsigned int getPrecomputedCost() const { return precomputedCost; }
         
         inline void foundLowerBound( unsigned int lb ) { outputBuilder->foundLowerBound( lb ); }
@@ -584,6 +585,9 @@ class Solver
         Clause* unsatCore;
         bool weighted_;
         unsigned int maxNumberOfChoices;
+        unsigned int numberOfChoices;
+        unsigned int maxNumberOfRestarts;
+        unsigned int numberOfRestarts;
         
         #ifndef NDEBUG
         bool checkStatusBeforePropagation( Var variable )
@@ -629,7 +633,10 @@ Solver::Solver()
     computeUnsatCores_( false ),
     unsatCore( NULL ),
     weighted_( false ),
-    maxNumberOfChoices( UINT_MAX )
+    maxNumberOfChoices( UINT_MAX ),
+    numberOfChoices( 0 ),
+    maxNumberOfRestarts( UINT_MAX ),
+    numberOfRestarts( 0 )
 {
     dependencyGraph = new DependencyGraph( *this );
     satelite = new Satelite( *this );
@@ -672,10 +679,8 @@ Solver::solve(
     {
         if( conflictLiteral != Literal::null )
             computeUnsatCore();
-        
-//        assert( 0 && "RIVEDIMI" );
-//        else
-//            unsatCore = new Clause();
+        else
+            unsatCore = new Clause();
     }
     clearAfterSolveUnderAssumptions( assumptionsAND, assumptionsOR );
     clearConflictStatus();
@@ -983,6 +988,7 @@ bool
 Solver::doRestart()
 {
     trace( solving, 2, "Performing restart.\n" );
+    numberOfRestarts++;
     restart->onRestart();
     unroll( 0 );
 
@@ -1666,7 +1672,8 @@ Solver::updateOptimizationAggregate(
         
     unsigned int backjumpingLevel = 0; //optimizationAggregate->getLevelOfBackjump( *this, modelCost - precomputedCost );
     trace_msg( weakconstraints, 2, "Backjumping level is " << backjumpingLevel );
-    unroll( backjumpingLevel );
+    if( getCurrentDecisionLevel() != 0 )
+        unroll( backjumpingLevel );
     clearConflictStatus();
     
     if( !optimizationAggregate->updateBound( *this, modelCost - precomputedCost ) )

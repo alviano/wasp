@@ -59,7 +59,8 @@ Oll::run()
         vector< unsigned int > weights;
         
         unsigned int minWeight = computeMinWeight();
-        processCoreOll( literals, weights, minWeight );
+        if( !processCoreOll( literals, weights, minWeight ) )
+            return INCOHERENT;
         lb += minWeight;
         solver.foundLowerBound( lb );
         trace_msg( weakconstraints, 2, "Adding aggregate from unsat core" );
@@ -92,13 +93,16 @@ Oll::run()
     return OPTIMUM_FOUND;
 }
 
-void
+bool
 Oll::processCoreOll(
     vector< Literal >& literals,
     vector< unsigned int >& weights,
     unsigned int minWeight )
 {
     trace_msg( weakconstraints, 2, "Processing core for algorithm OLL" );
+    
+    bool trivial = false;
+    Clause* clause = new Clause();
     unsigned int originalSize = solver.numberOfOptimizationLiterals();
     for( unsigned int i = 0; i < originalSize; i++ )
     {
@@ -106,20 +110,48 @@ Oll::processCoreOll(
         if( optLitData.isRemoved() )
             continue;
 
-        trace_msg( weakconstraints, 3, "Considering literal " << optLitData.lit << " - weight " << optLitData.weight );
-        Var v = optLitData.lit.getVariable();
+        Literal lit = optLitData.lit;
+        trace_msg( weakconstraints, 3, "Considering literal " << lit << " - weight " << optLitData.weight );
+        Var v = lit.getVariable();
         if( visited( v ) )
         {
             trace_msg( weakconstraints, 4, "is in unsat core" );
-            literals.push_back( optLitData.lit );
+            literals.push_back( lit );
 //            weights.push_back( optLitData.weight );
             weights.push_back( 1 );
             optLitData.remove();
             
+            if( solver.isTrue( lit ) )
+                trivial = true;
+            
+            if( !solver.isFalse( lit ) )
+                clause->addLiteral( lit );
+            
             if( optLitData.weight > minWeight )
-                solver.addOptimizationLiteral( optLitData.lit, optLitData.weight - minWeight, UINT_MAX, true );            
+                solver.addOptimizationLiteral( lit, optLitData.weight - minWeight, UINT_MAX, true );            
         }
     }
+    
+    if( trivial )
+    {
+        delete clause;
+        return true;
+    }
+
+    bool res;
+    if( clause->size() == 2 )
+    {
+        res = solver.addClause( clause->getAt( 0 ), clause->getAt( 1 ) );
+        delete clause;        
+    }
+    else
+    {
+        res = solver.addClause( clause );
+        if( res )
+            solver.attachClause( *clause );
+    }
+    
+    return res;
 }
 
 bool

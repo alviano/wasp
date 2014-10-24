@@ -46,10 +46,11 @@ class Oll : public WeakInterface
 {
     public:
         inline Oll( Solver& s ) : WeakInterface( s ) {}
-        unsigned int run();
+        virtual ~Oll() {}
+        virtual unsigned int run();
 
-    private:
-        void processCoreOll( vector< Literal >& literals, vector< unsigned int >& weights, unsigned int minWeight );
+    protected:
+        bool processCoreOll( vector< Literal >& literals, vector< unsigned int >& weights, unsigned int minWeight );
         bool addAggregateOll( unordered_map< Var, OllData* >& guardMap, vector< Literal >& literals, vector< unsigned int >& weights, unsigned int bound, unsigned int weightOfOptimizationLiteral );
         inline Var addBinaryClauseForAggregateOll( Var aggrId, unsigned int weightOfOptimizationLiteral );        
 };

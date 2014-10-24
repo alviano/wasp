@@ -33,6 +33,7 @@ using namespace std;
 #include "weakconstraints/Oll.h"
 #include "weakconstraints/Opt.h"
 #include "weakconstraints/PMRes.h"
+#include "weakconstraints/OllBB.h"
 
 class WaspFacade
 {
@@ -106,12 +107,20 @@ WaspFacade::solveWithWeakConstraints()
             w = new PMRes( solver );
             break;
 
+        case OLLBB:
+            w = new OllBB( solver );
+            break;
+            
+        case OLLBBREST:
+            w = new OllBB( solver, true );
+            break;
+
         case MGDOLL:    
         default:
             if( solver.isWeighted() )
                 w = new Mgd( solver );
             else
-                w = new Oll( solver );            
+                w = new Oll( solver );             
 //            w = new OptOll( solver );
             break;
     }
