@@ -1254,7 +1254,7 @@ Solver::clearAfterSolveUnderAssumptions(
 
 bool compareWeight( OptimizationLiteralData* o1, OptimizationLiteralData* o2 )
 {
-    return o1->weight < o2->weight;
+    return o1->weight > o2->weight;
 }
 
 void
