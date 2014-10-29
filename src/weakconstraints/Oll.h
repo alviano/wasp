@@ -39,7 +39,7 @@ class OllData
         unsigned int guardId_;
         unsigned int weight_;
         vector< Literal > literals_;
-        vector< unsigned int > weights_;    
+        vector< unsigned int > weights_;        
 };
 
 class Oll : public WeakInterface
@@ -51,8 +51,9 @@ class Oll : public WeakInterface
 
     protected:
         bool processCoreOll( vector< Literal >& literals, vector< unsigned int >& weights, unsigned int minWeight );
-        bool addAggregateOll( unordered_map< Var, OllData* >& guardMap, vector< Literal >& literals, vector< unsigned int >& weights, unsigned int bound, unsigned int weightOfOptimizationLiteral );
-        inline Var addBinaryClauseForAggregateOll( Var aggrId, unsigned int weightOfOptimizationLiteral );        
+        bool addAggregateOll( vector< Literal >& literals, vector< unsigned int >& weights, unsigned int bound, unsigned int weightOfOptimizationLiteral );
+        inline Var addBinaryClauseForAggregateOll( Var aggrId, unsigned int weightOfOptimizationLiteral );
+        unordered_map< Var, OllData* > guardMap;
 };
 
 Var

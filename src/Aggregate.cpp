@@ -79,18 +79,18 @@ Aggregate::onLiteralFalse(
     }
     
     unsigned int index = ( position > 0 ? position : -position ); 
-    unsigned int& counter = ( position > 0 ? counterW2 : counterW1 );
+    int& counter = ( position > 0 ? counterW2 : counterW1 );
 
     trace_msg( aggregates, 2, "Updating counter. Old value: " << counter << " - New value: " << counter - weights[ index ] );
     
-    if( counter < weights[ index ] )
+    if( counter < (int) weights[ index ] )
     {
         assert_msg( solver.getDecisionLevel( currentLiteral ) == 0, "Literal " << currentLiteral << " in " << *this << " has a decision level " << solver.getDecisionLevel( currentLiteral ) );
         trace_msg( aggregates, 3, "A conflict happened." );        
         solver.assignLiteral( currentLiteral, this );
         return false;
     }
-    assert( counter >= weights[ index ] );
+    assert( counter >= (int) weights[ index ] );
     counter -= weights[ index ];
     watched[ index ] = false;
     
@@ -98,7 +98,7 @@ Aggregate::onLiteralFalse(
         trail.push_back( position );
 
     trace_msg( aggregates, 2, "Umax: " << umax << " - size: " << size() );
-    while( umax < literals.size() && weights[ umax ] > counter )
+    while( umax < literals.size() && (int) weights[ umax ] > counter )
     {
         if( watched[ umax ] )
         {
@@ -168,10 +168,10 @@ Aggregate::updateBound(
         // if( !literals[ i ].isFalse() || literals[ i ].getDecisionLevel() != 0 ) 
         sumOfWeights += weights[ i ]; 
     }
-    trace_msg( aggregates, 1, "Sum of weights: " << sumOfWeights );
+    trace_msg( aggregates, 1, "Sum of weights: " << sumOfWeights );    
 
-    unsigned int w1 = ( sumOfWeights - bound + 1 );
-    unsigned int w = max( w1, bound );
+    int w1 = ( sumOfWeights - bound + 1 );
+    int w = max( w1, (int) bound );
 
     counterW1 = sumOfWeights - w1 + w;
     counterW2 = sumOfWeights - bound + w;

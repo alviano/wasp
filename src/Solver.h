@@ -400,6 +400,7 @@ class Solver
         
         inline OptimizationLiteralData& getOptimizationLiteral( unsigned int pos ) { assert( pos < optimizationLiterals.size() ); return *optimizationLiterals[ pos ]; }
         inline unsigned int numberOfOptimizationLiterals() const { return optimizationLiterals.size(); }
+        void sortOptimizationLiterals();
         
         inline Aggregate* createAggregate( const vector< Literal >& literals, const vector< unsigned int >& weights );
         
@@ -464,7 +465,7 @@ class Solver
         uint64_t literalsInLearnedClauses;
         
         vector< Var > eliminatedVariables;
-        vector< Clause* > poolOfClauses;
+//        vector< Clause* > poolOfClauses;
 
         DependencyGraph* dependencyGraph;
         Vector< PostPropagator* > postPropagators;
@@ -1572,24 +1573,26 @@ Clause*
 Solver::newClause(
     unsigned reserve )
 {
-    if( poolOfClauses.empty() )
-    {
-        unsigned int bufferSize = 20;
-        for( unsigned int i = 0; i < bufferSize; i++ )
-            poolOfClauses.push_back( new Clause( reserve ) );       
-    }
-    
-    Clause* back = poolOfClauses.back();
-    poolOfClauses.pop_back();
-    return back;
+//    if( poolOfClauses.empty() )
+//    {
+//        unsigned int bufferSize = 20;
+//        for( unsigned int i = 0; i < bufferSize; i++ )
+//            poolOfClauses.push_back( new Clause( reserve ) );       
+//    }
+//    
+//    Clause* back = poolOfClauses.back();
+//    poolOfClauses.pop_back();
+//    return back;
+    return new Clause( reserve );
 }
 
 void
 Solver::releaseClause(
     Clause* clause )
 {
-    clause->free();    
-    poolOfClauses.push_back( clause );
+//    clause->free();    
+//    poolOfClauses.push_back( clause );
+    delete clause;
 }
 
 void

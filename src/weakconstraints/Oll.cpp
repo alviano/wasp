@@ -26,9 +26,7 @@ Oll::run()
     computeAssumptionsAND();        
     
     initInUnsatCore();    
-    unsigned int originalNumberOfVariables = solver.numberOfVariables();
-    
-    unordered_map< Var, OllData* > guardMap;
+    unsigned int originalNumberOfVariables = solver.numberOfVariables();        
 
     solver.setComputeUnsatCores( true );
     solver.turnOffSimplifications();
@@ -62,22 +60,23 @@ Oll::run()
         if( !processCoreOll( literals, weights, minWeight ) )
             return INCOHERENT;
         lb += minWeight;
-        solver.foundLowerBound( lb );
-        trace_msg( weakconstraints, 2, "Adding aggregate from unsat core" );
-        if( !addAggregateOll( guardMap, literals, weights, 2, minWeight ) )
+        solver.foundLowerBound( lb );        
+        if( !addAggregateOll( literals, weights, 2, minWeight ) )
             return INCOHERENT;        
         
         for( unsigned int i = 0; i < auxVariablesInUnsatCore.size(); i++ )
         {
             Var guardId = auxVariablesInUnsatCore[ i ];
+            if( guardMap.find( guardId ) == guardMap.end() )
+                continue;
             assert( guardMap.find( guardId ) != guardMap.end() );
-            
+                        
             OllData* ollData = guardMap[ guardId ];
             if( ollData->bound_ < ollData->literals_.size() )
             {
                 trace_msg( weakconstraints, 3, "Incrementing by one bound (" << ollData->bound_ <<  ") of aggregate " << guardId );
                 assert( ollData->literals_.size() > 0 );
-                if( !addAggregateOll( guardMap, ollData->literals_, ollData->weights_, ollData->bound_ + 1, ollData->weight_ ) )
+                if( !addAggregateOll( ollData->literals_, ollData->weights_, ollData->bound_ + 1, ollData->weight_ ) )
                     return INCOHERENT;
             }
         }
@@ -156,12 +155,56 @@ Oll::processCoreOll(
 
 bool
 Oll::addAggregateOll(
-    unordered_map< Var, OllData* >& guardMap,    
     vector< Literal >& literals,
     vector< unsigned int >& weights,
     unsigned int bound,
     unsigned int weightOfOptimizationLiteral )
 {
+    if( literals.size() == 1 )
+    {
+        trace_msg( weakconstraints, 2, "Literal " << literals[ 0 ] << " is removed from assumptions. Nothing more to do" );
+        return true;
+    }
+        
+    if( literals.size() == bound )
+    {
+        trace_msg( weakconstraints, 2, "The size of aggregate is equal to the bound (" << literals.size() << ")" );
+        Literal relaxLiteral( addAuxVariable(), POSITIVE );
+        solver.addOptimizationLiteral( relaxLiteral, weightOfOptimizationLiteral, UINT_MAX, true );
+
+        bool trivial = false;
+        Clause* clause = solver.newClause( literals.size() + 1 );
+        for( unsigned int i = 0; i < literals.size(); i++ )
+        {
+            Literal l = literals[ i ].getOppositeLiteral();
+            if( solver.isUndefined( l ) )
+                clause->addLiteral( l );
+            else if( solver.isTrue( l ) )
+            {
+                trivial = true;
+                break;
+            }                
+        }
+        
+        vector< Literal > tmp;
+        literals.swap( tmp );
+        if( trivial )
+        {
+            solver.releaseClause( clause );
+            return true;
+        }        
+        clause->addLiteral( relaxLiteral );
+        trace_msg( weakconstraints, 3, "Adding clause " << *clause );
+        if( clause->size() == 1 )
+            return solver.addClause( clause->getAt( 0 ) );
+        else if( clause->size() == 2 )
+            return solver.addClause( clause->getAt( 0 ), clause->getAt( 1 ) );        
+
+        solver.attachClause( *clause );
+        return solver.addClause( clause );
+    }
+    
+    trace_msg( weakconstraints, 2, "Adding aggregate from unsat core" );
     Var aggrId = addAuxVariable();
     Aggregate* aggregate = createAggregate( aggrId, literals, weights );     
     if( !processAndAddAggregate( aggregate, bound ) )

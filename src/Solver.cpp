@@ -42,12 +42,12 @@ Solver::~Solver()
         learnedClauses.pop_back();
     }
     
-    while( !poolOfClauses.empty() )
-    {
-        assert( poolOfClauses.back() );
-        delete poolOfClauses.back();
-        poolOfClauses.pop_back();
-    }
+//    while( !poolOfClauses.empty() )
+//    {
+//        assert( poolOfClauses.back() );
+//        delete poolOfClauses.back();
+//        poolOfClauses.pop_back();
+//    }
     
     while( !gusDataVector.empty() )
     {
@@ -1250,4 +1250,17 @@ Solver::clearAfterSolveUnderAssumptions(
     
     for( unsigned int i = 0; i < assumptionsOR.size(); i++ )
         setAssumptionOR( assumptionsOR[ i ], false );
+}
+
+bool compareWeight( OptimizationLiteralData* o1, OptimizationLiteralData* o2 )
+{
+    return o1->weight < o2->weight;
+}
+
+void
+Solver::sortOptimizationLiterals()
+{
+    if( !weighted_ )
+        return;
+    stable_sort( optimizationLiterals.begin(), optimizationLiterals.end(), compareWeight );
 }

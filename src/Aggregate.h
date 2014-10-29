@@ -81,8 +81,8 @@ class Aggregate : public Propagator, public Reason
         
         int active;
         
-        unsigned int counterW1;
-        unsigned int counterW2;
+        int counterW1;
+        int counterW2;
         
         unsigned int umax;
         Vector< int > trail;

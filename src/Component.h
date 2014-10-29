@@ -65,8 +65,8 @@ class Component : public PostPropagator
 
         inline bool isAuxVariable( unsigned int varId ) { return getGUSData( varId ).aux; }
         inline void setAuxVariable( unsigned int varId ) { getGUSData( varId ).aux = true; }
-        inline void addExternalLiteralForVariable( unsigned int varId, Literal lit ) { getGUSData( varId ).externalLiterals.push_back( lit ); }
-        inline void addInternalLiteralForVariable( unsigned int varId, Literal lit ) { getGUSData( varId ).internalLiterals.push_back( lit ); }
+        inline void addExternalLiteralForVariable( unsigned int varId, Literal lit ) { addExternalLiteral( varId, lit ); /*getGUSData( varId ).externalLiterals.push_back( lit );*/ }
+        inline void addInternalLiteralForVariable( unsigned int varId, Literal lit ) { addInternalLiteral( varId, lit ); /*getGUSData( varId ).internalLiterals.push_back( lit );*/ }
         inline void addVariablePossiblySupportedByLiteral( Var var, Literal lit ) { gusData[ lit.getVariable() ]->possiblySupportedByThis[ lit.getSign() ].push_back( var ); }
         inline void addAuxVariableSupportedByLiteral( Var var, Literal lit ) { gusData[ lit.getVariable() ]->auxVariablesSupportedByThis[ lit.getSign() ].push_back( var ); }
         
@@ -190,7 +190,9 @@ Component::addExternalLiteral(
     Literal literal )
 {
     if( !getGUSData( id ).aux )
-        getGUSData( id ).externalLiterals.push_back( literal );    
+        getGUSData( id ).externalLiterals.push_back( literal );
+    else
+        getGUSData( id ).literals.push_back( literal ); 
 }
 
 void

@@ -70,11 +70,12 @@ WeakInterface::processAndAddAggregate(
     unsigned int bound )
 {    
     trace_msg( weakconstraints, 4, "Trying to add the aggregate " << *aggregate << " - with bound " << bound );
-        
+
     if( !aggregate->updateBound( solver, bound ) )
     {
         trace_msg( weakconstraints, 5, "Aggregate is already false" );
-        solver.addClause( aggregate->getLiteral( 1 ) );
+        bool res = solver.addClause( aggregate->getLiteral( 1 ) );
+        cout << aggregate->getLiteral( 1 ) << " res " << res << endl;
         assert( solver.isFalse( aggregate->getLiteral( 1 ).getVariable() ) );
     }
     else

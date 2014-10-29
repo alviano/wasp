@@ -1174,6 +1174,14 @@ GringoNumericFormat::processRecursivePositiveCrule(
                 component->addAuxVariableSupportedByLiteral( variable, lit );
                 component->addInternalLiteralForVariable( variable, lit );
             }
+            else if( !solver.inTheSameComponent( currentVariable, variable ) )
+            {
+                component->addExternalLiteralForVariable( variable, currentLiteral.getOppositeLiteral() );
+            }
+        }
+        else
+        {
+            component->addExternalLiteralForVariable( variable, currentLiteral.getOppositeLiteral() );
         }
     }
 }

@@ -165,13 +165,13 @@ Component::computeGUS()
         unsigned int varId = variable;
         if( !solver.isFalse( variable ) )
         {
-            trace_msg( unfoundedset, 1, "Variable " << variable << " lost the source pointer" );        
+            trace_msg( unfoundedset, 1, "Variable " << Literal( variable, POSITIVE ) << " lost the source pointer" );        
             propagateLiteralLostSourcePointer( Literal( variable ) );
             i++;
         }
         else
         {
-            trace_msg( unfoundedset, 1, "Variable " << variable << " is false" );        
+            trace_msg( unfoundedset, 1, "Variable " << Literal( variable, POSITIVE ) << " is false" );        
             variablesWithoutSourcePointer[ i ] = variablesWithoutSourcePointer.back(); //variablesWithoutSourcePointer[ variablesWithoutSourcePointer.size() - 1 ];            
             variablesWithoutSourcePointer.pop_back();
             setVariableFounded( varId, true );
@@ -187,7 +187,7 @@ Component::computeGUS()
         if( getGUSData( varId ).founded )
             continue;
         
-        trace_msg( unfoundedset, 1, "Looking for a new source pointer for the variable " << variable );
+        trace_msg( unfoundedset, 1, "Looking for a new source pointer for the variable " << Literal( variable, POSITIVE ) );
         lookForANewSourcePointer( varId );
     }
 
@@ -199,7 +199,7 @@ Component::computeGUS()
         unsigned int varId = variable;
         if( !getGUSData( varId ).founded )
         {
-            trace_msg( unfoundedset, 1, "The variable " << variable << " is in the unfounded set");    
+            trace_msg( unfoundedset, 1, "The variable " << Literal( variable, POSITIVE ) << " is in the unfounded set");    
             assert( !solver.isFalse( variable ) );
             unfoundedSet.push_back( variable );
         }
@@ -258,7 +258,7 @@ Component::iterationOnSupportedByThisExternal(
     {
         Var variable = wl[ j ] = wl[ i ];
         assert( solver.getComponent( variable ) != NULL );
-        trace_msg( unfoundedset, 3, "Considering variable " << variable << " which is " << ( solver.isFalse( variable ) ? "false" : "true" ) << " and " << ( ( getGUSData( variable ).inQueue ) ? "in queue" : "not in queue" ) );
+        trace_msg( unfoundedset, 3, "Considering variable " << Literal( variable, POSITIVE ) << " which is " << ( solver.isFalse( variable ) ? "false" : "true" ) << " and " << ( ( getGUSData( variable ).inQueue ) ? "in queue" : "not in queue" ) );
         if( solver.getComponent( variable )->getId() == id && !solver.isFalse( variable ) && !( getGUSData( variable ).inQueue ) )
             variableHasNoSourcePointer( variable );
         else
@@ -283,7 +283,7 @@ Component::iterationOnSupportedByThisInternal(
     {
         Var variable = wl[ j ] = wl[ i ];
         assert( solver.getComponent( variable ) != NULL && solver.getComponent( variable )->getId() == id );
-        trace_msg( unfoundedset, 3, "Considering variable " << variable << " which is " << ( solver.isFalse( variable ) ? "false" : "true" ) << " and " << ( ( getGUSData( variable ).inQueue ) ? "in queue" : "not in queue" ) );
+        trace_msg( unfoundedset, 3, "Considering variable " << Literal( variable, POSITIVE ) << " which is " << ( solver.isFalse( variable ) ? "false" : "true" ) << " and " << ( ( getGUSData( variable ).inQueue ) ? "in queue" : "not in queue" ) );
         if( !solver.isFalse( variable ) && !( getGUSData( variable ).inQueue ) )
             variableHasNoSourcePointer( variable );
         else
@@ -306,7 +306,7 @@ Component::iterationOnAuxSupportedByThis(
     {
         Var variable = vec[ i ];
         assert( getGUSData( variable ).aux );
-        trace_msg( unfoundedset, 3, "Considering variable " << variable << " which is " << ( solver.isFalse( variable ) ? "false" : "true/undefined" ) << " and " << ( ( getGUSData( variable ).inQueue ) ? "in queue" : "not in queue" ) );
+        trace_msg( unfoundedset, 3, "Considering variable " << Literal( variable, POSITIVE ) << " which is " << ( solver.isFalse( variable ) ? "false" : "true/undefined" ) << " and " << ( ( getGUSData( variable ).inQueue ) ? "in queue" : "not in queue" ) );
         if( !solver.isFalse( variable ) )
         {
             if( !getGUSData( variable ).inQueue )
@@ -329,7 +329,7 @@ Component::foundSourcePointer(
         
         if( !solver.isFalse( var ) && !getGUSData( var ).founded )
         {
-            trace_msg( unfoundedset, 1, "Literal " << Literal( variableWithSourcePointer ) << " is a source pointer of " << var );
+            trace_msg( unfoundedset, 1, "Literal " << Literal( variableWithSourcePointer ) << " is a source pointer of " << Literal( var, POSITIVE ) );
             propagateSourcePointer( var, Literal( variableWithSourcePointer ) );
         }
     }
@@ -340,7 +340,7 @@ Component::foundSourcePointer(
         
         if( !solver.isFalse( var ) )
         {
-            assert_msg( !getGUSData( var ).founded, "Variable " << var << " is founded" );
+            assert_msg( !getGUSData( var ).founded, "Variable " << Literal( var, POSITIVE ) << " is founded" );
             trace_msg( unfoundedset, 1, "Literal " << Literal( variableWithSourcePointer ) << " is a source pointer of " << var );
             propagateSourcePointer( var, Literal( variableWithSourcePointer ) );
         }
@@ -406,14 +406,61 @@ Component::onLearningForUnfounded(
 
         for( unsigned int i = 0; i < getGUSData( id ).internalLiterals.size(); i++ )
         {
-            Literal literal = getGUSData( id ).internalLiterals[ i ];            
+            Literal literal = getGUSData( id ).internalLiterals[ i ];
             if( solver.getDecisionLevel( literal ) > 0 && getGUSData( literal.getVariable() ).founded )
             {
+                GUSData& element = getGUSData( literal.getVariable() );
                 assert( solver.isFalse( literal ) );
-                learning.onNavigatingLiteralForUnfoundedSetLearning( literal );
+
+                if( !element.aux )
+                {
+                    learning.onNavigatingLiteralForUnfoundedSetLearning( literal );
+                }
+                else
+                {
+                    bool ignore = false;
+                    unsigned int min = UINT_MAX;
+                    unsigned int minPos = UINT_MAX;
+                    for( unsigned int j = 0; j < element.literals.size(); j++ )
+                    {
+                        Literal lit = element.literals[ j ];
+                        if( lit.isPositive() && !getGUSData( lit.getVariable() ).founded )
+                        {
+                            ignore = true;
+                            break;
+                        }
+
+                        if( solver.isFalse( lit ) )
+                        {
+                            unsigned int dl = solver.getDecisionLevel( lit );
+                            if( dl == 0 )
+                            {
+                                ignore = true;
+                                break;
+                            }
+                            else if( dl < min )
+                            {
+                                min = dl;
+                                minPos = j;
+                            }
+                        }
+                    }
+                    if( ignore )
+                        continue;
+
+                    if( minPos == UINT_MAX )
+                    {
+                        learning.onNavigatingLiteralForUnfoundedSetLearning( literal );
+                    }
+                    else
+                    {
+                        assert_msg( minPos < element.literals.size(), "Literal " << literal << " " << minPos << " >= " << element.literals.size() );
+                        learning.onNavigatingLiteralForUnfoundedSetLearning( element.literals[ minPos ] );
+                    }
+                }
             }
         }
-    }    
+    }
 }
 
 bool
@@ -439,13 +486,13 @@ Component::checkSourcePointersStatus()
         assert( solver.getComponent( id )->getId() == this->id );
         if( !getGUSData( id ).founded )
         {
-            cerr << "Variable " << getGUSData( id ).variable << " is not founded " << getGUSData( id ).numberOfSupporting << endl;
+            cerr << "Variable " << Literal( getGUSData( id ).variable, POSITIVE ) << " is not founded " << getGUSData( id ).numberOfSupporting << endl;
             return false;
         }
 
         if( getGUSData( id ).numberOfSupporting != 0 )
         {
-            cerr << "Variable " << getGUSData( id ).variable << " has a number of supporting greater than 0" << endl;
+            cerr << "Variable " << Literal( getGUSData( id ).variable, POSITIVE ) << " has a number of supporting greater than 0" << endl;
             return false;
         }
     }

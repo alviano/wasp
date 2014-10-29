@@ -54,7 +54,8 @@ class WeakInterface
 
 void
 WeakInterface::computeAssumptionsAND()
-{    
+{
+    solver.sortOptimizationLiterals();
     for( unsigned int i = 0; i < solver.numberOfOptimizationLiterals(); i++ )
     {
         if( solver.getOptimizationLiteral( i ).isRemoved() )

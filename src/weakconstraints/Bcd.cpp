@@ -208,7 +208,7 @@ Bcd::run()
     initInUnsatCore();    
     for( unsigned int i = 0; i <= solver.numberOfVariables(); i++ )
     {
-        tokeepInAssumptions.push_back( true );
+        toKeepInAssumptions.push_back( true );
         auxVarsToBcdData.push_back( NULL );
     }
     originalNumberOfVariables = solver.numberOfVariables();
@@ -305,7 +305,10 @@ Bcd::addAggregateBcd(
     BcdData* bcdData )
 {
     Var aggrId = addAuxVariableBcd();
+    cout << "VARIABILE CREATA " << aggrId << endl;
     Aggregate* aggregate = createAggregate( aggrId, bcdData->getLiterals(), bcdData->getWeights() );    
+    
+    assert( solver.isUndefined( aggrId ) );
     if( !processAndAddAggregate( aggregate, bcdData->middle() + 1 ) )
         return false;
     
@@ -360,12 +363,12 @@ Bcd::foundCore(
         {
             assert( v < auxVarsToBcdData.size() );
             assert( auxVarsToBcdData[ v ] != NULL );
-            assert( auxVarsToBcdData.size() == tokeepInAssumptions.size() );
+            assert( auxVarsToBcdData.size() == toKeepInAssumptions.size() );
             intersectingCores.push_back( auxVarsToBcdData[ v ] );
             auxVarsToBcdData[ v ]->remove();
-            tokeepInAssumptions[ v ] = false;
+            toKeepInAssumptions[ v ] = false;
             visit( v );
-            bool res = solver.addClause( Literal( v, POSITIVE ) );            
+            bool res = solver.addClause( Literal( v, POSITIVE ) );
             if( !res )
                 cout << "probably return false" << endl;
             continue;
@@ -373,11 +376,11 @@ Bcd::foundCore(
         if( visited( v, 0 ) )
             newVars = true;
         visit( v );
-    }    
-        
-    computeIntersectingCores( intersectingCores );    
+    }
+
+    computeIntersectingCores( intersectingCores );
     if( !newVars && intersectingCores.size() == 1 )
-        updateLowerBound( intersectingCores[ 0 ] );        
+        updateLowerBound( intersectingCores[ 0 ] );
     else
         createBcdData( intersectingCores );
     deleteOldCores();
@@ -388,7 +391,7 @@ Bcd::updateLowerBound(
     BcdData* corePointer )
 {
     BcdData& core = *corePointer;
-    trace_msg( weakconstraints, 4, "Updating lower bound for core " << core << ". New value: " << core.middle() );
+    trace_msg( weakconstraints, 4, "Updating lower bound for core " << core << ". New value: " << core.middle() << ". Upper bound was " << core.ub() );
     core.setLb( core.middle() );
     assert( core.isRemoved() );
     core.restore();
@@ -413,8 +416,8 @@ Bcd::processModifiedCores()
         {
             if( !solver.addClause( Literal( aggrId, POSITIVE ) ) )
                 return false;
-            assert( aggrId < tokeepInAssumptions.size() );
-            tokeepInAssumptions[ aggrId ] = false;            
+            assert( aggrId < toKeepInAssumptions.size() );
+            toKeepInAssumptions[ aggrId ] = false;            
         }
         
         if( !addAggregateBcd( data ) )

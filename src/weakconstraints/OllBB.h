@@ -39,7 +39,6 @@ class OllBB : public Oll
         
         unsigned int originalNumberOfVariables;
         unsigned int numberOfModels;
-        unordered_map< Var, OllData* > guardMap;
         bool useRestarts_;
         
         unsigned int increment;

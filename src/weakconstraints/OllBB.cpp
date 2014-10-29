@@ -33,7 +33,7 @@ OllBB::run()
     {
         setAndUpdateHeuristicValues();
         unsigned int res;
-        trace_msg( weakconstraints, 1, i << " iteration - number of choices: " << numberOfChoices  );
+        trace_msg( weakconstraints, 1, i << " iteration" );
         if( i++ % 2 == 0 )
             res = oll();
         else
@@ -128,20 +128,21 @@ OllBB::oll()
         if( lb == ub )
             return OPTIMUM_FOUND;
         trace_msg( weakconstraints, 2, "Adding aggregate from unsat core" );
-        if( !addAggregateOll( guardMap, literals, weights, 2, minWeight ) )
+        if( !addAggregateOll( literals, weights, 2, minWeight ) )
             return INCOHERENT;        
         
         for( unsigned int i = 0; i < auxVariablesInUnsatCore.size(); i++ )
         {
             Var guardId = auxVariablesInUnsatCore[ i ];
-            assert( guardMap.find( guardId ) != guardMap.end() );
+            if( guardMap.find( guardId ) == guardMap.end() )
+                continue;
             
             OllData* ollData = guardMap[ guardId ];
             if( ollData->bound_ < ollData->literals_.size() )
             {
                 trace_msg( weakconstraints, 3, "Incrementing by one bound (" << ollData->bound_ <<  ") of aggregate " << guardId );
                 assert( ollData->literals_.size() > 0 );
-                if( !addAggregateOll( guardMap, ollData->literals_, ollData->weights_, ollData->bound_ + 1, ollData->weight_ ) )
+                if( !addAggregateOll( ollData->literals_, ollData->weights_, ollData->bound_ + 1, ollData->weight_ ) )
                     return INCOHERENT;
             }
         }
