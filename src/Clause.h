@@ -116,7 +116,16 @@ class Clause : public Reason
         inline void swapLiterals( unsigned int pos1, unsigned int pos2 );
         
         inline void recomputeSignature();                
-        bool isTautology() const;
+        #ifndef NDEBUG
+        inline bool isTautology() const
+        {
+            for( unsigned i = 0; i < size(); ++i )
+                for( unsigned j = i+1; j < size(); ++j )
+                    if( getAt( i ) == getAt( j ).getOppositeLiteral() )
+                        return true;
+            return false;
+        }
+        #endif
         
         inline void setLbd( unsigned int lbd ) { lbd_ = lbd; }
         inline unsigned int lbd() const { return lbd_; }

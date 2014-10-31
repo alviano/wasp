@@ -209,8 +209,7 @@ Solver::addClauseFromModelAndRestart()
         return false;
     }
     
-    if( !this->doRestart() )
-        return false;
+    unrollToZero();
     simplifyOnRestart();    
     clearConflictStatus();
     
@@ -285,7 +284,7 @@ Solver::solveWithoutPropagators(
                     return INCOHERENT;
                 }
                 minisatHeuristic->variableDecayActivity();
-                assert( hasNextVariableToPropagate() || getCurrentDecisionLevel() == 0 );
+                assert_msg( hasNextVariableToPropagate() || getCurrentDecisionLevel() == numberOfAssumptions || getCurrentDecisionLevel() == 0, getCurrentDecisionLevel() << " != " << numberOfAssumptions );
             }
         }
     }
@@ -351,7 +350,7 @@ Solver::solvePropagators(
                     return INCOHERENT;
                 }
                 minisatHeuristic->variableDecayActivity();
-                assert( hasNextVariableToPropagate() || getCurrentDecisionLevel() == 0 );
+                assert_msg( hasNextVariableToPropagate() || getCurrentDecisionLevel() == numberOfAssumptions || getCurrentDecisionLevel() == 0, getCurrentDecisionLevel() << " != " << numberOfAssumptions );
             }
         }
         
@@ -974,6 +973,10 @@ Solver::updateActivity(
 void
 Solver::simplifyOnRestart()
 {
+    assert( incremental_ || currentDecisionLevel == 0 );
+    if( currentDecisionLevel != 0 )
+        return;
+    
     if( variables.numberOfAssignedLiterals() == assignedVariablesAtLevelZero || nextValueOfPropagation > 0 )
         return;
 
@@ -993,29 +996,55 @@ Solver::removeSatisfied(
     for( unsigned int i = 0; i < clauses.size(); )
     {
         assert_msg( clauses[ i ] != NULL, "Current clause is NULL" );
-        Clause* current = clauses[ i ];
-        uint64_t size = current->size();
-        if( removeSatisfiedLiterals( *current ) )
-        {
-            detachClause( *current );
-            if( current->isLearned() )
-                literalsInLearnedClauses -= size;
+        Clause* currentPointer = clauses[ i ];
+        Clause& current = *currentPointer;
+        uint64_t size = current.size();
+        if( incremental_ )
+        {            
+            assert( size > 1 );
+            if( isTrue( current[ 0 ] ) || isTrue( current[ 1 ] ) )
+            {
+                detachClause( current );
+                if( current.isLearned() )
+                    literalsInLearnedClauses -= size;
+                else
+                    literalsInClauses -= size;
+                if( isLocked( current ) )
+                    setImplicant( current[ 0 ].getVariable(), NULL );
+                assert( !isLocked( current ) );
+                delete currentPointer;
+                clauses[ i ] = clauses.back();            
+                clauses.pop_back();
+            }
             else
-                literalsInClauses -= size;
-            assert( !isLocked( *current ) );
-            delete current;
-            clauses[ i ] = clauses.back();            
-            clauses.pop_back();            
+            {
+                ++i;
+            }
         }
         else
         {
-            ++i;
-            uint64_t newsize = current->size();
-            size -= newsize;
-            if( current->isLearned() )
-                literalsInLearnedClauses -= size;
+            if( removeSatisfiedLiterals( current ) )
+            {
+                detachClause( current );
+                if( current.isLearned() )
+                    literalsInLearnedClauses -= size;
+                else
+                    literalsInClauses -= size;
+                assert( !isLocked( current ) );
+                delete currentPointer;
+                clauses[ i ] = clauses.back();            
+                clauses.pop_back();            
+            }
             else
-                literalsInClauses -= size;
+            {
+                ++i;
+                uint64_t newsize = current.size();
+                size -= newsize;
+                if( current.isLearned() )
+                    literalsInLearnedClauses -= size;
+                else
+                    literalsInClauses -= size;
+            }
         }
     }
 }

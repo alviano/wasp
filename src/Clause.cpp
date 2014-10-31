@@ -90,16 +90,6 @@ Clause::getMaxDecisionLevel(
 //    solver.onLiteralAssigned( literals[ 1 ], TRUE, this );    
 //}
 
-bool
-Clause::isTautology() const
-{
-    for( unsigned i = 0; i < size(); ++i )
-        for( unsigned j = i+1; j < size(); ++j )
-            if( getAt( i ) == getAt( j ).getOppositeLiteral() )
-                return true;
-    return false;
-}
-
 void
 Clause::onLearning(
     const Solver& solver,

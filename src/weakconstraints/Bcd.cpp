@@ -223,8 +223,7 @@ Bcd::run()
         if( solver.solve( assumptionsAND, assumptionsOR ) == COHERENT )
         {
             foundModel();
-            if( solver.getCurrentDecisionLevel() != 0 && !solver.doRestart() )
-                break;
+            solver.unrollToZero();
         }
         else
         {
@@ -234,8 +233,7 @@ Bcd::run()
             if( unsatCore.size() == 0 )
                 return INCOHERENT;
             solver.clearConflictStatus();
-            if( solver.getCurrentDecisionLevel() != 0 && !solver.doRestart() )
-                break;
+            solver.unrollToZero();
             foundCore( unsatCore );            
         }        
     } while( !hasToFinishBcd() );
@@ -368,7 +366,7 @@ Bcd::foundCore(
             auxVarsToBcdData[ v ]->remove();
             toKeepInAssumptions[ v ] = false;
             visit( v );
-            bool res = solver.addClause( Literal( v, POSITIVE ) );
+            bool res = solver.addClauseRuntime( Literal( v, POSITIVE ) );
             if( !res )
                 cout << "probably return false" << endl;
             continue;
@@ -414,7 +412,7 @@ Bcd::processModifiedCores()
          */        
         if( aggrId != UINT_MAX )
         {
-            if( !solver.addClause( Literal( aggrId, POSITIVE ) ) )
+            if( !solver.addClauseRuntime( Literal( aggrId, POSITIVE ) ) )
                 return false;
             assert( aggrId < toKeepInAssumptions.size() );
             toKeepInAssumptions[ aggrId ] = false;            

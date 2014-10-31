@@ -42,8 +42,7 @@ Oll::run()
             return INCOHERENT;
 
         solver.clearConflictStatus();
-        if( solver.getCurrentDecisionLevel() != 0 && !solver.doRestart() )
-            return INCOHERENT;
+        solver.unrollToZero();
         
         for( unsigned int i = 0; i < unsatCore.size(); i++ )
         {
@@ -60,7 +59,7 @@ Oll::run()
         if( !processCoreOll( literals, weights, minWeight ) )
             return INCOHERENT;
         lb += minWeight;
-        solver.foundLowerBound( lb );        
+        solver.foundLowerBound( lb );     
         if( !addAggregateOll( literals, weights, 2, minWeight ) )
             return INCOHERENT;        
         
@@ -137,20 +136,26 @@ Oll::processCoreOll(
         return true;
     }
 
-    bool res;
-    if( clause->size() == 2 )
-    {
-        res = solver.addClause( clause->getAt( 0 ), clause->getAt( 1 ) );
-        delete clause;        
-    }
-    else
-    {
-        res = solver.addClause( clause );
-        if( res )
-            solver.attachClause( *clause );
-    }
-    
-    return res;
+    return solver.addClauseRuntime( clause );
+//    bool res;
+//    if( clause->size() == 1 )
+//    {
+//        res = solver.addClause( clause->getAt( 0 ) );
+//        delete clause;
+//    }    
+//    else if( clause->size() == 2 )
+//    {
+//        res = solver.addClause( clause->getAt( 0 ), clause->getAt( 1 ) );
+//        delete clause;        
+//    }
+//    else
+//    {
+//        res = solver.addClause( clause );
+//        if( res )
+//            solver.attachClause( *clause );
+//    }
+//    
+//    return res;
 }
 
 bool
@@ -160,49 +165,49 @@ Oll::addAggregateOll(
     unsigned int bound,
     unsigned int weightOfOptimizationLiteral )
 {
-    if( literals.size() == 1 )
-    {
-        trace_msg( weakconstraints, 2, "Literal " << literals[ 0 ] << " is removed from assumptions. Nothing more to do" );
-        return true;
-    }
-        
-    if( literals.size() == bound )
-    {
-        trace_msg( weakconstraints, 2, "The size of aggregate is equal to the bound (" << literals.size() << ")" );
-        Literal relaxLiteral( addAuxVariable(), POSITIVE );
-        solver.addOptimizationLiteral( relaxLiteral, weightOfOptimizationLiteral, UINT_MAX, true );
-
-        bool trivial = false;
-        Clause* clause = solver.newClause( literals.size() + 1 );
-        for( unsigned int i = 0; i < literals.size(); i++ )
-        {
-            Literal l = literals[ i ].getOppositeLiteral();
-            if( solver.isUndefined( l ) )
-                clause->addLiteral( l );
-            else if( solver.isTrue( l ) )
-            {
-                trivial = true;
-                break;
-            }                
-        }
-        
-        vector< Literal > tmp;
-        literals.swap( tmp );
-        if( trivial )
-        {
-            solver.releaseClause( clause );
-            return true;
-        }        
-        clause->addLiteral( relaxLiteral );
-        trace_msg( weakconstraints, 3, "Adding clause " << *clause );
-        if( clause->size() == 1 )
-            return solver.addClause( clause->getAt( 0 ) );
-        else if( clause->size() == 2 )
-            return solver.addClause( clause->getAt( 0 ), clause->getAt( 1 ) );        
-
-        solver.attachClause( *clause );
-        return solver.addClause( clause );
-    }
+//    if( literals.size() == 1 )
+//    {
+//        trace_msg( weakconstraints, 2, "Literal " << literals[ 0 ] << " is removed from assumptions. Nothing more to do" );
+//        return true;
+//    }
+//        
+//    if( literals.size() == bound )
+//    {
+//        trace_msg( weakconstraints, 2, "The size of aggregate is equal to the bound (" << literals.size() << ")" );
+//        Literal relaxLiteral( addAuxVariable(), POSITIVE );
+//        solver.addOptimizationLiteral( relaxLiteral, weightOfOptimizationLiteral, UINT_MAX, true );
+//
+//        bool trivial = false;
+//        Clause* clause = solver.newClause( literals.size() + 1 );
+//        for( unsigned int i = 0; i < literals.size(); i++ )
+//        {
+//            Literal l = literals[ i ].getOppositeLiteral();
+//            if( solver.isUndefined( l ) )
+//                clause->addLiteral( l );
+//            else if( solver.isTrue( l ) )
+//            {
+//                trivial = true;
+//                break;
+//            }                
+//        }
+//        
+//        vector< Literal > tmp;
+//        literals.swap( tmp );
+//        if( trivial )
+//        {
+//            solver.releaseClause( clause );
+//            return true;
+//        }        
+//        clause->addLiteral( relaxLiteral );
+//        trace_msg( weakconstraints, 3, "Adding clause " << *clause );
+//        if( clause->size() == 1 )
+//            return solver.addClause( clause->getAt( 0 ) );
+//        else if( clause->size() == 2 )
+//            return solver.addClause( clause->getAt( 0 ), clause->getAt( 1 ) );        
+//
+//        solver.attachClause( *clause );
+//        return solver.addClause( clause );
+//    }
     
     trace_msg( weakconstraints, 2, "Adding aggregate from unsat core" );
     Var aggrId = addAuxVariable();

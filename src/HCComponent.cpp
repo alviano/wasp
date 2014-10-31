@@ -174,7 +174,7 @@ HCComponent::testModel()
     } );
     
     if( checker.getCurrentDecisionLevel() > 0 )
-        checker.doRestart();
+        checker.unroll( 0 );
     statistics( &checker, startCheckerInvokation( trail.size() != ( hcVariables.size() + externalLiterals.size() ), time( 0 ) ) );    
     if( checker.solve( assumptionsAND, assumptionsOR ) == COHERENT )
     {        

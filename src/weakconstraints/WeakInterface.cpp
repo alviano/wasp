@@ -25,13 +25,16 @@ WeakInterface::createFalseAggregate(
     unsigned int bound )
 {
     assert( literals.size() == weights.size() );
-    if( !solver.doRestart() )
-        return false;
+    solver.unrollToZero();
 
     Aggregate* aggregate = solver.createAggregate( literals, weights );   
     
     assert( literals.size() >= 1 );
-    solver.addClause( literals[ 0 ] );
+    #ifndef NDEBUG
+    bool res =
+    #endif
+    solver.addClauseRuntime( literals[ 0 ] );
+    assert( res );
     solver.attachAggregate( *aggregate );
     if( !aggregate->updateBound( solver, bound ) )
         return false;
@@ -71,11 +74,16 @@ WeakInterface::processAndAddAggregate(
 {    
     trace_msg( weakconstraints, 4, "Trying to add the aggregate " << *aggregate << " - with bound " << bound );
 
+    #ifndef NDEBUG
+    bool res = true;
+    #endif
     if( !aggregate->updateBound( solver, bound ) )
     {
         trace_msg( weakconstraints, 5, "Aggregate is already false" );
-        bool res = solver.addClause( aggregate->getLiteral( 1 ) );
-        cout << aggregate->getLiteral( 1 ) << " res " << res << endl;
+        #ifndef NDEBUG
+        res =
+        #endif
+        solver.addClauseRuntime( aggregate->getLiteral( 1 ) );
         assert( solver.isFalse( aggregate->getLiteral( 1 ).getVariable() ) );
     }
     else
@@ -83,11 +91,15 @@ WeakInterface::processAndAddAggregate(
         if( aggregate->isTrue() )
         {
             trace_msg( weakconstraints, 5, "Aggregate is true" );
-            solver.addClause( aggregate->getLiteral( 1 ).getOppositeLiteral() );
+            #ifndef NDEBUG
+            res =
+            #endif                    
+            solver.addClauseRuntime( aggregate->getLiteral( 1 ).getOppositeLiteral() );
         }
         solver.attachAggregate( *aggregate );
     }
 
+    assert( res );
     solver.addAggregate( aggregate );
     
     trace_msg( weakconstraints, 5, "Adding aggregate " << *aggregate );

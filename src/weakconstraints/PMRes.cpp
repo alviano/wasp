@@ -60,8 +60,7 @@ PMRes::run()
             return INCOHERENT;
 
         solver.clearConflictStatus();
-        if( solver.getCurrentDecisionLevel() != 0 && !solver.doRestart() )
-            return INCOHERENT;
+        solver.unrollToZero();
 
         for( unsigned int i = 0; i < unsatCore.size(); i++ )
         {
@@ -219,80 +218,90 @@ PMRes::addAuxClausesCompressed(
         Var relaxVar = relaxClause( clause );
 
         solver.addOptimizationLiteral( Literal( relaxVar, POSITIVE ), minWeight, UINT_MAX, true );
-        trace_msg( weakconstraints, 4, "Adding clause " << *clause );
+        trace_msg( weakconstraints, 4, "Adding clause1 " << *clause );
         if( !addClauseToSolver( clause ) )
             return false;
 
-        Clause* auxClause = new Clause();
-        auxClause->addLiteral( auxLits[ i + 1 ].getOppositeLiteral() );
-        auxClause->addLiteral( optLiterals[ i + 1 ].getOppositeLiteral() );
-        
         if( i + 2 < optLiterals.size() )
+        {
+            Clause* auxClause = new Clause();
+            auxClause->addLiteral( auxLits[ i + 1 ].getOppositeLiteral() );
+            auxClause->addLiteral( optLiterals[ i + 1 ].getOppositeLiteral() );
             auxClause->addLiteral( auxLits[ i + 2 ] );
-        
-        Clause* c1 = new Clause( 2 );
-        c1->addLiteral( auxLits[ i + 1 ] );
-        c1->addLiteral( optLiterals[ i + 1 ] );
-        trace_msg( weakconstraints, 4, "Adding clause " << *c1 );
-        if( !addClauseToSolver( c1 ) )
-        {
-            delete auxClause;
-            return false;
-        }        
-        
-        if( i + 2 < optLiterals.size() )
-        {
-            Clause* c2 = new Clause( 2 );
-            c2->addLiteral( auxLits[ i + 1 ] );
-            c2->addLiteral( auxLits[ i + 2 ].getOppositeLiteral() );
-            trace_msg( weakconstraints, 4, "Adding clause " << *c2 );
-            if( !addClauseToSolver( c2 ) )
+                
+            Clause* c1 = new Clause( 2 );
+            c1->addLiteral( auxLits[ i + 1 ] );
+            c1->addLiteral( optLiterals[ i + 1 ] );
+            trace_msg( weakconstraints, 4, "Adding clause2 " << *c1 );
+            if( !addClauseToSolver( c1 ) )
             {
                 delete auxClause;
                 return false;
             }        
-        }
-        trace_msg( weakconstraints, 4, "Adding clause " << *auxClause );
-        if( !addClauseToSolver( auxClause ) )
-            return false;
+        
+            Clause* c2 = new Clause( 2 );
+            c2->addLiteral( auxLits[ i + 1 ] );
+            c2->addLiteral( auxLits[ i + 2 ].getOppositeLiteral() );
+            trace_msg( weakconstraints, 4, "Adding clause3 " << *c2 );
+            if( !addClauseToSolver( c2 ) )
+            {
+                delete auxClause;
+                return false;
+            }
+            trace_msg( weakconstraints, 4, "Adding clause4 " << *auxClause );
+            if( !addClauseToSolver( auxClause ) )
+                return false;
+        }        
     }        
 
     return true;
 }
 
+//bool
+//PMRes::addClauseToSolverAndCheckDuplicatesAndTautological(
+//    Clause* clause )
+//{
+//    if( clause->removeDuplicatesAndCheckIfTautological() )
+//    {
+//        delete clause;
+//        return true;
+//    }    
+//    return addClauseToSolver( clause );
+//}
+
 bool
 PMRes::addClauseToSolver(
-    Clause* clausePointer )
+    Clause* clause )
 {
-    unsigned int size = clausePointer->size();
-    Clause& clause = *clausePointer;
-
-    bool res;
-    switch( size )
-    {
-        case 0:
-            res = false;
-            delete clausePointer;
-            break;
-
-        case 1:
-            res = solver.addClause( clause[ 0 ] );
-            delete clausePointer;
-            break;
-
-        case 2:
-            res = solver.addClause( clause[ 0 ], clause[ 1 ] );
-            delete clausePointer;
-            break;
-
-        default:
-            res = solver.addClause( clausePointer );
-            if( res )
-                solver.attachClause( clause );
-            break;
-    }
-
-    return res;
+    return solver.addClauseRuntime( clause );
+//    unsigned int size = clausePointer->size();
+//    Clause& clause = *clausePointer;    
+//    bool res;
+//    switch( size )
+//    {
+//        case 0:
+//            res = false;
+//            delete clausePointer;
+//            break;
+//
+//        case 1:
+//            res = solver.addClause( clause[ 0 ] );
+//            delete clausePointer;
+//            break;
+//
+//        case 2:
+//            res = solver.addClause( clause[ 0 ], clause[ 1 ] );
+//            delete clausePointer;
+//            break;
+//
+//        default:
+//            res = solver.addClause( clausePointer );
+//            if( res )
+//                solver.attachClause( clause );
+//            break;
+//    }
+//
+//    return res;
 }
 
 Var

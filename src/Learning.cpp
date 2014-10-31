@@ -116,8 +116,8 @@ Learning::onConflict(
         
         if( solver.glucoseHeuristic() )
         {
-            unsigned int lbd = solver.computeLBD( *learnedClause );            
-            bool hasToComputeMaxDecisionLevel = solver.minimisationWithBinaryResolution( *learnedClause, lbd );
+            unsigned int lbd = solver.computeLBD( *learnedClause );             
+            bool hasToComputeMaxDecisionLevel = !solver.incremental() && solver.minimisationWithBinaryResolution( *learnedClause, lbd );
             assert( sameDecisionLevelOfSolver( learnedClause->getAt( 0 ) ) );
             if( learnedClause->size() == 1 )
                 return learnedClause;

@@ -188,7 +188,13 @@ Bcd::addBinaryClauseForAggregateBcd(
     
     assert( !solver.isFalse( aggrId ) );
     if( solver.isTrue( aggrId ) )
-        solver.addClause( lit );
+    {
+        #ifndef NDEBUG
+        bool res =
+        #endif
+        solver.addClauseRuntime( lit );
+        assert( res );
+    }
      
     return lit.getVariable();
 }
@@ -209,7 +215,7 @@ Bcd::computeIntersectingCores(
                 trace_msg( weakconstraints, 3, "Removing Bcd data " << core );
                 intersectingCores.push_back( disjCores[ i ] );
                 core.remove();
-                bool res = solver.addClause( Literal( core.getAggregateAux(), POSITIVE ) );
+                bool res = solver.addClauseRuntime( Literal( core.getAggregateAux(), POSITIVE ) );
                 assumptionsToAdd.findAndRemove( Literal( core.getAggregateAux(), NEGATIVE ) );                
                 if( !res )                    
                     cout << "probably return false" << endl;

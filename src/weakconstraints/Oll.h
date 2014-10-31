@@ -67,7 +67,13 @@ Oll::addBinaryClauseForAggregateOll(
     
     assert( !solver.isFalse( aggrId ) );
     if( solver.isTrue( aggrId ) )
-        solver.addClause( lit );
+    {
+        #ifndef NDEBUG
+        bool res =
+        #endif
+        solver.addClauseRuntime( lit );
+        assert( res );
+    }
     
     return lit.getVariable();
 }

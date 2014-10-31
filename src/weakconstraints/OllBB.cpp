@@ -51,8 +51,7 @@ unsigned int
 OllBB::bb()
 {
     trace_msg( weakconstraints, 1, "Starting BB" );
-    if( solver.getCurrentDecisionLevel() != 0 && !solver.doRestart() )
-        return OPTIMUM_FOUND;
+    solver.unrollToZero();
 
     solver.setComputeUnsatCores( false );
     unsigned int res = solver.solve();
@@ -86,9 +85,7 @@ OllBB::bb()
 unsigned int
 OllBB::oll()
 {
-    if( solver.getCurrentDecisionLevel() != 0 && !solver.doRestart() )
-        return OPTIMUM_FOUND;
-
+    solver.unrollToZero();
     computeAssumptionsAND();
     solver.setComputeUnsatCores( true );
     
@@ -105,8 +102,7 @@ OllBB::oll()
             return INCOHERENT;
 
         solver.clearConflictStatus();
-        if( solver.getCurrentDecisionLevel() != 0 && !solver.doRestart() )
-            return INCOHERENT;
+        solver.unrollToZero();
         
         for( unsigned int i = 0; i < unsatCore.size(); i++ )
         {

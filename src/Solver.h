@@ -101,6 +101,8 @@ class Solver
         inline bool cleanAndAddClause( Clause* clause );
         inline bool addClause( Literal literal );
         inline bool addClause( Clause* clause );
+        inline bool addClauseRuntime( Literal literal );
+        inline bool addClauseRuntime( Clause* clause );
         inline bool addClause( Literal lit1, Literal lit2 );        
         
         inline bool addClauseFromModel( Clause* clause );
@@ -129,7 +131,8 @@ class Solver
         
         inline void onLearningClause( Literal literalToPropagate, Clause* learnedClause, unsigned int backjumpingLevel );
         inline void onLearningUnaryClause( Literal literalToPropagate, Clause* learnedClause );        
-        inline bool doRestart();        
+        inline bool doRestart();
+        inline void unrollToZero();
         
         inline unsigned int numberOfClauses() const { return clauses.size(); }
         inline unsigned int numberOfLearnedClauses() const;         
@@ -412,6 +415,7 @@ class Solver
         inline unsigned int getPrecomputedCost() const { return precomputedCost; }
         
         inline void foundLowerBound( unsigned int lb ) { outputBuilder->foundLowerBound( lb ); }
+        inline bool incremental() const { return incremental_; }
         
     private:
         HCComponent* hcComponentForChecker;
@@ -590,6 +594,8 @@ class Solver
         unsigned int maxNumberOfRestarts;
         unsigned int numberOfRestarts;
         
+        bool incremental_;
+        
         #ifndef NDEBUG
         bool checkStatusBeforePropagation( Var variable )
         {
@@ -637,7 +643,8 @@ Solver::Solver()
     maxNumberOfChoices( UINT_MAX ),
     numberOfChoices( 0 ),
     maxNumberOfRestarts( UINT_MAX ),
-    numberOfRestarts( 0 )
+    numberOfRestarts( 0 ),
+    incremental_( false )
 {
     dependencyGraph = new DependencyGraph( *this );
     satelite = new Satelite( *this );
@@ -653,6 +660,7 @@ Solver::Solver()
 unsigned int
 Solver::solve()
 {
+    incremental_ = false;
     vector< Literal > assumptionsAND;
     vector< Literal > assumptionsOR;
     if( !hasPropagators() )
@@ -666,7 +674,8 @@ Solver::solve(
     vector< Literal >& assumptionsAND,
     vector< Literal >& assumptionsOR )
 {
-    numberOfAssumptions = assumptionsAND.size();
+    incremental_ = true;
+    numberOfAssumptions = 0;
     for( unsigned int i = 0; i < assumptionsAND.size(); i++ )
         setAssumptionAND( assumptionsAND[ i ], true );
     
@@ -858,6 +867,65 @@ Solver::addClause(
     return true;
 }
 
+bool
+Solver::addClauseRuntime(
+    Literal literal )
+{
+    if( isTrue( literal ) )
+        return true;
+    assert( currentDecisionLevel == 0 );
+    assignLiteral( literal );
+    assert( isTrue( literal ) );
+    assert( !conflictDetected() );
+
+    while( hasNextVariableToPropagate() )
+    {
+        nextValueOfPropagation--;
+        Var variableToPropagate = getNextVariableToPropagate();
+        if( hasPropagators() )
+            propagateWithPropagators( variableToPropagate );
+        else
+            propagate( variableToPropagate );
+
+        if( conflictDetected() )
+            return false;
+    }
+    return true;
+}
+
+bool
+Solver::addClauseRuntime(
+    Clause* clausePointer )
+{
+    assert( clausePointer != NULL );
+    Clause& clause = *clausePointer;
+    assert( allUndefined( clause ) );
+    assert( !clause.isTautology() );
+
+    unsigned int size = clause.size();
+    switch( size )
+    {
+        case 1:
+        {
+            Literal tmpLit = clause[ 0 ];
+            releaseClause( clausePointer );
+            return addClauseRuntime( tmpLit );
+        }
+        case 2:
+            assert( !callSimplifications_ );
+            addBinaryClause( clause[ 0 ], clause[ 1 ] );
+            releaseClause( clausePointer );
+            return true;
+            
+        default:
+            attachClause( clause );
+            clauses.push_back( clausePointer );
+            return true;
+    }
+
+    return true;
+}
+
 void
 Solver::addBinaryClause(
     Literal lit1,
@@ -991,7 +1059,13 @@ Solver::doRestart()
     trace( solving, 2, "Performing restart.\n" );
     numberOfRestarts++;
     restart->onRestart();
-    unroll( 0 );
+    
+    assert( incremental_ || numberOfAssumptions == 0 );
+    if( currentDecisionLevel > numberOfAssumptions )
+        unroll( numberOfAssumptions );
+    else
+        unroll( 0 );
+        
 
     if( generator && exchangeClauses_ )
     {
@@ -1004,6 +1078,13 @@ Solver::doRestart()
         }
     }
     return true;
+}
+
+void
+Solver::unrollToZero()
+{
+    if( currentDecisionLevel != 0 )    
+        unroll( 0 );
 }
 
 void
@@ -1104,7 +1185,7 @@ Solver::chooseLiteral(
     for( unsigned int i = 0; i < assumptionsAND.size(); i++ )
     {
         if( isUndefined( assumptionsAND[ i ] ) )
-        {
+        {            
             if( choice == Literal::null )
                 choice = assumptionsAND[ i ];
         }
@@ -1117,7 +1198,10 @@ Solver::chooseLiteral(
     }
     
     if( choice != Literal::null )
-        goto end;        
+    {
+        numberOfAssumptions++;
+        goto end;
+    }
         
     if( !assumptionsOR.empty() )
     {
@@ -2106,10 +2190,10 @@ Solver::computeLBD(
     unsigned int lbd = 0;
     glucoseData.MYFLAG++;
     for( unsigned int i = 0; i < clause.size(); i++ )
-    {        
-        unsigned int level = getDecisionLevel( clause[ i ] );
-//        if( level <= numberOfAssumptions )
-//            continue;
+    {
+        if( isAssumptionAND( clause[ i ].getVariable() ) )
+            continue;
+        unsigned int level = getDecisionLevel( clause[ i ] );        
         if( glucoseData.permDiff[ level ] != glucoseData.MYFLAG )
         {
             glucoseData.permDiff[ level ] = glucoseData.MYFLAG;
