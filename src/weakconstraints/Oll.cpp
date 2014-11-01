@@ -18,15 +18,22 @@
 
 #include "Oll.h"
 
+Oll::~Oll()
+{
+    for( unsigned int i = 0; i < elements.size(); i++ )
+        delete elements[ i ];
+}
+
 unsigned int
 Oll::run()
 {    
+    statistics( &solver, disable() );
     unsigned int lb = 0;
     trace_msg( weakconstraints, 1, "Starting algorithm OLL" );    
     computeAssumptionsAND();        
     
     initInUnsatCore();    
-    unsigned int originalNumberOfVariables = solver.numberOfVariables();        
+    originalNumberOfVariables = solver.numberOfVariables();        
 
     solver.setComputeUnsatCores( true );
     solver.turnOffSimplifications();
@@ -66,13 +73,14 @@ Oll::run()
         for( unsigned int i = 0; i < auxVariablesInUnsatCore.size(); i++ )
         {
             Var guardId = auxVariablesInUnsatCore[ i ];
-            if( guardMap.find( guardId ) == guardMap.end() )
-                continue;
-            assert( guardMap.find( guardId ) != guardMap.end() );
+//            if( guardMap.find( guardId ) == guardMap.end() )
+//                continue;
+//            assert( guardMap.find( guardId ) != guardMap.end() );
+            assert( hasOllData( guardId ) );
                         
-            OllData* ollData = guardMap[ guardId ];
+            OllData* ollData = getOllData( guardId ); //guardMap[ guardId ];
             if( ollData->bound_ < ollData->literals_.size() )
-            {
+            {                
                 trace_msg( weakconstraints, 3, "Incrementing by one bound (" << ollData->bound_ <<  ") of aggregate " << guardId );
                 assert( ollData->literals_.size() > 0 );
                 if( !addAggregateOll( ollData->literals_, ollData->weights_, ollData->bound_ + 1, ollData->weight_ ) )
@@ -84,6 +92,8 @@ Oll::run()
         computeAssumptionsAND();
     }
         
+    statistics( &solver, enable() );
+    statistics( &solver, endSolving() );
     unsigned int ub = solver.computeCostOfModel();
     assert_msg( lb == ub, lb << " != " << ub );
     solver.printAnswerSet();
@@ -165,12 +175,12 @@ Oll::addAggregateOll(
     unsigned int bound,
     unsigned int weightOfOptimizationLiteral )
 {
-//    if( literals.size() == 1 )
-//    {
-//        trace_msg( weakconstraints, 2, "Literal " << literals[ 0 ] << " is removed from assumptions. Nothing more to do" );
-//        return true;
-//    }
-//        
+    if( literals.size() == 1 )
+    {
+        trace_msg( weakconstraints, 2, "Literal " << literals[ 0 ] << " is removed from assumptions. Nothing more to do" );
+        return true;
+    }
+        
 //    if( literals.size() == bound )
 //    {
 //        trace_msg( weakconstraints, 2, "The size of aggregate is equal to the bound (" << literals.size() << ")" );
@@ -210,7 +220,8 @@ Oll::addAggregateOll(
 //    }
     
     trace_msg( weakconstraints, 2, "Adding aggregate from unsat core" );
-    Var aggrId = addAuxVariable();
+    Var aggrId = addAuxVariable();    
+    elements.push_back( NULL );
     Aggregate* aggregate = createAggregate( aggrId, literals, weights );     
     if( !processAndAddAggregate( aggregate, bound ) )
         return false;
@@ -218,8 +229,10 @@ Oll::addAggregateOll(
     if( solver.isFalse( aggrId ) )
         return true;
     
-    Var guardId = addBinaryClauseForAggregateOll( aggrId, weightOfOptimizationLiteral );
-    OllData* ollData = new OllData( bound, guardId, weightOfOptimizationLiteral, literals, weights );
-    guardMap[ guardId ] = ollData;
+//    Var guardId = addBinaryClauseForAggregateOll( aggrId, weightOfOptimizationLiteral );
+    Literal lit( aggrId, POSITIVE );
+    solver.addOptimizationLiteral( lit, weightOfOptimizationLiteral, UINT_MAX, true );
+    OllData* ollData = new OllData( bound, aggrId, weightOfOptimizationLiteral, literals, weights );
+    setOllData( aggrId, ollData );
     return true;
 }

@@ -901,7 +901,7 @@ Solver::addClauseRuntime(
     Clause& clause = *clausePointer;
     assert( allUndefined( clause ) );
     assert( !clause.isTautology() );
-
+    assert( currentDecisionLevel == 0 );
     unsigned int size = clause.size();
     switch( size )
     {
@@ -1263,27 +1263,32 @@ Solver::analyzeConflict()
     
     if( learnedClause->size() == 1 )
     {
-        if( !doRestart() )
-            return false;
+//        if( !doRestart() )
+//            return false;        
+        unrollToZero();
         clearConflictStatus();
-        assignLiteral( learnedClause->getAt( 0 ) );
-        assert( isTrue( learnedClause->getAt( 0 ) ) );
-        assert( !conflictDetected() );
-//        delete learnedClause;
+        Literal tmpLit = learnedClause->getAt( 0 );
         releaseClause( learnedClause );
+        if( !addClauseRuntime( tmpLit ) )
+            return false;
+            
+//        assignLiteral( learnedClause->getAt( 0 ) );
+//        assert( isTrue( learnedClause->getAt( 0 ) ) );
+//        assert( !conflictDetected() );
+//        delete learnedClause;        
 
-        while( hasNextVariableToPropagate() )
-        {
-            nextValueOfPropagation--;            
-            Var variableToPropagate = getNextVariableToPropagate();
-            if( hasPropagators() )
-                propagateWithPropagators( variableToPropagate );
-            else
-                propagate( variableToPropagate );
-
-            if( conflictDetected() )
-                return false;
-        }
+//        while( hasNextVariableToPropagate() )
+//        {
+//            nextValueOfPropagation--;            
+//            Var variableToPropagate = getNextVariableToPropagate();
+//            if( hasPropagators() )
+//                propagateWithPropagators( variableToPropagate );
+//            else
+//                propagate( variableToPropagate );
+//
+//            if( conflictDetected() )
+//                return false;
+//        }
         
         simplifyOnRestart();
     }

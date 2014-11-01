@@ -35,9 +35,7 @@ class OllBB : public Oll
         unsigned int bb();
         
         unsigned int lb;
-        unsigned int ub;
-        
-        unsigned int originalNumberOfVariables;
+        unsigned int ub;        
         unsigned int numberOfModels;
         bool useRestarts_;
         

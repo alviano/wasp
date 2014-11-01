@@ -130,10 +130,10 @@ OllBB::oll()
         for( unsigned int i = 0; i < auxVariablesInUnsatCore.size(); i++ )
         {
             Var guardId = auxVariablesInUnsatCore[ i ];
-            if( guardMap.find( guardId ) == guardMap.end() )
-                continue;
-            
-            OllData* ollData = guardMap[ guardId ];
+//            if( guardMap.find( guardId ) == guardMap.end() )
+//                continue;
+            assert( hasOllData( guardId ) );
+            OllData* ollData = getOllData( guardId ); //guardMap[ guardId ];
             if( ollData->bound_ < ollData->literals_.size() )
             {
                 trace_msg( weakconstraints, 3, "Incrementing by one bound (" << ollData->bound_ <<  ") of aggregate " << guardId );

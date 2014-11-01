@@ -45,38 +45,68 @@ class OllData
 class Oll : public WeakInterface
 {
     public:
-        inline Oll( Solver& s ) : WeakInterface( s ) {}
-        virtual ~Oll() {}
+        inline Oll( Solver& s ) : WeakInterface( s ), originalNumberOfVariables( 0 ) { elements.push_back( NULL ); }
+        virtual ~Oll();
         virtual unsigned int run();
 
     protected:
         bool processCoreOll( vector< Literal >& literals, vector< unsigned int >& weights, unsigned int minWeight );
         bool addAggregateOll( vector< Literal >& literals, vector< unsigned int >& weights, unsigned int bound, unsigned int weightOfOptimizationLiteral );
-        inline Var addBinaryClauseForAggregateOll( Var aggrId, unsigned int weightOfOptimizationLiteral );
-        unordered_map< Var, OllData* > guardMap;
+//        inline Var addBinaryClauseForAggregateOll( Var aggrId, unsigned int weightOfOptimizationLiteral );
+        inline bool hasOllData( Var v ) const;
+        inline OllData* getOllData( Var v );
+        inline void setOllData( Var v, OllData* );
+        
+        unsigned int originalNumberOfVariables;
+        
+    private:
+        vector< OllData* > elements;        
 };
 
-Var
-Oll::addBinaryClauseForAggregateOll(
-    Var aggrId,
-    unsigned int weightOfOptimizationLiteral )
-{    
-    Literal lit( addAuxVariable(), POSITIVE );
-    solver.addOptimizationLiteral( lit, weightOfOptimizationLiteral, UINT_MAX, true );    
-    solver.addClause( lit, Literal( aggrId, NEGATIVE ) );
-    
-    assert( !solver.isFalse( aggrId ) );
-    if( solver.isTrue( aggrId ) )
-    {
-        #ifndef NDEBUG
-        bool res =
-        #endif
-        solver.addClauseRuntime( lit );
-        assert( res );
-    }
-    
-    return lit.getVariable();
+//Var
+//Oll::addBinaryClauseForAggregateOll(
+//    Var aggrId,
+//    unsigned int weightOfOptimizationLiteral )
+//{    
+//    Literal lit( addAuxVariable(), POSITIVE );
+//    solver.addOptimizationLiteral( lit, weightOfOptimizationLiteral, UINT_MAX, true );    
+//    solver.addClause( lit, Literal( aggrId, NEGATIVE ) );
+//    
+//    assert( !solver.isFalse( aggrId ) );
+//    if( solver.isTrue( aggrId ) )
+//    {
+//        #ifndef NDEBUG
+//        bool res =
+//        #endif
+//        solver.addClauseRuntime( lit );
+//        assert( res );
+//    }
+//    
+//    return lit.getVariable();
+//}
+
+bool
+Oll::hasOllData(
+    Var v ) const
+{
+    assert_msg( v - originalNumberOfVariables < elements.size(), v - originalNumberOfVariables << ">=" << elements.size() );
+    return elements[ v - originalNumberOfVariables ] != NULL;
+}
+OllData*
+Oll::getOllData(
+    Var v )
+{
+    assert_msg( v - originalNumberOfVariables < elements.size(), v - originalNumberOfVariables << ">=" << elements.size() );
+    return elements[ v - originalNumberOfVariables ];
 }
 
-
+void
+Oll::setOllData(
+    Var v,
+    OllData* ollData )
+{
+    assert_msg( v - originalNumberOfVariables < elements.size(), v - originalNumberOfVariables << ">=" << elements.size() );
+    elements[ v - originalNumberOfVariables ] = ollData;
+}
+        
 #endif
