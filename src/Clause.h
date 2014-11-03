@@ -95,7 +95,8 @@ class Clause : public Reason
         
         inline Activity& activity(){ return act(); }
         inline const Activity& activity() const { return act(); }
-        inline void setLearned(){ clauseData.learned = 1; }
+        inline void setLearned() { clauseData.learned = 1; }
+        inline void setOriginal() { clauseData.learned = 0; }
         inline bool isLearned() const { return clauseData.learned == 1; }
         
 //        inline bool removeSatisfiedLiterals();

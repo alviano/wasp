@@ -414,7 +414,7 @@ Solver::solvePropagators(
 //                        glucoseData.sumLBD += clauseToPropagate->lbd();
 //                        glucoseData.lbdQueue.push( clauseToPropagate->lbd() );
 //                    }
-                    addLearnedClause( clauseToPropagate );                    
+                    addLearnedClause( clauseToPropagate, false );                    
                     if( !isUndefined( clauseToPropagate->getAt( 1 ) ) )
                     {
                         assert( !isTrue( clauseToPropagate->getAt( 0 ) ) );
@@ -761,7 +761,7 @@ Solver::minisatDeletion()
     while( i != learnedClauses.end() )
     {
         Clause& clause = **i;
-        if( clause.size() > 2 && !isLocked( clause ) && ( numberOfDeletions < toDelete || clause.activity() < threshold ) )
+        if( /*clause.size() > 2 &&*/ !isLocked( clause ) && ( numberOfDeletions < toDelete || clause.activity() < threshold ) )
         {
             deleteLearnedClause( i );
             numberOfDeletions++;
@@ -846,7 +846,7 @@ Solver::glucoseDeletion()
     while( i != learnedClauses.end() )
     {
         Clause& clause = **i;
-        if( clause.lbd() > 2 && clause.size() > 2 && clause.canBeDeleted() && !isLocked( clause ) && ( numberOfDeletions < toDelete ) )
+        if( clause.lbd() > 2 && /*clause.size() > 2 &&*/ clause.canBeDeleted() && !isLocked( clause ) && ( numberOfDeletions < toDelete ) )
         {
             deleteLearnedClause( i );
             numberOfDeletions++;
@@ -1248,25 +1248,33 @@ Solver::cleanAndAddLearnedClause(
     else
     {
         clause->setLearned();
-        addLearnedClause( clause );    
+        addLearnedClause( clause, true );    
     }
     return true;
 }
 
 void
 Solver::addLearnedClause( 
-    Clause* learnedClause )
+    Clause* learnedClause,
+    bool optimizeBinaryClause )
 {
     assert( learnedClause != NULL );
-    attachClause( *learnedClause );
-    if( hcComponentForChecker != NULL && exchangeClauses_ )
-    {
-        assert( !generator );
-        hcComponentForChecker->addLearnedClausesFromChecker( learnedClause );
-    }
-    
-    learnedClauses.push_back( learnedClause );    
     literalsInLearnedClauses += learnedClause->size();
+    if( optimizeBinaryClause && learnedClause->size() == 2 )
+    {
+        learnedClause->setOriginal();
+        addBinaryClauseRuntime( learnedClause );
+    }
+    else
+    {
+        attachClause( *learnedClause );
+        if( hcComponentForChecker != NULL && exchangeClauses_ )
+        {
+            assert( !generator );
+            hcComponentForChecker->addLearnedClausesFromChecker( learnedClause );
+        }
+        learnedClauses.push_back( learnedClause );        
+    }    
 }
 
 void

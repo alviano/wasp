@@ -86,7 +86,9 @@ class Component : public PostPropagator
         vector< GUSData* >& gusData;
         Vector< Var > variablesWithoutSourcePointer;
         Vector< Var > unfoundedSet;
-        Clause* clauseToPropagate;        
+        Clause* clauseToPropagate;
+        bool addAuxVar;
+        Var auxVar;
         
         unsigned int id : 31;
         unsigned int removed : 1;        

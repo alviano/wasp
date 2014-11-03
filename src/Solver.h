@@ -102,11 +102,12 @@ class Solver
         inline bool addClause( Literal literal );
         inline bool addClause( Clause* clause );
         inline bool addClauseRuntime( Literal literal );
+        inline void addBinaryClauseRuntime( Clause* clause );
         inline bool addClauseRuntime( Clause* clause );
         inline bool addClause( Literal lit1, Literal lit2 );        
         
         inline bool addClauseFromModel( Clause* clause );
-        void addLearnedClause( Clause* learnedClause );
+        void addLearnedClause( Clause* learnedClause, bool optimizeBinary );
         bool addClauseFromModelAndRestart();
         
         inline Literal getLiteral( int lit );
@@ -893,6 +894,15 @@ Solver::addClauseRuntime(
     return true;
 }
 
+void
+Solver::addBinaryClauseRuntime(
+    Clause* clause )
+{
+    assert( !callSimplifications_ );
+    addBinaryClause( clause->getAt( 0 ), clause->getAt( 1 ) );
+    releaseClause( clause );
+}
+
 bool
 Solver::addClauseRuntime(
     Clause* clausePointer )
@@ -912,9 +922,7 @@ Solver::addClauseRuntime(
             return addClauseRuntime( tmpLit );
         }
         case 2:
-            assert( !callSimplifications_ );
-            addBinaryClause( clause[ 0 ], clause[ 1 ] );
-            releaseClause( clausePointer );
+            addBinaryClauseRuntime( clausePointer );
             return true;
             
         default:
@@ -1261,7 +1269,9 @@ Solver::analyzeConflict()
     assert( "Learned clause has not been calculated." && learnedClause != NULL );
     statistics( this, onLearning( learnedClause->size() ) );
     
-    if( learnedClause->size() == 1 )
+    unsigned int size = learnedClause->size();
+    
+    if( size == 1 )
     {
 //        if( !doRestart() )
 //            return false;        
@@ -1294,16 +1304,24 @@ Solver::analyzeConflict()
     }
     else
     {
-        //Be careful. UIP should be always in position 0.
-        assert( getDecisionLevel( learnedClause->getAt( 0 ) ) == currentDecisionLevel );
-        assert( getDecisionLevel( learnedClause->getAt( 1 ) ) == learnedClause->getMaxDecisionLevel( *this, 1, learnedClause->size() ) );        
         if( glucoseHeuristic_ )
         {
             glucoseData.sumLBD += learnedClause->lbd();
             glucoseData.lbdQueue.push( learnedClause->lbd() );
         }
-        addLearnedClause( learnedClause );
-
+        
+        Literal firstLiteral = learnedClause->getAt( 0 );
+        Literal secondLiteral = learnedClause->getAt( 1 );
+        //Be careful. UIP should be always in position 0.
+        assert( getDecisionLevel( firstLiteral ) == currentDecisionLevel );
+        assert( getDecisionLevel( secondLiteral ) == learnedClause->getMaxDecisionLevel( *this, 1, learnedClause->size() ) );        
+        
+        unsigned int unrollLevel = getDecisionLevel( secondLiteral );
+        assert_msg( unrollLevel != 0, "Trying to backjumping to level 0" );
+        assert_msg( unrollLevel < currentDecisionLevel, "Trying to backjump from level " << unrollLevel << " to level " << currentDecisionLevel );
+        trace_msg( solving, 2, "Learned clause and backjumping to level " << unrollLevel );
+        addLearnedClause( learnedClause, true );        
+        
         bool hasToRestart = glucoseHeuristic_ ? ( glucoseData.lbdQueue.isValid() && ( ( glucoseData.lbdQueue.getAvg() * glucoseData.K ) > ( glucoseData.sumLBD / conflictsRestarts ) ) ) : restart->hasToRestart();
         if( hasToRestart )
         {
@@ -1315,19 +1333,19 @@ Solver::analyzeConflict()
         }
         else
         {
-            assert( getDecisionLevel( learnedClause->getAt( 1 ) ) != 0 );
-            assert( "Backjumping level is not valid." && getDecisionLevel( learnedClause->getAt( 1 ) ) < currentDecisionLevel );
-            trace( solving, 2, "Learned clause and backjumping to level %d.\n", getDecisionLevel( learnedClause->getAt( 1 ) ) );
-            unroll( getDecisionLevel( learnedClause->getAt( 1 ) ) );    
-            
-            assert( "Each learned clause has to be an asserting clause." && learnedClause->getAt( 0 ) != Literal::null );
-            
-            clearConflictStatus();
-            assignLiteral( learnedClause );
-            
-            onLearning( learnedClause );  // FIXME: this should be moved outside
+            unroll( unrollLevel );
+            clearConflictStatus();                        
+            if( size != 2 )
+            {
+                assignLiteral( learnedClause );
+                onLearning( learnedClause );  // FIXME: this should be moved outside
+            }
+            else
+            {
+                assignLiteral( firstLiteral, variables.getReasonForBinaryClauses( secondLiteral.getVariable() ) );
+            }
         }
-        
+
         clearConflictStatus();
     }
 
@@ -1547,7 +1565,7 @@ Solver::preprocessing()
     deletionCounters.maxLearned = numberOfClauses() * deletionCounters.learnedSizeFactor;
     deletionCounters.learnedSizeAdjustConfl = deletionCounters.learnedSizeAdjustStartConfl;
     deletionCounters.learnedSizeAdjustCnt = ( unsigned int ) deletionCounters.learnedSizeAdjustConfl;
-    
+    callSimplifications_ = false;
     statistics( this, afterPreprocessing( numberOfAssignedLiterals(), numberOfClauses() ) );
 
     return true;

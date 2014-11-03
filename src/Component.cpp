@@ -52,6 +52,7 @@ Component::getClauseToPropagate(
             return NULL;
         }
 
+        addAuxVar = false;
         computeGUS();
         
         if( unfoundedSet.empty() )
@@ -66,6 +67,28 @@ Component::getClauseToPropagate(
             if( solver.glucoseHeuristic() )
                 clauseToPropagate->setLbd( solver.computeLBD( *clauseToPropagate ) );
 
+//            addAuxVar = unfoundedSet.size() >= 5 && clauseToPropagate->size() >=10 && ( unfoundedSet.size() * ( clauseToPropagate->size() + 1 ) - ( 2 * unfoundedSet.size() + ( clauseToPropagate->size() + 1 ) ) ) >= 100;
+            addAuxVar = unfoundedSet.size() >= 5 && clauseToPropagate->size() >=10 && ( ( ( unfoundedSet.size() - 3 ) * ( clauseToPropagate->size() - 1 ) ) >= 104 );
+            if( addAuxVar )
+            {
+                solver.addVariableRuntime();
+                auxVar = solver.numberOfVariables();
+                
+                Clause* newClause = new Clause();
+                newClause->setLearned();
+                newClause->addLiteralInLearnedClause( Literal( auxVar, NEGATIVE ) );                
+                for( unsigned int i = 0; i < clauseToPropagate->size(); i++ )
+                {
+                    Clause* c = new Clause( 2 );
+                    c->setLearned();
+                    c->addLiteralInLearnedClause( clauseToPropagate->getAt( i ).getOppositeLiteral() );
+                    assert( solver.isTrue( clauseToPropagate->getAt( i ).getOppositeLiteral() ) );
+                    c->addLiteralInLearnedClause( Literal( auxVar, POSITIVE ) );
+                    solver.addLearnedClause( c, false );
+                    newClause->addLiteralInLearnedClause( clauseToPropagate->getAt( i ) );
+                }                
+                return newClause;
+            }
             trace_msg( unfoundedset, 2, "Reasons of unfounded sets: " << *clauseToPropagate );
             goto begin;
         }
@@ -84,7 +107,7 @@ Component::getClauseToPropagate(
                 break;
             }
         }
-        
+                
         Var variable;
         do
         {
@@ -97,10 +120,17 @@ Component::getClauseToPropagate(
             if( !solver.isFalse( variable ) )
             {
                 Clause* loopFormula = new Clause();
-                loopFormula->copyLiterals( *clauseToPropagate );
-                if( solver.glucoseHeuristic() )
-                    loopFormula->setLbd( clauseToPropagate->lbd() );
-
+                if( !addAuxVar )
+                {
+                    loopFormula->copyLiterals( *clauseToPropagate );
+                    if( solver.glucoseHeuristic() )
+                        loopFormula->setLbd( clauseToPropagate->lbd() );
+                }
+                else
+                {
+                    loopFormula->addLiteral( Literal( auxVar, POSITIVE ) );                    
+                }
+                
                 if( solver.isTrue( variable ) )
                 {
                     if( solver.getDecisionLevel( variable ) > 0 )

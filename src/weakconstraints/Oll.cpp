@@ -221,7 +221,7 @@ Oll::addAggregateOll(
     
     trace_msg( weakconstraints, 2, "Adding aggregate from unsat core" );
     Var aggrId = addAuxVariable();    
-    elements.push_back( NULL );
+//    elements.push_back( NULL );
     Aggregate* aggregate = createAggregate( aggrId, literals, weights );     
     if( !processAndAddAggregate( aggregate, bound ) )
         return false;

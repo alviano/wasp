@@ -45,7 +45,7 @@ class OllData
 class Oll : public WeakInterface
 {
     public:
-        inline Oll( Solver& s ) : WeakInterface( s ), originalNumberOfVariables( 0 ) { elements.push_back( NULL ); }
+        inline Oll( Solver& s ) : WeakInterface( s ), originalNumberOfVariables( 0 ) { /*elements.push_back( NULL );*/ }
         virtual ~Oll();
         virtual unsigned int run();
 
@@ -60,7 +60,7 @@ class Oll : public WeakInterface
         unsigned int originalNumberOfVariables;
         
     private:
-        vector< OllData* > elements;        
+        unordered_map< Var, OllData* > elements;        
 };
 
 //Var
@@ -89,15 +89,17 @@ bool
 Oll::hasOllData(
     Var v ) const
 {
-    assert_msg( v - originalNumberOfVariables < elements.size(), v - originalNumberOfVariables << ">=" << elements.size() );
-    return elements[ v - originalNumberOfVariables ] != NULL;
+//    assert_msg( v - originalNumberOfVariables < elements.size(), v - originalNumberOfVariables << ">=" << elements.size() );    
+//    return elements[ v - originalNumberOfVariables ] != NULL;
+    return elements.find( v ) != elements.end();
 }
 OllData*
 Oll::getOllData(
     Var v )
 {
-    assert_msg( v - originalNumberOfVariables < elements.size(), v - originalNumberOfVariables << ">=" << elements.size() );
-    return elements[ v - originalNumberOfVariables ];
+//    assert_msg( v - originalNumberOfVariables < elements.size(), v - originalNumberOfVariables << ">=" << elements.size() );
+//    return elements[ v - originalNumberOfVariables ];
+    return elements[ v ];
 }
 
 void
@@ -105,8 +107,9 @@ Oll::setOllData(
     Var v,
     OllData* ollData )
 {
-    assert_msg( v - originalNumberOfVariables < elements.size(), v - originalNumberOfVariables << ">=" << elements.size() );
-    elements[ v - originalNumberOfVariables ] = ollData;
+//    assert_msg( v - originalNumberOfVariables < elements.size(), v - originalNumberOfVariables << ">=" << elements.size() );
+//    elements[ v - originalNumberOfVariables ] = ollData;
+    elements[ v ] = ollData;
 }
         
 #endif

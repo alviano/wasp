@@ -76,7 +76,8 @@ Var
 WeakInterface::addAuxVariable()
 {
     solver.addVariableRuntime();
-    inUnsatCore.push_back( 0 );
+    while( inUnsatCore.size() <= solver.numberOfVariables() )
+        inUnsatCore.push_back( 0 );
     return solver.numberOfVariables();        
 }
 
