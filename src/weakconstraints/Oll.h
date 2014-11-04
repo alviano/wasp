@@ -45,9 +45,11 @@ class OllData
 class Oll : public WeakInterface
 {
     public:
-        inline Oll( Solver& s ) : WeakInterface( s ), originalNumberOfVariables( 0 ), lb( 0 ), ub( 0 ), weight( UINT_MAX ) { /*elements.push_back( NULL );*/ }
+        inline Oll( Solver& s ) : WeakInterface( s ), originalNumberOfVariables( 0 ), lb( 0 ), ub( UINT_MAX ), weight( UINT_MAX ) { /*elements.push_back( NULL );*/ }
         virtual ~Oll();
         virtual unsigned int run();        
+        unsigned int runWeighted();
+        unsigned int runUnweighted();
 
     protected:
         bool processCoreOll( vector< Literal >& literals, vector< unsigned int >& weights, unsigned int minWeight );

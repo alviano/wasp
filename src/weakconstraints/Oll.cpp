@@ -26,6 +26,12 @@ Oll::~Oll()
 
 unsigned int
 Oll::run()
+{
+    return solver.isWeighted() ? runWeighted() : runUnweighted();
+}
+
+unsigned int
+Oll::runUnweighted()
 {    
     statistics( &solver, disable() );    
     trace_msg( weakconstraints, 1, "Starting algorithm OLL" );    
@@ -53,56 +59,56 @@ Oll::run()
     return OPTIMUM_FOUND;
 }
 
-//unsigned int
-//Oll::run()
-//{    
-//    statistics( &solver, disable() );
-//    trace_msg( weakconstraints, 1, "Starting algorithm OLL" );
-//    solver.sortOptimizationLiterals();
-//    for( unsigned int i = 0; i < solver.numberOfOptimizationLiterals(); i++ )
-//        weights.push_back( solver.getOptimizationLiteral( i ).weight );
-//        
-//    vector< unsigned int >::iterator it = unique( weights.begin(), weights.end() );
-//    weights.erase( it, weights.end() );
-//    
-//    changeWeight();
-//    computeAssumptionsANDStratified();        
-//    
-//    initInUnsatCore();    
-//    originalNumberOfVariables = solver.numberOfVariables();        
-//
-//    solver.setComputeUnsatCores( true );
-//    solver.turnOffSimplifications();
-//
-//    while( true )
-//    {
-//        if( solver.solve( assumptionsAND, assumptionsOR ) != INCOHERENT )
-//        {            
-//            ub = solver.computeCostOfModel();
-//            solver.printAnswerSet();
-//            solver.printOptimizationValue( ub );
-//            solver.unrollToZero();
-//            solver.clearConflictStatus();
-//            if( !changeWeight() )
-//                break;
-//            assumptionsAND.clear();
-//            computeAssumptionsANDStratified();
-//        }
-//        else
-//        {
-//            if( !foundUnsat() )
-//                return INCOHERENT;
-//            assumptionsAND.clear();
-//            computeAssumptionsANDStratified();
-//        }
-//    }
-//
-//    statistics( &solver, enable() );
-//    statistics( &solver, endSolving() );    
-//    assert_msg( lb == ub, lb << " != " << ub );    
-//    
-//    return OPTIMUM_FOUND;
-//}
+unsigned int
+Oll::runWeighted()
+{    
+    statistics( &solver, disable() );
+    trace_msg( weakconstraints, 1, "Starting algorithm OLL" );
+    solver.sortOptimizationLiterals();
+    for( unsigned int i = 0; i < solver.numberOfOptimizationLiterals(); i++ )
+        weights.push_back( solver.getOptimizationLiteral( i ).weight );
+        
+    vector< unsigned int >::iterator it = unique( weights.begin(), weights.end() );
+    weights.erase( it, weights.end() );
+    
+    changeWeight();
+    computeAssumptionsANDStratified();        
+    
+    initInUnsatCore();    
+    originalNumberOfVariables = solver.numberOfVariables();        
+
+    solver.setComputeUnsatCores( true );
+    solver.turnOffSimplifications();
+
+    while( true )
+    {
+        if( solver.solve( assumptionsAND, assumptionsOR ) != INCOHERENT )
+        {            
+            ub = solver.computeCostOfModel();
+            solver.printAnswerSet();
+            solver.printOptimizationValue( ub );
+            solver.unrollToZero();
+            solver.clearConflictStatus();
+            if( !changeWeight() )
+                break;
+            assumptionsAND.clear();
+            computeAssumptionsANDStratified();
+        }
+        else
+        {
+            if( !foundUnsat() )
+                return INCOHERENT;
+            assumptionsAND.clear();
+            computeAssumptionsANDStratified();
+        }
+    }
+
+    statistics( &solver, enable() );
+    statistics( &solver, endSolving() );    
+    assert_msg( lb == ub, lb << " != " << ub );    
+    
+    return OPTIMUM_FOUND;
+}
 
 bool
 Oll::processCoreOll(
@@ -304,9 +310,7 @@ Oll::computeAssumptionsANDStratified()
         if( solver.getOptimizationLiteral( i ).isRemoved() )
             continue;
         if( solver.getOptimizationLiteral( i ).weight >= this->weight )
-            assumptionsAND.push_back( solver.getOptimizationLiteral( i ).lit.getOppositeLiteral() );
-        else
-            assumptionsAND.push_back( solver.getOptimizationLiteral( i ).lit );
+            assumptionsAND.push_back( solver.getOptimizationLiteral( i ).lit.getOppositeLiteral() );        
     }
     trace_action( weakconstraints, 2, 
     {
@@ -323,8 +327,8 @@ Oll::changeWeight()
 {
     unsigned int oldWeight = weight;
     for( unsigned int i = 0; i < weights.size(); i++ )
-    {
-        if( weights[ i ] < weight )
+    {        
+        if( weights[ i ] < weight && weights[ i ] <= ub )
         {
             weight = weights[ i ];
             break;
