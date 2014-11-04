@@ -27,8 +27,7 @@ Oll::~Oll()
 unsigned int
 Oll::run()
 {    
-    statistics( &solver, disable() );
-    unsigned int lb = 0;
+    statistics( &solver, disable() );    
     trace_msg( weakconstraints, 1, "Starting algorithm OLL" );    
     computeAssumptionsAND();        
     
@@ -39,67 +38,71 @@ Oll::run()
     solver.turnOffSimplifications();
     while( solver.solve( assumptionsAND, assumptionsOR ) == INCOHERENT )
     {        
-        vector< unsigned int > auxVariablesInUnsatCore;
-        ++numberOfCalls;
-        assert( solver.getUnsatCore() != NULL );
-        const Clause& unsatCore = *( solver.getUnsatCore() );
-
-        //The incoherence does not depend on weak constraints
-        if( unsatCore.size() == 0 )
+        if( !foundUnsat() )
             return INCOHERENT;
-
-        solver.clearConflictStatus();
-        solver.unrollToZero();
-        
-        for( unsigned int i = 0; i < unsatCore.size(); i++ )
-        {
-            Var v = unsatCore[ i ].getVariable();
-            visit( v );
-            if( v > originalNumberOfVariables )
-                auxVariablesInUnsatCore.push_back( v );
-        }
-        
-        vector< Literal > literals;
-        vector< unsigned int > weights;
-        
-        unsigned int minWeight = computeMinWeight();
-        if( !processCoreOll( literals, weights, minWeight ) )
-            return INCOHERENT;
-        lb += minWeight;
-        solver.foundLowerBound( lb );     
-        if( !addAggregateOll( literals, weights, 2, minWeight ) )
-            return INCOHERENT;        
-        
-        for( unsigned int i = 0; i < auxVariablesInUnsatCore.size(); i++ )
-        {
-            Var guardId = auxVariablesInUnsatCore[ i ];
-//            if( guardMap.find( guardId ) == guardMap.end() )
-//                continue;
-//            assert( guardMap.find( guardId ) != guardMap.end() );
-            assert( hasOllData( guardId ) );
-                        
-            OllData* ollData = getOllData( guardId ); //guardMap[ guardId ];
-            if( ollData->bound_ < ollData->literals_.size() )
-            {                
-                trace_msg( weakconstraints, 3, "Incrementing by one bound (" << ollData->bound_ <<  ") of aggregate " << guardId );
-                assert( ollData->literals_.size() > 0 );
-                if( !addAggregateOll( ollData->literals_, ollData->weights_, ollData->bound_ + 1, ollData->weight_ ) )
-                    return INCOHERENT;
-            }
-        }
-        
         assumptionsAND.clear();
         computeAssumptionsAND();
     }
         
     statistics( &solver, enable() );
     statistics( &solver, endSolving() );
-    unsigned int ub = solver.computeCostOfModel();
+    ub = solver.computeCostOfModel();
     assert_msg( lb == ub, lb << " != " << ub );
     solver.printAnswerSet();
     solver.printOptimizationValue( ub );
     return OPTIMUM_FOUND;
 }
+
+//unsigned int
+//Oll::run()
+//{    
+//    statistics( &solver, disable() );
+//    trace_msg( weakconstraints, 1, "Starting algorithm OLL" );
+//    solver.sortOptimizationLiterals();
+//    for( unsigned int i = 0; i < solver.numberOfOptimizationLiterals(); i++ )
+//        weights.push_back( solver.getOptimizationLiteral( i ).weight );
+//        
+//    vector< unsigned int >::iterator it = unique( weights.begin(), weights.end() );
+//    weights.erase( it, weights.end() );
+//    
+//    changeWeight();
+//    computeAssumptionsANDStratified();        
+//    
+//    initInUnsatCore();    
+//    originalNumberOfVariables = solver.numberOfVariables();        
+//
+//    solver.setComputeUnsatCores( true );
+//    solver.turnOffSimplifications();
+//
+//    while( true )
+//    {
+//        if( solver.solve( assumptionsAND, assumptionsOR ) != INCOHERENT )
+//        {            
+//            ub = solver.computeCostOfModel();
+//            solver.printAnswerSet();
+//            solver.printOptimizationValue( ub );
+//            solver.unrollToZero();
+//            solver.clearConflictStatus();
+//            if( !changeWeight() )
+//                break;
+//            assumptionsAND.clear();
+//            computeAssumptionsANDStratified();
+//        }
+//        else
+//        {
+//            if( !foundUnsat() )
+//                return INCOHERENT;
+//            assumptionsAND.clear();
+//            computeAssumptionsANDStratified();
+//        }
+//    }
+//
+//    statistics( &solver, enable() );
+//    statistics( &solver, endSolving() );    
+//    assert_msg( lb == ub, lb << " != " << ub );    
+//    
+//    return OPTIMUM_FOUND;
+//}
 
 bool
 Oll::processCoreOll(
@@ -235,4 +238,97 @@ Oll::addAggregateOll(
     OllData* ollData = new OllData( bound, aggrId, weightOfOptimizationLiteral, literals, weights );
     setOllData( aggrId, ollData );
     return true;
+}
+
+bool
+Oll::foundUnsat()
+{
+    vector< unsigned int > auxVariablesInUnsatCore;
+    ++numberOfCalls;
+    assert( solver.getUnsatCore() != NULL );
+    const Clause& unsatCore = *( solver.getUnsatCore() );
+
+    //The incoherence does not depend on weak constraints
+    if( unsatCore.size() == 0 )
+        return false;
+
+    solver.clearConflictStatus();
+    solver.unrollToZero();
+
+    for( unsigned int i = 0; i < unsatCore.size(); i++ )
+    {
+        Var v = unsatCore[ i ].getVariable();
+        visit( v );
+        if( v > originalNumberOfVariables )
+            auxVariablesInUnsatCore.push_back( v );
+    }
+
+    vector< Literal > literals;
+    vector< unsigned int > weights;
+
+    unsigned int minWeight = computeMinWeight();
+    if( !processCoreOll( literals, weights, minWeight ) )
+        return false;
+    lb += minWeight;
+    solver.foundLowerBound( lb );     
+    if( !addAggregateOll( literals, weights, 2, minWeight ) )
+        return false;        
+
+    for( unsigned int i = 0; i < auxVariablesInUnsatCore.size(); i++ )
+    {
+        Var guardId = auxVariablesInUnsatCore[ i ];
+//            if( guardMap.find( guardId ) == guardMap.end() )
+//                continue;
+//            assert( guardMap.find( guardId ) != guardMap.end() );
+        assert( hasOllData( guardId ) );
+
+        OllData* ollData = getOllData( guardId ); //guardMap[ guardId ];
+        if( ollData->bound_ < ollData->literals_.size() )
+        {                
+            trace_msg( weakconstraints, 3, "Incrementing by one bound (" << ollData->bound_ <<  ") of aggregate " << guardId );
+            assert( ollData->literals_.size() > 0 );
+            if( !addAggregateOll( ollData->literals_, ollData->weights_, ollData->bound_ + 1, ollData->weight_ ) )
+                return false;
+        }
+    }
+    
+    return true;
+}
+
+void
+Oll::computeAssumptionsANDStratified()
+{
+    solver.sortOptimizationLiterals();
+    for( unsigned int i = 0; i < solver.numberOfOptimizationLiterals(); i++ )
+    {
+        if( solver.getOptimizationLiteral( i ).isRemoved() )
+            continue;
+        if( solver.getOptimizationLiteral( i ).weight >= this->weight )
+            assumptionsAND.push_back( solver.getOptimizationLiteral( i ).lit.getOppositeLiteral() );
+        else
+            assumptionsAND.push_back( solver.getOptimizationLiteral( i ).lit );
+    }
+    trace_action( weakconstraints, 2, 
+    {
+        trace_tag( cerr, weakconstraints, 2 );
+        cerr << "AssumptionsAND: [";
+        for( unsigned int i = 0; i < assumptionsAND.size(); i++ )
+            cerr << " " << assumptionsAND[ i ];
+        cerr << " ]" << endl;
+    });
+}
+
+bool
+Oll::changeWeight()
+{
+    unsigned int oldWeight = weight;
+    for( unsigned int i = 0; i < weights.size(); i++ )
+    {
+        if( weights[ i ] < weight )
+        {
+            weight = weights[ i ];
+            break;
+        }
+    }
+    return oldWeight != weight;
 }

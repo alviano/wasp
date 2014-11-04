@@ -146,6 +146,7 @@ class Solver
         
         inline bool analyzeConflict();
         inline void clearConflictStatus();
+        inline bool performAssumptions( vector< Literal >& assumptionsAND );
         inline bool chooseLiteral( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
         inline bool conflictDetected();
         inline void foundIncoherence();
@@ -676,7 +677,7 @@ Solver::solve(
     vector< Literal >& assumptionsOR )
 {
     incremental_ = true;
-    numberOfAssumptions = 0;
+    numberOfAssumptions = assumptionsAND.size();
     for( unsigned int i = 0; i < assumptionsAND.size(); i++ )
         setAssumptionAND( assumptionsAND[ i ], true );
     
@@ -915,6 +916,10 @@ Solver::addClauseRuntime(
     unsigned int size = clause.size();
     switch( size )
     {
+        case 0:
+            releaseClause( clausePointer );
+            return false;
+        
         case 1:
         {
             Literal tmpLit = clause[ 0 ];
@@ -1188,12 +1193,12 @@ bool
 Solver::chooseLiteral(
     vector< Literal >& assumptionsAND,
     vector< Literal >& assumptionsOR )
-{    
+{        
     Literal choice = Literal::null;
-    for( unsigned int i = 0; i < assumptionsAND.size(); i++ )
+    for( unsigned int i = currentDecisionLevel; i < assumptionsAND.size(); i++ )
     {
         if( isUndefined( assumptionsAND[ i ] ) )
-        {            
+        {
             if( choice == Literal::null )
                 choice = assumptionsAND[ i ];
         }
@@ -1203,14 +1208,15 @@ Solver::chooseLiteral(
             trace_msg( solving, 1, "The assumption AND " << assumptionsAND[ i ] << " is false: stop" );
             return false;
         }
+        else
+        {
+            if( choice == Literal::null )
+                incrementCurrentDecisionLevel();
+        }
     }
     
     if( choice != Literal::null )
-    {
-        numberOfAssumptions++;
-        goto end;
-    }
-        
+        goto end;    
     if( !assumptionsOR.empty() )
     {
         bool satisfied = false;

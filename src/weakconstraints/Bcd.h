@@ -162,8 +162,18 @@ class Bcd : public WeakInterface
         inline void deleteOldCores();
         bool processModifiedCores();
         inline void computeAssumptions();
-        inline Var addAuxVariableBcd() { toKeepInAssumptions.push_back( true ), auxVarsToBcdData.push_back( NULL ); return addAuxVariable(); }
-
+        inline Var addAuxVariableBcd()
+        {            
+            Var v = addAuxVariable();
+            assert( toKeepInAssumptions.size() == auxVarsToBcdData.size() );
+            while( auxVarsToBcdData.size() <= v )
+            {
+                toKeepInAssumptions.push_back( true );
+                auxVarsToBcdData.push_back( NULL );
+            }
+            return v;
+        }
+        
         vector< BcdData* > disjCores;
         Vector< BcdData* > modifiedCores;
         Vector< Literal > assumptionsToAdd;

@@ -303,7 +303,6 @@ Bcd::addAggregateBcd(
     BcdData* bcdData )
 {
     Var aggrId = addAuxVariableBcd();
-    cout << "VARIABILE CREATA " << aggrId << endl;
     Aggregate* aggregate = createAggregate( aggrId, bcdData->getLiterals(), bcdData->getWeights() );    
     
     assert( solver.isUndefined( aggrId ) );
