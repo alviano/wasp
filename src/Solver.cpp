@@ -287,6 +287,9 @@ Solver::solveWithoutPropagators(
                 assert_msg( hasNextVariableToPropagate() || getCurrentDecisionLevel() == numberOfAssumptions || getCurrentDecisionLevel() == 0, getCurrentDecisionLevel() << " != " << numberOfAssumptions );
             }
         }
+        
+        if( !restartIfNecessary() )
+            return INCOHERENT;
     }
     
     completeModel();
@@ -435,6 +438,9 @@ Solver::solvePropagators(
                     goto propagationLabel;
             }
         }
+        
+        if( !restartIfNecessary() )
+            return INCOHERENT;
     }
     
     completeModel();

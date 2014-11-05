@@ -197,6 +197,7 @@ class Solver
         inline void markClauseForDeletion( Clause* clause ){ satelite->onDeletingClause( clause ); clause->markAsDeleted(); }
         
         inline void deleteClausesIfNecessary();
+        inline bool restartIfNecessary();
         
         void printProgram() const;
         void printDimacs() const;
@@ -417,7 +418,7 @@ class Solver
         inline unsigned int getPrecomputedCost() const { return precomputedCost; }
         
         inline void foundLowerBound( unsigned int lb ) { outputBuilder->foundLowerBound( lb ); }
-        inline bool incremental() const { return incremental_; }
+        inline bool incremental() const { return incremental_; }                
         
     private:
         HCComponent* hcComponentForChecker;
@@ -1327,30 +1328,18 @@ Solver::analyzeConflict()
         assert_msg( unrollLevel < currentDecisionLevel, "Trying to backjump from level " << unrollLevel << " to level " << currentDecisionLevel );
         trace_msg( solving, 2, "Learned clause and backjumping to level " << unrollLevel );
         addLearnedClause( learnedClause, true );        
-        
-        bool hasToRestart = glucoseHeuristic_ ? ( glucoseData.lbdQueue.isValid() && ( ( glucoseData.lbdQueue.getAvg() * glucoseData.K ) > ( glucoseData.sumLBD / conflictsRestarts ) ) ) : restart->hasToRestart();
-        if( hasToRestart )
+
+        unroll( unrollLevel );
+        clearConflictStatus();                        
+        if( size != 2 )
         {
-            statistics( this, onRestart() );    
-            glucoseData.lbdQueue.fastClear();
-            if( !doRestart() )
-                return false;
-            simplifyOnRestart();
+            assignLiteral( learnedClause );
+            onLearning( learnedClause );  // FIXME: this should be moved outside
         }
         else
         {
-            unroll( unrollLevel );
-            clearConflictStatus();                        
-            if( size != 2 )
-            {
-                assignLiteral( learnedClause );
-                onLearning( learnedClause );  // FIXME: this should be moved outside
-            }
-            else
-            {
-                assignLiteral( firstLiteral, variables.getReasonForBinaryClauses( secondLiteral.getVariable() ) );
-            }
-        }
+            assignLiteral( firstLiteral, variables.getReasonForBinaryClauses( secondLiteral.getVariable() ) );
+        }        
 
         clearConflictStatus();
     }
@@ -2250,6 +2239,22 @@ Solver::deleteClausesIfNecessary()
         if( ( int ) ( numberOfLearnedClauses() - numberOfAssignedLiterals() ) >= deletionCounters.maxLearned )
             deleteClauses();
     }
+}
+
+bool
+Solver::restartIfNecessary()
+{
+    bool hasToRestart = glucoseHeuristic_ ? ( glucoseData.lbdQueue.isValid() && ( ( glucoseData.lbdQueue.getAvg() * glucoseData.K ) > ( glucoseData.sumLBD / conflictsRestarts ) ) ) : restart->hasToRestart();
+    if( hasToRestart )
+    {
+        statistics( this, onRestart() );    
+        glucoseData.lbdQueue.fastClear();
+        if( !doRestart() )
+            return false;
+        simplifyOnRestart();
+    }
+    
+    return true;
 }
 
 bool
