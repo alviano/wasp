@@ -1070,6 +1070,7 @@ Solver::unrollOne()
 bool
 Solver::doRestart()
 {
+    assert( currentDecisionLevel != 0 );
     trace( solving, 2, "Performing restart.\n" );
     numberOfRestarts++;
     restart->onRestart();
@@ -2244,6 +2245,8 @@ Solver::deleteClausesIfNecessary()
 bool
 Solver::restartIfNecessary()
 {
+    if( currentDecisionLevel == 0 )
+        return true;
     bool hasToRestart = glucoseHeuristic_ ? ( glucoseData.lbdQueue.isValid() && ( ( glucoseData.lbdQueue.getAvg() * glucoseData.K ) > ( glucoseData.sumLBD / conflictsRestarts ) ) ) : restart->hasToRestart();
     if( hasToRestart )
     {
