@@ -178,6 +178,74 @@ Oll::processCoreOll(
 }
 
 bool
+Oll::processCoreOll(
+    vector< Literal >& literals,
+    vector< unsigned int >& weights,
+    unsigned int minWeight,
+    unsigned int& n )
+{
+    trace_msg( weakconstraints, 2, "Processing core for algorithm OLL" );
+    
+    bool trivial = false;
+    Clause* clause = new Clause();
+    unsigned int originalSize = solver.numberOfOptimizationLiterals();
+    for( unsigned int i = 0; i < originalSize; i++ )
+    {
+        OptimizationLiteralData& optLitData = solver.getOptimizationLiteral( i );        
+        if( optLitData.isRemoved() )
+            continue;
+
+        Literal lit = optLitData.lit;
+        trace_msg( weakconstraints, 3, "Considering literal " << lit << " - weight " << optLitData.weight );
+        Var v = lit.getVariable();
+        if( visited( v ) )
+        {
+            trace_msg( weakconstraints, 4, "is in unsat core" );
+            literals.push_back( lit );
+//            weights.push_back( optLitData.weight );
+            weights.push_back( 1 );
+            optLitData.remove();
+            
+            if( solver.isTrue( lit ) )
+                trivial = true;
+            
+            if( !solver.isFalse( lit ) )
+                clause->addLiteral( lit );
+            
+            if( optLitData.weight > minWeight )
+                solver.addOptimizationLiteral( lit, optLitData.weight - minWeight, UINT_MAX, true );            
+        }
+    }
+    
+    n = literals.size();
+    vector< Var > newVars;
+    for( unsigned int i = 0; i < n - 1; i++ )
+    {
+        Var auxVar = addAuxVariable();
+        literals.push_back( Literal( auxVar, POSITIVE ) );
+        weights.push_back( 1 );
+        solver.addOptimizationLiteral( Literal( auxVar, NEGATIVE ), minWeight, UINT_MAX, true );
+        newVars.push_back( auxVar );
+    }
+    
+    for( int i = newVars.size() - 1; i >= 1; i-- )
+    {
+        Clause* c = new Clause();
+        c->addLiteral( Literal( newVars[ i ], NEGATIVE ) );
+        c->addLiteral( Literal( newVars[ i - 1 ], POSITIVE ) );
+        solver.addClauseRuntime( c );        
+    }
+    
+    if( trivial )
+    {
+        delete clause;
+        return true;
+    }
+
+    return solver.addClauseRuntime( clause );
+}
+
+bool
 Oll::addAggregateOll(
     vector< Literal >& literals,
     vector< unsigned int >& weights,
@@ -235,14 +303,17 @@ Oll::addAggregateOll(
     if( !processAndAddAggregate( aggregate, bound ) )
         return false;
     
-    if( solver.isFalse( aggrId ) )
-        return true;
+    assert( !solver.isTrue( aggrId ) );
+    solver.addClauseRuntime( Literal( aggrId, NEGATIVE ) );
+    assert( solver.isFalse( aggrId ) );
+//    if( solver.isFalse( aggrId ) )
+//        return true;
     
 //    Var guardId = addBinaryClauseForAggregateOll( aggrId, weightOfOptimizationLiteral );
-    Literal lit( aggrId, POSITIVE );
-    solver.addOptimizationLiteral( lit, weightOfOptimizationLiteral, UINT_MAX, true );
-    OllData* ollData = new OllData( bound, aggrId, weightOfOptimizationLiteral, literals, weights );
-    setOllData( aggrId, ollData );
+//    Literal lit( aggrId, POSITIVE );
+//    solver.addOptimizationLiteral( lit, weightOfOptimizationLiteral, UINT_MAX, true );
+//    OllData* ollData = new OllData( bound, aggrId, weightOfOptimizationLiteral, literals, weights );
+//    setOllData( aggrId, ollData );
     return true;
 }
 
@@ -272,31 +343,32 @@ Oll::foundUnsat()
     vector< Literal > literals;
     vector< unsigned int > weights;
 
+    unsigned int n = 0;
     unsigned int minWeight = computeMinWeight();
-    if( !processCoreOll( literals, weights, minWeight ) )
+    if( !processCoreOll( literals, weights, minWeight, n ) )
         return false;
-    lb += minWeight;
-    solver.foundLowerBound( lb );     
-    if( !addAggregateOll( literals, weights, 2, minWeight ) )
+    lb += minWeight;    
+    solver.foundLowerBound( lb );    
+    if( !addAggregateOll( literals, weights, n + 1, minWeight ) )
         return false;        
 
-    for( unsigned int i = 0; i < auxVariablesInUnsatCore.size(); i++ )
-    {
-        Var guardId = auxVariablesInUnsatCore[ i ];
-//            if( guardMap.find( guardId ) == guardMap.end() )
-//                continue;
-//            assert( guardMap.find( guardId ) != guardMap.end() );
-        assert( hasOllData( guardId ) );
-
-        OllData* ollData = getOllData( guardId ); //guardMap[ guardId ];
-        if( ollData->bound_ < ollData->literals_.size() )
-        {                
-            trace_msg( weakconstraints, 3, "Incrementing by one bound (" << ollData->bound_ <<  ") of aggregate " << guardId );
-            assert( ollData->literals_.size() > 0 );
-            if( !addAggregateOll( ollData->literals_, ollData->weights_, ollData->bound_ + 1, ollData->weight_ ) )
-                return false;
-        }
-    }
+//    for( unsigned int i = 0; i < auxVariablesInUnsatCore.size(); i++ )
+//    {
+//        Var guardId = auxVariablesInUnsatCore[ i ];
+////            if( guardMap.find( guardId ) == guardMap.end() )
+////                continue;
+////            assert( guardMap.find( guardId ) != guardMap.end() );
+//        assert( hasOllData( guardId ) );
+//
+//        OllData* ollData = getOllData( guardId ); //guardMap[ guardId ];
+//        if( ollData->bound_ < ollData->literals_.size() )
+//        {                
+//            trace_msg( weakconstraints, 3, "Incrementing by one bound (" << ollData->bound_ <<  ") of aggregate " << guardId );
+//            assert( ollData->literals_.size() > 0 );
+//            if( !addAggregateOll( ollData->literals_, ollData->weights_, ollData->bound_ + 1, ollData->weight_ ) )
+//                return false;
+//        }
+//    }
     
     return true;
 }
@@ -324,15 +396,14 @@ Oll::computeAssumptionsANDStratified()
 
 bool
 Oll::changeWeight()
-{
-    unsigned int oldWeight = weight;
+{    
+    if( weight == 0 )
+        return false;
+    unsigned int max = 0;
     for( unsigned int i = 0; i < weights.size(); i++ )
-    {        
-        if( weights[ i ] < weight && weights[ i ] <= ub )
-        {
-            weight = weights[ i ];
-            break;
-        }
-    }
-    return oldWeight != weight;
+        if( weights[ i ] < weight && weights[ i ] <= ub && weights[ i ] > max )
+            max = weights[ i ];            
+
+    weight = max;
+    return true;
 }

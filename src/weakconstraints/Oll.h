@@ -53,6 +53,7 @@ class Oll : public WeakInterface
 
     protected:
         bool processCoreOll( vector< Literal >& literals, vector< unsigned int >& weights, unsigned int minWeight );
+        bool processCoreOll( vector< Literal >& literals, vector< unsigned int >& weights, unsigned int minWeight, unsigned int& n );
         bool addAggregateOll( vector< Literal >& literals, vector< unsigned int >& weights, unsigned int bound, unsigned int weightOfOptimizationLiteral );
 //        inline Var addBinaryClauseForAggregateOll( Var aggrId, unsigned int weightOfOptimizationLiteral );
         inline bool hasOllData( Var v ) const;
