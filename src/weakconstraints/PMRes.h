@@ -24,15 +24,21 @@
 class PMRes : public WeakInterface
 {
     public:
-        inline PMRes( Solver& solver ) : WeakInterface( solver ) {}
-        unsigned int run();
+        inline PMRes( Solver& solver ) : WeakInterface( solver ), lb( 0 ), ub( UINT_MAX ) {}
+        unsigned int run();        
 
     private:
+        unsigned int runWeighted();
+        unsigned int runUnweighted();
+        
+        bool foundUnsat();
         bool addAuxClauses( vector< Literal >& optLiterals );
         bool addAuxClausesCompressed( vector< Literal > &optLiterals, unsigned int minWeight );
         bool addClauseToSolver( Clause* clause );
 //        bool addClauseToSolverAndCheckDuplicatesAndTautological( Clause* clause );
         Var relaxClause( Clause* clause );
+        unsigned int lb;
+        unsigned int ub;
 };
 
 #endif

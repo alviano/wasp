@@ -63,15 +63,10 @@ unsigned int
 Oll::runWeighted()
 {    
     statistics( &solver, disable() );
-    trace_msg( weakconstraints, 1, "Starting algorithm OLL" );
-    solver.sortOptimizationLiterals();
-    for( unsigned int i = 0; i < solver.numberOfOptimizationLiterals(); i++ )
-        weights.push_back( solver.getOptimizationLiteral( i ).weight );
-        
-    vector< unsigned int >::iterator it = unique( weights.begin(), weights.end() );
-    weights.erase( it, weights.end() );
+    trace_msg( weakconstraints, 1, "Starting algorithm OLL" );    
     
-    changeWeight();
+    preprocessingWeights();
+    changeWeight( ub );
     computeAssumptionsANDStratified();        
     
     initInUnsatCore();    
@@ -89,7 +84,7 @@ Oll::runWeighted()
             solver.printOptimizationValue( ub );
             solver.unrollToZero();
             solver.clearConflictStatus();
-            if( !changeWeight() )
+            if( !changeWeight( ub ) )
                 break;
             assumptionsAND.clear();
             computeAssumptionsANDStratified();
@@ -250,7 +245,7 @@ Oll::addAggregateOll(
     vector< Literal >& literals,
     vector< unsigned int >& weights,
     unsigned int bound,
-    unsigned int weightOfOptimizationLiteral )
+    unsigned int /*weightOfOptimizationLiteral*/ )
 {
     if( literals.size() == 1 )
     {
@@ -370,40 +365,5 @@ Oll::foundUnsat()
 //        }
 //    }
     
-    return true;
-}
-
-void
-Oll::computeAssumptionsANDStratified()
-{
-    solver.sortOptimizationLiterals();
-    for( unsigned int i = 0; i < solver.numberOfOptimizationLiterals(); i++ )
-    {
-        if( solver.getOptimizationLiteral( i ).isRemoved() )
-            continue;
-        if( solver.getOptimizationLiteral( i ).weight >= this->weight )
-            assumptionsAND.push_back( solver.getOptimizationLiteral( i ).lit.getOppositeLiteral() );        
-    }
-    trace_action( weakconstraints, 2, 
-    {
-        trace_tag( cerr, weakconstraints, 2 );
-        cerr << "AssumptionsAND: [";
-        for( unsigned int i = 0; i < assumptionsAND.size(); i++ )
-            cerr << " " << assumptionsAND[ i ];
-        cerr << " ]" << endl;
-    });
-}
-
-bool
-Oll::changeWeight()
-{    
-    if( weight == 0 )
-        return false;
-    unsigned int max = 0;
-    for( unsigned int i = 0; i < weights.size(); i++ )
-        if( weights[ i ] < weight && weights[ i ] <= ub && weights[ i ] > max )
-            max = weights[ i ];            
-
-    weight = max;
     return true;
 }

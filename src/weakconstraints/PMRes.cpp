@@ -21,117 +21,22 @@
 unsigned int
 PMRes::run()
 {    
+    return solver.isWeighted() ? runWeighted() : runUnweighted();
+}
+
+unsigned int
+PMRes::runUnweighted()
+{
     trace_msg( weakconstraints, 1, "Starting algorithm PMRes" );
     solver.setComputeUnsatCores( true );
     solver.turnOffSimplifications();        
     initInUnsatCore();
-    
-//    unsigned int size_ = solver.numberOfOptimizationLiterals();    
-//    for( unsigned int i = 0; i < size_; i++ )
-//    {
-//        OptimizationLiteralData& data = solver.getOptimizationLiteral( i );
-//        if( data.weight > 1 )
-//        {            
-//            for( unsigned int j = 0; j < data.weight - 1; j++ )
-//            {
-//                Var v = addAuxVariable();
-//                solver.addClause( Literal( v, NEGATIVE ), data.lit );
-//                solver.addClause( Literal( v, POSITIVE ), data.lit.getOppositeLiteral() );
-//                solver.addOptimizationLiteral( Literal( v, POSITIVE ), 1, data.level, false );
-//            }
-//            
-//            data.weight = 1;
-//        }
-//    }
     computeAssumptionsAND();
-//    unsigned int originalNumberOfVariables = solver.numberOfVariables();    
-
     unsigned int result = solver.solve( assumptionsAND, assumptionsOR );
-
-    unsigned int lb = 0;
+    
     while( result == INCOHERENT )
     {        
-        ++numberOfCalls;
-        assert( solver.getUnsatCore() != NULL );
-        const Clause& unsatCore = *( solver.getUnsatCore() );
-
-        //The incoherence does not depend on weak constraints
-        if( unsatCore.size() == 0 )
-            return INCOHERENT;
-
-        solver.clearConflictStatus();
-        solver.unrollToZero();
-
-        for( unsigned int i = 0; i < unsatCore.size(); i++ )
-        {
-            Var v = unsatCore[ i ].getVariable();
-            visit( v );
-        }        
-        unsigned int minWeight = computeMinWeight();
-        lb += minWeight;
-        solver.foundLowerBound( lb );
-        vector< Literal > optLiterals;
-
-        bool trivial = false;
-        Clause* clause = new Clause();
-        trace_msg( weakconstraints, 1, "Computing hard clause " );
-        unsigned int originalSize = solver.numberOfOptimizationLiterals();
-        
-        unsigned int atLevelZeroWeight = 0;
-        for( unsigned int i = 0; i < originalSize; i++ )
-        {
-            OptimizationLiteralData& data = solver.getOptimizationLiteral( i );
-            Literal lit = data.lit;
-            if( data.isRemoved() || !visited( lit.getVariable() ) )
-                continue;
-            
-            trace_msg( weakconstraints, 2, "Considering literal " << lit );
-            trace_msg( weakconstraints, 3, "which is " << ( visited( lit.getVariable() ) ? "in the core" : "not in the core: skipped" ) );
-            trace_msg( weakconstraints, 3, "its decision level is " << solver.getDecisionLevel( lit ) );
-            assert_msg( !solver.isFalse( lit ), "Lit " << lit << " is false" );
-            trace_msg( weakconstraints, 3, "and it is " << ( solver.isUndefined( lit ) ? "undefined" : "true" ) );
-            trace_msg( weakconstraints, 3, "its weight is " << data.weight );
-
-            if( solver.isTrue( lit ) )
-                trivial = true;
-
-            data.remove();
-            if( solver.getDecisionLevel( lit ) > 0 )
-            {
-                clause->addLiteral( lit );
-                optLiterals.push_back( lit.getOppositeLiteral() );
-
-                if( data.weight > minWeight )
-                    solver.addOptimizationLiteral( lit, data.weight - minWeight, UINT_MAX, true );
-            }
-            else
-            {
-                atLevelZeroWeight += data.weight;
-            }
-        }        
-
-        if( clause->size() != 0 )
-        {
-            if( !trivial )
-            {
-                trace_msg( weakconstraints, 1, "Adding clause " << *clause );            
-                addClauseToSolver( clause );
-            }
-            #ifndef NDEBUG
-            bool res =
-            #endif
-            addAuxClausesCompressed( optLiterals, minWeight );
-            assert( res );
-        }
-        else
-        {
-            trace_msg( weakconstraints, 1, "Derived empty clause" );
-            if( atLevelZeroWeight > minWeight )
-                lb += atLevelZeroWeight - minWeight;
-        }
-
-        assumptionsAND.clear();
-        computeAssumptionsAND();
+        foundUnsat();
         result = solver.solve( assumptionsAND, assumptionsOR );
     }
 
@@ -142,6 +47,52 @@ PMRes::run()
     assert_msg( lb == cost, lb << " != " << cost );    
     return OPTIMUM_FOUND;
 }
+
+unsigned int
+PMRes::runWeighted()
+{
+    statistics( &solver, disable() );
+    trace_msg( weakconstraints, 1, "Starting algorithm OLL" );    
+    
+    preprocessingWeights();
+    changeWeight( ub );
+    computeAssumptionsANDStratified();        
+    
+    initInUnsatCore();    
+
+    solver.setComputeUnsatCores( true );
+    solver.turnOffSimplifications();
+
+    while( true )
+    {
+        if( solver.solve( assumptionsAND, assumptionsOR ) != INCOHERENT )
+        {            
+            ub = solver.computeCostOfModel();
+            solver.printAnswerSet();
+            solver.printOptimizationValue( ub );
+            solver.unrollToZero();
+            solver.clearConflictStatus();
+            if( !changeWeight( ub ) )
+                break;
+            assumptionsAND.clear();
+            computeAssumptionsANDStratified();
+        }
+        else
+        {
+            if( !foundUnsat() )
+                return INCOHERENT;
+            assumptionsAND.clear();
+            computeAssumptionsANDStratified();
+        }
+    }
+
+    statistics( &solver, enable() );
+    statistics( &solver, endSolving() );    
+    assert_msg( lb == ub, lb << " != " << ub );    
+    
+    return OPTIMUM_FOUND;
+}
+
 
 bool
 PMRes::addAuxClauses(
@@ -187,6 +138,93 @@ PMRes::addAuxClauses(
             return false;
     }        
 
+    return true;
+}
+
+bool
+PMRes::foundUnsat()
+{
+    ++numberOfCalls;
+    assert( solver.getUnsatCore() != NULL );
+    const Clause& unsatCore = *( solver.getUnsatCore() );
+
+    //The incoherence does not depend on weak constraints
+    if( unsatCore.size() == 0 )
+        return false;
+
+    solver.clearConflictStatus();
+    solver.unrollToZero();
+
+    for( unsigned int i = 0; i < unsatCore.size(); i++ )
+    {
+        Var v = unsatCore[ i ].getVariable();
+        visit( v );
+    }        
+    unsigned int minWeight = computeMinWeight();
+    lb += minWeight;
+    solver.foundLowerBound( lb );
+    vector< Literal > optLiterals;
+
+    bool trivial = false;
+    Clause* clause = new Clause();
+    trace_msg( weakconstraints, 1, "Computing hard clause " );
+    unsigned int originalSize = solver.numberOfOptimizationLiterals();
+
+    unsigned int atLevelZeroWeight = 0;
+    for( unsigned int i = 0; i < originalSize; i++ )
+    {
+        OptimizationLiteralData& data = solver.getOptimizationLiteral( i );
+        Literal lit = data.lit;
+        if( data.isRemoved() || !visited( lit.getVariable() ) )
+            continue;
+
+        trace_msg( weakconstraints, 2, "Considering literal " << lit );
+        trace_msg( weakconstraints, 3, "which is " << ( visited( lit.getVariable() ) ? "in the core" : "not in the core: skipped" ) );
+        trace_msg( weakconstraints, 3, "its decision level is " << solver.getDecisionLevel( lit ) );
+        assert_msg( !solver.isFalse( lit ), "Lit " << lit << " is false" );
+        trace_msg( weakconstraints, 3, "and it is " << ( solver.isUndefined( lit ) ? "undefined" : "true" ) );
+        trace_msg( weakconstraints, 3, "its weight is " << data.weight );
+
+        if( solver.isTrue( lit ) )
+            trivial = true;
+
+        data.remove();
+        if( solver.getDecisionLevel( lit ) > 0 )
+        {
+            clause->addLiteral( lit );
+            optLiterals.push_back( lit.getOppositeLiteral() );
+
+            if( data.weight > minWeight )
+                solver.addOptimizationLiteral( lit, data.weight - minWeight, UINT_MAX, true );
+        }
+        else
+        {
+            atLevelZeroWeight += data.weight;
+        }
+    }        
+
+    if( clause->size() != 0 )
+    {
+        if( !trivial )
+        {
+            trace_msg( weakconstraints, 1, "Adding clause " << *clause );            
+            addClauseToSolver( clause );
+        }
+        #ifndef NDEBUG
+        bool res =
+        #endif
+        addAuxClausesCompressed( optLiterals, minWeight );
+        assert( res );
+    }
+    else
+    {
+        trace_msg( weakconstraints, 1, "Derived empty clause" );
+        if( atLevelZeroWeight > minWeight )
+            lb += atLevelZeroWeight - minWeight;
+    }
+
+    assumptionsAND.clear();
+    computeAssumptionsAND();    
     return true;
 }
 

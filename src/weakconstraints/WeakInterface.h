@@ -30,7 +30,7 @@ using namespace std;
 class WeakInterface
 {
     public:
-        WeakInterface( Solver& s ) : solver( s ), numberOfCalls( 0 ) {}
+        WeakInterface( Solver& s ) : solver( s ), numberOfCalls( 0 ), weight( UINT_MAX ) {}
         virtual ~WeakInterface() {}
         virtual unsigned int run() = 0;
         
@@ -44,12 +44,20 @@ class WeakInterface
         inline bool visited( Var v, unsigned int value ) const { assert( v > 0 && v < inUnsatCore.size() ); return inUnsatCore[ v ] == value; }
         inline bool visited( Var v ) const { return visited( v, numberOfCalls ); }
         inline void visit( Var v ) { assert( v > 0 && v < inUnsatCore.size() ); inUnsatCore[ v ] = numberOfCalls; }
-        inline void initInUnsatCore();        
+        inline void initInUnsatCore();
+        inline void preprocessingWeights();
+        inline void computeAssumptionsANDStratified();
+        inline bool changeWeight( unsigned int ub );
+
         Solver& solver;
         vector< unsigned int > inUnsatCore;
         unsigned int numberOfCalls;
         vector< Literal > assumptionsAND;
-        vector< Literal > assumptionsOR;        
+        vector< Literal > assumptionsOR;
+        
+    private:
+        vector< unsigned int > weights;        
+        unsigned int weight;
 };
 
 void
@@ -86,6 +94,53 @@ WeakInterface::initInUnsatCore()
 {
     for( unsigned int i = 0; i <= solver.numberOfVariables(); i++ )
         inUnsatCore.push_back( numberOfCalls );
+}
+
+void
+WeakInterface::preprocessingWeights()
+{
+    solver.sortOptimizationLiterals();
+    for( unsigned int i = 0; i < solver.numberOfOptimizationLiterals(); i++ )
+        weights.push_back( solver.getOptimizationLiteral( i ).weight );
+        
+    vector< unsigned int >::iterator it = unique( weights.begin(), weights.end() );
+    weights.erase( it, weights.end() );
+}
+
+void
+WeakInterface::computeAssumptionsANDStratified()
+{
+    solver.sortOptimizationLiterals();
+    for( unsigned int i = 0; i < solver.numberOfOptimizationLiterals(); i++ )
+    {
+        if( solver.getOptimizationLiteral( i ).isRemoved() )
+            continue;
+        if( solver.getOptimizationLiteral( i ).weight >= this->weight )
+            assumptionsAND.push_back( solver.getOptimizationLiteral( i ).lit.getOppositeLiteral() );        
+    }
+    trace_action( weakconstraints, 2, 
+    {
+        trace_tag( cerr, weakconstraints, 2 );
+        cerr << "AssumptionsAND: [";
+        for( unsigned int i = 0; i < assumptionsAND.size(); i++ )
+            cerr << " " << assumptionsAND[ i ];
+        cerr << " ]" << endl;
+    });
+}
+
+bool
+WeakInterface::changeWeight(
+    unsigned int ub )
+{    
+    if( weight == 0 )
+        return false;
+    unsigned int max = 0;
+    for( unsigned int i = 0; i < weights.size(); i++ )
+        if( weights[ i ] < weight && weights[ i ] <= ub && weights[ i ] > max )
+            max = weights[ i ];            
+
+    weight = max;
+    return true;
 }
 
 #endif

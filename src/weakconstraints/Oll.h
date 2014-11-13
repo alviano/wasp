@@ -45,7 +45,7 @@ class OllData
 class Oll : public WeakInterface
 {
     public:
-        inline Oll( Solver& s ) : WeakInterface( s ), originalNumberOfVariables( 0 ), lb( 0 ), ub( UINT_MAX ), weight( UINT_MAX ) { /*elements.push_back( NULL );*/ }
+        inline Oll( Solver& s ) : WeakInterface( s ), originalNumberOfVariables( 0 ), lb( 0 ), ub( UINT_MAX ) { /*elements.push_back( NULL );*/ }
         virtual ~Oll();
         virtual unsigned int run();        
         unsigned int runWeighted();
@@ -61,16 +61,12 @@ class Oll : public WeakInterface
         inline void setOllData( Var v, OllData* );
         
         bool foundUnsat();
-        unsigned int originalNumberOfVariables;
-        void computeAssumptionsANDStratified();
-        bool changeWeight();
+        unsigned int originalNumberOfVariables;        
         
     private:
-        unordered_map< Var, OllData* > elements;
-        vector< unsigned int > weights;        
+        unordered_map< Var, OllData* > elements;        
         unsigned int lb;
         unsigned int ub;
-        unsigned int weight;
 };
 
 //Var
