@@ -62,11 +62,11 @@ class Oll : public WeakInterface
         
         bool foundUnsat();
         unsigned int originalNumberOfVariables;        
-        
-    private:
-        unordered_map< Var, OllData* > elements;        
         unsigned int lb;
         unsigned int ub;
+
+    private:
+        unordered_map< Var, OllData* > elements;                
 };
 
 //Var

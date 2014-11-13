@@ -52,7 +52,7 @@ OllBB::bb()
 {
     trace_msg( weakconstraints, 1, "Starting BB" );
     solver.unrollToZero();
-
+    assumptionsAND.clear();
     solver.setComputeUnsatCores( false );
     unsigned int res = solver.solve();
     while( res == COHERENT )
@@ -85,63 +85,25 @@ OllBB::bb()
 unsigned int
 OllBB::oll()
 {
-    solver.unrollToZero();
+    solver.unrollToZero();    
+    
+    if( first )
+    {
+        initInUnsatCore();    
+        originalNumberOfVariables = solver.numberOfVariables();        
+
+        solver.setComputeUnsatCores( true );
+        solver.turnOffSimplifications();
+    }
+    assumptionsAND.clear();
     computeAssumptionsAND();
     solver.setComputeUnsatCores( true );
     
     unsigned int res = solver.solve( assumptionsAND, assumptionsOR );    
     while( res == INCOHERENT )
     {        
-        vector< unsigned int > auxVariablesInUnsatCore;
-        ++numberOfCalls;
-        assert( solver.getUnsatCore() != NULL );
-        const Clause& unsatCore = *( solver.getUnsatCore() );
-
-        //The incoherence does not depend on weak constraints
-        if( unsatCore.size() == 0 )
+        if( !foundUnsat() )
             return INCOHERENT;
-
-        solver.clearConflictStatus();
-        solver.unrollToZero();
-        
-        for( unsigned int i = 0; i < unsatCore.size(); i++ )
-        {
-            Var v = unsatCore[ i ].getVariable();
-            visit( v );
-            if( v > originalNumberOfVariables )
-                auxVariablesInUnsatCore.push_back( v );
-        }
-        
-        vector< Literal > literals;
-        vector< unsigned int > weights;
-        
-        unsigned int minWeight = computeMinWeight();
-        if( !processCoreOll( literals, weights, minWeight ) )
-            return INCOHERENT;
-        lb += minWeight;
-        solver.foundLowerBound( lb );
-        
-        if( lb == ub )
-            return OPTIMUM_FOUND;
-        trace_msg( weakconstraints, 2, "Adding aggregate from unsat core" );
-        if( !addAggregateOll( literals, weights, 2, minWeight ) )
-            return INCOHERENT;        
-        
-        for( unsigned int i = 0; i < auxVariablesInUnsatCore.size(); i++ )
-        {
-            Var guardId = auxVariablesInUnsatCore[ i ];
-//            if( guardMap.find( guardId ) == guardMap.end() )
-//                continue;
-            assert( hasOllData( guardId ) );
-            OllData* ollData = getOllData( guardId ); //guardMap[ guardId ];
-            if( ollData->bound_ < ollData->literals_.size() )
-            {
-                trace_msg( weakconstraints, 3, "Incrementing by one bound (" << ollData->bound_ <<  ") of aggregate " << guardId );
-                assert( ollData->literals_.size() > 0 );
-                if( !addAggregateOll( ollData->literals_, ollData->weights_, ollData->bound_ + 1, ollData->weight_ ) )
-                    return INCOHERENT;
-            }
-        }
         
         assumptionsAND.clear();
         computeAssumptionsAND();
@@ -159,4 +121,4 @@ OllBB::oll()
     numberOfModels++;
     
     return OPTIMUM_FOUND;    
-}
+}            

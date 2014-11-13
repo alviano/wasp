@@ -27,21 +27,20 @@ using namespace std;
 class OllBB : public Oll
 {
     public:
-        inline OllBB( Solver& s, bool useRestarts = false ) : Oll( s ), lb( 0 ), ub( UINT_MAX ), numberOfModels( 0 ), useRestarts_( useRestarts ), increment( 0 ), counter( 0 ) {}
+        inline OllBB( Solver& s, bool useRestarts = false ) : Oll( s ), numberOfModels( 0 ), useRestarts_( useRestarts ), increment( 0 ), counter( 0 ), first( true ) {}
         unsigned int run();
         
     private:
         unsigned int oll();
         unsigned int bb();
         
-        unsigned int lb;
-        unsigned int ub;        
         unsigned int numberOfModels;
         bool useRestarts_;
         
         unsigned int increment;
         unsigned int counter;
         
+        bool first;
         inline void initHeuristicValues();
         inline void setAndUpdateHeuristicValues();
 };
