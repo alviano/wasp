@@ -207,9 +207,9 @@ Options::parse(
                 { "mgdoll", no_argument, NULL, OPTIONID_mgdoll },
                 { "oll", no_argument, NULL, OPTIONID_oll },
                 { "bcd", no_argument, NULL, OPTIONID_bcd },
-                { "bb", no_argument, NULL, OPTIONID_bb },
+                { "basic", no_argument, NULL, OPTIONID_bb },
                 { "pmres", no_argument, NULL, OPTIONID_pmres },
-                { "ollbb", optional_argument, NULL, OPTIONID_ollbb },
+                { "interleaving", optional_argument, NULL, OPTIONID_ollbb },
 
                 // The NULL-option indicates the end of the array.
                 { NULL, 0, NULL, 0 }

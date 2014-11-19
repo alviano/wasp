@@ -86,11 +86,7 @@ WaspFacade::solveWithWeakConstraints()
         case BCD:
             w = new Bcd( solver );
             break;
-            
-        case OLL:
-            w = new Oll( solver );
-            break;
-            
+
         case MGD:
             w = new Mgd( solver );
             break;
@@ -98,11 +94,11 @@ WaspFacade::solveWithWeakConstraints()
         case OPT:
             w = new Opt( solver );
             break;
-            
+
         case BB:
             w = new Opt( solver, true );
             break;
-            
+
         case PMRES:
             w = new PMRes( solver );
             break;
@@ -110,18 +106,21 @@ WaspFacade::solveWithWeakConstraints()
         case OLLBB:
             w = new OllBB( solver );
             break;
-            
+
         case OLLBBREST:
             w = new OllBB( solver, true );
             break;
 
-        case MGDOLL:    
-        default:
+        case MGDOLL:
             if( solver.isWeighted() )
                 w = new Mgd( solver );
             else
-                w = new Oll( solver );             
-//            w = new OptOll( solver );
+                w = new Oll( solver );
+            break;
+
+        case OLL:
+        default:
+            w = new Oll( solver );
             break;
     }
     
