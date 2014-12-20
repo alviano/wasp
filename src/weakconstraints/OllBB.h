@@ -21,13 +21,17 @@
 
 #include "WeakInterface.h"
 #include "Oll.h"
+#include "Opt.h"
 #include <unordered_map>
 using namespace std;
 
 class OllBB : public Oll
 {
     public:
-        inline OllBB( Solver& s, bool useRestarts = false ) : Oll( s ), numberOfModels( 0 ), useRestarts_( useRestarts ), increment( 0 ), counter( 0 ), first( true ) {}
+        inline OllBB( Solver& s, bool useRestarts = false ) : Oll( s ), numberOfModels( 0 ), useRestarts_( useRestarts ), increment( 0 ), counter( 0 )
+        {            
+            strategyModelGuided = new Opt( s, true );
+        }
         unsigned int run();
         
     private:
@@ -40,9 +44,10 @@ class OllBB : public Oll
         unsigned int increment;
         unsigned int counter;
         
-        bool first;
         inline void initHeuristicValues();
         inline void setAndUpdateHeuristicValues();
+        
+        Opt* strategyModelGuided;
 };
 
 void

@@ -59,8 +59,7 @@ int main( int argc, char** argv )
     try
     {
         SignalHandler signalHandler;
-        signalHandler.init();
-        waspFacade.greetings();
+        signalHandler.init();        
         waspFacade.readInput();
         waspFacade.solve();
         waspFacade.onFinish();

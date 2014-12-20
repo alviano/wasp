@@ -55,7 +55,7 @@ PMRes::runWeighted()
     trace_msg( weakconstraints, 1, "Starting algorithm OLL" );    
     
     preprocessingWeights();
-    changeWeight( ub );
+    changeWeight();
     computeAssumptionsANDStratified();        
     
     initInUnsatCore();    
@@ -66,13 +66,17 @@ PMRes::runWeighted()
     while( true )
     {
         if( solver.solve( assumptionsAND, assumptionsOR ) != INCOHERENT )
-        {            
-            ub = solver.computeCostOfModel();
-            solver.printAnswerSet();
-            solver.printOptimizationValue( ub );
+        {
+            unsigned int newUb = solver.computeCostOfModel();
+            if( newUb < ub )
+            {
+                ub = newUb;
+                solver.printAnswerSet();
+                solver.printOptimizationValue( ub );                
+            }
             solver.unrollToZero();
             solver.clearConflictStatus();
-            if( !changeWeight( ub ) )
+            if( !changeWeight() )
                 break;
             assumptionsAND.clear();
             computeAssumptionsANDStratified();
@@ -84,6 +88,9 @@ PMRes::runWeighted()
             assumptionsAND.clear();
             computeAssumptionsANDStratified();
         }
+        
+        if( lb == ub )
+            break;
     }
 
     statistics( &solver, enable() );
@@ -150,7 +157,7 @@ PMRes::foundUnsat()
 
     //The incoherence does not depend on weak constraints
     if( unsatCore.size() == 0 )
-        return false;
+        return false;    
 
     solver.clearConflictStatus();
     solver.unrollToZero();

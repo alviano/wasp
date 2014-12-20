@@ -130,7 +130,7 @@ unsigned int Options::maxCost = MAXUNSIGNEDINT;
 
 bool Options::exchangeClauses = false;
 
-WEAK_CONSTRAINTS_ALG Options::weakConstraintsAlg = MGDOLL;
+WEAK_CONSTRAINTS_ALG Options::weakConstraintsAlg = OLL;
     
 void
 Options::parse(

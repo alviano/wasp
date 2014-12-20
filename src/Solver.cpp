@@ -77,7 +77,7 @@ Solver::~Solver()
     delete outputBuilder;
     delete satelite;
     delete restart;
-    delete optimizationAggregate;
+//    delete optimizationAggregate;
     delete dependencyGraph;
     
     while( !variableDataStructures.empty() )

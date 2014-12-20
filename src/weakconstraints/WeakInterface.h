@@ -30,12 +30,13 @@ using namespace std;
 class WeakInterface
 {
     public:
-        WeakInterface( Solver& s ) : solver( s ), numberOfCalls( 0 ), weight( UINT_MAX ) {}
+        WeakInterface( Solver& s ) : solver( s ), numberOfCalls( 0 ), lb( 0 ), ub( UINT_MAX ), weight( UINT_MAX ) {}
         virtual ~WeakInterface() {}
         virtual unsigned int run() = 0;
         
     protected:
         bool createFalseAggregate( const vector< Literal >& literals, const vector< unsigned int >& weights, unsigned int bound );
+        Aggregate* createAndReturnFalseAggregate( const vector< Literal >& literals, const vector< unsigned int >& weights, unsigned int bound );
         Aggregate* createAggregate( Var aggrId, const vector< Literal >& literals, const vector< unsigned int >& weights );
         bool processAndAddAggregate( Aggregate* aggregate, unsigned int bound );        
         inline void computeAssumptionsAND();
@@ -47,13 +48,16 @@ class WeakInterface
         inline void initInUnsatCore();
         inline void preprocessingWeights();
         inline void computeAssumptionsANDStratified();
-        inline bool changeWeight( unsigned int ub );
+        inline bool changeWeight();
 
         Solver& solver;
         vector< unsigned int > inUnsatCore;
         unsigned int numberOfCalls;
         vector< Literal > assumptionsAND;
         vector< Literal > assumptionsOR;
+        
+        unsigned int lb;
+        unsigned int ub;
         
     private:
         vector< unsigned int > weights;        
@@ -129,18 +133,23 @@ WeakInterface::computeAssumptionsANDStratified()
 }
 
 bool
-WeakInterface::changeWeight(
-    unsigned int ub )
-{    
+WeakInterface::changeWeight()
+{
     if( weight == 0 )
         return false;
     unsigned int max = 0;
-    for( unsigned int i = 0; i < weights.size(); i++ )
-        if( weights[ i ] < weight && weights[ i ] <= ub && weights[ i ] > max )
-            max = weights[ i ];            
+    for( unsigned int i = 0; i < solver.numberOfOptimizationLiterals(); i++ )
+    {
+        if( solver.getOptimizationLiteral( i ).isRemoved() )
+            continue;
+        
+        unsigned int currentWeight = solver.getOptimizationLiteral( i ).weight;
+        if( currentWeight < weight && currentWeight <= ub && currentWeight > max )
+            max = currentWeight;        
+    }
 
     weight = max;
-    return true;
+    return weight != 0;    
 }
 
 #endif

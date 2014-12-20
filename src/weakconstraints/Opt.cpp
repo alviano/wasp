@@ -17,13 +17,17 @@
  */
 
 #include "Opt.h"
+#include "../Aggregate.h"
 
 unsigned int
 Opt::run()
 {
-    trace_msg( weakconstraints, 1, "Starting algorithm OPT" );
+    trace_msg( weakconstraints, 1, "Starting algorithm OPT" );        
+    solver.sortOptimizationLiterals();
+    createOptimizationAggregate();
+    
     if( !disableprefchoices_ )
-        solver.addPreferredChoicesFromOptimizationLiterals();    
+        solver.addPreferredChoicesFromOptimizationLiterals();
     unsigned int numberOfModels = 0;
     while( solver.solve() == COHERENT )
     {
@@ -43,8 +47,8 @@ Opt::run()
         
 //        solver.removePrefChoices();
         
-        trace_msg( weakconstraints, 2, "Updating bound of optimization aggregate. Model cost: " << modelCost );
-        if( !solver.updateOptimizationAggregate( modelCost ) )
+        trace_msg( weakconstraints, 2, "Updating bound of optimization aggregate. Model cost: " << modelCost );        
+        if( !updateOptimizationAggregate( modelCost ) )
         {
             trace_msg( weakconstraints, 3, "Failed updating of optimization aggregate: return" );
             break;        
@@ -56,4 +60,58 @@ Opt::run()
     if( numberOfModels > 0 )
         return OPTIMUM_FOUND;
     return INCOHERENT;
+}
+
+void
+Opt::createOptimizationAggregate()
+{
+    assert_msg( aggregate == NULL, "Aggregate has been created" );
+    assert_msg( solver.getCurrentDecisionLevel() == 0, "The decision level is " << solver.getCurrentDecisionLevel() );
+    vector< Literal > literals;
+    vector< unsigned int > weights;
+
+    unsigned int bound = 1;
+    for( unsigned int i = 0; i < solver.numberOfOptimizationLiterals(); i++ )
+    {
+        OptimizationLiteralData& optData = solver.getOptimizationLiteral( i );
+        Literal lit = optData.lit;
+        unsigned int weight = optData.weight;
+         
+        if( !solver.isUndefined( lit ) )
+            continue;
+
+        bound += weight;
+        literals.push_back( lit );
+        weights.push_back( weight );        
+    }
+   
+    aggregate = createAndReturnFalseAggregate( literals, weights, bound );
+    assert( aggregate != NULL );    
+}
+
+bool
+Opt::updateOptimizationAggregate(
+    unsigned int modelCost )
+{
+    assert( aggregate != NULL );
+    trace_msg( weakconstraints, 2, "Precomputed cost is " << solver.getPrecomputedCost() );
+    if( solver.getPrecomputedCost() >= modelCost )
+        return false;
+        
+    unsigned int backjumpingLevel = 0; //optimizationAggregate->getLevelOfBackjump( *this, modelCost - precomputedCost );
+    trace_msg( weakconstraints, 2, "Backjumping level is " << backjumpingLevel );
+    if( solver.getCurrentDecisionLevel() != 0 )
+        solver.unroll( backjumpingLevel );
+    solver.clearConflictStatus();
+        
+    if( !aggregate->updateBound( solver, modelCost - solver.getPrecomputedCost() ) )
+        return false;
+    
+    assert( solver.isFalse( aggregate->getLiteral( 1 ).getOppositeLiteral() ) );
+    aggregate->onLiteralFalse( solver, aggregate->getLiteral( 1 ).getOppositeLiteral(), -1 );
+
+    if( solver.conflictDetected() )
+        return false;    
+    
+    return true;
 }

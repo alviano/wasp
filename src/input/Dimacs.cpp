@@ -30,7 +30,7 @@
 using namespace std;
 
 Dimacs::Dimacs(
-    Solver& s ) : solver( s ), numberOfClauses( 0 ), numberOfVariables( 0 )
+    Solver& s ) : solver( s ), numberOfClauses( 0 ), numberOfVariables( 0 ), maxWeight( 0 ), maxsat( false )
 {
 }
 
@@ -44,11 +44,13 @@ Dimacs::parse()
 void
 Dimacs::parse(
     Istream& input )
-{
-    if( !input.readInfoDimacs( numberOfVariables, numberOfClauses ) )
-        ErrorMessage::errorDuringParsing( "Unexpected symbol." ); 
+{    
+    if( !input.readInfoDimacs( numberOfVariables, numberOfClauses, maxWeight ) )
+        ErrorMessage::errorDuringParsing( "Unexpected symbol." );
+
+    maxsat = maxWeight != 0;
     //insertVariables( numberOfVariables );
-    readAllClauses( input );
+    readAllClauses( input );    
 }
 
 void
@@ -56,17 +58,28 @@ Dimacs::readAllClauses(
     Istream& input )
 {
     trace_msg( parser, 1, "Starting iteration on " << numberOfClauses << " clauses.");
-    
-    unsigned int numOfClauses = 0;
-    while( readClause( input ) )
+    unsigned int numOfClauses = 0;    
+    if( !maxsat )
     {
-        numOfClauses++; 
+        while( readClause( input ) )
+            numOfClauses++;
     }
-
+    else
+    {
+        while( solver.numberOfVariables() < numberOfVariables )
+        {
+            solver.addVariable();
+            VariableNames::setToBePrinted( solver.numberOfVariables() );
+        }
+        
+        while( readWeightedClause( input ) )
+            numOfClauses++;
+    }
+    
     if( input.eof() && numOfClauses != numberOfClauses )
         cerr << "Warning: Read " << numOfClauses << " clauses, expected " << numberOfClauses << " clauses" << endl;
     
-    if( input.eof() && solver.numberOfVariables() != numberOfVariables )
+    if( input.eof() && !maxsat && solver.numberOfVariables() != numberOfVariables )
         cerr << "Warning: Read " << solver.numberOfVariables() << " variables, expected " << numberOfVariables << " variables" << endl;
 }
 
@@ -131,5 +144,81 @@ Dimacs::readClause(
         solver.releaseClause( clause );
     }
     
+    return true;
+}
+
+bool
+Dimacs::readWeightedClause(
+    Istream& input )
+{
+    uint64_t weight;
+    input.read( weight );
+    if( weight == maxWeight )
+        return readClause( input );    
+    
+    //a variable containing the literal to read
+    int next;
+
+    //read the next literal
+    bool result = readNextLiteral( input, next );
+    if( input.eof() )
+        return false;
+    
+    if( !result )
+        ErrorMessage::errorDuringParsing( "Unexpected symbol." );
+
+    if( next == 0 )
+    {
+        solver.addClause( solver.newClause() );
+        return false;
+    }
+//        ErrorMessage::errorDuringParsing( "Empty clause are not allowed." );
+
+    unordered_set< int > tempSet;  
+    bool trivial = false;
+    Clause* clause = solver.newClause();
+
+    do
+    {
+        if( static_cast< unsigned int > ( abs( next ) ) > numberOfVariables )
+            ErrorMessage::errorDuringParsing( "Wrong number of variables." );
+
+        //insert the current literal in the set
+        bool inserted = !tempSet.insert( next ).second;
+        trace_msg( parser, 2, "Reading " << next );
+
+        Literal literal = solver.getLiteral( next );
+
+        //if a literal appears in a clause C with both polarities then C is a tautology
+        //if a literal is true the clause is satisfied
+        if( tempSet.find( -next ) != tempSet.end() || solver.isTrue( literal ) )
+            trivial = true;
+        else if( solver.isUndefined( literal ) && !inserted ) //skip false literals and already inserted literals
+            clause->addLiteral( literal );
+
+        //read the next literal
+        bool result = readNextLiteral( input, next );
+        if( !result )
+            ErrorMessage::errorDuringParsing( "Unexpected symbol." );
+    } while( next != 0 );
+
+    if( !trivial )
+    {
+        solver.addVariable();
+        Var newVar = solver.numberOfVariables();
+        clause->addLiteral( Literal( newVar, NEGATIVE ) );
+        relaxationVars.push_back( newVar );
+        relaxationVarsWeights.push_back( weight );
+        trace_msg( parser, 1, "Adding weighted clause " << *clause << " to the solver. Weight: " << weight );        
+        solver.setFrozen( newVar );
+        solver.addOptimizationLiteral( Literal( newVar, NEGATIVE ), weight, 1, false );        
+        return solver.addClause( clause );
+    }
+    else
+    {
+        trace_msg( parser, 1, "Deleting clause " << *clause << " because is trivial" );
+        solver.releaseClause( clause );
+    }
+
     return true;
 }

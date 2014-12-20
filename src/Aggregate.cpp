@@ -178,7 +178,7 @@ Aggregate::updateBound(
 
     trace_msg( aggregates, 1, "Counters: " << counterW1 << "," << counterW2 );
     weights[ 1 ] = w;
-    
+        
     for( unsigned int i = 2; i < weights.size(); i++ )
     {
         if( solver.getDecisionLevel( literals[ i ] ) != 0 )

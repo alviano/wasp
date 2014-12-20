@@ -22,12 +22,13 @@ unsigned int
 OllBB::run()
 {   
     trace_msg( weakconstraints, 1, "Starting algorithm OLLBB" );        
-    
-    originalNumberOfVariables = solver.numberOfVariables();
-    
-    solver.turnOffSimplifications();    
+
+    solver.turnOffSimplifications();
     initInUnsatCore();
+    originalNumberOfVariables = solver.numberOfVariables();
+    strategyModelGuided->createOptimizationAggregate();    
     initHeuristicValues();
+    
     unsigned int i = 0;
     while( true )
     {
@@ -53,7 +54,7 @@ OllBB::bb()
     trace_msg( weakconstraints, 1, "Starting BB" );
     solver.unrollToZero();
     assumptionsAND.clear();
-    solver.setComputeUnsatCores( false );
+    solver.setComputeUnsatCores( false );    
     unsigned int res = solver.solve();
     while( res == COHERENT )
     {
@@ -66,8 +67,8 @@ OllBB::bb()
         if( ub == lb || ub == 0 || solver.getCurrentDecisionLevel() == 0 )
             break;
         
-        trace_msg( weakconstraints, 2, "Updating bound of optimization aggregate. Model cost: " << ub );
-        if( !solver.updateOptimizationAggregate( ub ) )
+        trace_msg( weakconstraints, 2, "Updating bound of optimization aggregate. Model cost: " << ub );        
+        if( !strategyModelGuided->updateOptimizationAggregate( ub ) )
         {
             trace_msg( weakconstraints, 3, "Failed updating of optimization aggregate: return" );
             break;        
@@ -85,20 +86,10 @@ OllBB::bb()
 unsigned int
 OllBB::oll()
 {
-    solver.unrollToZero();    
-    
-    if( first )
-    {
-        initInUnsatCore();    
-        originalNumberOfVariables = solver.numberOfVariables();        
-
-        solver.setComputeUnsatCores( true );
-        solver.turnOffSimplifications();
-    }
-    assumptionsAND.clear();
-    computeAssumptionsAND();
+    solver.unrollToZero();        
     solver.setComputeUnsatCores( true );
-    
+    assumptionsAND.clear();
+    computeAssumptionsAND();    
     unsigned int res = solver.solve( assumptionsAND, assumptionsOR );    
     while( res == INCOHERENT )
     {        
@@ -110,7 +101,7 @@ OllBB::oll()
         
         res = solver.solve( assumptionsAND, assumptionsOR );        
     }
-        
+
     if( res == INTERRUPTED )
         return res;
 

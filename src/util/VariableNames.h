@@ -32,10 +32,13 @@ class VariableNames
         static bool isHidden( Var v );
         static const string& getName( Var v );
         static void setName( Var v, string name );
+        static void setToBePrinted( Var v );
+        static bool hasToBePrinted( Var v );
         static void addVariable();
         
     private:        
         static vector< string > variables;
+        static bool toBePrinted;
 };
 
 #endif

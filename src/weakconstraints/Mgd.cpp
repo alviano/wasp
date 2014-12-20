@@ -23,6 +23,8 @@ Mgd::run()
 {
     unsigned int minCost = UINT_MAX;
     unsigned int numberOfModels = 0;
+    
+    solver.sortOptimizationLiterals();
     while( solver.solve() == COHERENT )
     {
         numberOfModels++;
@@ -36,16 +38,10 @@ Mgd::run()
 
         if( modelCost == 0 || solver.getCurrentDecisionLevel() == 0 )
             break;
-
-        solver.addVariableRuntime();
         
         vector< Literal > literals;
         vector< unsigned int > weights;
         
-        Literal aggregateLiteral( solver.numberOfVariables(), POSITIVE );
-        
-        literals.push_back( aggregateLiteral.getOppositeLiteral() );
-        weights.push_back( 0 );
         for( unsigned int i = 0; i < solver.numberOfOptimizationLiterals(); i++ )
         {
             Literal l = solver.getOptimizationLiteral( i ).lit;

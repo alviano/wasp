@@ -18,6 +18,7 @@
 
 #include "DimacsOutputBuilder.h"
 
+#include "../util/VariableNames.h"
 #include <cassert>
 using namespace std;
 
@@ -27,7 +28,7 @@ void
 DimacsOutputBuilder::startModel()
 {
     EXIT_CODE = 10;
-    if( ++numberOfModels == 1 )
+    if( ++numberOfModels == 1 && !maxsat )
         cout << SOLUTION_DIMACS << " " << SAT << endl;
     
     cout << COMMENT_DIMACS << " solution " << numberOfModels << endl;    
@@ -38,15 +39,10 @@ void
 DimacsOutputBuilder::printVariable(
     Var v,
     bool isTrue )
-{    
-    if( isTrue )
-    {
-        cout << " " << v;
-    }
-    else
-    {
-        cout << " -" << v;
-    }
+{
+    if( !VariableNames::hasToBePrinted( v ) )
+        return;
+    cout << ( isTrue ? " " : " -" ) << v;    
 }
 
 void
@@ -65,5 +61,28 @@ DimacsOutputBuilder::onProgramIncoherent()
 void
 DimacsOutputBuilder::greetings()
 {
-    cout << COMMENT_DIMACS << " " << WASP_STRING << endl;
+    cout << COMMENT_DIMACS << " " << WASP_STRING;
+}
+
+void
+DimacsOutputBuilder::foundModelOptimization(
+    Solver&,
+    unsigned int cost,
+    unsigned int )
+{
+    cout << OPTIMUM_DIMACS << " " << cost << endl;
+}
+
+void
+DimacsOutputBuilder::optimumFound()
+{
+    EXIT_CODE = 10;
+    cout << SOLUTION_DIMACS << " " << OPTIMUM_FOUND_DIMACS << endl;    
+}
+
+void
+DimacsOutputBuilder::foundLowerBound(
+    unsigned int lb )
+{
+    cout << OPTIMUM_DIMACS << " " << lb << endl;
 }

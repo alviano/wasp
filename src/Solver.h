@@ -238,16 +238,15 @@ class Solver
         inline Satelite* getSatelite() { return satelite; }
         
         inline void addAggregate( Aggregate* aggr ) { assert( aggr != NULL ); aggregates.push_back( aggr ); }
-        inline bool hasPropagators() const { return ( !tight() || !aggregates.empty() || hasOptimizationAggregate() ); }
+        inline bool hasPropagators() const { return ( !tight() || !aggregates.empty() ); }
         
         inline void turnOffSimplifications() { callSimplifications_ = false; }
         inline bool callSimplifications() const { return callSimplifications_; }
         
-        inline void setOptimizationAggregate( Aggregate* optAggregate ) { assert( optAggregate != NULL ); optimizationAggregate = optAggregate; }
+//        inline void setOptimizationAggregate( Aggregate* optAggregate ) { assert( optAggregate != NULL ); optimizationAggregate = optAggregate; }
         inline void addOptimizationLiteral( Literal lit, unsigned int weight, unsigned int level, bool isAux );
         inline unsigned int computeCostOfModel();
-        inline bool updateOptimizationAggregate( unsigned int modelCost );
-        inline bool hasOptimizationAggregate() const { return optimizationAggregate != NULL; }
+//        inline bool updateOptimizationAggregate( unsigned int modelCost );        
         
         inline unsigned int getCostOfLevel( unsigned int levelIndex, unsigned int totalCost ) const;
         inline void setMaxCostOfLevelOfOptimizationRules( vector< unsigned int >& m ) { maxCostOfLevelOfOptimizationRules.swap( m ); }
@@ -408,7 +407,7 @@ class Solver
         inline unsigned int numberOfOptimizationLiterals() const { return optimizationLiterals.size(); }
         void sortOptimizationLiterals();
         
-        inline Aggregate* createAggregate( const vector< Literal >& literals, const vector< unsigned int >& weights );
+//        inline Aggregate* createAggregate( const vector< Literal >& literals, const vector< unsigned int >& weights );
         
         inline bool isWeighted() const { return weighted_; }
         inline void setWeighted() { weighted_ = true; }
@@ -418,8 +417,10 @@ class Solver
         inline unsigned int getPrecomputedCost() const { return precomputedCost; }
         
         inline void foundLowerBound( unsigned int lb ) { outputBuilder->foundLowerBound( lb ); }
-        inline bool incremental() const { return incremental_; }                
+        inline bool incremental() const { return incremental_; }
         
+        inline bool isOptimizationProblem() const { return numberOfOptimizationLiterals() > 0; }                
+               
     private:
         HCComponent* hcComponentForChecker;
         PostPropagator* afterConflictPropagator;
@@ -484,7 +485,7 @@ class Solver
         vector< GUSData* > gusDataVector;
         vector< Aggregate* > aggregates;
         
-        Aggregate* optimizationAggregate;
+//        Aggregate* optimizationAggregate;
         unsigned int numberOfOptimizationLevels;
         unsigned int precomputedCost;                
         
@@ -492,7 +493,7 @@ class Solver
         
         bool glucoseHeuristic_;
         uint64_t conflicts;
-        uint64_t conflictsRestarts;                        
+        uint64_t conflictsRestarts;                
         
         struct DeletionCounters
         {
@@ -629,7 +630,7 @@ Solver::Solver()
     nextValueOfPropagation( 0 ),
     literalsInClauses( 0 ),
     literalsInLearnedClauses( 0 ),
-    optimizationAggregate( NULL ),
+//    optimizationAggregate( NULL ),
     numberOfOptimizationLevels( 0 ),
     precomputedCost( 0 ),
     callSimplifications_( true ),
@@ -1767,35 +1768,6 @@ Solver::computeCostOfModel()
     return cost;
 }
 
-bool
-Solver::updateOptimizationAggregate(
-    unsigned int modelCost )
-{   
-    assert( optimizationAggregate != NULL );
-    trace_msg( weakconstraints, 2, "Precomputed cost is " << precomputedCost );
-    if( precomputedCost >= modelCost )
-        return false;
-        
-    unsigned int backjumpingLevel = 0; //optimizationAggregate->getLevelOfBackjump( *this, modelCost - precomputedCost );
-    trace_msg( weakconstraints, 2, "Backjumping level is " << backjumpingLevel );
-    if( getCurrentDecisionLevel() != 0 )
-        unroll( backjumpingLevel );
-    clearConflictStatus();
-    
-    if( !optimizationAggregate->updateBound( *this, modelCost - precomputedCost ) )
-        return false;
-    
-    assert( isFalse( optimizationAggregate->getLiteral( 1 ).getOppositeLiteral() ) );
-    optimizationAggregate->onLiteralFalse( *this, optimizationAggregate->getLiteral( 1 ).getOppositeLiteral(), -1 );
-    
-    if( conflictDetected() )
-        return false;
-    
-//    addInPropagatorsForUnroll( optimizationAggregate );
-    
-    return true;
-}
-
 void
 Solver::addOptimizationLiteral(
     Literal lit,
@@ -2364,18 +2336,18 @@ Solver::computeUnsatCore()
     unsatCore = learning.analyzeFinal( conflictLiteral );
 }
 
-Aggregate*
-Solver::createAggregate(
-    const vector< Literal >& literals,
-    const vector< unsigned int >& weights )
-{
-    assert( literals.size() == weights.size() );    
-    Aggregate* aggregate = new Aggregate();
-    for( unsigned int i = 0; i < literals.size(); i++ )
-        aggregate->addLiteral( literals[ i ], weights[ i ] );    
-    
-    return aggregate;
-}
+//Aggregate*
+//Solver::createAggregate(
+//    const vector< Literal >& literals,
+//    const vector< unsigned int >& weights )
+//{
+//    assert( literals.size() == weights.size() );    
+//    Aggregate* aggregate = new Aggregate();
+//    for( unsigned int i = 0; i < literals.size(); i++ )
+//        aggregate->addLiteral( literals[ i ], weights[ i ] );    
+//    
+//    return aggregate;
+//}
 
 void
 Solver::addInPropagatorsForUnroll(

@@ -30,12 +30,17 @@ class DimacsOutputBuilder : public OutputBuilder
         virtual void endModel();
         virtual void onProgramIncoherent();
         virtual void greetings();
+        virtual void foundModelOptimization( Solver&, unsigned int cost, unsigned int );
+        virtual void optimumFound();
+        virtual void foundLowerBound( unsigned int );
     
+        inline void setMaxsat() { maxsat = true; }
     private:
         unsigned int numberOfModels;
+        bool maxsat;
 };
 
-DimacsOutputBuilder::DimacsOutputBuilder() : numberOfModels( 0 )
+DimacsOutputBuilder::DimacsOutputBuilder() : numberOfModels( 0 ), maxsat( false )
 {
 }
 

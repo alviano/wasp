@@ -29,11 +29,12 @@ class Istream
         explicit inline Istream( istream& in_ ) : in( in_ ), idx( 0 ) { buff[ 0 ] = '\0';  in.read( buff, 2047 ); buff[ in.gcount() ] = '\0'; }
         inline char next();
         inline bool read( unsigned int& value );
+        inline bool read( uint64_t& value );
         inline bool read( int& value );
         inline bool read( string& value );
         inline void read( char& value );
         inline void getline( char* buff, unsigned size );
-        inline bool readInfoDimacs( unsigned int& numberOfVariables, unsigned int& numberOfClauses );        
+        inline bool readInfoDimacs( unsigned int& numberOfVariables, unsigned int& numberOfClauses, uint64_t& maxWeight );        
         inline bool eof(){ return buff[ 0 ] == EOF; }
 
     private:
@@ -106,6 +107,31 @@ Istream::read(
 bool
 Istream::read(
     unsigned int& value )
+{
+    skipBlanksAndComments();
+
+    char c = next();    
+
+    if( !isCipher( c ) )
+        return false;
+    value = c - '0';
+    while( true )
+    {
+        c = next();
+        if( !isCipher( c ) )
+        {
+            return true;
+        }
+        value *= 10;
+        value += c - '0';
+    }
+    
+    return true;
+}
+
+bool
+Istream::read(
+    uint64_t& value )
 {
     skipBlanksAndComments();
 
@@ -232,7 +258,8 @@ Istream::isBlank(
 bool
 Istream::readInfoDimacs(
     unsigned int& numberOfVariables,
-    unsigned int& numberOfClauses )
+    unsigned int& numberOfClauses,
+    uint64_t& maxWeight )
 {
     skipBlanksAndComments();
     if( next() != 'p' )
@@ -241,11 +268,14 @@ Istream::readInfoDimacs(
     string type;
     read( type );
     
-    if( type != "cnf" )
+    if( type != "cnf" && type != "wcnf" )
         return false;
-    
+
     read( numberOfVariables );
     read( numberOfClauses );
+    
+    if( type.at( 0 ) == 'w' )
+        read( maxWeight );
     
     return true;
 }

@@ -48,9 +48,13 @@ WaspFacade::readInput()
         case COMMENT_DIMACS:
         case FORMULA_INFO_DIMACS:
         {
+            DimacsOutputBuilder* d = new DimacsOutputBuilder();
+            solver.setOutputBuilder( d );
             Dimacs dimacs( solver );
             dimacs.parse();
-            solver.setOutputBuilder( new DimacsOutputBuilder() );
+            if( dimacs.isMaxsat() )
+                d->setMaxsat();
+            greetings();
             break;
         }
 
@@ -59,6 +63,7 @@ WaspFacade::readInput()
             GringoNumericFormat gringo( solver );
             gringo.parse();
 //            solver.setOutputBuilder( new WaspOutputBuilder() );
+            greetings();
             break;
         }
     }
@@ -81,7 +86,7 @@ WaspFacade::solve()
             return;
         }
         
-        if( !solver.hasOptimizationAggregate() )
+        if( !solver.isOptimizationProblem() )
         {            
             while( solver.solve() == COHERENT )
             {

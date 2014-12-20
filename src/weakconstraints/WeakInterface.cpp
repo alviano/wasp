@@ -26,28 +26,64 @@ WeakInterface::createFalseAggregate(
 {
     assert( literals.size() == weights.size() );
     solver.unrollToZero();
-
-    Aggregate* aggregate = solver.createAggregate( literals, weights );   
     
-    assert( literals.size() >= 1 );
+    solver.addVariableRuntime();    
+    Var aggregateVar = solver.numberOfVariables();
+    Literal aggregateLit( aggregateVar, POSITIVE );    
+    Aggregate* aggregate = createAggregate( aggregateVar, literals, weights );   
+    
+    assert( aggregate->size() >= 1 );
     #ifndef NDEBUG
     bool res =
     #endif
-    solver.addClauseRuntime( literals[ 0 ] );
+    solver.addClauseRuntime( aggregateLit.getOppositeLiteral() );
     assert( res );
-    solver.attachAggregate( *aggregate );
     if( !aggregate->updateBound( solver, bound ) )
-        return false;
+        return false;    
 
-    assert( solver.isFalse( literals[ 0 ].getOppositeLiteral() ) );
-    aggregate->onLiteralFalse( solver, literals[ 0 ].getOppositeLiteral(), -1 );    
-
+    solver.attachAggregate( *aggregate );
     solver.addAggregate( aggregate );
+    
+    assert( solver.isFalse( aggregateLit ) );
+    aggregate->onLiteralFalse( solver, aggregateLit, -1 );
     
     if( solver.conflictDetected() )
         return false;
     
-    return true;
+    return aggregate;
+}
+
+Aggregate*
+WeakInterface::createAndReturnFalseAggregate(
+    const vector< Literal >& literals,
+    const vector< unsigned int >& weights,
+    unsigned int bound )
+{
+    assert( literals.size() == weights.size() );
+    solver.unrollToZero();
+    
+    solver.addVariableRuntime();    
+    Var aggregateVar = solver.numberOfVariables();
+    Literal aggregateLit( aggregateVar, POSITIVE );    
+    Aggregate* aggregate = createAggregate( aggregateVar, literals, weights );   
+    
+    assert( aggregate->size() >= 1 );
+    #ifndef NDEBUG
+    bool res =
+    #endif
+    solver.addClauseRuntime( aggregateLit.getOppositeLiteral() );
+    assert( res );
+    aggregate->updateBound( solver, bound );    
+    solver.attachAggregate( *aggregate );
+    solver.addAggregate( aggregate );
+    
+    assert( solver.isFalse( aggregateLit ) );
+    aggregate->onLiteralFalse( solver, aggregateLit, -1 );
+    
+    if( solver.conflictDetected() )
+        return NULL;
+    
+    return aggregate;
 }
 
 Aggregate*

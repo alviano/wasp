@@ -21,6 +21,8 @@
 
 #include "../util/ErrorMessage.h"
 #include "../util/Istream.h"
+#include <vector>
+using namespace std;
 class Solver;
 
 class Dimacs
@@ -41,20 +43,31 @@ class Dimacs
         * @param input The istream input.
         */
         void parse( Istream& input );
+        
+        bool isMaxsat() const { return maxsat; }
 
     private:
 
         void readAllClauses( Istream& input );
 
         bool readClause( Istream& input );
+        
+        bool readWeightedClause( Istream& input );
 
         inline bool readNextLiteral( Istream& input, int& next );
+        
+        inline void addNewVariable();        
 
         Solver& solver;
-        
-        unsigned int numberOfClauses;
 
+        unsigned int numberOfClauses;
         unsigned int numberOfVariables;
+
+        uint64_t maxWeight;
+        bool maxsat;
+
+        vector< Var > relaxationVars;
+        vector< uint64_t > relaxationVarsWeights;
 };
 
 bool

@@ -2489,25 +2489,29 @@ GringoNumericFormat::addOptimizationRules()
     unsigned int bound = 1;
     computeLinearCostsForOptimizationRules( maxCostOfLevelOfWeakConstraints, literals, weights, levels, bound );
     
-    WeightConstraintRule* optimizationWeightConstraint = new WeightConstraintRule( 0, bound );
-    optimizationWeightConstraint->literals.swap( literals );
-    optimizationWeightConstraint->weights.swap( weights );
+//    WeightConstraintRule* optimizationWeightConstraint = new WeightConstraintRule( 0, bound );
+//    optimizationWeightConstraint->literals.swap( literals );
+//    optimizationWeightConstraint->weights.swap( weights );
+//        
+//    optimizationWeightConstraint->sort();
     
-    optimizationWeightConstraint->sort();
-    
-    trace_msg( parser, 4, "Created optimization weight constraint " << *optimizationWeightConstraint );
-    unsigned int k = 0;
-    
-    unsigned int precomputedCost = 0;
-    optimizationWeightConstraint->bound = 1;
-    for( unsigned int j = 0; j < optimizationWeightConstraint->literals.size(); j++ )
-    {
-        optimizationWeightConstraint->literals[ k ] = optimizationWeightConstraint->literals[ j ];
-        optimizationWeightConstraint->weights[ k ] = optimizationWeightConstraint->weights[ j ];
+//    trace_msg( parser, 4, "Created optimization weight constraint " << *optimizationWeightConstraint );
+//    unsigned int k = 0;
 
-        unsigned int weight = optimizationWeightConstraint->weights[ j ];
-        Literal lit = solver.getLiteral( optimizationWeightConstraint->literals[ j ] );
+    unsigned int precomputedCost = 0;
+//    optimizationWeightConstraint->bound = 1;
+//    for( unsigned int j = 0; j < optimizationWeightConstraint->literals.size(); j++ )
+//    {
+//        optimizationWeightConstraint->literals[ k ] = optimizationWeightConstraint->literals[ j ];
+//        optimizationWeightConstraint->weights[ k ] = optimizationWeightConstraint->weights[ j ];
+    
+    for( unsigned int j = 0; j < literals.size(); j++ )
+    {        
+//        unsigned int weight = optimizationWeightConstraint->weights[ j ];
+//        Literal lit = solver.getLiteral( optimizationWeightConstraint->literals[ j ] );
         
+        Literal lit = solver.getLiteral( literals[ j ] );
+        unsigned int weight = weights[ j ];        
 //        assert( weight <= optimizationWeightConstraint->bound );
         
         if( solver.isTrue( lit ) )
@@ -2517,34 +2521,34 @@ GringoNumericFormat::addOptimizationRules()
 //            optimizationWeightConstraint->bound -= weight;
             precomputedCost += weight;
         }
-        else if( !solver.isFalse( lit ) )
+        else /*if( !solver.isFalse( lit ) )*/
         {
-            optimizationWeightConstraint->bound += weight;
+//            optimizationWeightConstraint->bound += weight;
             solver.setFrozen( lit.getVariable() );
             assert( lit != Literal::null );
             solver.addOptimizationLiteral( lit, weight, levels[ j ], false );
-            ++k;
-        }                
+//            ++k;
+        }
     }
 
-    optimizationWeightConstraint->literals.resize( k );
-    optimizationWeightConstraint->weights.resize( k );
-    trace_msg( parser, 4, "Shrinked optimization weight constraint " << *optimizationWeightConstraint );    
+//    optimizationWeightConstraint->literals.resize( k );
+//    optimizationWeightConstraint->weights.resize( k );
+//    trace_msg( parser, 4, "Shrinked optimization weight constraint " << *optimizationWeightConstraint );    
     solver.setPrecomputedCost( precomputedCost );
-    solver.addVariable();
-    optimizationWeightConstraint->id = solver.numberOfVariables();
-    solver.setFrozen( solver.numberOfVariables() );
-
-    solver.addClause( Literal( solver.numberOfVariables(), NEGATIVE ) );
-    propagatedLiterals++;        
-    Aggregate* aggregate = weightConstraintToAggregate( optimizationWeightConstraint );
-    assert( aggregate != NULL );
-    
-    trace_msg( parser, 4, "Final optimization aggregate " << *aggregate );
-    solver.setOptimizationAggregate( aggregate );
+//    solver.addVariable();
+//    optimizationWeightConstraint->id = solver.numberOfVariables();
+//    solver.setFrozen( solver.numberOfVariables() );
+//
+//    solver.addClause( Literal( solver.numberOfVariables(), NEGATIVE ) );
+//    propagatedLiterals++;        
+//    Aggregate* aggregate = weightConstraintToAggregate( optimizationWeightConstraint );
+//    assert( aggregate != NULL );
+//    
+//    trace_msg( parser, 4, "Final optimization aggregate " << *aggregate );
+//    solver.setOptimizationAggregate( aggregate );
     solver.setMaxCostOfLevelOfOptimizationRules( maxCostOfLevelOfWeakConstraints );
     solver.setNumberOfOptimizationLevels( optimizationRules.size() );
-    delete optimizationWeightConstraint;
+//    delete optimizationWeightConstraint;
 }
 
 void

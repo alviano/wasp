@@ -19,6 +19,7 @@
 #include "VariableNames.h"
 #include "Assert.h"
 vector< string > VariableNames::variables;
+bool VariableNames::toBePrinted = false;
 
 bool
 VariableNames::isHidden(
@@ -59,4 +60,18 @@ void
 VariableNames::addVariable()
 {
     variables.push_back( "" );
+}
+
+void
+VariableNames::setToBePrinted(
+    Var v )
+{
+    variables[ v ] = "1";
+}
+
+bool
+VariableNames::hasToBePrinted(
+    Var v )
+{
+    return variables[ v ] == "1";
 }
