@@ -56,9 +56,10 @@ class WaspFacade
         inline void setMaxModels( unsigned int max ) { maxModels = max; }
         inline void setPrintProgram( bool printProgram ) { this->printProgram = printProgram; }
         inline void setPrintDimacs( bool printDimacs ) { this->printDimacs = printDimacs; }
-        void setExchangeClauses( bool exchangeClauses ) { solver.setExchangeClauses( exchangeClauses ); }
+        void setExchangeClauses( bool exchangeClauses ) { solver.setExchangeClauses( exchangeClauses ); }                
         
         inline void setWeakConstraintsAlgorithm( WEAK_CONSTRAINTS_ALG alg ) { weakConstraintsAlg = alg; }
+        inline void setDisjCoresPreprocessing( bool value ) { disjCoresPreprocessing = value; }
         
         inline unsigned int solveWithWeakConstraints();        
 
@@ -68,12 +69,13 @@ class WaspFacade
         unsigned int numberOfModels;
         unsigned int maxModels;
         bool printProgram;
-        bool printDimacs;
+        bool printDimacs;        
 
-        WEAK_CONSTRAINTS_ALG weakConstraintsAlg;                
+        WEAK_CONSTRAINTS_ALG weakConstraintsAlg;
+        bool disjCoresPreprocessing;
 };
 
-WaspFacade::WaspFacade() : numberOfModels( 0 ), maxModels( 1 ), printProgram( false ), printDimacs( false ), weakConstraintsAlg( OPT )
+WaspFacade::WaspFacade() : numberOfModels( 0 ), maxModels( 1 ), printProgram( false ), printDimacs( false ), weakConstraintsAlg( OPT ), disjCoresPreprocessing( false )
 {
 }
 
@@ -124,6 +126,7 @@ WaspFacade::solveWithWeakConstraints()
             break;
     }
     
+    w->setDisjCoresPreprocessing( disjCoresPreprocessing );
     unsigned int res = w->run();    
     delete w;
     return res;

@@ -20,7 +20,9 @@
 
 unsigned int
 PMRes::run()
-{    
+{
+    if( disjCoresPreprocessing && !disjointCorePreprocessing() )
+        return INCOHERENT;
     return solver.isWeighted() ? runWeighted() : runUnweighted();
 }
 
@@ -28,16 +30,17 @@ unsigned int
 PMRes::runUnweighted()
 {
     trace_msg( weakconstraints, 1, "Starting algorithm PMRes" );
-    solver.setComputeUnsatCores( true );
-    solver.turnOffSimplifications();        
+    computeAssumptionsAND();    
     initInUnsatCore();
-    computeAssumptionsAND();
-    unsigned int result = solver.solve( assumptionsAND, assumptionsOR );
-    
-    while( result == INCOHERENT )
+
+    solver.setComputeUnsatCores( true );
+    solver.turnOffSimplifications();
+    while( solver.solve( assumptionsAND, assumptionsOR ) == INCOHERENT )
     {        
-        foundUnsat();
-        result = solver.solve( assumptionsAND, assumptionsOR );
+        if( !foundUnsat() )
+            return INCOHERENT;
+        assumptionsAND.clear();
+        computeAssumptionsAND();
     }
 
     unsigned int cost = solver.computeCostOfModel();
@@ -228,10 +231,7 @@ PMRes::foundUnsat()
         trace_msg( weakconstraints, 1, "Derived empty clause" );
         if( atLevelZeroWeight > minWeight )
             lb += atLevelZeroWeight - minWeight;
-    }
-
-    assumptionsAND.clear();
-    computeAssumptionsAND();    
+    }       
     return true;
 }
 

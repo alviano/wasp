@@ -160,3 +160,33 @@ WeakInterface::computeMinWeight()
     trace_msg( weakconstraints, 2, "Min weight " << minWeight );
     return minWeight;
 }
+
+bool
+WeakInterface::disjointCorePreprocessing()
+{
+    computeAssumptionsAND();
+    initInUnsatCore();
+    
+    solver.setComputeUnsatCores( true );
+    solver.turnOffSimplifications();
+
+    unsigned int originalNumberOfOptLiterals = solver.numberOfOptimizationLiterals();
+    while( true )
+    {
+        if( solver.solve( assumptionsAND, assumptionsOR ) != INCOHERENT )
+        {
+            solver.clearConflictStatus();
+            solver.unrollToZero();
+            assumptionsAND.clear();
+            break;
+        }
+
+        if( !foundUnsat() )
+            return false;
+        
+        assumptionsAND.clear();
+        computeAssumptionsANDOnlyOriginal( originalNumberOfOptLiterals );
+    }        
+    
+    return true;
+}

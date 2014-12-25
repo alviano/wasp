@@ -27,6 +27,8 @@ Oll::~Oll()
 unsigned int
 Oll::run()
 {
+    if( disjCoresPreprocessing && !disjointCorePreprocessing() )
+        return INCOHERENT;
     return solver.isWeighted() ? runWeighted() : runUnweighted();
 }
 

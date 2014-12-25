@@ -72,6 +72,8 @@ namespace wasp
             static bool exchangeClauses;
             
             static WEAK_CONSTRAINTS_ALG weakConstraintsAlg;
+            
+            static bool disjCoresPreprocessing;
     };
 }
 

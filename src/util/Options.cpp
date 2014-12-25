@@ -92,6 +92,9 @@ namespace wasp
 #define OPTIONID_bb ( 'z' + 205 )
 #define OPTIONID_pmres ( 'z' + 206 )
 #define OPTIONID_ollbb ( 'z' + 207 )
+    
+    
+#define OPTIONID_disjcores ( 'z' + 215 )
 
     
 #ifdef TRACE_ON
@@ -131,6 +134,8 @@ unsigned int Options::maxCost = MAXUNSIGNEDINT;
 bool Options::exchangeClauses = false;
 
 WEAK_CONSTRAINTS_ALG Options::weakConstraintsAlg = OLL;
+
+bool Options::disjCoresPreprocessing = false;
     
 void
 Options::parse(
@@ -210,6 +215,7 @@ Options::parse(
                 { "basic", no_argument, NULL, OPTIONID_bb },
                 { "pmres", no_argument, NULL, OPTIONID_pmres },
                 { "interleaving", optional_argument, NULL, OPTIONID_ollbb },
+                { "enable-disjcores", no_argument, NULL, OPTIONID_disjcores },
 
                 // The NULL-option indicates the end of the array.
                 { NULL, 0, NULL, 0 }
@@ -449,6 +455,10 @@ Options::parse(
                 }
                 break;
                 
+            case OPTIONID_disjcores:
+                disjCoresPreprocessing = true;
+                break;
+                
             default:
                 ErrorMessage::errorGeneric( "This option is not supported." );
                 break;
@@ -476,6 +486,7 @@ Options::setOptions(
     waspFacade.setPrintDimacs( printDimacs);
     waspFacade.setExchangeClauses( exchangeClauses );
     waspFacade.setWeakConstraintsAlgorithm( weakConstraintsAlg );
+    waspFacade.setDisjCoresPreprocessing( disjCoresPreprocessing );
 }
 
 };

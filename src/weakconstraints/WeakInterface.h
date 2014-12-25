@@ -30,11 +30,14 @@ using namespace std;
 class WeakInterface
 {
     public:
-        WeakInterface( Solver& s ) : solver( s ), numberOfCalls( 0 ), lb( 0 ), ub( UINT_MAX ), weight( UINT_MAX ) {}
+        WeakInterface( Solver& s ) : solver( s ), numberOfCalls( 0 ), lb( 0 ), ub( UINT_MAX ), disjCoresPreprocessing( false ), weight( UINT_MAX ) {}
         virtual ~WeakInterface() {}
         virtual unsigned int run() = 0;
         
+        inline void setDisjCoresPreprocessing( bool value ) { disjCoresPreprocessing = value; }
+        
     protected:
+        bool disjointCorePreprocessing();
         bool createFalseAggregate( const vector< Literal >& literals, const vector< unsigned int >& weights, unsigned int bound );
         Aggregate* createAndReturnFalseAggregate( const vector< Literal >& literals, const vector< unsigned int >& weights, unsigned int bound );
         Aggregate* createAggregate( Var aggrId, const vector< Literal >& literals, const vector< unsigned int >& weights );
@@ -49,6 +52,8 @@ class WeakInterface
         inline void preprocessingWeights();
         inline void computeAssumptionsANDStratified();
         inline bool changeWeight();
+        
+        virtual bool foundUnsat() { return true; }
 
         Solver& solver;
         vector< unsigned int > inUnsatCore;
@@ -59,9 +64,12 @@ class WeakInterface
         unsigned int lb;
         unsigned int ub;
         
+        bool disjCoresPreprocessing;
     private:
         vector< unsigned int > weights;        
-        unsigned int weight;
+        unsigned int weight;        
+        
+        inline void computeAssumptionsANDOnlyOriginal( unsigned int originalNumberOfOptLiterals );
 };
 
 void
@@ -69,6 +77,27 @@ WeakInterface::computeAssumptionsAND()
 {    
     solver.sortOptimizationLiterals();
     for( unsigned int i = 0; i < solver.numberOfOptimizationLiterals(); i++ )
+    {
+        if( solver.getOptimizationLiteral( i ).isRemoved() )
+            continue;
+        assumptionsAND.push_back( solver.getOptimizationLiteral( i ).lit.getOppositeLiteral() );
+    }
+    trace_action( weakconstraints, 2, 
+    {
+        trace_tag( cerr, weakconstraints, 2 );
+        cerr << "AssumptionsAND: [";
+        for( unsigned int i = 0; i < assumptionsAND.size(); i++ )
+            cerr << " " << assumptionsAND[ i ];
+        cerr << " ]" << endl;
+    });
+}
+
+void
+WeakInterface::computeAssumptionsANDOnlyOriginal(
+    unsigned int originalNumberOfOptLiterals )
+{    
+    solver.sortOptimizationLiterals();
+    for( unsigned int i = 0; i < originalNumberOfOptLiterals; i++ )
     {
         if( solver.getOptimizationLiteral( i ).isRemoved() )
             continue;
@@ -96,7 +125,8 @@ WeakInterface::addAuxVariable()
 void
 WeakInterface::initInUnsatCore()
 {
-    for( unsigned int i = 0; i <= solver.numberOfVariables(); i++ )
+//    for( unsigned int i = 0; i <= solver.numberOfVariables(); i++ )
+    while( inUnsatCore.size() <= solver.numberOfVariables() )
         inUnsatCore.push_back( numberOfCalls );
 }
 
