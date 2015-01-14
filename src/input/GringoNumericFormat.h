@@ -92,16 +92,16 @@ public:
             
             inline WeightConstraintRule( unsigned int id_, unsigned int bound_ ) : id( id_ ), bound( bound_ ), currentValue( 0 ), maxPossibleValue( 0 ), umax( 0 ) {}
 
-            inline void addNegativeLiteral( unsigned int idLit, unsigned int weightLit )
+            inline void addNegativeLiteralCount( unsigned int idLit )
             {
                 addNegativeLiteral( idLit );
-                addNegativeLiteralWeight( weightLit );
+                addNegativeLiteralWeight( 1 );
             }
 
-            inline void addPositiveLiteral( unsigned int idLit, unsigned int weightLit )
+            inline void addPositiveLiteralCount( unsigned int idLit )
             {
                 addPositiveLiteral( idLit );
-                addPositiveLiteralWeight( weightLit );
+                addPositiveLiteralWeight( 1 );
             }
 
             inline void addNegativeLiteral( unsigned int idLit ) { literals.push_back( -idLit ); }

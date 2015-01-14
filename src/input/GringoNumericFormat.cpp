@@ -637,32 +637,13 @@ GringoNumericFormat::readCount(
         --size;
         input.read( tmp );
         createStructures( tmp );
-        //Eventually we should create again the set.
-//        if( atomData[ tmp ].readNormalRule_negativeLiterals == readNormalRule_numberOfCalls )
-//            continue;
-//        if( solver.getVariable( tmp )->isTrue() )
-//            continue;
-//        else if( solver.getVariable( tmp )->isFalse() )
-//        {
-//            assert( weightConstraintRule->bound > 0 );
-//            --weightConstraintRule->bound;
-//        }
-//        else
-            weightConstraintRule->addNegativeLiteral( tmp, 1 );
+        weightConstraintRule->addNegativeLiteralCount( tmp );
     }
     while( size-- > 0 )
     {
         input.read( tmp );
         createStructures( tmp );
-//        if( solver.getVariable( tmp )->isFalse() )
-//            continue;
-//        else if( solver.getVariable( tmp )->isTrue() )
-//        {
-//            assert( weightConstraintRule->bound > 0 );
-//            --weightConstraintRule->bound;
-//        }
-//        else        
-            weightConstraintRule->addPositiveLiteral( tmp, 1 );
+        weightConstraintRule->addPositiveLiteralCount( tmp );
     }
     
     assert( weightConstraintRule->literals.size() == weightConstraintRule->weights.size() );    
@@ -731,7 +712,7 @@ GringoNumericFormat::readSum(
         else if( previousWeight != tmp )
             previousWeight = MAXUNSIGNEDINT;
     }
-
+    
     assert( weightConstraintRule->literals.size() == weightConstraintRule->weights.size() );
     add( weightConstraintRule );
 }
@@ -2381,7 +2362,8 @@ GringoNumericFormat::atMostOneBisequential( WeightConstraintRule* rule )
 }
 
 Aggregate*
-GringoNumericFormat::weightConstraintToAggregate( WeightConstraintRule* weightConstraintRule )
+GringoNumericFormat::weightConstraintToAggregate( 
+    WeightConstraintRule* weightConstraintRule )
 {
     Literal aggregateLiteral = solver.getLiteral( weightConstraintRule->id );
 
@@ -2393,11 +2375,14 @@ GringoNumericFormat::weightConstraintToAggregate( WeightConstraintRule* weightCo
 
     for( unsigned int j = 0; j < weightConstraintRule->literals.size(); j++ )
     {
+        if( weightConstraintRule->weights[ j ] > weightConstraintRule->bound )
+            weightConstraintRule->weights[ j ] = weightConstraintRule->bound;
+        
         unsigned int weight = weightConstraintRule->weights[ j ];
         Literal lit = solver.getLiteral( weightConstraintRule->literals[ j ] );
 
-        assert( solver.isUndefined( lit ) );
-        assert( weight <= weightConstraintRule->bound );
+        assert( solver.isUndefined( lit ) );         
+        assert_msg( weight <= weightConstraintRule->bound, weight << ">" << weightConstraintRule->bound );
         aggregate->addLiteral( lit, weight );
         solver.setFrozen( lit.getVariable() );
     }
