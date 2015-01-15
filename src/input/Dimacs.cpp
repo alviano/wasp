@@ -112,7 +112,10 @@ Dimacs::readClause(
     do
     {
         while( solver.numberOfVariables() < static_cast< unsigned int > ( abs( next ) ) )
+        {            
             solver.addVariable();
+            VariableNames::setToBePrinted( solver.numberOfVariables() );
+        }
 
         //insert the current literal in the set
         bool inserted = !tempSet.insert( next ).second;
