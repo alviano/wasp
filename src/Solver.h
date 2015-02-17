@@ -419,7 +419,9 @@ class Solver
         inline void foundLowerBound( unsigned int lb ) { outputBuilder->foundLowerBound( lb ); }
         inline bool incremental() const { return incremental_; }
         
-        inline bool isOptimizationProblem() const { return numberOfOptimizationLiterals() > 0; }                
+        inline bool isOptimizationProblem() const { return numberOfOptimizationLiterals() > 0; }
+        
+        inline bool propagateFixpoint();
                
     private:
         HCComponent* hcComponentForChecker;
@@ -2363,6 +2365,22 @@ Solver::addInPropagatorsForUnroll(
         propagatorsForUnroll.push_back( prop );
         prop->setInVectorOfUnroll( dl );
     }
+}
+
+bool
+Solver::propagateFixpoint()
+{    
+    assert( !conflictDetected() );
+    while( hasNextVariableToPropagate() )
+    {
+        nextValueOfPropagation--;
+        Var variableToPropagate = getNextVariableToPropagate();
+        propagateWithPropagators( variableToPropagate );
+
+        if( conflictDetected() )
+            return false;
+    }
+    return true;
 }
 
 #endif

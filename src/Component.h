@@ -29,6 +29,7 @@
 #include "GUSData.h"
 #include "util/Options.h"
 #include "util/Trace.h"
+#include "util/Assert.h"
 
 class Learning;
 class Solver;
@@ -47,8 +48,8 @@ class Component : public PostPropagator
 {
     friend ostream& operator<<( ostream& o, const Component& c );
     public:
-        inline Component( vector< GUSData* >& gusData_, Solver& s ) : PostPropagator(), solver( s ), gusData( gusData_ ), clauseToPropagate( NULL ), id( 0 ), removed( 0 ) {}
-        inline ~Component() {}
+        inline Component( vector< GUSData* >& gusData_, Solver& s ) : PostPropagator(), solver( s ), gusData( gusData_ ), clauseToPropagate( NULL ), conflict( 0 ), first( 1 ), id( 0 ), removed( 0 ), numberOfCalls( 0 ) {}        
+        ~Component();        
         
         virtual bool onLiteralFalse( Literal lit );
 
@@ -63,8 +64,8 @@ class Component : public PostPropagator
         
         virtual Clause* getClauseToPropagate( Learning& learning );
 
-        inline bool isAuxVariable( unsigned int varId ) { return getGUSData( varId ).aux; }
-        inline void setAuxVariable( unsigned int varId ) { getGUSData( varId ).aux = true; }
+        inline bool isAuxVariable( unsigned int varId ) { return getGUSData( varId ).isAux(); }
+        inline void setAuxVariable( unsigned int varId ) { getGUSData( varId ).setAux(); }
         inline void addExternalLiteralForVariable( unsigned int varId, Literal lit ) { addExternalLiteral( varId, lit ); /*getGUSData( varId ).externalLiterals.push_back( lit );*/ }
         inline void addInternalLiteralForVariable( unsigned int varId, Literal lit ) { addInternalLiteral( varId, lit ); /*getGUSData( varId ).internalLiterals.push_back( lit );*/ }
         inline void addVariablePossiblySupportedByLiteral( Var var, Literal lit ) { gusData[ lit.getVariable() ]->possiblySupportedByThis[ lit.getSign() ].push_back( var ); }
@@ -75,6 +76,9 @@ class Component : public PostPropagator
         
         void remove() { removed = 1; }
         bool isRemoved() const { return removed; }
+        
+        Clause* inferFalsityOfUnfoundedAtoms();
+        void conflictOnUnfoundedAtom( Clause* clause, Var variable );                
         
     protected:
         virtual void reset();
@@ -87,11 +91,17 @@ class Component : public PostPropagator
         Vector< Var > variablesWithoutSourcePointer;
         Vector< Var > unfoundedSet;
         Clause* clauseToPropagate;
-        bool addAuxVar;
+        Vector< Clause* > clausesToDelete;
+        
         Var auxVar;
+        unsigned int conflict : 31;
+        unsigned int first : 1;
         
         unsigned int id : 31;
-        unsigned int removed : 1;        
+        unsigned int removed : 1;
+        
+        vector< unsigned int > added;
+        unsigned int numberOfCalls;
         
         bool propagateFalseForGUS( Literal lit );
         inline void propagateLiteralLostSourcePointer( Literal lit );
@@ -99,23 +109,35 @@ class Component : public PostPropagator
         bool iterationOnSupportedByThisInternal( Literal lit );
         void iterationOnAuxSupportedByThis( Literal lit );        
 
-        void foundSourcePointer( unsigned int id );
-        inline void lookForANewSourcePointer( unsigned int id );
-        inline void propagateSourcePointer( unsigned int id, Literal literal );
-        inline void addExternalLiteral( unsigned int id, Literal literal );
-        inline void addInternalLiteral( unsigned int id, Literal literal );
-        inline void resetSourcePointer( unsigned int id );
+        void foundSourcePointer( Var var );
+        inline void lookForANewSourcePointer( Var var );
+        void propagateSourcePointer( Var var, Literal literal );
+        inline void addExternalLiteral( Var var, Literal literal );
+        inline void addInternalLiteral( Var var, Literal literal );
+        inline void resetSourcePointer( Var var );
+        inline Clause* handleConflict();
 
-        inline void setVariableFounded( unsigned int id, bool value );
+//        inline void setVariableFounded( unsigned int id, bool value );
+        inline void setFounded( Var var );
+        inline void setUnfounded( Var var );
         
         void addVariableSupportedByLiteral( Var variable, Literal literal );
         
-        inline GUSData& getGUSData( unsigned int id );
+        void removeFalseAtomsAndPropagateUnfoundedness();
+        
+        inline GUSData& getGUSData( Var var );
         
         void computeGUS();
+        void computeGUSFirst();
+        bool computeUnfoundedSet( Var var );
+        
+        inline void visit( Var var ) { assert_msg( var < added.size(), var << " >= " << added.size() ); added[ var ] = numberOfCalls; }
+        inline bool visited( Var var ) const { assert_msg( var < added.size(), var << " >= " << added.size() ); return added[ var ] == numberOfCalls; } 
         
         #ifndef NDEBUG
-        bool checkSourcePointersStatus();        
+        bool checkSourcePointersStatus();
+        bool checkFoundedStatus();
+        void printVariablesWithoutSourcePointer();
         #endif
 };
 
@@ -132,120 +154,87 @@ Component::propagateLiteralLostSourcePointer(
 void
 Component::variableHasNoSourcePointer(
     Var variable )
-{    
-    assert( !getGUSData( variable ).inQueue );
-    
-    setVariableFounded( variable, false );
-    getGUSData( variable ).inQueue = true;
-    
-    variablesWithoutSourcePointer.push_back( variable );    
-}
-
-//void
-//Component::variableHasNoSourcePointer(
-//    unsigned int id )
-//{
-//    assert( !gusData[ id ]->inQueue );
-//
-//    gusData[ id ]->founded = false;
-//    gusData[ id ]->inQueue = true;
-//
-//    assert( variable->getComponent() != NULL );
-//    if( !variable->getComponent()->hasBeenInserted() )
-//    {
-//        variable->getComponent()->setInserted( true );
-//        componentsToProcess.pushNoCheck( variable->getComponent() );
-//    }
-//
-//    assert( variable->getComponent()->getId() < variablesWithoutSourcePointer.size() );
-//    variablesWithoutSourcePointer[ variable->getComponent()->getId() ]->push_back( variable );
-//}
-
-void
-Component::propagateSourcePointer(
-    unsigned int id,
-    Literal literal )
 {
-    if( !getGUSData( id ).aux )
-    {
-        assert( !getGUSData( id ).founded );
-        getGUSData( id ).sourcePointer = literal;
-        setVariableFounded( id, true );
-//        addVariableSupportedByLiteral( getGUSData( id ).variable, literal );
-        foundSourcePointer( id );
-    }
-    else
-    {
-        assert( getGUSData( id ).numberOfSupporting > 0 );
-        getGUSData( id ).numberOfSupporting--;
-        if( getGUSData( id ).numberOfSupporting == 0 )
-        {
-            setVariableFounded( id, true );
-            foundSourcePointer( id );
-        }
-    }
+    assert( !getGUSData( variable ).isInQueue() );
+    assert( !variablesWithoutSourcePointer.existElement( variable ) );
+
+    setUnfounded( variable );
+    getGUSData( variable ).setInQueue();
+    variablesWithoutSourcePointer.push_back( variable );
 }
 
 void
 Component::addExternalLiteral(
-    unsigned int id,
+    Var var,
     Literal literal )
 {
-    if( !getGUSData( id ).aux )
-        getGUSData( id ).externalLiterals.push_back( literal );
+    if( !getGUSData( var ).isAux() )
+        getGUSData( var ).externalLiterals.push_back( literal );
     else
-        getGUSData( id ).literals.push_back( literal ); 
+        getGUSData( var ).literals.push_back( literal ); 
 }
 
 void
 Component::addInternalLiteral(
-    unsigned int id,
+    Var var,
     Literal literal )
 {
-    if( !getGUSData( id ).aux )
-        getGUSData( id ).internalLiterals.push_back( literal );
+    if( !getGUSData( var ).isAux() )
+        getGUSData( var ).internalLiterals.push_back( literal );
     else
-        getGUSData( id ).literals.push_back( literal );    
+        getGUSData( var ).literals.push_back( literal );
 }
 
 void
 Component::resetSourcePointer(
-    unsigned int id )
+    Var var )
 {
-    if( !getGUSData( id ).aux )
+    assert( getGUSData( var ).isFounded() );
+    if( !getGUSData( var ).isAux() )
     {
-        Literal sourcePointer = getGUSData( id ).sourcePointer;        
-//        assert_msg( sourcePointer != Literal::null, "Variable " << *( getGUSData( id ).variable ) << " has no source pointer" );        
+        Literal sourcePointer = getGUSData( var ).sourcePointer;
+//        assert_msg( sourcePointer != Literal::null, "Variable " << *( getGUSData( id ).var() ) << " has no source pointer" );
         if( sourcePointer != Literal::null )
         {
-            trace_msg( unfoundedset, 3, "Set " << sourcePointer << " as source pointer for variable " << getGUSData( id ).variable );
-            addVariableSupportedByLiteral( getGUSData( id ).variable, sourcePointer );
+            trace_msg( unfoundedset, 3, "Set " << sourcePointer << " as source pointer for variable " << Literal( var, POSITIVE ) );
+            addVariableSupportedByLiteral( var, sourcePointer );
         }
     }
     else
-    {
-        trace_msg( unfoundedset, 3, "Aux variable " << getGUSData( id ).variable << " has a source pointer" );
-        getGUSData( id ).numberOfSupporting = 0;
+    {        
+        trace_msg( unfoundedset, 3, "Aux variable " << Literal( var, POSITIVE ) << " has a source pointer" );
+        getGUSData( var ).numberOfSupporting = 0;
     }
 }
 
 void
-Component::setVariableFounded(
-    unsigned int id,
-    bool value )
+Component::setUnfounded(
+    Var var )
 {
-    if( value && !getGUSData( id ).founded )
-        resetSourcePointer( id );
-    getGUSData( id ).founded = value;    
+    getGUSData( var ).setUnfounded();
+}
+
+void
+Component::setFounded(
+    Var var )
+{    
+    if( getGUSData( var ).isFounded() )
+    {
+        assert_msg( !getGUSData( var ).isAux() || getGUSData( var ).numberOfSupporting == 0, "Aux: " << Literal( var, POSITIVE ) << " - Without source: " << getGUSData( var ).numberOfSupporting );
+        return;
+    }
+
+    getGUSData( var ).setFounded();
+    resetSourcePointer( var );
 }
 
 GUSData&
 Component::getGUSData(
-    unsigned int id )
+    Var var )
 {
-    assert( id < gusData.size() );
-    assert( gusData[ id ] != NULL );
-    return *gusData[ id ];
+    assert( var < gusData.size() );
+    assert( gusData[ var ] != NULL );
+    return *gusData[ var ];
 }
 
 #endif

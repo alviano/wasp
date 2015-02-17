@@ -49,7 +49,7 @@ Oll::runUnweighted()
         if( !foundUnsat() )
             return INCOHERENT;
         assumptionsAND.clear();
-        computeAssumptionsAND();
+        computeAssumptionsAND();        
     }
         
     statistics( &solver, enable() );
@@ -321,6 +321,7 @@ Oll::addAggregateOll(
     return true;
 }
 
+#include "../util/Trace.h"
 bool
 Oll::foundUnsat()
 {
@@ -332,7 +333,7 @@ Oll::foundUnsat()
     //The incoherence does not depend on weak constraints
     if( unsatCore.size() == 0 )
         return false;    
-
+    
     solver.clearConflictStatus();
     solver.unrollToZero();
 
@@ -351,7 +352,7 @@ Oll::foundUnsat()
     unsigned int minWeight = computeMinWeight();
     if( !processCoreOll( literals, weights, minWeight, n ) )
         return false;
-    lb += minWeight;    
+    lb += minWeight;
     solver.foundLowerBound( lb );    
     if( !addAggregateOll( literals, weights, n + 1, minWeight ) )
         return false;        

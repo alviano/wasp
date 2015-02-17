@@ -31,31 +31,55 @@ class GUSData
     public:
         inline GUSData();
         ~GUSData();
-        
+
         vector< Literal > externalLiterals;
         vector< Literal > internalLiterals;
         Vector< Var > supportedByThisExternalRule[ 2 ];
         Vector< Var > supportedByThisInternalRule[ 2 ];
         vector< Var > auxVariablesSupportedByThis[ 2 ];
         vector< Var > possiblySupportedByThis[ 2 ];
-        
+
         vector< Clause* > definingRulesForNonHCFAtom;
-        
-        bool aux;
-        bool founded;
-        bool inQueue;
-        
-        Var variable;
-        
+
         /* CONJUNCTIVE */
         vector< Literal > literals;
         unsigned int numberOfSupporting;
-        
+
         /* DISJUNCTIVE */
         Literal sourcePointer;
+
+        inline void setAux() { assert( !aux ); aux = 1; }
+        inline bool isAux() const { return aux; }
+
+        inline void setInQueue() { assert( !inQueue ); inQueue = 1; }
+        inline void setOutQueue() { assert( inQueue ); inQueue = 0; resetPropagated(); }
+        inline bool isInQueue() const { return inQueue; }
+
+        inline void setFounded() { assert( !founded ); founded = 1; }
+        inline void setUnfounded() { assert( founded ); founded = 0; }
+        inline bool isFounded() const { return founded; }
+        
+        inline void setInUnfoundedSet() { assert( !inUnfoundedSet ); inUnfoundedSet = 1; }
+        inline void removeFromUnfoundedSet() { assert( inUnfoundedSet ); inUnfoundedSet = 0; }
+        inline bool isInUnfoundedSet() const { return inUnfoundedSet; }
+        
+        inline void setPropagated() { assert( !propagated ); propagated = 1; }
+        inline void resetPropagated() { propagated = 0; }
+        inline bool isPropagated() const { return propagated; }
+
+//        inline Var var() const { return variable; }
+//        inline void setVariable( Var v ) { variable = v; }
+        
+    private:
+        unsigned int aux : 1;
+        unsigned int founded : 1;
+        unsigned int inQueue : 1;
+        unsigned int inUnfoundedSet : 1;
+        unsigned int propagated : 28;
+//        unsigned int variable : 27;
 };
 
-GUSData::GUSData() : aux( false ), founded( true ), inQueue( false ), variable( 0 ), numberOfSupporting( 0 ), sourcePointer( Literal::null )
+GUSData::GUSData() : numberOfSupporting( 0 ), sourcePointer( Literal::null ), aux( 0 ), founded( 1 ), inQueue( 0 ), inUnfoundedSet( 0 ), propagated( 0 )
 {
 }
 

@@ -52,6 +52,7 @@ class Clause : public Reason
         inline Clause( unsigned reserve = 8 );
 
         inline Literal getAt( unsigned idx ) const { assert( idx < literals.size() ); return literals[ idx ]; }
+        inline void setAt( unsigned idx, Literal lit ) { assert( idx < literals.size() ); literals[ idx ] = lit; }
         inline void flipLiteralAt( unsigned idx ) { assert( idx < literals.size() ); literals[ idx ] = literals[ idx ].getOppositeLiteral(); }
         inline void markAsDeleted() { literals.push_back( literals[ 0 ] ); literals[ 0 ] = Literal::null; }
         inline bool hasBeenDeleted() const { assert( !literals.empty() ); return literals[ 0 ] == Literal::null; }

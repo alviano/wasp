@@ -1215,7 +1215,7 @@ GringoNumericFormat::computeGusStructures()
     for( unsigned int i = 2; i <= solver.numberOfVariables(); i++ )
     {
         GUSData* gd = new GUSData();
-        gd->variable = i;
+//        gd->setVariable( i );
         solver.addGUSData( gd );
     }
 

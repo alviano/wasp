@@ -99,9 +99,8 @@ Clause::onLearning(
     assert( "LearningStrategy is not initialized." && strategy != NULL );
 
     //Navigating all literals in the clause.
-    assert_msg( solver.getDecisionLevel( literals[ 0 ] ) != 0, "Literal " << literals[ 0 ] << " is in position 0 and it has been inferred " << ( solver.isTrue( literals[ 0 ] ) ? "TRUE" : "FALSE" ) << " at level 0. Clause: " << *this );
-    
-    strategy->onNavigatingLiteral( literals[ 0 ] );
+//    assert_msg( solver.getDecisionLevel( literals[ 0 ] ) != 0, "Literal " << literals[ 0 ] << " is in position 0 and it has been inferred " << ( solver.isTrue( literals[ 0 ] ) ? "TRUE" : "FALSE" ) << " at level 0. Clause: " << *this );    
+//    strategy->onNavigatingLiteral( literals[ 0 ] );
 
     assert_msg( solver.getDecisionLevel( literals[ 1 ] ) != 0, "Literal " << literals[ 1 ] << " is in position 1 and it has been inferred at level 0. Clause: " << *this );
     strategy->onNavigatingLiteral( literals[ 1 ] );
@@ -119,9 +118,6 @@ Clause::onLearning(
             assert_msg( solver.isFalse( literal ), "Literal " << literal << " is not false." );
             swapUnwatchedLiterals( i, literals.size() - 1 );
             literals.pop_back();
-
-//            if( lastSwapIndex >= literals.size() )
-//                resetLastSwapIndex();
         }
     }
 }
@@ -132,15 +128,14 @@ Clause::onNavigatingLiteralForAllMarked(
     Learning* strategy,
     Literal )
 {
-    assert( "LearningStrategy is not initialized." && strategy != NULL );    
+    assert( "LearningStrategy is not initialized." && strategy != NULL );
     for( unsigned int i = 1; i < literals.size(); i++ )
     {
         trace_msg( learning, 5, "Considering literal " << literals[ i ] << " in position " << i );
-
         if( !strategy->onNavigatingLiteralForAllMarked( literals[ i ] ) )
             return false;
     }
-    
+
     return true;
 //    for( unsigned int i = 2; i < literals.size(); i++ )
 //    {
@@ -160,17 +155,17 @@ Clause::onNavigatingForUnsatCore(
     Literal )
 {
     //Navigating all literals in the clause.    
-    for( unsigned int i = 0; i < literals.size(); i++ )
+    //It was 0 but position 0 contains the assigned literal
+    for( unsigned int i = 1; i < literals.size(); i++ )
         toVisit.push_back( literals[ i ] );
-//        toVisit.push_back( literals[ i ].getOppositeLiteral() );    
 }
 
 bool
 Clause::removeDuplicatesAndFalseAndCheckIfTautological(
     Solver& solver )
 {
-    literals.sort( literalComparator ); 
-    
+    literals.sort( literalComparator );
+
     Literal previousLiteral = Literal::null;
     
     unsigned int i = 0;

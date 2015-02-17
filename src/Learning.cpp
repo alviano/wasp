@@ -53,44 +53,44 @@ Learning::onConflict(
     decisionLevel = solver.getCurrentDecisionLevel();
 
     trace_msg( learning, 2, "Starting First UIP Learning Strategy. Current Level: " << decisionLevel );
-    trace_msg( learning, 2, "Conflict literal: " << conflictLiteral << " - Conflict implicant: " << *conflictClause << ( conflictClause->isLearned() ? " (learned)" : " (original)" ) );
-
-    //Compute implicants of the conflicting literal.
+    trace_msg( learning, 2, "Conflict literal: " << conflictLiteral << " - Conflict implicant: " << *conflictClause << ( conflictClause->isLearned() ? " (learned)" : " (original)" ) );    
+    
+    //Increment heuristic activity
     if( conflictClause->isLearned() ) 
         solver.learnedClauseUsedForConflict( ( Clause* ) conflictClause );
     
+    setVisited( conflictLiteral.getVariable(), numberOfCalls );
+    pendingVisitedVariables++;
+
+    //Compute implicants of the conflicting literal   
     conflictClause->onLearning( solver, this, conflictLiteral );
-    //assert_msg( conflictLiteral.getVariable()->getImplicant() != NULL, "Conflict literal " << conflictLiteral << " has no implicant" ); // FIXME: I added this assert. Is it right? It is true only for tight programs.
 
     if( solver.getImplicant( conflictLiteral.getVariable() ) != NULL  )
         solver.getImplicant( conflictLiteral.getVariable() )->onLearning( solver, this, conflictLiteral.getOppositeLiteral() );
-//        conflictLiteral.getVariable()->getImplicant()->onLearning( this, conflictLiteral.getOppositeLiteral() );
     
     addLiteralToNavigate( conflictLiteral );
     assert( isVisited( conflictLiteral.getVariable(), numberOfCalls ) );
     solver.startIterationOnAssignedVariable();
     
-    //If there is only one element, this element is the first UIP.
+    //If there is only one element, this element is the first UIP
     while( pendingVisitedVariables > 1 )
     {
-        //Get next literal.
+        //Get next literal
         Literal currentLiteral = getNextLiteralToNavigate();        
         trace_msg( learning, 3, "Navigating " << currentLiteral << " for calculating the UIP" );
         
-        Reason* implicant = solver.getImplicant( currentLiteral.getVariable() );        
-        //Compute implicants of the literal.
-        if( implicant != NULL )
-        {
-            lastDecisionLevel.push_back( currentLiteral.getVariable() );
-            trace_msg( learning, 4, "The implicant of " << currentLiteral << " is " << *implicant << ( implicant->isLearned() ? " (learned)" : " (original)" ) );
-            if( implicant->isLearned() )
-                solver.learnedClauseUsedForConflict( ( Clause* ) implicant );
-            implicant->onLearning( solver, this, currentLiteral );            
-        }
-        else
+        Reason* implicant = solver.getImplicant( currentLiteral.getVariable() );
+        if( implicant == NULL )
         {
             trace_msg( learning, 4, currentLiteral << " has no implicant" );
+            continue;
         }
+        
+        lastDecisionLevel.push_back( currentLiteral.getVariable() );
+        trace_msg( learning, 4, "The implicant of " << currentLiteral << " is " << *implicant << ( implicant->isLearned() ? " (learned)" : " (original)" ) );
+        if( implicant->isLearned() )
+            solver.learnedClauseUsedForConflict( ( Clause* ) implicant );
+        implicant->onLearning( solver, this, currentLiteral );        
     }
 
     Literal firstUIP = getNextLiteralToNavigate();
@@ -102,10 +102,8 @@ Learning::onConflict(
     trace_msg( learning, 3, "Clause after simplification: " << *learnedClause );
     
     learnedClause->addLiteralInLearnedClause( firstUIP );    
-    
-    assert_msg( sameDecisionLevelOfSolver( firstUIP ), "UIP " << firstUIP << " is not of the same level of the solver. UIP dl: " << solver.getDecisionLevel( firstUIP ) << " - solver dl: " << solver.getCurrentDecisionLevel() );
-    
-    assert( learnedClause->size() > 0 );    
+    assert_msg( sameDecisionLevelOfSolver( firstUIP ), "UIP " << firstUIP << " is not of the same level of the solver. UIP dl: " << solver.getDecisionLevel( firstUIP ) << " - solver dl: " << solver.getCurrentDecisionLevel() );    
+    assert_msg( learnedClause->size() > 0, "Learned clause cannot be empty!" );
     
     if( learnedClause->size() >= 2 )
     {

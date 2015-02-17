@@ -375,8 +375,13 @@ Solver::solvePropagators(
             Clause* clauseToPropagate = postPropagator->getClauseToPropagate( learning );
             if( clauseToPropagate == NULL )
             {
+                if( conflictDetected() )
+                    goto conflict;
+                else if( hasNextVariableToPropagate() )
+                    goto propagationLabel;
+                
                 postPropagators.pop_back();
-                postPropagator->onRemoving();                                            
+                postPropagator->onRemoving();
             }
             else
             {
@@ -385,7 +390,7 @@ Solver::solvePropagators(
                 else
                     partialChecks = true;
                 unsigned int size = clauseToPropagate->size();
-                statistics( this, onLearningFromPropagators( size ) );                                
+                statistics( this, onLearningFromPropagators( size ) );
                 if( size == 0 )
                 {
                     clearConflictStatus();
@@ -397,7 +402,7 @@ Solver::solvePropagators(
                 {
                     if( getCurrentDecisionLevel() != 0 )
                     {
-                        clearConflictStatus();                    
+                        clearConflictStatus();
                         if( !doRestart() )
                             return INCOHERENT;
                     }
@@ -408,8 +413,8 @@ Solver::solvePropagators(
                 {
                     if( !isUndefined( clauseToPropagate->getAt( 1 ) ) && getDecisionLevel( clauseToPropagate->getAt( 1 ) ) < getCurrentDecisionLevel() )
                     {
-                        clearConflictStatus();                    
-                        trace( solving, 2, "Learned clause from propagator and backjumping to level %d.\n", getDecisionLevel( clauseToPropagate->getAt( 1 ) ) );            
+                        clearConflictStatus();
+                        trace( solving, 2, "Learned clause from propagator and backjumping to level %d.\n", getDecisionLevel( clauseToPropagate->getAt( 1 ) ) );
                         unroll( getDecisionLevel( clauseToPropagate->getAt( 1 ) ) );
                     }
 //                    if( glucoseHeuristic_ )
