@@ -74,6 +74,10 @@ namespace wasp
             static WEAK_CONSTRAINTS_ALG weakConstraintsAlg;
             
             static bool disjCoresPreprocessing;
+            
+            static bool minimizeUnsatCore;
+            
+            static bool stratification;
     };
 }
 

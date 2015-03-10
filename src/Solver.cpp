@@ -19,6 +19,7 @@
 #include "Solver.h"
 #include "input/Dimacs.h"
 #include "HCComponent.h"
+#include "weakconstraints/WeakInterface.h"
 #include <algorithm>
 #include <stdint.h>
 #include <vector>
@@ -375,10 +376,13 @@ Solver::solvePropagators(
             Clause* clauseToPropagate = postPropagator->getClauseToPropagate( learning );
             if( clauseToPropagate == NULL )
             {
-                if( conflictDetected() )
-                    goto conflict;
-                else if( hasNextVariableToPropagate() )
-                    goto propagationLabel;
+                
+                assert( !conflictDetected() );
+                assert( !hasNextVariableToPropagate() );
+//                if( conflictDetected() )
+//                    goto conflict;
+//                else if( hasNextVariableToPropagate() )
+//                    goto propagationLabel;
                 
                 postPropagators.pop_back();
                 postPropagator->onRemoving();
@@ -422,7 +426,12 @@ Solver::solvePropagators(
 //                        glucoseData.sumLBD += clauseToPropagate->lbd();
 //                        glucoseData.lbdQueue.push( clauseToPropagate->lbd() );
 //                    }
-                    addLearnedClause( clauseToPropagate, false );                    
+                    
+                    if( postPropagator->hasToAddClause() )
+                    {
+                        addLearnedClause( clauseToPropagate, false );
+                        onLearning( clauseToPropagate );
+                    }
                     if( !isUndefined( clauseToPropagate->getAt( 1 ) ) )
                     {
                         assert( !isTrue( clauseToPropagate->getAt( 0 ) ) );
@@ -433,8 +442,7 @@ Solver::solvePropagators(
                         HCComponent* comp = dynamic_cast< HCComponent* >( afterConflictPropagator );
                         comp->setHasToTestModel( false );
                         afterConflictPropagator = NULL;
-                    }                    
-                    onLearning( clauseToPropagate );
+                    }
                 }
                 
                 if( conflictDetected() )
@@ -1311,4 +1319,12 @@ Solver::sortOptimizationLiterals()
     if( !weighted_ )
         return;
     stable_sort( optimizationLiterals.begin(), optimizationLiterals.end(), compareWeight );
+}
+
+void
+Solver::simplifyOptimizationLiteralsAndUpdateLowerBound(
+    WeakInterface* w )
+{
+    simplifyOptimizationLiterals();
+    w->setLowerBound( precomputedCost );
 }

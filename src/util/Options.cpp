@@ -92,10 +92,10 @@ namespace wasp
 #define OPTIONID_bb ( 'z' + 205 )
 #define OPTIONID_pmres ( 'z' + 206 )
 #define OPTIONID_ollbb ( 'z' + 207 )
-    
-    
-#define OPTIONID_disjcores ( 'z' + 215 )
 
+#define OPTIONID_disjcores ( 'z' + 215 )
+#define OPTIONID_minimize ( 'z' + 216 )
+#define OPTIONID_stratification ( 'z' + 217 )
     
 #ifdef TRACE_ON
 TraceLevels Options::traceLevels;
@@ -136,6 +136,8 @@ bool Options::exchangeClauses = false;
 WEAK_CONSTRAINTS_ALG Options::weakConstraintsAlg = OLL;
 
 bool Options::disjCoresPreprocessing = false;
+bool Options::minimizeUnsatCore = false;
+bool Options::stratification = true;
     
 void
 Options::parse(
@@ -216,6 +218,8 @@ Options::parse(
                 { "pmres", no_argument, NULL, OPTIONID_pmres },
                 { "interleaving", optional_argument, NULL, OPTIONID_ollbb },
                 { "enable-disjcores", no_argument, NULL, OPTIONID_disjcores },
+                { "minimize-unsatcore", no_argument, NULL, OPTIONID_minimize },
+                { "disable-stratification", no_argument, NULL, OPTIONID_stratification },
 
                 // The NULL-option indicates the end of the array.
                 { NULL, 0, NULL, 0 }
@@ -459,6 +463,14 @@ Options::parse(
                 disjCoresPreprocessing = true;
                 break;
                 
+            case OPTIONID_minimize:
+                minimizeUnsatCore = true;
+                break;
+                
+            case OPTIONID_stratification:
+                stratification = false;
+                break;
+                
             default:
                 ErrorMessage::errorGeneric( "This option is not supported." );
                 break;
@@ -487,6 +499,8 @@ Options::setOptions(
     waspFacade.setExchangeClauses( exchangeClauses );
     waspFacade.setWeakConstraintsAlgorithm( weakConstraintsAlg );
     waspFacade.setDisjCoresPreprocessing( disjCoresPreprocessing );
+    waspFacade.setMinimizeUnsatCore( minimizeUnsatCore );
+    waspFacade.setStratification( stratification );
 }
 
 };

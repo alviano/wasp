@@ -2483,7 +2483,7 @@ GringoNumericFormat::addOptimizationRules()
 //    trace_msg( parser, 4, "Created optimization weight constraint " << *optimizationWeightConstraint );
 //    unsigned int k = 0;
 
-    unsigned int precomputedCost = 0;
+//    unsigned int precomputedCost = 0;
 //    optimizationWeightConstraint->bound = 1;
 //    for( unsigned int j = 0; j < optimizationWeightConstraint->literals.size(); j++ )
 //    {
@@ -2504,7 +2504,7 @@ GringoNumericFormat::addOptimizationRules()
             assert( lit != Literal::null );
             solver.addOptimizationLiteral( lit, weight, levels[ j ], false );
 //            optimizationWeightConstraint->bound -= weight;
-            precomputedCost += weight;
+//            precomputedCost += weight;
         }
         else /*if( !solver.isFalse( lit ) )*/
         {
@@ -2519,7 +2519,7 @@ GringoNumericFormat::addOptimizationRules()
 //    optimizationWeightConstraint->literals.resize( k );
 //    optimizationWeightConstraint->weights.resize( k );
 //    trace_msg( parser, 4, "Shrinked optimization weight constraint " << *optimizationWeightConstraint );    
-    solver.setPrecomputedCost( precomputedCost );
+//    solver.setPrecomputedCost( precomputedCost );
 //    solver.addVariable();
 //    optimizationWeightConstraint->id = solver.numberOfVariables();
 //    solver.setFrozen( solver.numberOfVariables() );

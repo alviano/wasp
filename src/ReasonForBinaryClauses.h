@@ -33,7 +33,7 @@ class ReasonForBinaryClauses : public Reason
         virtual void onLearning( const Solver& solver, Learning* strategy, Literal lit );
         virtual bool onNavigatingLiteralForAllMarked( const Solver& solver, Learning* strategy, Literal lit );        
         virtual ostream& print( ostream& o ) const;
-        void onNavigatingForUnsatCore( const Solver& solver, vector< Literal >& toVisit, Literal lit );
+        void onNavigatingForUnsatCore( const Solver& solver, vector< unsigned int >& toVisit, unsigned int numberOfCalls, Literal lit );
         
     private:
         Var varId;

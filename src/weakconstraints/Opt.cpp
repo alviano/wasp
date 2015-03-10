@@ -85,7 +85,7 @@ Opt::createOptimizationAggregate()
         weights.push_back( weight );        
     }
    
-    aggregate = createAndReturnFalseAggregate( literals, weights, bound );
+    aggregate = createAndReturnFalseAggregate( literals, weights, bound );    
     assert( aggregate != NULL );    
 }
 
@@ -93,7 +93,7 @@ bool
 Opt::updateOptimizationAggregate(
     unsigned int modelCost )
 {
-    assert( aggregate != NULL );
+    assert( aggregate != NULL );    
     trace_msg( weakconstraints, 2, "Precomputed cost is " << solver.getPrecomputedCost() );
     if( solver.getPrecomputedCost() >= modelCost )
         return false;

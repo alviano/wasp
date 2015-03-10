@@ -40,7 +40,7 @@ class Reason
         virtual bool onNavigatingLiteralForAllMarked( const Solver& solver, Learning* strategy, Literal lit ) = 0;
         virtual bool isLearned() const { return false; }
         virtual ostream& print( ostream& o ) const = 0;
-        virtual void onNavigatingForUnsatCore( const Solver& solver, vector< Literal >& toVisit, Literal lit ) = 0;
+        virtual void onNavigatingForUnsatCore( const Solver& solver, vector< unsigned int >& visited, unsigned int numberOfCalls, Literal lit ) = 0;
 };
 
 #endif

@@ -65,7 +65,7 @@ class Aggregate : public Propagator, public Reason
         
         virtual void onLearning( const Solver& solver, Learning* strategy, Literal lit );
         virtual bool onNavigatingLiteralForAllMarked( const Solver& solver, Learning* strategy, Literal lit );
-        virtual void onNavigatingForUnsatCore( const Solver& solver, vector< Literal >& toVisit, Literal lit );
+        virtual void onNavigatingForUnsatCore( const Solver& solver, vector< unsigned int >& visited, unsigned int numberOfCalls, Literal lit );
         
         inline void sort() { mergesort( 2, literals.size() - 1 ); }                
         

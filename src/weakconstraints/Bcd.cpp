@@ -205,6 +205,7 @@ Bcd::run()
 {
     solver.setComputeUnsatCores( true );
     solver.turnOffSimplifications();
+    solver.setMinimizeUnsatCore( false );
     initInUnsatCore();    
     for( unsigned int i = 0; i <= solver.numberOfVariables(); i++ )
     {

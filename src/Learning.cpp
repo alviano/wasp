@@ -513,6 +513,55 @@ Learning::sortClause(
     clause->swapLiterals( 1, posMax2 != 0 ? posMax2 : posMax1 );    
 }
 
+//Clause*
+//Learning::analyzeFinal(
+//    Literal lit )
+//{
+//    ++numberOfCalls;
+//    clearDataStructures();
+//    assert_msg( learnedClause == NULL, "Learned clause has to be NULL in the beginning" );
+//    assert( isVisitedVariablesEmpty() );
+// 
+//    trace_msg( weakconstraints, 1, "Computing unsat core" );
+//    learnedClause = solver.newClause();
+//    learnedClause->setLearned();
+//
+//    vector< Literal > toVisit;
+//    toVisit.push_back( lit );
+//    
+//    while( !toVisit.empty() )
+//    {
+//        Literal currentLiteral = toVisit.back();
+//        trace_msg( weakconstraints, 2, "Considering literal " << currentLiteral );
+//        Var currentVariable = currentLiteral.getVariable();
+//        toVisit.pop_back();
+//                
+//        if( isVisited( currentVariable, numberOfCalls ) )
+//            continue;
+//        
+////        if( ( solver.isAssumptionAND( currentLiteral ) || solver.isAssumptionAND( currentLiteral.getOppositeLiteral() ) ) )//|| solver.isAssumptionOR( currentLiteral ) ) )
+//        if( solver.isAssumptionAND( currentVariable ) )//|| solver.isAssumptionOR( currentLiteral ) ) )
+//            addLiteralInLearnedClause( currentLiteral );
+//        else
+//            setVisited( currentVariable, numberOfCalls );        
+//        
+//        Reason* reason = solver.getImplicant( currentVariable );
+//        if( reason != NULL )
+//        {
+//            trace_msg( weakconstraints, 3, "Reason for literal " << currentLiteral << " is " << *reason );
+//            reason->onNavigatingForUnsatCore( solver, toVisit, currentLiteral );
+//        }
+//        else
+//        {
+//            trace_msg( weakconstraints, 3, "Literal " << currentLiteral << " is a choice (or level 0)" );
+//        }
+//                
+//    }
+//
+//    trace_msg( weakconstraints, 1, "Unsat core " << *learnedClause );
+//    return learnedClause;
+//}
+
 Clause*
 Learning::analyzeFinal(
     Literal lit )
@@ -526,38 +575,52 @@ Learning::analyzeFinal(
     learnedClause = solver.newClause();
     learnedClause->setLearned();
 
-    vector< Literal > toVisit;
-    toVisit.push_back( lit );
-    
-    while( !toVisit.empty() )
+    assert( solver.isAssumptionAND( lit.getVariable() ) );
+    learnedClause->addLiteralInLearnedClause( lit );
+    if( solver.getCurrentDecisionLevel() == 0 )
     {
-        Literal currentLiteral = toVisit.back();
-        trace_msg( weakconstraints, 2, "Considering literal " << currentLiteral );
-        Var currentVariable = currentLiteral.getVariable();
-        toVisit.pop_back();
-                
-        if( isVisited( currentVariable, numberOfCalls ) )
-            continue;
-        
-//        if( ( solver.isAssumptionAND( currentLiteral ) || solver.isAssumptionAND( currentLiteral.getOppositeLiteral() ) ) )//|| solver.isAssumptionOR( currentLiteral ) ) )
-        if( solver.isAssumptionAND( currentVariable ) )//|| solver.isAssumptionOR( currentLiteral ) ) )
-            addLiteralInLearnedClause( currentLiteral );
-        else
-            setVisited( currentVariable, numberOfCalls );        
-        
-        Reason* reason = solver.getImplicant( currentVariable );
-        if( reason != NULL )
-        {
-            trace_msg( weakconstraints, 3, "Reason for literal " << currentLiteral << " is " << *reason );
-            reason->onNavigatingForUnsatCore( solver, toVisit, currentLiteral );
-        }
-        else
-        {
-            trace_msg( weakconstraints, 3, "Literal " << currentLiteral << " is a choice (or level 0)" );
-        }
-                
+        trace_msg( weakconstraints, 2, "Conflict at level 0. Unsat core " << *learnedClause );
+        return learnedClause;
     }
 
-    trace_msg( weakconstraints, 1, "Unsat core " << *learnedClause );
+    setVisited( lit.getVariable(), numberOfCalls );
+    solver.startIterationOnAssignedVariable();
+    while( solver.hasNextAssignedVariable() )
+    {        
+        Literal next = solver.getOppositeLiteralFromLastAssignedVariable();
+        Var nextVar = next.getVariable();
+        trace_msg( weakconstraints, 3, "Considering literal " << next );
+        if( solver.getDecisionLevel( nextVar ) == 0 )
+        {
+            trace_msg( weakconstraints, 4, "its decision level is 0: stop" );
+            break;
+        }
+        
+//        assert( !solver.isUndefined( next.getVariable() ) );
+//        solver.unrollLastVariable();
+//        assert( solver.isUndefined( next.getVariable() ) );
+
+        if( !isVisited( nextVar, numberOfCalls ) )
+        {
+            trace_msg( weakconstraints, 4, "it is not in the core: skip" );
+            continue;
+        }
+        
+        Reason* reason = solver.getImplicant( nextVar );
+        if( reason == NULL )
+        {
+            assert( solver.isAssumptionAND( nextVar ) );
+            assert( solver.getDecisionLevel( nextVar ) > 0 );
+            trace_msg( weakconstraints, 4, "it was a choice: added" );
+            learnedClause->addLiteralInLearnedClause( next );
+        }
+        else
+        {
+            trace_msg( weakconstraints, 4, "its reason is " << *reason );
+            reason->onNavigatingForUnsatCore( solver, visited, numberOfCalls, lit );            
+        }        
+    }
+    
+    trace_msg( weakconstraints, 2, "Unsat core " << *learnedClause );
     return learnedClause;
 }

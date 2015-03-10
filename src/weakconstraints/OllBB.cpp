@@ -26,7 +26,9 @@ OllBB::run()
     solver.turnOffSimplifications();
     initInUnsatCore();
     originalNumberOfVariables = solver.numberOfVariables();
-    strategyModelGuided->createOptimizationAggregate();    
+    solver.sortOptimizationLiterals();
+    strategyModelGuided->createOptimizationAggregate();
+    solver.simplifyOptimizationLiteralsAndUpdateLowerBound( this );
     initHeuristicValues();
     
     unsigned int i = 0;
@@ -86,9 +88,10 @@ OllBB::bb()
 unsigned int
 OllBB::oll()
 {
+    trace_msg( weakconstraints, 1, "Starting OLL" );
     solver.unrollToZero();        
-    solver.setComputeUnsatCores( true );
     assumptionsAND.clear();
+    solver.setComputeUnsatCores( true );    
     computeAssumptionsAND();    
     unsigned int res = solver.solve( assumptionsAND, assumptionsOR );    
     while( res == INCOHERENT )
@@ -101,7 +104,7 @@ OllBB::oll()
         
         res = solver.solve( assumptionsAND, assumptionsOR );        
     }
-
+    
     if( res == INTERRUPTED )
         return res;
 

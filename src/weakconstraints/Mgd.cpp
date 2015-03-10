@@ -36,6 +36,8 @@ Mgd::run()
             solver.printOptimizationValue( modelCost );
         }
 
+        assert( modelCost >= solver.getPrecomputedCost() );
+        modelCost -= solver.getPrecomputedCost();
         if( modelCost == 0 || solver.getCurrentDecisionLevel() == 0 )
             break;
         

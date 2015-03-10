@@ -52,11 +52,18 @@ ReasonForBinaryClauses::print(
 
 void
 ReasonForBinaryClauses::onNavigatingForUnsatCore(
-    const Solver& solver,
-    vector< Literal >& toVisit,
+    const Solver& 
+    #ifndef NDEBUG 
+        solver 
+    #endif
+    ,
+    vector< unsigned int >& visited,
+    unsigned int numberOfCalls,
     Literal )
 {
-    Literal lit = solver.createFromAssignedVariable( varId );
-//    toVisit.push_back( lit.getOppositeLiteral() );
-    toVisit.push_back( lit );
+    assert( solver.getDecisionLevel( varId ) > 0 );
+    visited[ varId ] = numberOfCalls;
+//    Literal lit = solver.createFromAssignedVariable( varId );
+////    toVisit.push_back( lit.getOppositeLiteral() );
+//    toVisit.push_back( lit );
 }

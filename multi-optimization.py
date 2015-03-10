@@ -46,14 +46,14 @@ class Process(threading.Thread):
                 newBound = int(line[2:])
                 if upperBound is None or newBound < upperBound:
                     upperBound = newBound
-                    print("u %d" % (newBound,), file=sys.stderr)
+                    print("u %d" % (newBound,), file=sys.stderr, flush=True)
                 lock.release()
             elif line[0] == 'l':
                 lock.acquire()
                 newBound = int(line[2:])
                 if lowerBound is None or newBound > lowerBound:
                     lowerBound = newBound
-                    print("l %d" % (newBound,), file=sys.stderr)
+                    print("l %d" % (newBound,), file=sys.stderr, flush=True)
                 lock.release()
             elif line[0] == 'v':
                 lock.acquire()
@@ -76,7 +76,8 @@ class Process(threading.Thread):
         return self._process.returncode
         
     def terminate(self):
-        self._process.terminate()
+        #self._process.terminate()
+        self._process.kill()
         
     def readModel(self):
         global exitCode
@@ -93,14 +94,14 @@ class Process(threading.Thread):
             line = self._process.stdout.readline().decode()
             if not line:
                 break
-            print(line, end="")
+            print(line, end="", flush=True)
         exitCode = self._process.wait()
 
 if __name__ == "__main__":
     wasp = sys.argv[1] if len(sys.argv) == 2 else "wasp"
 
-    processes.append(Process([wasp, "--multi", "--oll"]))
-    processes.append(Process([wasp, "--multi", "--mgd"]))
+    processes.append(Process([wasp, "--multi", "--oll", "--minimize-unsatcore"]))
+    processes.append(Process([wasp, "--multi", "--basic"]))
     #processes.append(Process([wasp, "--multi", "--opt"]))
     #processes.append(Process([wasp, "--multi", "--pmres"]))
 

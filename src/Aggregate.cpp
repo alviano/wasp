@@ -298,8 +298,9 @@ Aggregate::onLearning(
 
 void
 Aggregate::onNavigatingForUnsatCore(
-    const Solver&,
-    vector< Literal >& toVisit,
+    const Solver& solver,
+    vector< unsigned int >& visited,
+    unsigned int numberOfCalls,
     Literal lit )
 {
     for( unsigned int i = 0; i < trail.size(); i++ )
@@ -319,8 +320,10 @@ Aggregate::onNavigatingForUnsatCore(
             {
 //                assert_msg( solver.getDecisionLevel( l ) > 0, "Literal " << l << " has been inferred at the decision level 0" );
 //                clause->addLiteral( l.getOppositeLiteral() );                
-//                toVisit.push_back( l ); //l.getOppositeLiteral() );    
-                toVisit.push_back( l.getOppositeLiteral() );                
+//                toVisit.push_back( l ); //l.getOppositeLiteral() );
+                Var variable = l.getVariable();
+                if( solver.getDecisionLevel( variable ) > 0 )
+                    visited[ variable ] = numberOfCalls;                
             }
             
             assert( l != lit );            

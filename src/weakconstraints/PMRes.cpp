@@ -23,7 +23,9 @@ PMRes::run()
 {
     if( disjCoresPreprocessing && !disjointCorePreprocessing() )
         return INCOHERENT;
-    return solver.isWeighted() ? runWeighted() : runUnweighted();
+    if( stratification && solver.isWeighted() )
+        return runWeighted();
+    return runUnweighted();
 }
 
 unsigned int

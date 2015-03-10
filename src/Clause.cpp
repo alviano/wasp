@@ -150,14 +150,19 @@ Clause::onNavigatingLiteralForAllMarked(
 
 void
 Clause::onNavigatingForUnsatCore(
-    const Solver&,
-    vector< Literal >& toVisit,
+    const Solver& solver,
+    vector< unsigned int >& visited,
+    unsigned int numberOfCalls,
     Literal )
 {
     //Navigating all literals in the clause.    
     //It was 0 but position 0 contains the assigned literal
     for( unsigned int i = 1; i < literals.size(); i++ )
-        toVisit.push_back( literals[ i ] );
+    {
+        Var v = literals[ i ].getVariable();
+        if( solver.getDecisionLevel( v ) > 0 )
+            visited[ v ] = numberOfCalls;
+    }
 }
 
 bool

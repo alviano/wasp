@@ -60,6 +60,8 @@ class WaspFacade
         
         inline void setWeakConstraintsAlgorithm( WEAK_CONSTRAINTS_ALG alg ) { weakConstraintsAlg = alg; }
         inline void setDisjCoresPreprocessing( bool value ) { disjCoresPreprocessing = value; }
+        inline void setMinimizeUnsatCore( bool value ) { solver.setMinimizeUnsatCore( value ); }
+        inline void setStratification( bool value ) { stratification = value; }
         
         inline unsigned int solveWithWeakConstraints();        
 
@@ -73,20 +75,21 @@ class WaspFacade
 
         WEAK_CONSTRAINTS_ALG weakConstraintsAlg;
         bool disjCoresPreprocessing;
+        bool stratification;
 };
 
-WaspFacade::WaspFacade() : numberOfModels( 0 ), maxModels( 1 ), printProgram( false ), printDimacs( false ), weakConstraintsAlg( OPT ), disjCoresPreprocessing( false )
-{
+WaspFacade::WaspFacade() : numberOfModels( 0 ), maxModels( 1 ), printProgram( false ), printDimacs( false ), weakConstraintsAlg( OPT ), disjCoresPreprocessing( false ), stratification( true )
+{   
 }
 
 unsigned int
 WaspFacade::solveWithWeakConstraints()
-{
-    WeakInterface* w = NULL;
+{    
+    WeakInterface* w = NULL;    
     switch( weakConstraintsAlg )
     {
         case BCD:
-            w = new Bcd( solver );
+            w = new Bcd( solver );      
             break;
 
         case MGD:
@@ -101,7 +104,7 @@ WaspFacade::solveWithWeakConstraints()
             w = new Opt( solver, true );
             break;
 
-        case PMRES:
+        case PMRES:            
             w = new PMRes( solver );
             break;
 
@@ -117,16 +120,19 @@ WaspFacade::solveWithWeakConstraints()
             if( solver.isWeighted() )
                 w = new Mgd( solver );
             else
-                w = new Oll( solver );
+                w = new Oll( solver );                
             break;
 
         case OLL:
-        default:
+        default:            
             w = new Oll( solver );
             break;
     }
     
+    if( weakConstraintsAlg != OLLBB && weakConstraintsAlg != OLLBBREST )
+        solver.simplifyOptimizationLiteralsAndUpdateLowerBound( w );
     w->setDisjCoresPreprocessing( disjCoresPreprocessing );
+    w->setStratification( stratification );
     unsigned int res = w->run();    
     delete w;
     return res;

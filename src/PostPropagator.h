@@ -36,6 +36,7 @@ class PostPropagator
         inline void onRemoving();
         
         bool hasBeenAdded() const { return inserted; }
+        virtual bool hasToAddClause() const { return true; }
     
         virtual void reset() = 0;
         

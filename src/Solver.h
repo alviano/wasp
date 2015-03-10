@@ -44,14 +44,24 @@ using namespace std;
 #include "stl/BoundedQueue.h"
 #include "Component.h"
 class HCComponent;
+class WeakInterface;
 
-struct DataStructures
-{    
-    WatchedList< Clause* > variableWatchedLists;
-    Vector< Clause* > variableAllOccurrences;
-    Vector< PostPropagator* > variablePostPropagators;
-    Vector< pair< Propagator*, int > > variablePropagators;
-    Vector< Literal > variableBinaryClauses;    
+class DataStructures
+{
+    public:
+        WatchedList< Clause* > variableWatchedLists;
+        Vector< Clause* > variableAllOccurrences;
+        Vector< PostPropagator* > variablePostPropagators;
+        Vector< pair< Propagator*, int > > variablePropagators;
+        Vector< Literal > variableBinaryClauses;
+
+        DataStructures() : isOptimizationLiteral_( false ) {}
+
+        bool isOptLit() const { return isOptimizationLiteral_; }
+        void setOptLit( bool value ) { isOptimizationLiteral_ = value; }
+    
+    private:
+        bool isOptimizationLiteral_;
 };
 
 struct OptimizationLiteralData
@@ -222,7 +232,7 @@ class Solver
         inline void resetPostPropagators();
         
         inline void addEdgeInDependencyGraph( unsigned int v1, unsigned int v2 ){ trace_msg( parser, 10, "Add arc " << v1 << " -> " << v2 ); dependencyGraph->addEdge( v1, v2 ); }
-        inline void computeStrongConnectedComponents();        
+        inline void computeStrongConnectedComponents();                        
         
         void createCyclicComponents();
         inline void addHCComponent( HCComponent* c ) { hcComponents.push_back( c ); }
@@ -250,8 +260,7 @@ class Solver
         
         inline unsigned int getCostOfLevel( unsigned int levelIndex, unsigned int totalCost ) const;
         inline void setMaxCostOfLevelOfOptimizationRules( vector< unsigned int >& m ) { maxCostOfLevelOfOptimizationRules.swap( m ); }
-        inline void setNumberOfOptimizationLevels( unsigned int n ) { numberOfOptimizationLevels = n; }
-        inline void setPrecomputedCost( unsigned int c ) { precomputedCost = c; }
+        inline void setNumberOfOptimizationLevels( unsigned int n ) { numberOfOptimizationLevels = n; }        
         inline void addPreferredChoicesFromOptimizationLiterals();
         inline void removePrefChoices() { minisatHeuristic->removePrefChoices(); }
         
@@ -400,6 +409,8 @@ class Solver
         inline bool isAssumptionOR( Var v ) const { return variables.isAssumptionAND( v ); }        
         
         inline void computeUnsatCore();
+        inline void minimizeUnsatCore( vector< Literal >& assumptionsAND );
+        inline void setMinimizeUnsatCore( bool b ) { minimizeUnsatCore_ = b; }
         inline void setComputeUnsatCores( bool b ) { computeUnsatCores_ = b; }
         inline const Clause* getUnsatCore() const { return unsatCore; }
         
@@ -415,6 +426,8 @@ class Solver
         inline void setMaxNumberOfChoices( unsigned int max ) { maxNumberOfChoices = max; }
         inline void setMaxNumberOfRestarts( unsigned int max ) { maxNumberOfRestarts = max; }
         inline unsigned int getPrecomputedCost() const { return precomputedCost; }
+        
+        void simplifyOptimizationLiteralsAndUpdateLowerBound( WeakInterface* );
         
         inline void foundLowerBound( unsigned int lb ) { outputBuilder->foundLowerBound( lb ); }
         inline bool incremental() const { return incremental_; }
@@ -440,6 +453,7 @@ class Solver
         
         bool checkVariablesState();
         inline void setEliminated( Var v, unsigned int value, Clause* definition ) { variables.setEliminated( v, value, definition ); }        
+        inline void simplifyOptimizationLiterals();
         
         Solver( const Solver& ) : learning( *this ), dependencyGraph( NULL )
         {
@@ -489,8 +503,8 @@ class Solver
         
 //        Aggregate* optimizationAggregate;
         unsigned int numberOfOptimizationLevels;
-        unsigned int precomputedCost;                
-        
+        unsigned int precomputedCost;
+                
         bool callSimplifications_;
         
         bool glucoseHeuristic_;
@@ -593,6 +607,7 @@ class Solver
         unsigned int learnedFromConflicts;                
         bool partialChecks;
         bool computeUnsatCores_;
+        bool minimizeUnsatCore_;
         Clause* unsatCore;
         bool weighted_;
         unsigned int maxNumberOfChoices;
@@ -667,6 +682,7 @@ unsigned int
 Solver::solve()
 {
     incremental_ = false;
+    numberOfAssumptions = 0;    
     vector< Literal > assumptionsAND;
     vector< Literal > assumptionsOR;
     if( !hasPropagators() )
@@ -688,15 +704,18 @@ Solver::solve(
     for( unsigned int i = 0; i < assumptionsOR.size(); i++ )
         setAssumptionOR( assumptionsOR[ i ], true );
     
-    unsigned int result = ( !hasPropagators() ) ? solveWithoutPropagators( assumptionsAND, assumptionsOR ) : solvePropagators( assumptionsAND, assumptionsOR );
     delete unsatCore;
     unsatCore = NULL;
-    if( computeUnsatCores_ && result == INCOHERENT )    
-    {
-        if( conflictLiteral != Literal::null )
-            computeUnsatCore();
-        else
+    unsigned int result = ( !hasPropagators() ) ? solveWithoutPropagators( assumptionsAND, assumptionsOR ) : solvePropagators( assumptionsAND, assumptionsOR );
+    if( computeUnsatCores_ && result == INCOHERENT )
+    {        
+        if( unsatCore == NULL )
             unsatCore = new Clause();
+        else
+        {
+            if( minimizeUnsatCore_ )
+                minimizeUnsatCore( assumptionsAND );
+        }
     }
     clearAfterSolveUnderAssumptions( assumptionsAND, assumptionsOR );
     clearConflictStatus();
@@ -1211,6 +1230,11 @@ Solver::chooseLiteral(
         {
             conflictLiteral = assumptionsAND[ i ];
             trace_msg( solving, 1, "The assumption AND " << assumptionsAND[ i ] << " is false: stop" );
+            if( computeUnsatCores_ )    
+            {
+                assert( unsatCore == NULL );                 
+                computeUnsatCore();                
+            }
             return false;
         }
         else
@@ -1755,7 +1779,7 @@ Solver::propagateWithPropagators(
 unsigned int
 Solver::computeCostOfModel()
 {
-    unsigned int cost = 0;
+    unsigned int cost = precomputedCost;
     
     for( unsigned int i = 0; i < numberOfOptimizationLiterals(); i++ )
     {        
@@ -1766,7 +1790,7 @@ Solver::computeCostOfModel()
         if( isTrue( getOptimizationLiteral( i ).lit ) )
             cost += getOptimizationLiteral( i ).weight;        
     }
-    
+        
     return cost;
 }
 
@@ -1785,6 +1809,7 @@ Solver::addOptimizationLiteral(
     opt.removed = 0;
     opt.aux = aux ? 1 : 0;
     optimizationLiterals.push_back( optPointer );
+    getDataStructure( lit ).setOptLit( true );    
 }
 
 unsigned int
@@ -2305,6 +2330,11 @@ Solver::modelIsValidUnderAssumptions(
         {
             trace_msg( solving, 3, "Assumptions AND not satisfied" );
             conflictLiteral = assumptionsAND[ i ];
+            if( computeUnsatCores_ )
+            {
+                assert( unsatCore == NULL );
+                computeUnsatCore();                
+            }
             return false;
         }
     }
@@ -2336,6 +2366,81 @@ Solver::computeUnsatCore()
     assert( conflictLiteral != Literal::null );
 //    delete unsatCore;
     unsatCore = learning.analyzeFinal( conflictLiteral );
+}
+
+void
+Solver::minimizeUnsatCore(
+    vector< Literal >& assumptionsAND )
+{
+    unsigned int originalMaxNumberOfChoices = maxNumberOfChoices;
+    unsigned int originalMaxNumberOfRestarts = maxNumberOfRestarts;
+    
+    setMaxNumberOfChoices( UINT_MAX );
+    setMaxNumberOfRestarts( UINT_MAX );
+    begin:;
+
+    assert( unsatCore != NULL );
+    if( unsatCore->size() <= 2 )
+    {
+        setMaxNumberOfChoices( originalMaxNumberOfChoices );
+        setMaxNumberOfRestarts( originalMaxNumberOfRestarts );
+        return;
+    }
+    
+    vector< Literal > tmp;    
+    vector< Literal > tmp2;
+    
+    clearAfterSolveUnderAssumptions( assumptionsAND, tmp2 );
+    clearConflictStatus();    
+//    for( unsigned int i = 0; i < assumptionsAND.size(); i++ )
+//    {
+//        Literal lit = assumptionsAND[ i ];
+//        if( getDataStructure( lit ).isOptLit() || getDataStructure( lit.getOppositeLiteral() ).isOptLit() )
+//            continue;
+//        
+//        tmp.push_back( lit );
+//        setAssumptionAND( lit, true );
+//    }
+    
+    assumptionsAND.swap( tmp );    
+    
+    for( unsigned int i = 0; i < unsatCore->size(); i++ )
+    {
+        Literal lit = unsatCore->getAt( i );        
+        Literal toAdd;
+        if( getDataStructure( lit ).isOptLit() )            
+            toAdd = lit.getOppositeLiteral();
+        else if( getDataStructure( lit.getOppositeLiteral() ).isOptLit() )
+            toAdd = lit;
+        else
+            continue;
+        assumptionsAND.push_back( toAdd );
+        setAssumptionAND( toAdd, true );
+    }
+    numberOfAssumptions = assumptionsAND.size();
+    
+    unrollToZero();
+    unsigned int oldSize = unsatCore->size();
+    delete unsatCore;
+    unsatCore = NULL;
+
+    #ifndef NDEBUG
+    unsigned int result = 
+    #endif
+    ( !hasPropagators() ) ? solveWithoutPropagators( assumptionsAND, tmp2 ) : solvePropagators( assumptionsAND, tmp2 );
+    
+    assert( result == INCOHERENT );
+    
+    if( unsatCore == NULL )
+        unsatCore = new Clause();
+    
+    assert( unsatCore->size() <= oldSize );
+    if( unsatCore->size() < oldSize )
+        goto begin;
+    
+    assert( unsatCore->size() == oldSize );
+    setMaxNumberOfChoices( originalMaxNumberOfChoices );
+    setMaxNumberOfRestarts( originalMaxNumberOfRestarts );
 }
 
 //Aggregate*
@@ -2381,6 +2486,22 @@ Solver::propagateFixpoint()
             return false;
     }
     return true;
+}
+
+void
+Solver::simplifyOptimizationLiterals()
+{    
+    assert( precomputedCost == 0 );
+    unsigned int j = 0;
+    for( unsigned int i = 0; i < optimizationLiterals.size(); i++ )
+    {
+        optimizationLiterals[ j ] = optimizationLiterals[ i ];        
+        if( isTrue( optimizationLiterals[ j ]->lit ) )
+            precomputedCost += optimizationLiterals[ j ]->weight;
+        else
+            ++j;
+    }
+    optimizationLiterals.resize( j );    
 }
 
 #endif

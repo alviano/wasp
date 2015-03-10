@@ -48,7 +48,7 @@ class Component : public PostPropagator
 {
     friend ostream& operator<<( ostream& o, const Component& c );
     public:
-        inline Component( vector< GUSData* >& gusData_, Solver& s ) : PostPropagator(), solver( s ), gusData( gusData_ ), clauseToPropagate( NULL ), conflict( 0 ), first( 1 ), id( 0 ), removed( 0 ), numberOfCalls( 0 ) {}        
+        inline Component( vector< GUSData* >& gusData_, Solver& s ) : PostPropagator(), solver( s ), gusData( gusData_ ), clauseToPropagate( NULL ), conflict( 0 ), id( 0 ), done( 0 ), first( 1 ), removed( 0 ), numberOfCalls( 0 ) {}
         ~Component();        
         
         virtual bool onLiteralFalse( Literal lit );
@@ -92,12 +92,12 @@ class Component : public PostPropagator
         Vector< Var > unfoundedSet;
         Clause* clauseToPropagate;
         Vector< Clause* > clausesToDelete;
+                
+        Var conflict;        
         
-        Var auxVar;
-        unsigned int conflict : 31;
+        unsigned int id : 29;        
+        unsigned int done : 1;
         unsigned int first : 1;
-        
-        unsigned int id : 31;
         unsigned int removed : 1;
         
         vector< unsigned int > added;
@@ -132,7 +132,12 @@ class Component : public PostPropagator
         bool computeUnfoundedSet( Var var );
         
         inline void visit( Var var ) { assert_msg( var < added.size(), var << " >= " << added.size() ); added[ var ] = numberOfCalls; }
-        inline bool visited( Var var ) const { assert_msg( var < added.size(), var << " >= " << added.size() ); return added[ var ] == numberOfCalls; } 
+        inline bool visited( Var var ) const { assert_msg( var < added.size(), var << " >= " << added.size() ); return added[ var ] == numberOfCalls; }
+        
+        inline Var updateClauseToPropagate();
+        
+        virtual bool hasToAddClause() const;
+
         
         #ifndef NDEBUG
         bool checkSourcePointersStatus();

@@ -29,7 +29,10 @@ Oll::run()
 {
     if( disjCoresPreprocessing && !disjointCorePreprocessing() )
         return INCOHERENT;
-    return solver.isWeighted() ? runWeighted() : runUnweighted();
+    
+    if( stratification && solver.isWeighted() )
+        return runWeighted();
+    return runUnweighted();
 }
 
 unsigned int
@@ -321,7 +324,6 @@ Oll::addAggregateOll(
     return true;
 }
 
-#include "../util/Trace.h"
 bool
 Oll::foundUnsat()
 {
@@ -329,11 +331,11 @@ Oll::foundUnsat()
     ++numberOfCalls;
     assert( solver.getUnsatCore() != NULL );
     const Clause& unsatCore = *( solver.getUnsatCore() );
-
+    
     //The incoherence does not depend on weak constraints
     if( unsatCore.size() == 0 )
         return false;    
-    
+        
     solver.clearConflictStatus();
     solver.unrollToZero();
 

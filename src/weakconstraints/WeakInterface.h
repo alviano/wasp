@@ -30,11 +30,13 @@ using namespace std;
 class WeakInterface
 {
     public:
-        WeakInterface( Solver& s ) : solver( s ), numberOfCalls( 0 ), lb( 0 ), ub( UINT_MAX ), disjCoresPreprocessing( false ), weight( UINT_MAX ) {}
+        WeakInterface( Solver& s ) : solver( s ), numberOfCalls( 0 ), lb( 0 ), ub( UINT_MAX ), disjCoresPreprocessing( false ), stratification( true ), weight( UINT_MAX ) {}
         virtual ~WeakInterface() {}
         virtual unsigned int run() = 0;
         
         inline void setDisjCoresPreprocessing( bool value ) { disjCoresPreprocessing = value; }
+        inline void setLowerBound( unsigned int value ) { lb = value; }
+        inline void setStratification( bool value ) { stratification = value; }
         
     protected:
         bool disjointCorePreprocessing();
@@ -65,6 +67,8 @@ class WeakInterface
         unsigned int ub;
         
         bool disjCoresPreprocessing;
+        bool stratification;
+
     private:
         vector< unsigned int > weights;        
         unsigned int weight;        

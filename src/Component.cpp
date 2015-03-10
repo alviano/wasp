@@ -46,6 +46,7 @@ Component::getClauseToPropagate(
     begin:;
     if( unfoundedSet.empty() )
     {
+        assert( !done );
         clauseToPropagate = NULL;
         
         assert( !variablesWithoutSourcePointer.empty() || checkSourcePointersStatus() );
@@ -72,6 +73,36 @@ Component::getClauseToPropagate(
     else
     {
         assert( clauseToPropagate != NULL );
+        
+        if( done )
+        {
+            Var variable = updateClauseToPropagate();
+            if( variable == 0 )
+            {
+                assert( unfoundedSet.empty() );
+                done = 0;
+                clauseToPropagate = NULL;
+                goto begin;
+            }
+            
+            Clause* c = clauseToPropagate;
+            if( solver.isTrue( variable ) )
+            {
+                assert( c->getAt( 0 ) == Literal( variable, FALSE ) );
+                assert( solver.getDecisionLevel( variable ) == solver.getCurrentDecisionLevel() );
+
+                c = new Clause( clauseToPropagate->size() );
+                c->copyLiterals( *clauseToPropagate );
+                if( solver.glucoseHeuristic() )
+                    c->setLbd( clauseToPropagate->lbd() );
+                c->setLearned();
+                reset();
+                assert( !done );
+                assert( clauseToPropagate == NULL );
+            }
+            return c;              
+        }
+        
         if( conflict != 0 )
             return handleConflict();
 
@@ -85,43 +116,19 @@ Component::getClauseToPropagate(
             goto begin;
         }
                         
-        assert( unfoundedSet.size() >= 2 );
-//        Clause* newClause = new Clause();
-//        newClause->copyLiterals( *clauseToPropagate );
-//        if( solver.glucoseHeuristic() )
-//            newClause->setLbd( clauseToPropagate->lbd() );
+        assert( unfoundedSet.size() >= 2 );        
+        assert( clauseToPropagate->size() > 3 );
         
-        assert( clauseToPropagate->size() > 3 );          
+        assert( !done );
         clauseToPropagate->addLiteralInLearnedClause( Literal::null );
         clauseToPropagate->swapLiterals( 0, 1 );
         clauseToPropagate->swapLiterals( 0, clauseToPropagate->size() - 1 );
 
-        while( !unfoundedSet.empty() )
-        {
-            Var variable = unfoundedSet.back();
-            unfoundedSet.pop_back();
-            getGUSData( variable ).removeFromUnfoundedSet();
-            setFounded( variable );
-
-            assert( !solver.isFalse( variable ) );
-
-//            newClause->addLiteral( Literal( variable, FALSE ) );
-            assert_msg( !solver.isTrue( variable ), "Variable " << Literal( variable, POSITIVE ) << " is true" );
-            assert_msg( solver.getDecisionLevel( clauseToPropagate->getAt( 1 ) ) == solver.getCurrentDecisionLevel(), "Literal " << clauseToPropagate->getAt( 1 ) << " - DL: " << solver.getDecisionLevel( clauseToPropagate->getAt( 1 ) ) << " != " << solver.getCurrentDecisionLevel() );
-            trace_msg( unfoundedset, 2, "Inferring " << Literal( variable, NEGATIVE ) << " that is unfounded. Reasons: " << *clauseToPropagate );
-            solver.assignLiteral( Literal( variable, NEGATIVE ), clauseToPropagate );
-            assert( !solver.conflictDetected() );
-        }
-        assert( unfoundedSet.empty() );
-        clauseToPropagate = NULL;
-
-//        assert( newClause->size() >= 5 );
-//        newClause->swapLiterals( 0, newClause->size() - 1 );
-//        newClause->swapLiterals( 1, newClause->size() - 2 );
-//        newClause->setLearned();
-//        solver.addLearnedClause( newClause, false );
-//        solver.onLearning( newClause );
-        return NULL;
+//        assert( unfoundedSet.empty() );
+//        clauseToPropagate = NULL;
+        done = 1;
+        goto begin;
+//        return NULL;
     }
 
     goto begin;
@@ -227,6 +234,7 @@ Component::reset()
     unfoundedSet.clear();
     conflict = 0;
     clauseToPropagate = NULL;
+    done = 0;
 }
 
 bool
@@ -792,6 +800,36 @@ Component::handleConflict()
     
     conflict = 0;
     return c;
+}
+
+Var
+Component::updateClauseToPropagate()
+{
+    assert( !solver.conflictDetected() );
+    while( !unfoundedSet.empty() )
+    {
+        Var variable = unfoundedSet.back();
+        unfoundedSet.pop_back();
+        getGUSData( variable ).removeFromUnfoundedSet();
+        setFounded( variable );
+
+        if( solver.isFalse( variable ) )
+            continue;
+
+        assert_msg( solver.getDecisionLevel( clauseToPropagate->getAt( 1 ) ) == solver.getCurrentDecisionLevel(), "Literal " << clauseToPropagate->getAt( 1 ) << " - DL: " << solver.getDecisionLevel( clauseToPropagate->getAt( 1 ) ) << " != " << solver.getCurrentDecisionLevel() );
+        trace_msg( unfoundedset, 2, "Using " << *clauseToPropagate << " for the inference of unfounded atom " << Literal( variable, POSITIVE ) );
+
+        clauseToPropagate->setAt( 0, Literal( variable, NEGATIVE ) );
+        return variable;
+    }
+
+    return 0;
+}
+
+bool
+Component::hasToAddClause() const
+{
+    return !done;
 }
 
 #ifndef NDEBUG
