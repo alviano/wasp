@@ -44,6 +44,7 @@ namespace wasp
             static void setOptions( WaspFacade& waspFacade );
             static unsigned int maxCost;        
             static bool forwardPartialChecks;
+            static bool backwardPartialChecks;
             static bool bumpActivityAfterPartialCheck;
             
         private:

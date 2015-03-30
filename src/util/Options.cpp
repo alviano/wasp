@@ -84,6 +84,7 @@ namespace wasp
 #define OPTIONID_exchange_clauses ( 'z' + 103 )
 #define OPTIONID_forward_partialchecks ( 'z' + 104 )
 #define OPTIONID_bumpactivityafterpartialchecks ( 'z' + 105 )
+#define OPTIONID_backward_partialchecks ( 'z' + 106 )
     
 /* WEAK CONSTRAINTS OPTIONS */
 #define OPTIONID_opt ( 'z' + 200 )
@@ -136,6 +137,8 @@ unsigned int Options::maxCost = MAXUNSIGNEDINT;
 bool Options::exchangeClauses = false;
 
 bool Options::forwardPartialChecks = false;
+
+bool Options::backwardPartialChecks = false;
 
 bool Options::bumpActivityAfterPartialCheck = false;
 
@@ -214,6 +217,7 @@ Options::parse(
                 
                 { "exchange-clauses", no_argument, NULL, OPTIONID_exchange_clauses },
                 { "forward-partialchecks", no_argument, NULL, OPTIONID_forward_partialchecks },  
+                { "backward-partialchecks", no_argument, NULL, OPTIONID_backward_partialchecks },  
                 { "bump-activity-partialchecks", no_argument, NULL, OPTIONID_bumpactivityafterpartialchecks },  
                 
                 /* WEAK CONSTRAINTS */
@@ -432,6 +436,10 @@ Options::parse(
             case OPTIONID_forward_partialchecks:
                 forwardPartialChecks = true;
                 break;
+                
+            case OPTIONID_backward_partialchecks:
+                backwardPartialChecks = true;
+                break;            
                 
             case OPTIONID_bumpactivityafterpartialchecks:
                 bumpActivityAfterPartialCheck = true;

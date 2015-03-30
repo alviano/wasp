@@ -387,10 +387,13 @@ Solver::solvePropagators(
             }
             else
             {
-                if( learnedFromPropagators > ( learnedFromConflicts * 0.5 ) )
-                    partialChecks = false;
-                else
-                    partialChecks = true;
+                if( !wasp::Options::backwardPartialChecks )
+                {
+                    if( learnedFromPropagators > ( learnedFromConflicts * 0.5 ) )
+                        partialChecks = false;
+                    else
+                        partialChecks = true;
+                }
                 unsigned int size = clauseToPropagate->size();
                 statistics( this, onLearningFromPropagators( size ) );
                 if( size == 0 )
