@@ -173,18 +173,18 @@ WeakInterface::disjointCorePreprocessing()
     unsigned int originalNumberOfOptLiterals = solver.numberOfOptimizationLiterals();
     while( true )
     {
-        if( solver.solve( assumptionsAND, assumptionsOR ) != INCOHERENT )
+        if( solver.solve( assumptions ) != INCOHERENT )
         {
             solver.clearConflictStatus();
             solver.unrollToZero();
-            assumptionsAND.clear();
+            assumptions.clear();
             break;
         }
 
         if( !foundUnsat() )
             return false;
         
-        assumptionsAND.clear();
+        assumptions.clear();
         computeAssumptionsANDOnlyOriginal( originalNumberOfOptLiterals );
     }        
     

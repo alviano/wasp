@@ -7,6 +7,7 @@
 #include "util/Options.h"
 
 #include <vector>
+#include "util/Options.h"
 
 ostream& operator<<( ostream& out, const HCComponent& component )
 {
@@ -19,7 +20,11 @@ ostream& operator<<( ostream& out, const HCComponent& component )
 HCComponent::HCComponent(
     vector< GUSData* >& gusData_,
     Solver& s,
-    unsigned numberOfInputAtoms ) : PostPropagator(), gusData( gusData_ ), solver( s ), numberOfCalls( 0 ), hasToTestModel( false ), numberOfAtoms( numberOfInputAtoms ), id( 0 )
+    unsigned numberOfInputAtoms ) : PostPropagator(), gusData( gusData_ ), solver( s ), numberOfCalls( 0 ), 
+        hasToTestModel( false ), numberOfAtoms( numberOfInputAtoms ), 
+        id( 0 ), assumptionLiteral( Literal::null ), isConflictual( false ),
+        numberOfExternalLiterals( 0 ), numberOfInternalVariables( 0 ), numberOfZeroLevel( 0 ), removedHCVars( 0 ), literalToAdd( Literal::null ),
+        low( 0 ), high( solver.numberOfVariables() )
 {   
     inUnfoundedSet.push_back( 0 );
     generatorToCheckerId.push_back( UINT_MAX );
@@ -40,7 +45,7 @@ HCComponent::HCComponent(
     checker.setGenerator( false ); 
     checker.disableStatistics();
     checker.setHCComponentForChecker( this );
-    checker.disableVariableElimination();    
+    checker.disableVariableElimination();        
 }
 
 HCComponent::~HCComponent()
@@ -70,6 +75,7 @@ HCComponent::addExternalLiteral(
         checkerToGeneratorId.push_back( lit.getVariable() );    
     }    
     externalLiterals.push_back( lit );    
+    numberOfExternalLiterals++;
     return true;
 }
 
@@ -85,6 +91,7 @@ HCComponent::addExternalLiteralForInternalVariable(
     generatorToCheckerId[ lit.getVariable() ] = checker.numberOfVariables();
     checkerToGeneratorId.push_back( lit.getVariable() );
     externalLiterals.push_back( lit );
+    numberOfExternalLiterals++;
     return true;
 }
 
@@ -103,9 +110,19 @@ HCComponent::reset()
 bool
 HCComponent::onLiteralFalse(
     Literal literal )
-{
-    trail.push_back( literal );    
-    if( trail.size() == ( hcVariables.size() + externalLiterals.size() ) )
+{    
+    if( solver.getCurrentDecisionLevel() > 0 )
+        trail.push_back( literal );
+    else
+        numberOfZeroLevel++;
+    
+    if( wasp::Options::forwardPartialChecks && ( low + high ) / 2 <= solver.getCurrentDecisionLevel() )
+    {
+        hasToTestModel = true;
+        return true;
+    }
+    
+    if( trail.size() + numberOfZeroLevel == ( numberOfInternalVariables + numberOfExternalLiterals ) )
     {
         //testModel();
         hasToTestModel = true;
@@ -119,90 +136,103 @@ void
 HCComponent::testModel()
 {
     trace_msg( modelchecker, 1, "Check component " << *this );
-    
-    vector< Literal > assumptionsAND;
-    vector< Literal > assumptionsOR;    
-
-    computeAssumptions( assumptionsAND, assumptionsOR );
-    if( assumptionsOR.empty() )
-    {
-        trace_msg( modelchecker, 2, "Nothing to check here!" );
-        return;
-    }
-    
     if( numberOfCalls++ == 0 )
     {
         trace_msg( modelchecker, 2, "First call. Removing unused variables" );
         for( unsigned i = 1; i < inUnfoundedSet.size(); ++i )
         {
             if( inUnfoundedSet[ i ] == 0 )
-                checker.addClause( Literal( i, POSITIVE ) );                
+                checker.addClause( Literal( i, POSITIVE ) );
             else
                 inUnfoundedSet[ i ] = 0;        
         }
         #ifndef NDEBUG
         bool result = 
-        #endif
+        #endif        
         checker.preprocessing();
         assert( result );
+        checker.turnOffSimplifications();
+        createInitialClauseAndSimplifyHCVars();
+        if( wasp::Options::bumpActivityAfterPartialCheck )
+        {
+            checker.setComputeUnsatCores( true );
+            checker.setMinimizeUnsatCore( false );
+        }
+    }
+    
+    //The checker will return always unsat
+    if( isConflictual )
+        return;
+    
+    vector< Literal > assumptions;
+    computeAssumptions( assumptions );
+    //The checker will return always unsat
+    if( isConflictual )
+        return;
+    
+    if( unfoundedSetCandidates.empty() )
+    {
+        trace_msg( modelchecker, 2, "Nothing to check here!" );
+        return;
     }
 
-    trace_action( modelchecker, 2,
-    {
-        trace_tag( cerr, modelchecker, 2 );
-        cerr << "Assumptions AND: ";
-        if( !assumptionsAND.empty() )
-        {
-            cerr << assumptionsAND[ 0 ];
-            for( unsigned int i = 1; i < assumptionsAND.size(); i++ )
-                cerr << ", " << assumptionsAND[ i ];
-        }
-        else
-            cerr << "empty";
-        cerr << endl;
-        trace_tag( cerr, modelchecker, 2 );
-        cerr << "Assumptions OR: ";
-        if( !assumptionsOR.empty() )
-        {
-            cerr << assumptionsOR[ 0 ];
-            for( unsigned int i = 1; i < assumptionsOR.size(); i++ )
-                cerr << ", " << assumptionsOR[ i ];
-        }
-        else
-            cerr << "empty";
-        cerr << endl;        
-    } );
+    assert( !checker.conflictDetected() );
+    assert( checker.getCurrentDecisionLevel() == 0 );
+    trace_action( modelchecker, 2, { printVector( assumptions, "Assumptions" ); } );
+    trace_action( modelchecker, 2, { printVector( unfoundedSetCandidates, "Unfounded set candidates" ); } );
+    statistics( &checker, startCheckerInvokation( trail.size() != ( hcVariables.size() + externalLiterals.size() ), time( 0 ) ) );
+    checker.clearConflictStatus();
     
-    if( checker.getCurrentDecisionLevel() > 0 )
-        checker.unroll( 0 );
-    statistics( &checker, startCheckerInvokation( trail.size() != ( hcVariables.size() + externalLiterals.size() ), time( 0 ) ) );    
-    if( checker.solve( assumptionsAND, assumptionsOR ) == COHERENT )
-    {        
-        trace_msg( modelchecker, 1, "SATISFIABLE: the model is not stable." );                
-        for( unsigned int i = 0; i < assumptionsOR.size(); i++ )
-            if( checker.isTrue( assumptionsOR[ i ] ) )
+    if( checker.solve( assumptions ) == COHERENT )
+    {
+        trace_msg( modelchecker, 1, "SATISFIABLE: the model is not stable." );
+        for( unsigned int i = 0; i < unfoundedSetCandidates.size(); i++ )
+            if( checker.isTrue( unfoundedSetCandidates[ i ] ) )
             {
-                Var curr = assumptionsOR[ i ].getVariable();
+                Var curr = unfoundedSetCandidates[ i ].getVariable();
                 unfoundedSet.push_back( curr );
                 setInUnfoundedSet( curr );
             }
-        trace_action( modelchecker, 2,
-        {            
-            trace_tag( cerr, modelchecker, 2 );
-            cerr << "The unfounded set is:";
-            for( unsigned int i = 0; i < unfoundedSet.size(); i++ )
-                cerr << " " << Literal( unfoundedSet[ i ], POSITIVE );
-            cerr << endl;
-        } );
+        trace_action( modelchecker, 2, { printVector( unfoundedSet, "Unfounded set" ); } );
         statistics( &checker, foundUS( trail.size() != ( hcVariables.size() + externalLiterals.size() ), unfoundedSet.size() ) );
         assert( !unfoundedSet.empty() );
+        high = solver.getCurrentDecisionLevel();        
     }
     else
     {
-        trace_msg( modelchecker, 1, "UNSATISFIABLE: the model is stable." );    
+        trace_msg( modelchecker, 1, "UNSATISFIABLE: the model is stable." );
+        low = solver.getCurrentDecisionLevel();    
+        
+        if( wasp::Options::bumpActivityAfterPartialCheck )
+        {
+            assert( checker.getUnsatCore() != NULL );
+            const Clause& unsatCore = *( checker.getUnsatCore() );        
+            if( unsatCore.size() == 0 )
+                isConflictual = true;
+            
+            for( unsigned int i = 0; i < unsatCore.size(); i++ )
+            {
+                Literal l = unsatCore[ i ];
+                if( l.getVariable() >= checkerToGeneratorId.size() )
+                    continue;
+
+                Literal origLit = getGeneratorLiteralFromCheckerLiteral( l );
+                solver.bumpActivity( origLit.getVariable() );
+            }
+        }
+        checker.clearConflictStatus();
     }
-    statistics( &checker, endCheckerInvokation( time( 0 ) ) );
     
+    clearUnfoundedSetCandidates();
+
+    assert( !checker.conflictDetected() );
+    checker.unrollToZero();
+    assert( !checker.conflictDetected() );
+    if( assumptionLiteral != Literal::null )
+        checker.addClause( assumptionLiteral.getOppositeLiteral() );
+    assert( !checker.conflictDetected() );
+    statistics( &checker, endCheckerInvokation( time( 0 ) ) );
+
     if( solver.exchangeClauses() )
     {
         while( !learnedClausesFromChecker.empty() )
@@ -217,27 +247,77 @@ HCComponent::testModel()
 
 void
 HCComponent::computeAssumptions(
-    vector< Literal >& assumptionsAND,
-    vector< Literal >& assumptionsOR )
-{    
+    vector< Literal >& assumptions )
+{
+    trace_msg( modelchecker, 1, "Computing assumptions" );
+    assert_msg( unfoundedSetCandidates.size() == removedHCVars, unfoundedSetCandidates.size() << "!=" << removedHCVars );
+    bool toAdd = true;
+    Clause* clause = new Clause();    
     for( unsigned int i = 0; i < hcVariables.size(); i++ )
-    {        
+    {
         Var v = hcVariables[ i ];
+        Literal lit = Literal( v, NEGATIVE );
         if( !solver.isFalse( v ) )
-            assumptionsOR.push_back( Literal( v, NEGATIVE ) );
+        {
+            unfoundedSetCandidates.push_back( lit );
+            if( toAdd )
+                toAdd = addLiteralInClause( lit, clause );
+        }
         else
-            assumptionsAND.push_back( Literal( v, NEGATIVE ) );        
-    }        
+            assumptions.push_back( lit );
+    }
+    
+    if( toAdd )
+    {
+        if( literalToAdd != Literal::null )
+            toAdd = addLiteralInClause( literalToAdd, clause );
+        
+        if( toAdd )
+        {
+            Var addedVar = addFreshVariable();
+            assumptionLiteral = Literal( addedVar, POSITIVE );
+            clause->addLiteral( assumptionLiteral.getOppositeLiteral() );
+            assumptions.push_back( assumptionLiteral );
 
+            trace_msg( modelchecker, 2, "Adding clause " << *clause );
+            #ifndef NDEBUG
+            bool result =
+            #endif
+            checker.addClauseRuntime( clause );
+            assert( result );
+            statistics( &checker, assumptionsOR( clause->size() ) );            
+            trace_msg( modelchecker, 3, "Adding " << assumptionLiteral << " as assumption" );
+        }
+        else
+        {
+            delete clause;
+        }
+    }
+    else
+    {
+        delete clause;
+    }
+    
+    int j = 0;
     for( unsigned int i = 0; i < externalLiterals.size(); i++ )
     {
-        Literal lit = externalLiterals[ i ];
-        assert( getCheckerVarFromExternalLiteral( lit ) != UINT_MAX );        
-        assumptionsAND.push_back( Literal( getCheckerVarFromExternalLiteral( lit ), solver.isTrue( lit ) ? POSITIVE : NEGATIVE ) );        
+        Literal lit = externalLiterals[ j ] = externalLiterals[ i ];
+        assert( getCheckerVarFromExternalLiteral( lit ) != UINT_MAX );
+        if( solver.getDecisionLevel( lit ) > 0 || solver.isUndefined( lit ) )
+        {
+            assumptions.push_back( Literal( getCheckerVarFromExternalLiteral( lit ), solver.isTrue( lit ) ? POSITIVE : NEGATIVE ) );
+            j++;
+        }
+        else
+        {
+            isConflictual = !checker.addClauseRuntime( Literal( getCheckerVarFromExternalLiteral( lit ), solver.isTrue( lit ) ? POSITIVE : NEGATIVE ) );
+            if( isConflictual )
+                return;
+        }
     }
-
-    statistics( &checker, assumptionsAND( assumptionsAND.size() ) );
-    statistics( &checker, assumptionsOR( assumptionsOR.size() ) );
+    externalLiterals.resize( j );
+    
+    statistics( &checker, assumptions( assumptions.size() ) );
 }
 
 void
@@ -286,20 +366,20 @@ HCComponent::getClauseToPropagate(
     assert( unfoundedSet.empty() );
     if( hasToTestModel )
         testModel();
-    if( unfoundedSet.empty() )
-    {
-        return NULL;
-    }
-    else
+
+    hasToTestModel = false;
+    if( !unfoundedSet.empty() )
     {
         trace_msg( modelchecker, 1, "Learning unfounded set rule for component " << *this );
         Clause* loopFormula = learning.learnClausesFromDisjunctiveUnfoundedSet( unfoundedSet );
-        trace_msg( modelchecker, 1, "Adding loop formula: " << *loopFormula );        
-        unfoundedSet.clear();        
-        solver.setAfterConflictPropagator( this ); 
+        trace_msg( modelchecker, 1, "Adding loop formula: " << *loopFormula );
+        unfoundedSet.clear();
+        if( !( wasp::Options::forwardPartialChecks ) )
+            solver.setAfterConflictPropagator( this );
         solver.onLearningALoopFormulaFromModelChecker();
         return loopFormula;
-    }        
+    }    
+    return NULL;
 }
 
 void
@@ -340,7 +420,7 @@ HCComponent::computeReasonForUnfoundedAtom(
             //This should be not true anymore.
 //            assert( !isInUnfoundedSet( lit.getVariable() ) );
             //If the variable is in the HCC component and it is undefined can be a reason during partial checks
-            if( solver.isUndefined( lit ) && solver.getHCComponent( lit.getVariable() ) == this )
+            if( solver.isUndefined( lit ) && solver.getHCComponent( lit.getVariable() ) == this && ( lit.isNegativeBodyLiteral() || lit.isHeadAtom() ) )
             {
                 if( pos == UINT_MAX )
                     pos = j;
@@ -397,4 +477,77 @@ HCComponent::sameComponent(
     Var v ) const
 {
     return solver.getHCComponent( v ) == this;
+}
+
+void
+HCComponent::createInitialClauseAndSimplifyHCVars()
+{
+    trace_msg( modelchecker, 1, "Simplifying Head Cycle variables" );
+    Clause* clause = new Clause();
+
+    bool satisfied = false;
+    int j = 0;
+    for( unsigned int i = 0; i < hcVariables.size(); i++ )
+    {
+        Var v = hcVariables[ j ] = hcVariables[ i ];
+        if( solver.isTrue( v ) && solver.getDecisionLevel( v ) == 0 )
+        {
+            Literal lit = Literal( v, NEGATIVE );
+            unfoundedSetCandidates.push_back( lit );            
+            removedHCVars++;
+            trace_msg( modelchecker, 2, "Variable " << Literal( v ) << " is true at level 0: removed" );
+            if( !satisfied )
+                satisfied = !addLiteralInClause( lit, clause );
+        }
+        else
+            j++;
+    }
+    hcVariables.resize( j );        
+    
+    trace_msg( modelchecker, 2, "Clause before adding a fresh variable " << *clause );    
+    if( clause->size() == 0 )
+        satisfied = true;
+    else if( clause->size() == 1 )
+    {
+        trace_msg( modelchecker, 3, "Removed" );
+        assert( removedHCVars == 1 );
+        assert( unfoundedSetCandidates.size() == removedHCVars );
+        removedHCVars--;
+        unfoundedSetCandidates.pop_back();
+        hcVariables.push_back( clause->getAt( 0 ).getVariable() );
+        satisfied = true;
+    }
+    
+    if( satisfied )        
+    {
+        trace_msg( modelchecker, 3, "Removed" );
+        delete clause;
+    }
+    else
+    {
+        statistics( &checker, setTrueAtLevelZero( removedHCVars ) );
+        assert( clause != NULL );
+        Var newVar = addFreshVariable();
+        literalToAdd = Literal( newVar, NEGATIVE );
+        clause->addLiteral( literalToAdd.getOppositeLiteral() );
+        
+        trace_msg( modelchecker, 3, "Clause to add " << *clause );
+        if( !isConflictual )
+            isConflictual = !checker.addClauseRuntime( clause );        
+    }    
+    
+    assert( removedHCVars == unfoundedSetCandidates.size() );
+}
+
+void
+HCComponent::clearUnfoundedSetCandidates()
+{
+    unfoundedSetCandidates.shrink( removedHCVars );
+}
+
+Var
+HCComponent::addFreshVariable()
+{
+    checker.addVariableRuntime();
+    return checker.numberOfVariables();
 }

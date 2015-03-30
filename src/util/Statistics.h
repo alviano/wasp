@@ -55,7 +55,7 @@ class Solver;
             numberOfOR( 0 ), maxSizeOR( 0 ), minSizeOR( MAXUNSIGNEDINT ), avgOR( 0 ), numberOfAND( 0 ), maxSizeAND( 0 ), 
             minSizeAND( MAXUNSIGNEDINT ), avgAND( 0 ), numberOfCalling( 0 ), minTime( MAXUNSIGNEDINT ), 
             maxTime( 0 ), avgTime( 0 ), currentTime( 0 ), numberOfPartialChecks( 0 ), partialCheckWithUS( 0 ),
-            clausesAfterSimplifications( 0 ), variablesAfterSimplifications( 0 ), numberOfVars( 0 )
+            clausesAfterSimplifications( 0 ), variablesAfterSimplifications( 0 ), numberOfVars( 0 ), trueAtLevelZero( 0 )
             {
             }
 
@@ -298,7 +298,7 @@ class Solver;
                     maxSizeOR = size;
             }
             
-            inline void assumptionsAND( unsigned int size )
+            inline void assumptions( unsigned int size )
             {
                 numberOfAND++;
                 avgAND += size;
@@ -312,7 +312,12 @@ class Solver;
             inline void onDeletingChecker( unsigned int i )
             {
                 printCheckerStats( i );
-            }            
+            } 
+            
+            inline void setTrueAtLevelZero( unsigned int nb )
+            {
+                trueAtLevelZero = nb;
+            }      
             
         private:
             static vector< Statistics* > instances;
@@ -390,6 +395,8 @@ class Solver;
             unsigned int variablesAfterSimplifications;
             unsigned int numberOfVars;
             
+            unsigned int trueAtLevelZero;
+            
             void printStatistics()
             {
                 if( disabled )
@@ -461,6 +468,9 @@ class Solver;
                 cerr << "Checker Number of Variables    : " << numberOfVars << endl;
                 cerr << "   Assigned after satelite     : " << variablesAfterSimplifications << endl;
                 
+                cerr << separator << endl;
+                cerr << "Number of HC vars always true  : " << trueAtLevelZero << endl;
+                
                 printStatistics();                
                 cerr << separator << endl;
 
@@ -471,15 +481,15 @@ class Solver;
                 cerr << "       Avg Time(s)             : " << ( numberOfCalling == 0 ? -1 : avgTime / numberOfCalling ) << endl;                
                 cerr << "       Partial checks          : " << numberOfPartialChecks << "(" << ( numberOfCalling == 0 ? -1 : ( ( double ) numberOfPartialChecks / ( double ) numberOfCalling ) * 100 ) << "% of total)" << endl;
                 cerr << "           Found USs           : " << partialCheckWithUS << "(" << ( numberOfPartialChecks == 0 ? -1 : ( ( double ) partialCheckWithUS / ( double ) numberOfPartialChecks ) * 100 ) << "% of total)" << endl;
-                cerr << "UnfoundedSets                  : " << endl;
+                cerr << "UnfoundedSets                    " << endl;
                 cerr << "       Min Size                : " << minSizeUS << endl;
                 cerr << "       Max Size                : " << maxSizeUS << endl;
                 cerr << "       Avg Size                : " << ( numberOfUS == 0 ? -1 : avgUS / numberOfUS ) << endl;
-                cerr << "AssumptionsOR                    " << endl;
+                cerr << "UnfoundedSetCandidates           " << endl;
                 cerr << "       Min Number              : " << minSizeOR << endl;
                 cerr << "       Max Number              : " << maxSizeOR << endl;
                 cerr << "       Avg Number              : " << ( numberOfOR == 0 ? -1 : avgOR / numberOfOR ) << endl;
-                cerr << "AssumptionsAND                    " << endl;
+                cerr << "Assumptions                      " << endl;
                 cerr << "       Min Number              : " << minSizeAND << endl;
                 cerr << "       Max Number              : " << maxSizeAND << endl;
                 cerr << "       Avg Number              : " << ( numberOfAND == 0 ? -1 : avgAND / numberOfAND ) << endl;

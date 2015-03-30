@@ -60,8 +60,7 @@ class WeakInterface
         Solver& solver;
         vector< unsigned int > inUnsatCore;
         unsigned int numberOfCalls;
-        vector< Literal > assumptionsAND;
-        vector< Literal > assumptionsOR;
+        vector< Literal > assumptions;
         
         unsigned int lb;
         unsigned int ub;
@@ -84,14 +83,14 @@ WeakInterface::computeAssumptionsAND()
     {
         if( solver.getOptimizationLiteral( i ).isRemoved() )
             continue;
-        assumptionsAND.push_back( solver.getOptimizationLiteral( i ).lit.getOppositeLiteral() );
+        assumptions.push_back( solver.getOptimizationLiteral( i ).lit.getOppositeLiteral() );
     }
     trace_action( weakconstraints, 2, 
     {
         trace_tag( cerr, weakconstraints, 2 );
         cerr << "AssumptionsAND: [";
-        for( unsigned int i = 0; i < assumptionsAND.size(); i++ )
-            cerr << " " << assumptionsAND[ i ];
+        for( unsigned int i = 0; i < assumptions.size(); i++ )
+            cerr << " " << assumptions[ i ];
         cerr << " ]" << endl;
     });
 }
@@ -105,14 +104,14 @@ WeakInterface::computeAssumptionsANDOnlyOriginal(
     {
         if( solver.getOptimizationLiteral( i ).isRemoved() )
             continue;
-        assumptionsAND.push_back( solver.getOptimizationLiteral( i ).lit.getOppositeLiteral() );
+        assumptions.push_back( solver.getOptimizationLiteral( i ).lit.getOppositeLiteral() );
     }
     trace_action( weakconstraints, 2, 
     {
         trace_tag( cerr, weakconstraints, 2 );
         cerr << "AssumptionsAND: [";
-        for( unsigned int i = 0; i < assumptionsAND.size(); i++ )
-            cerr << " " << assumptionsAND[ i ];
+        for( unsigned int i = 0; i < assumptions.size(); i++ )
+            cerr << " " << assumptions[ i ];
         cerr << " ]" << endl;
     });
 }
@@ -154,14 +153,14 @@ WeakInterface::computeAssumptionsANDStratified()
         if( solver.getOptimizationLiteral( i ).isRemoved() )
             continue;
         if( solver.getOptimizationLiteral( i ).weight >= this->weight )
-            assumptionsAND.push_back( solver.getOptimizationLiteral( i ).lit.getOppositeLiteral() );        
+            assumptions.push_back( solver.getOptimizationLiteral( i ).lit.getOppositeLiteral() );        
     }
     trace_action( weakconstraints, 2, 
     {
         trace_tag( cerr, weakconstraints, 2 );
         cerr << "AssumptionsAND: [";
-        for( unsigned int i = 0; i < assumptionsAND.size(); i++ )
-            cerr << " " << assumptionsAND[ i ];
+        for( unsigned int i = 0; i < assumptions.size(); i++ )
+            cerr << " " << assumptions[ i ];
         cerr << " ]" << endl;
     });
 }

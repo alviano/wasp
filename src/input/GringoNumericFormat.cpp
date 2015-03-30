@@ -1562,7 +1562,7 @@ GringoNumericFormat::computeCompletion()
         }
         trace_msg( parser, 3, "Adding clause " << *crule );
         solver.cleanAndAddClause( crule );
-        trace_msg( parser, 4, "Actually added " << *crule );
+//        trace_msg( parser, 4, "Actually added " << *crule );
         
         assert_msg( propagatedLiterals == solver.numberOfAssignedLiterals() || ( propagatedLiterals + 1 == solver.numberOfAssignedLiterals() && solver.getAssignedVariable( propagatedLiterals ) == lit.getVariable() && lit.getVariable() >= atomData.size() ), "difference is " << ( solver.numberOfAssignedLiterals() - propagatedLiterals ) );
         propagatedLiterals = solver.numberOfAssignedLiterals();
@@ -2559,7 +2559,7 @@ GringoNumericFormat::computeLinearCostsForOptimizationRules(
             levels.push_back( i + 1 );
             bound += newWeight;
         }
-        assert( currentMaxCost >= maxCostOfLevelOfOptimizationRules.back() );
+        assert_msg( currentMaxCost >= maxCostOfLevelOfOptimizationRules.back(), currentMaxCost << " < " << maxCostOfLevelOfOptimizationRules.back() );
         maxCostOfLevelOfOptimizationRules.push_back( currentMaxCost );
     }    
 }

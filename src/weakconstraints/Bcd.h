@@ -288,7 +288,7 @@ Bcd::deleteOldCores()
 void
 Bcd::computeAssumptions()
 {
-    assumptionsAND.clear();
+    assumptions.clear();
     computeAssumptionsAND();
     unsigned int k = 0;
     for( unsigned int i = 0; i < assumptionsToAdd.size(); i++ )
@@ -297,7 +297,7 @@ Bcd::computeAssumptions()
         Var v = assumptionsToAdd[ i ].getVariable();
         assert( v < toKeepInAssumptions.size() );
         if( toKeepInAssumptions[ v ] )
-            assumptionsAND.push_back( assumptionsToAdd[ k++ ] );
+            assumptions.push_back( assumptionsToAdd[ k++ ] );
     }
     assumptionsToAdd.shrink( k );
     
@@ -305,8 +305,8 @@ Bcd::computeAssumptions()
     {
         trace_tag( cerr, weakconstraints, 2 );
         cerr << "AssumptionsAND: [";
-        for( unsigned int i = 0; i < assumptionsAND.size(); i++ )
-            cerr << " " << assumptionsAND[ i ];
+        for( unsigned int i = 0; i < assumptions.size(); i++ )
+            cerr << " " << assumptions[ i ];
         cerr << " ]" << endl;
     });
 }

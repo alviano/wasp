@@ -44,7 +44,7 @@ class HCComponent : public PostPropagator
 
         void addClauseToChecker( Clause* c, Var headAtom );
         
-        inline void addHCVariable( Var v ) { inUnfoundedSet[ v ] |= 4; hcVariables.push_back( v ); }
+        inline void addHCVariable( Var v ) { inUnfoundedSet[ v ] |= 4; hcVariables.push_back( v ); numberOfInternalVariables++; }
 //        inline bool isExternal( Var v ) const { assert( numberOfCalls == 0 ); assert( v < inUnfoundedSet.size() ); return inUnfoundedSet[ v ] & 3; }
         bool addExternalLiteral( Literal lit );
         bool addExternalLiteralForInternalVariable( Literal lit );
@@ -66,7 +66,7 @@ class HCComponent : public PostPropagator
         
         void addLearnedClausesFromChecker( Clause* c );
         
-    private:
+    private:                
         inline HCComponent( const HCComponent& orig );
 
         bool isInUnfoundedSet( Var v ) { assert_msg( v < inUnfoundedSet.size(), "v = " << v << "; inUnfoundedSet.size() = " << inUnfoundedSet.size() ); return inUnfoundedSet[ v ] == numberOfCalls; }
@@ -74,6 +74,13 @@ class HCComponent : public PostPropagator
         
         bool sameComponent( Var v ) const;
         
+        void createInitialClauseAndSimplifyHCVars();
+        
+        void clearUnfoundedSetCandidates();
+        Clause* computeClause();
+        
+        Var addFreshVariable();
+
         vector< GUSData* >& gusData;
         Vector< Literal > trail;
         Solver& solver;
@@ -82,6 +89,7 @@ class HCComponent : public PostPropagator
         vector< Var > hcVariables;
         vector< Literal > externalLiterals;
         Vector< Var > unfoundedSet;
+        Vector< Literal > unfoundedSetCandidates;
         
         Vector< Clause* > learnedClausesFromChecker;
         
@@ -92,13 +100,26 @@ class HCComponent : public PostPropagator
         Vector< unsigned int > inUnfoundedSet;
         unsigned int numberOfCalls;
         
-        bool hasToTestModel;
+        bool hasToTestModel;        
         
         unsigned int numberOfAtoms;
         unsigned int id;
-
+        
+        Literal assumptionLiteral;
+        bool isConflictual;
+        
+        unsigned int numberOfExternalLiterals;
+        unsigned int numberOfInternalVariables;
+        unsigned int numberOfZeroLevel;
+        unsigned int removedHCVars;
+        
+        Literal literalToAdd;
+        
+        unsigned int low;
+        unsigned int high;
+        
         void testModel();
-        void computeAssumptions( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
+        void computeAssumptions( vector< Literal >& assumptions );
         
         inline Var getCheckerVarFromExternalLiteral( Literal l ) const
         { 
@@ -122,14 +143,73 @@ class HCComponent : public PostPropagator
         {
             if( l.getVariable() <= numberOfAtoms )
                 return l;
-                        
+
             assert( l.getVariable() < checkerToGeneratorId.size() );
             assert( checkerToGeneratorId[ l.getVariable() ] > 0 );
             if( solver.getHCComponent( l.getVariable() ) != this )
                 return Literal( checkerToGeneratorId[ l.getVariable() ], NEGATIVE );
             else
                 return Literal( checkerToGeneratorId[ l.getVariable() ], POSITIVE );
-        }        
+        }     
+        
+        inline bool addLiteralInClause( Literal lit, Clause* clause )
+        {            
+            if( checker.isTrue( lit ) )
+                return false;
+            
+            if( !checker.isFalse( lit ) )
+                clause->addLiteral( lit );
+            return true;
+                
+        }
+        
+        #ifdef TRACE_ON
+        template< class T >
+        void printVector( const vector< T >& v, const string& description )
+        {            
+            trace_tag( cerr, modelchecker, 2 );
+            cerr << description << ": ";
+            if( !v.empty() )
+            {
+                cerr << v[ 0 ];
+                for( unsigned int i = 1; i < v.size(); i++ )
+                    cerr << ", " << v[ i ];
+            }
+            else
+                cerr << "empty";
+            cerr << endl;
+        }
+                
+        void printVector( const Vector< Literal >& v, const string& description )
+        {            
+            trace_tag( cerr, modelchecker, 2 );
+            cerr << description << ": ";
+            if( !v.empty() )
+            {
+                cerr << v[ 0 ];
+                for( unsigned int i = 1; i < v.size(); i++ )
+                    cerr << ", " << v[ i ];
+            }
+            else
+                cerr << "empty";
+            cerr << endl;
+        }
+        
+        void printVector( const Vector< Var >& v, const string& description )
+        {            
+            trace_tag( cerr, modelchecker, 2 );
+            cerr << description << ": ";
+            if( !v.empty() )
+            {
+                cerr << Literal( v[ 0 ] );
+                for( unsigned int i = 1; i < v.size(); i++ )
+                    cerr << ", " << Literal( v[ i ] );
+            }
+            else
+                cerr << "empty";
+            cerr << endl;
+        }
+        #endif                    
 };
 
 #endif

@@ -42,8 +42,10 @@ namespace wasp
 
             static void parse( int argc, char* const* argv );
             static void setOptions( WaspFacade& waspFacade );
-            static unsigned int maxCost;
-        
+            static unsigned int maxCost;        
+            static bool forwardPartialChecks;
+            static bool bumpActivityAfterPartialCheck;
+            
         private:
 
             static DELETION_POLICY deletionPolicy;
@@ -69,7 +71,7 @@ namespace wasp
 
             static unsigned int timeLimit;
             
-            static bool exchangeClauses;
+            static bool exchangeClauses;                                    
             
             static WEAK_CONSTRAINTS_ALG weakConstraintsAlg;
             

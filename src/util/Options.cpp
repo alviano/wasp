@@ -82,6 +82,8 @@ namespace wasp
 #define OPTIONID_time_limit ( 'z' + 101 )
 #define OPTIONID_max_cost ( 'z' + 102 )
 #define OPTIONID_exchange_clauses ( 'z' + 103 )
+#define OPTIONID_forward_partialchecks ( 'z' + 104 )
+#define OPTIONID_bumpactivityafterpartialchecks ( 'z' + 105 )
     
 /* WEAK CONSTRAINTS OPTIONS */
 #define OPTIONID_opt ( 'z' + 200 )
@@ -132,6 +134,10 @@ unsigned int Options::deletionThreshold = 8;
 unsigned int Options::maxCost = MAXUNSIGNEDINT;
 
 bool Options::exchangeClauses = false;
+
+bool Options::forwardPartialChecks = false;
+
+bool Options::bumpActivityAfterPartialCheck = false;
 
 WEAK_CONSTRAINTS_ALG Options::weakConstraintsAlg = OLL;
 
@@ -207,6 +213,8 @@ Options::parse(
                 { "max-cost", required_argument, NULL, OPTIONID_max_cost },
                 
                 { "exchange-clauses", no_argument, NULL, OPTIONID_exchange_clauses },
+                { "forward-partialchecks", no_argument, NULL, OPTIONID_forward_partialchecks },  
+                { "bump-activity-partialchecks", no_argument, NULL, OPTIONID_bumpactivityafterpartialchecks },  
                 
                 /* WEAK CONSTRAINTS */
                 { "mgd", no_argument, NULL, OPTIONID_mgd },
@@ -419,6 +427,14 @@ Options::parse(
                 
             case OPTIONID_exchange_clauses:
                 exchangeClauses = true;
+                break;
+                
+            case OPTIONID_forward_partialchecks:
+                forwardPartialChecks = true;
+                break;
+                
+            case OPTIONID_bumpactivityafterpartialchecks:
+                bumpActivityAfterPartialCheck = true;
                 break;
 
             case OPTIONID_opt:

@@ -219,8 +219,7 @@ Solver::addClauseFromModelAndRestart()
 
 unsigned int 
 Solver::solveWithoutPropagators(
-    vector< Literal >& assumptionsAND,
-    vector< Literal >& assumptionsOR )
+    vector< Literal >& assumptions )
 {
     trace( solving, 1, "Starting solving.\n" );
     
@@ -252,7 +251,7 @@ Solver::solveWithoutPropagators(
         deleteClausesIfNecessary();
 
         assert( !conflictDetected() );
-        if( !chooseLiteral( assumptionsAND, assumptionsOR ) )
+        if( !chooseLiteral( assumptions ) )
         {
             trace_msg( solving, 1, "INCONSISTENT" );
             statistics( this, endSolving() );
@@ -299,13 +298,12 @@ Solver::solveWithoutPropagators(
     
     statistics( this, endSolving() );
     
-    return modelIsValidUnderAssumptions( assumptionsAND, assumptionsOR ) ? COHERENT : INCOHERENT;
+    return modelIsValidUnderAssumptions( assumptions ) ? COHERENT : INCOHERENT;
 }
 
 unsigned int 
 Solver::solvePropagators(
-    vector< Literal >& assumptionsAND,
-    vector< Literal >& assumptionsOR )
+    vector< Literal >& assumptions )
 {
     trace( solving, 1, "Starting solving.\n" );    
     if( hasNextVariableToPropagate() )
@@ -315,11 +313,11 @@ Solver::solvePropagators(
         goto postPropagationLabel;
     
     while( hasUndefinedLiterals() )
-    {
+    {        
         deleteClausesIfNecessary();
         
         assert( !conflictDetected() );
-        if( !chooseLiteral( assumptionsAND, assumptionsOR ) )
+        if( !chooseLiteral( assumptions ) )
         {
             trace_msg( solving, 1, "Failure occurs while choosing a new Literal" );
             statistics( this, endSolving() );
@@ -461,7 +459,7 @@ Solver::solvePropagators(
     assert_msg( allClausesSatisfied(), "The model found is not correct." );
     
     statistics( this, endSolving() );
-    return modelIsValidUnderAssumptions( assumptionsAND, assumptionsOR ) ? COHERENT : INCOHERENT;
+    return modelIsValidUnderAssumptions( assumptions ) ? COHERENT : INCOHERENT;
 }
 
 void
@@ -714,7 +712,7 @@ void
 Solver::printProgram() const
 {
     for( ConstClauseIterator it = clauses.begin(); it != clauses.end(); ++it )
-        cout << *( *it ) << endl;
+        cout << *( *it ) << endl;        
     
     for( unsigned int i = 0; i < aggregates.size(); i++ )
         cout << *aggregates[ i ] << endl;    
@@ -1298,14 +1296,10 @@ Solver::addLearnedClause(
 
 void
 Solver::clearAfterSolveUnderAssumptions(
-    const vector< Literal >& assumptionsAND,
-    const vector< Literal >& assumptionsOR )
+    const vector< Literal >& assumptions )
 {
-    for( unsigned int i = 0; i < assumptionsAND.size(); i++ )
-        setAssumptionAND( assumptionsAND[ i ], false );
-    
-    for( unsigned int i = 0; i < assumptionsOR.size(); i++ )
-        setAssumptionOR( assumptionsOR[ i ], false );
+    for( unsigned int i = 0; i < assumptions.size(); i++ )
+        setAssumption( assumptions[ i ], false );    
 }
 
 bool compareWeight( OptimizationLiteralData* o1, OptimizationLiteralData* o2 )

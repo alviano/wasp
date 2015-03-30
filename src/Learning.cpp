@@ -223,7 +223,7 @@ Learning::onNavigatingLiteralForUnfoundedSetLearning(
     Literal literal )
 {
     assert( literal != Literal::null );
-    assert( solver.getDecisionLevel( literal.getVariable() ) > 0 );
+    assert( solver.isUndefined( literal ) || solver.getDecisionLevel( literal.getVariable() ) > 0 );
     addLiteralInLearnedClause( literal );    
 }
 
@@ -433,11 +433,9 @@ Learning::learnClausesFromDisjunctiveUnfoundedSet(
     }    
     
     assert( minDecisionLevel != UINT_MAX );
-    if( minDecisionLevel != 0 )
-    {
-        assert( pos < unfoundedSet.size() );
+    assert( pos < unfoundedSet.size() );
+    if( minDecisionLevel != 0 || solver.isUndefined( unfoundedSet[ pos ] ) )
         addLiteralInLearnedClause( Literal( unfoundedSet[ pos ], NEGATIVE ) );
-    }        
     
     if( learnedClause->size() > 1 )
         simplifyLearnedClause( learnedClause );
@@ -447,7 +445,7 @@ Learning::learnClausesFromDisjunctiveUnfoundedSet(
     
     if( solver.glucoseHeuristic() )
         learnedClause->setLbd( solver.computeLBD( *learnedClause ) );
-    
+        
     trace_msg( learning, 1, "Reason for disjunctive loop formula: " << *learnedClause );
     return learnedClause;
 }
@@ -482,16 +480,15 @@ Learning::sortClause(
     Clause* clause )
 {
     assert( clause->size() > 1 );
-    unsigned int max1 = solver.getDecisionLevel( clause->getAt( 0 ) );
+    unsigned int max1 = ( solver.isUndefined( clause->getAt( 0 ) ) ) ? UINT_MAX : solver.getDecisionLevel( clause->getAt( 0 ) );
     unsigned int max2 = 0;
     unsigned int posMax1 = 0;
     unsigned int posMax2 = 0;
     
     for( unsigned int i = 1; i < clause->size(); i++ )
     {
-        Literal lit = clause->getAt( i );
-        unsigned int dl = solver.getDecisionLevel( lit );        
-        
+        Literal lit = clause->getAt( i );        
+        unsigned int dl = solver.getDecisionLevel( lit );                
         if( solver.isUndefined( lit ) )
             dl = UINT_MAX;
         
@@ -575,7 +572,7 @@ Learning::analyzeFinal(
     learnedClause = solver.newClause();
     learnedClause->setLearned();
 
-    assert( solver.isAssumptionAND( lit.getVariable() ) );
+    assert( solver.isAssumption( lit.getVariable() ) );
     learnedClause->addLiteralInLearnedClause( lit );
     if( solver.getCurrentDecisionLevel() == 0 )
     {
@@ -609,7 +606,7 @@ Learning::analyzeFinal(
         Reason* reason = solver.getImplicant( nextVar );
         if( reason == NULL )
         {
-            assert( solver.isAssumptionAND( nextVar ) );
+            assert( solver.isAssumption( nextVar ) );
             assert( solver.getDecisionLevel( nextVar ) > 0 );
             trace_msg( weakconstraints, 4, "it was a choice: added" );
             learnedClause->addLiteralInLearnedClause( next );

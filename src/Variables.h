@@ -137,9 +137,9 @@ class Variables
         inline void setFrozen( Var v ) { variablesData[ v ].frozen = 1; }
         inline void printInterpretation() const;
         
-        inline void setAssumptionAND( Var v, bool isAssumption ) { variablesData[ v ].isAssumptionAND = isAssumption ? 1 : 0; }
+        inline void setAssumption( Var v, bool isAssumption ) { variablesData[ v ].isAssumptionAND = isAssumption ? 1 : 0; }
         inline void setAssumptionOR( Var v, bool isAssumption ) { variablesData[ v ].isAssumptionOR = isAssumption ? 1 : 0; }        
-        inline bool isAssumptionAND( Var v ) const { return variablesData[ v ].isAssumptionAND; }
+        inline bool isAssumption( Var v ) const { return variablesData[ v ].isAssumptionAND; }
         inline bool isAssumptionOR( Var v ) const { return variablesData[ v ].isAssumptionOR; }        
         
     private:
@@ -391,7 +391,7 @@ void
 Variables::printInterpretation() const
 {
     cout << "Interpretation: [";
-    for( unsigned int i = 2; i < this->numberOfVariables(); i++ )
+    for( unsigned int i = 2; i <= this->numberOfVariables(); i++ )
     {        
         if( hasBeenEliminated( i ) || hasBeenEliminatedByDistribution( i ) )
             cout << " R" << Literal( i, POSITIVE );            

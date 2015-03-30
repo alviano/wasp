@@ -37,11 +37,11 @@ PMRes::runUnweighted()
 
     solver.setComputeUnsatCores( true );
     solver.turnOffSimplifications();
-    while( solver.solve( assumptionsAND, assumptionsOR ) == INCOHERENT )
+    while( solver.solve( assumptions ) == INCOHERENT )
     {        
         if( !foundUnsat() )
             return INCOHERENT;
-        assumptionsAND.clear();
+        assumptions.clear();
         computeAssumptionsAND();
     }
 
@@ -70,7 +70,7 @@ PMRes::runWeighted()
 
     while( true )
     {
-        if( solver.solve( assumptionsAND, assumptionsOR ) != INCOHERENT )
+        if( solver.solve( assumptions ) != INCOHERENT )
         {
             unsigned int newUb = solver.computeCostOfModel();
             if( newUb < ub )
@@ -83,14 +83,14 @@ PMRes::runWeighted()
             solver.clearConflictStatus();
             if( !changeWeight() )
                 break;
-            assumptionsAND.clear();
+            assumptions.clear();
             computeAssumptionsANDStratified();
         }
         else
         {
             if( !foundUnsat() )
                 return INCOHERENT;
-            assumptionsAND.clear();
+            assumptions.clear();
             computeAssumptionsANDStratified();
         }
         

@@ -55,7 +55,7 @@ OllBB::bb()
 {
     trace_msg( weakconstraints, 1, "Starting BB" );
     solver.unrollToZero();
-    assumptionsAND.clear();
+    assumptions.clear();
     solver.setComputeUnsatCores( false );    
     unsigned int res = solver.solve();
     while( res == COHERENT )
@@ -90,19 +90,19 @@ OllBB::oll()
 {
     trace_msg( weakconstraints, 1, "Starting OLL" );
     solver.unrollToZero();        
-    assumptionsAND.clear();
+    assumptions.clear();
     solver.setComputeUnsatCores( true );    
     computeAssumptionsAND();    
-    unsigned int res = solver.solve( assumptionsAND, assumptionsOR );    
+    unsigned int res = solver.solve( assumptions );    
     while( res == INCOHERENT )
     {        
         if( !foundUnsat() )
             return INCOHERENT;
         
-        assumptionsAND.clear();
+        assumptions.clear();
         computeAssumptionsAND();
         
-        res = solver.solve( assumptionsAND, assumptionsOR );        
+        res = solver.solve( assumptions );        
     }
     
     if( res == INTERRUPTED )

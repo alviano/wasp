@@ -88,7 +88,7 @@ class Solver
         inline void onKill() { outputBuilder->onKill(); }
         
         inline unsigned int solve();
-        inline unsigned int solve( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
+        inline unsigned int solve( vector< Literal >& assumptions );
         
         inline void propagate( Var v );
         inline void propagateWithPropagators( Var variable );                
@@ -156,8 +156,8 @@ class Solver
         
         inline bool analyzeConflict();
         inline void clearConflictStatus();
-        inline bool performAssumptions( vector< Literal >& assumptionsAND );
-        inline bool chooseLiteral( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
+        inline bool performAssumptions( vector< Literal >& assumptions );
+        inline bool chooseLiteral( vector< Literal >& assumptions );
         inline bool conflictDetected();
         inline void foundIncoherence();
         inline bool hasUndefinedLiterals();
@@ -368,7 +368,7 @@ class Solver
         inline void disableGlucoseHeuristic() { glucoseHeuristic_ = false; }
         inline bool minimisationWithBinaryResolution( Clause& learnedClause, unsigned int lbd );
         
-        inline bool modelIsValidUnderAssumptions( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
+        inline bool modelIsValidUnderAssumptions( vector< Literal >& assumptions );
         
         void initFrom( Solver& solver );
         
@@ -399,17 +399,13 @@ class Solver
 
         inline void setMinisatHeuristic() { glucoseHeuristic_ = false; }
         
-        void clearAfterSolveUnderAssumptions( const vector< Literal >& assumptionsAND, const vector< Literal >& assumptionsOR );
+        void clearAfterSolveUnderAssumptions( const vector< Literal >& assumptions );
         
-        inline void setAssumptionAND( Literal lit, bool isAssumption ) { variables.setAssumptionAND( lit.getVariable(), isAssumption ); }
-        inline void setAssumptionOR( Literal lit, bool isAssumption ) { variables.setAssumptionOR( lit.getVariable(), isAssumption ); }        
-//        inline bool isAssumptionAND( Literal lit ) const { return variables.isAssumptionAND( lit.getVariable() ); }
-//        inline bool isAssumptionOR( Literal lit ) const { return variables.isAssumptionAND( lit.getVariable() ); }
-        inline bool isAssumptionAND( Var v ) const { return variables.isAssumptionAND( v ); }
-        inline bool isAssumptionOR( Var v ) const { return variables.isAssumptionAND( v ); }        
+        inline void setAssumption( Literal lit, bool isAssumption ) { variables.setAssumption( lit.getVariable(), isAssumption ); }
+        inline bool isAssumption( Var v ) const { return variables.isAssumption( v ); }
         
         inline void computeUnsatCore();
-        inline void minimizeUnsatCore( vector< Literal >& assumptionsAND );
+        inline void minimizeUnsatCore( vector< Literal >& assumptions );
         inline void setMinimizeUnsatCore( bool b ) { minimizeUnsatCore_ = b; }
         inline void setComputeUnsatCores( bool b ) { computeUnsatCores_ = b; }
         inline const Clause* getUnsatCore() const { return unsatCore; }
@@ -443,8 +439,8 @@ class Solver
         bool generator;
         static vector< Clause* > learnedFromAllSolvers;
 
-        unsigned int solveWithoutPropagators( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
-        unsigned int solvePropagators( vector< Literal >& assumptionsAND, vector< Literal >& assumptionsOR );
+        unsigned int solveWithoutPropagators( vector< Literal >& assumptions );
+        unsigned int solvePropagators( vector< Literal >& assumptions );
 
         void updateActivity( Clause* learnedClause );
         inline void addVariableInternal();        
@@ -659,6 +655,7 @@ Solver::Solver()
     learnedFromConflicts( 0 ),
     partialChecks( true ),
     computeUnsatCores_( false ),
+    minimizeUnsatCore_( true ),
     unsatCore( NULL ),
     weighted_( false ),
     maxNumberOfChoices( UINT_MAX ),
@@ -683,30 +680,25 @@ Solver::solve()
 {
     incremental_ = false;
     numberOfAssumptions = 0;    
-    vector< Literal > assumptionsAND;
-    vector< Literal > assumptionsOR;
+    vector< Literal > assumptions;
     if( !hasPropagators() )
-        return solveWithoutPropagators( assumptionsAND, assumptionsOR );
+        return solveWithoutPropagators( assumptions );
     else
-        return solvePropagators( assumptionsAND, assumptionsOR );
+        return solvePropagators( assumptions );
 }
 
 unsigned int
 Solver::solve(
-    vector< Literal >& assumptionsAND,
-    vector< Literal >& assumptionsOR )
+    vector< Literal >& assumptions )
 {
     incremental_ = true;
-    numberOfAssumptions = assumptionsAND.size();
-    for( unsigned int i = 0; i < assumptionsAND.size(); i++ )
-        setAssumptionAND( assumptionsAND[ i ], true );
-    
-    for( unsigned int i = 0; i < assumptionsOR.size(); i++ )
-        setAssumptionOR( assumptionsOR[ i ], true );
-    
+    numberOfAssumptions = assumptions.size();
+    for( unsigned int i = 0; i < assumptions.size(); i++ )
+        setAssumption( assumptions[ i ], true );
+        
     delete unsatCore;
     unsatCore = NULL;
-    unsigned int result = ( !hasPropagators() ) ? solveWithoutPropagators( assumptionsAND, assumptionsOR ) : solvePropagators( assumptionsAND, assumptionsOR );
+    unsigned int result = ( !hasPropagators() ) ? solveWithoutPropagators( assumptions ) : solvePropagators( assumptions );
     if( computeUnsatCores_ && result == INCOHERENT )
     {        
         if( unsatCore == NULL )
@@ -714,10 +706,10 @@ Solver::solve(
         else
         {
             if( minimizeUnsatCore_ )
-                minimizeUnsatCore( assumptionsAND );
+                minimizeUnsatCore( assumptions );            
         }
     }
-    clearAfterSolveUnderAssumptions( assumptionsAND, assumptionsOR );
+    clearAfterSolveUnderAssumptions( assumptions );
     clearConflictStatus();
     return result;    
 }
@@ -883,7 +875,7 @@ Solver::addClause(
     }
     else
     {
-        Clause* bin = newClause();
+        Clause* bin = newClause( 2 );
         bin->addLiteral( lit1 );
         bin->addLiteral( lit2 );
         return addClause( bin );
@@ -1215,21 +1207,20 @@ Solver::foundIncoherence()
 
 bool
 Solver::chooseLiteral(
-    vector< Literal >& assumptionsAND,
-    vector< Literal >& assumptionsOR )
+    vector< Literal >& assumptions )
 {        
     Literal choice = Literal::null;
-    for( unsigned int i = currentDecisionLevel; i < assumptionsAND.size(); i++ )
+    for( unsigned int i = currentDecisionLevel; i < assumptions.size(); i++ )
     {
-        if( isUndefined( assumptionsAND[ i ] ) )
+        if( isUndefined( assumptions[ i ] ) )
         {
             if( choice == Literal::null )
-                choice = assumptionsAND[ i ];
+                choice = assumptions[ i ];
         }
-        else if( isFalse( assumptionsAND[ i ] ) )
+        else if( isFalse( assumptions[ i ] ) )
         {
-            conflictLiteral = assumptionsAND[ i ];
-            trace_msg( solving, 1, "The assumption AND " << assumptionsAND[ i ] << " is false: stop" );
+            conflictLiteral = assumptions[ i ];
+            trace_msg( solving, 1, "The assumption " << assumptions[ i ] << " is false: stop" );
             if( computeUnsatCores_ )    
             {
                 assert( unsatCore == NULL );                 
@@ -1246,38 +1237,6 @@ Solver::chooseLiteral(
     
     if( choice != Literal::null )
         goto end;    
-    if( !assumptionsOR.empty() )
-    {
-        bool satisfied = false;
-        for( unsigned int i = 0; i < assumptionsOR.size(); i++ )
-        {
-            if( isUndefined( assumptionsOR[ i ] ) )
-            {
-                if( choice == Literal::null )
-                    choice = assumptionsOR[ i ];                
-            }
-            else if( isTrue( assumptionsOR[ i ] ) )
-            {
-                satisfied = true;
-                Literal tmp = assumptionsOR[ 0 ];
-                assumptionsOR[ 0 ] = assumptionsOR[ i ];
-                assumptionsOR[ i ] = tmp;
-                break;
-            }
-        }
-        
-        if( !satisfied )
-        {
-            //at least one undefined
-            if( choice != Literal::null )
-                goto end;
-            else
-            {
-                trace_msg( solving, 1, "All assumptions OR are false: stop" );
-                return false;
-            }
-        }
-    }
     choice = minisatHeuristic->makeAChoice();    
     
     end:;
@@ -2209,7 +2168,7 @@ Solver::computeLBD(
     glucoseData.MYFLAG++;
     for( unsigned int i = 0; i < clause.size(); i++ )
     {
-        if( isAssumptionAND( clause[ i ].getVariable() ) )
+        if( isAssumption( clause[ i ].getVariable() ) )
             continue;
         unsigned int level = getDecisionLevel( clause[ i ] );        
         if( glucoseData.permDiff[ level ] != glucoseData.MYFLAG )
@@ -2319,17 +2278,16 @@ Solver::computeStrongConnectedComponents()
 
 bool
 Solver::modelIsValidUnderAssumptions(
-    vector< Literal >& assumptionsAND,
-    vector< Literal >& assumptionsOR )
+    vector< Literal >& assumptions )
 {
-    trace_msg( solving, 1, "Check assumptions AND" );
-    for( unsigned int i = 0; i < assumptionsAND.size(); i++ )
+    trace_msg( solving, 1, "Check assumptions" );
+    for( unsigned int i = 0; i < assumptions.size(); i++ )
     {
-        trace_msg( solving, 2, "Checking " << assumptionsAND[ i ] );
-        if( isFalse( assumptionsAND[ i ] ) )
+        trace_msg( solving, 2, "Checking " << assumptions[ i ] );
+        if( isFalse( assumptions[ i ] ) )
         {
-            trace_msg( solving, 3, "Assumptions AND not satisfied" );
-            conflictLiteral = assumptionsAND[ i ];
+            conflictLiteral = assumptions[ i ];
+            trace_msg( solving, 3, "Assumption " << conflictLiteral << " not satisfied" );            
             if( computeUnsatCores_ )
             {
                 assert( unsatCore == NULL );
@@ -2338,26 +2296,8 @@ Solver::modelIsValidUnderAssumptions(
             return false;
         }
     }
-    trace_msg( solving, 2, "Assumptions AND satisfied" );
-    
-    trace_msg( solving, 1, "Check assumptions OR" );
-    if( assumptionsOR.empty() )
-    {
-        trace_msg( solving, 2, "Assumptions OR satisfied" );
-        return true;
-    }
-    
-    for( unsigned int i = 0; i < assumptionsOR.size(); i++ )
-    {
-        trace_msg( solving, 2, "Checking " << assumptionsOR[ i ] );
-        if( isTrue( assumptionsOR[ i ] ) )
-        {
-            trace_msg( solving, 3, "Assumptions OR satisfied" );
-            return true;
-        }
-    }
-    trace_msg( solving, 2, "Assumptions OR not satisfied" );
-    return false;
+    trace_msg( solving, 2, "Assumptions satisfied" );
+    return true;
 }
 
 void
@@ -2370,7 +2310,7 @@ Solver::computeUnsatCore()
 
 void
 Solver::minimizeUnsatCore(
-    vector< Literal >& assumptionsAND )
+    vector< Literal >& assumptions )
 {
     unsigned int originalMaxNumberOfChoices = maxNumberOfChoices;
     unsigned int originalMaxNumberOfRestarts = maxNumberOfRestarts;
@@ -2388,13 +2328,11 @@ Solver::minimizeUnsatCore(
     }
     
     vector< Literal > tmp;    
-    vector< Literal > tmp2;
-    
-    clearAfterSolveUnderAssumptions( assumptionsAND, tmp2 );
+    clearAfterSolveUnderAssumptions( assumptions );
     clearConflictStatus();    
-//    for( unsigned int i = 0; i < assumptionsAND.size(); i++ )
+//    for( unsigned int i = 0; i < assumptions.size(); i++ )
 //    {
-//        Literal lit = assumptionsAND[ i ];
+//        Literal lit = assumptions[ i ];
 //        if( getDataStructure( lit ).isOptLit() || getDataStructure( lit.getOppositeLiteral() ).isOptLit() )
 //            continue;
 //        
@@ -2402,7 +2340,7 @@ Solver::minimizeUnsatCore(
 //        setAssumptionAND( lit, true );
 //    }
     
-    assumptionsAND.swap( tmp );    
+    assumptions.swap( tmp );
     
     for( unsigned int i = 0; i < unsatCore->size(); i++ )
     {
@@ -2414,10 +2352,10 @@ Solver::minimizeUnsatCore(
             toAdd = lit;
         else
             continue;
-        assumptionsAND.push_back( toAdd );
-        setAssumptionAND( toAdd, true );
+        assumptions.push_back( toAdd );
+        setAssumption( toAdd, true );
     }
-    numberOfAssumptions = assumptionsAND.size();
+    numberOfAssumptions = assumptions.size();
     
     unrollToZero();
     unsigned int oldSize = unsatCore->size();
@@ -2427,8 +2365,7 @@ Solver::minimizeUnsatCore(
     #ifndef NDEBUG
     unsigned int result = 
     #endif
-    ( !hasPropagators() ) ? solveWithoutPropagators( assumptionsAND, tmp2 ) : solvePropagators( assumptionsAND, tmp2 );
-    
+    ( !hasPropagators() ) ? solveWithoutPropagators( assumptions ) : solvePropagators( assumptions );
     assert( result == INCOHERENT );
     
     if( unsatCore == NULL )
