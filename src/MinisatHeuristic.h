@@ -32,7 +32,7 @@ class Solver;
 struct ActivityComparator
 {
     const Vector< Activity >&  act;
-    bool operator()( Var x, Var y ) const { return act[ x ] > act[ y ]; }
+    bool operator()( Var x, Var y ) const { assert( x < act.size() && y < act.size() ); return act[ x ] > act[ y ]; }
     ActivityComparator( const Vector< Activity >& a ) : act( a ) {}
 };
 
@@ -51,7 +51,7 @@ class MinisatHeuristic
         inline void addPreferredChoice( Literal lit ){ assert( lit != Literal::null ); preferredChoices.push_back( lit ); }
         void removePrefChoices();
         void simplifyVariablesAtLevelZero();
-        inline bool bumpActivity( Var var ){ return ( ( act[ var ] += variableIncrement ) > 1e100 ); }        
+        inline bool bumpActivity( Var var ){ assert( var < act.size() ); return ( ( act[ var ] += variableIncrement ) > 1e100 ); }        
         
     private:        
         inline void rescaleActivity();        
@@ -111,6 +111,7 @@ void
 MinisatHeuristic::onNewVariableRuntime(
     Var v )
 {
+    assert( act.size() - 1 == v );
     heap.pushNoCheck( v );
 }
 

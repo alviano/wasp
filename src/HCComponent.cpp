@@ -504,21 +504,8 @@ HCComponent::createInitialClauseAndSimplifyHCVars()
     }
     hcVariables.resize( j );        
     
-    trace_msg( modelchecker, 2, "Clause before adding a fresh variable " << *clause );    
-    if( clause->size() == 0 )
-        satisfied = true;
-    else if( clause->size() == 1 )
-    {
-        trace_msg( modelchecker, 3, "Removed" );
-        assert( removedHCVars == 1 );
-        assert( unfoundedSetCandidates.size() == removedHCVars );
-        removedHCVars--;
-        unfoundedSetCandidates.pop_back();
-        hcVariables.push_back( clause->getAt( 0 ).getVariable() );
-        satisfied = true;
-    }
-    
-    if( satisfied )        
+    trace_msg( modelchecker, 2, "Clause before adding a fresh variable " << *clause << ", which is " << ( satisfied ? "" : "not" ) << " satisfied");
+    if( clause->size() == 0 || satisfied )
     {
         trace_msg( modelchecker, 3, "Removed" );
         delete clause;
