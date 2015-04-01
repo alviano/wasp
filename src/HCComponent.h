@@ -82,6 +82,9 @@ class HCComponent : public PostPropagator
         Var addFreshVariable();
         
         void initDataStructures();
+        void checkModel( vector< Literal >& assumptions );
+        
+        void sendLearnedClausesToSolver();
 
         vector< GUSData* >& gusData;
         Vector< Literal > trail;
@@ -122,6 +125,8 @@ class HCComponent : public PostPropagator
         
         void testModel();
         void computeAssumptions( vector< Literal >& assumptions );
+        void iterationInternalLiterals( vector< Literal >& assumptions );
+        void iterationExternalLiterals( vector< Literal >& assumptions );
         
         inline Var getCheckerVarFromExternalLiteral( Literal l ) const
         { 
