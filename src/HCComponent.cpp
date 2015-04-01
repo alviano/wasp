@@ -51,7 +51,7 @@ HCComponent::HCComponent(
 HCComponent::~HCComponent()
 {
     checker.enableStatistics();
-    statistics( &checker, onDeletingChecker( id ) );
+    statistics( &checker, onDeletingChecker( id ) );    
 }
 
 bool
@@ -157,7 +157,7 @@ HCComponent::testModel()
         {
             checker.setComputeUnsatCores( true );
             checker.setMinimizeUnsatCore( false );
-        }
+        }        
     }
     
     //The checker will return always unsat
@@ -220,7 +220,7 @@ HCComponent::testModel()
                 solver.bumpActivity( origLit.getVariable() );
             }
         }
-        checker.clearConflictStatus();
+        checker.clearConflictStatus();        
     }
     
     clearUnfoundedSetCandidates();
@@ -375,10 +375,10 @@ HCComponent::getClauseToPropagate(
         trace_msg( modelchecker, 1, "Adding loop formula: " << *loopFormula );
         unfoundedSet.clear();
         if( !( wasp::Options::forwardPartialChecks ) )
-            solver.setAfterConflictPropagator( this );
-        solver.onLearningALoopFormulaFromModelChecker();
+            solver.setAfterConflictPropagator( this );        
+        solver.onLearningALoopFormulaFromModelChecker();    
         return loopFormula;
-    }    
+    }
     return NULL;
 }
 

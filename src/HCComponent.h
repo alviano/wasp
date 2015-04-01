@@ -95,7 +95,7 @@ class HCComponent : public PostPropagator
         
         vector< Var > generatorToCheckerId;
         vector< Var > checkerToGeneratorId;
-//        vector< bool > usedAuxVars;
+//        vector< bool > usedAuxVars;        
         
         Vector< unsigned int > inUnfoundedSet;
         unsigned int numberOfCalls;
@@ -141,15 +141,14 @@ class HCComponent : public PostPropagator
 
         inline Literal getGeneratorLiteralFromCheckerLiteral( Literal l )
         {
-            if( l.getVariable() <= numberOfAtoms )
+            Var checkerVar = l.getVariable();
+            if( checkerVar <= numberOfAtoms )
                 return l;
 
-            assert( l.getVariable() < checkerToGeneratorId.size() );
-            assert( checkerToGeneratorId[ l.getVariable() ] > 0 );
-            if( solver.getHCComponent( l.getVariable() ) != this )
-                return Literal( checkerToGeneratorId[ l.getVariable() ], NEGATIVE );
-            else
-                return Literal( checkerToGeneratorId[ l.getVariable() ], POSITIVE );
+            assert( checkerVar < checkerToGeneratorId.size() );
+            Var v = checkerToGeneratorId[ checkerVar ];
+            assert( v > 0 && v <= solver.numberOfVariables() );
+            return ( solver.getHCComponent( v ) != this ) ? Literal( v, NEGATIVE ) : Literal( v, POSITIVE );
         }     
         
         inline bool addLiteralInClause( Literal lit, Clause* clause )
