@@ -137,28 +137,7 @@ HCComponent::testModel()
 {
     trace_msg( modelchecker, 1, "Check component " << *this );
     if( numberOfCalls++ == 0 )
-    {
-        trace_msg( modelchecker, 2, "First call. Removing unused variables" );
-        for( unsigned i = 1; i < inUnfoundedSet.size(); ++i )
-        {
-            if( inUnfoundedSet[ i ] == 0 )
-                checker.addClause( Literal( i, POSITIVE ) );
-            else
-                inUnfoundedSet[ i ] = 0;        
-        }
-        #ifndef NDEBUG
-        bool result = 
-        #endif        
-        checker.preprocessing();
-        assert( result );
-        checker.turnOffSimplifications();
-        createInitialClauseAndSimplifyHCVars();
-        if( wasp::Options::bumpActivityAfterPartialCheck )
-        {
-            checker.setComputeUnsatCores( true );
-            checker.setMinimizeUnsatCore( false );
-        }        
-    }
+        initDataStructures();    
     
     //The checker will return always unsat
     if( isConflictual )
@@ -537,4 +516,30 @@ HCComponent::addFreshVariable()
 {
     checker.addVariableRuntime();
     return checker.numberOfVariables();
+}
+
+void
+HCComponent::initDataStructures()
+{
+    trace_msg( modelchecker, 2, "First call. Removing unused variables" );
+    for( unsigned i = 1; i < inUnfoundedSet.size(); ++i )
+    {
+        if( inUnfoundedSet[ i ] == 0 )
+            checker.addClause( Literal( i, POSITIVE ) );
+        else
+            inUnfoundedSet[ i ] = 0;        
+    }
+    #ifndef NDEBUG
+    bool result = 
+    #endif    
+    checker.preprocessing();
+    assert( result );
+
+    checker.turnOffSimplifications();
+    createInitialClauseAndSimplifyHCVars();
+    if( wasp::Options::bumpActivityAfterPartialCheck )
+    {
+        checker.setComputeUnsatCores( true );
+        checker.setMinimizeUnsatCore( false );
+    }        
 }

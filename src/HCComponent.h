@@ -80,6 +80,8 @@ class HCComponent : public PostPropagator
         Clause* computeClause();
         
         Var addFreshVariable();
+        
+        void initDataStructures();
 
         vector< GUSData* >& gusData;
         Vector< Literal > trail;
