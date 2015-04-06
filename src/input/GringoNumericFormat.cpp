@@ -1026,13 +1026,15 @@ GringoNumericFormat::readAtomsTable(
     while( nextAtom != 0 )
     {
 //        assert_msg( nextAtom < inputVarId.size(), "nextAtom = " << nextAtom << "; size = " << inputVarId.size() );
-//        assert( inputVarId[ nextAtom ] > 1 );
-
+//        assert( inputVarId[ nextAtom ] > 1 );        
         createStructures( nextAtom );
         input.getline( name, 1024 );
         VariableNames::setName( nextAtom, name );
         trace_msg( parser, 6, "Set name " << name << " for atom " << nextAtom );
-        input.read( nextAtom );
+        
+        if( wasp::Options::queryAlgorithm != NO_QUERY )
+            solver.setFrozen( nextAtom );
+        input.read( nextAtom );        
     }
 
 //    #ifdef TRACE_ON

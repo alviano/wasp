@@ -100,6 +100,10 @@ namespace wasp
 #define OPTIONID_minimize ( 'z' + 216 )
 #define OPTIONID_stratification ( 'z' + 217 )
     
+/* QUERY OPTIONS */
+#define OPTIONID_queryalgorithm ( 'z' + 300 )
+#define OPTIONID_queryverbosity ( 'z' + 301 )
+    
 #ifdef TRACE_ON
 TraceLevels Options::traceLevels;
 #endif
@@ -147,6 +151,9 @@ WEAK_CONSTRAINTS_ALG Options::weakConstraintsAlg = OLL;
 bool Options::disjCoresPreprocessing = false;
 bool Options::minimizeUnsatCore = false;
 bool Options::stratification = true;
+
+unsigned int Options::queryAlgorithm = NO_QUERY;
+unsigned int Options::queryVerbosity = 0;
     
 void
 Options::parse(
@@ -233,6 +240,10 @@ Options::parse(
                 { "minimize-unsatcore", no_argument, NULL, OPTIONID_minimize },
                 { "disable-stratification", no_argument, NULL, OPTIONID_stratification },
 
+                /* QUERY */
+                { "query-algorithm", optional_argument, NULL, OPTIONID_queryalgorithm },
+                { "query-verbosity", required_argument, NULL, OPTIONID_queryverbosity },
+                
                 // The NULL-option indicates the end of the array.
                 { NULL, 0, NULL, 0 }
             };
@@ -495,6 +506,31 @@ Options::parse(
                 stratification = false;
                 break;
                 
+            case OPTIONID_queryalgorithm:
+                queryAlgorithm = ITERATIVE_COHERENCE_TESTING;
+                if( optarg )
+                {
+                    if( !strcmp( optarg, "or" ) )
+                        queryAlgorithm = OVERESTIMATE_REDUCTION;
+                    else if( !strcmp( optarg, "ict" ) )
+                        queryAlgorithm = ITERATIVE_COHERENCE_TESTING;
+                    else
+                        ErrorMessage::errorGeneric( "Inserted invalid algorithm for query answering." );
+                }
+                break;
+                
+            case OPTIONID_queryverbosity:
+                queryVerbosity = 0;
+                if( optarg )
+                {
+                    unsigned int value = atoi( optarg );
+                    if( value <= 2 )
+                        queryVerbosity = value;
+                    else
+                        ErrorMessage::errorGeneric( "Inserted invalid value for query verbosity." );
+                }
+                break;
+                
             default:
                 ErrorMessage::errorGeneric( "This option is not supported." );
                 break;
@@ -525,6 +561,7 @@ Options::setOptions(
     waspFacade.setDisjCoresPreprocessing( disjCoresPreprocessing );
     waspFacade.setMinimizeUnsatCore( minimizeUnsatCore );
     waspFacade.setStratification( stratification );
+    waspFacade.setQueryAlgorithm( queryAlgorithm );
 }
 
 };

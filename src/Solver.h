@@ -163,6 +163,7 @@ class Solver
         inline bool hasUndefinedLiterals();
         inline void printAnswerSet();
         inline void printOptimizationValue( unsigned int cost );
+        inline void printCautiousConsequences( const Vector< Var >& answers );        
         inline void optimumFound();
         
         void unroll( unsigned int level );
@@ -1191,6 +1192,16 @@ Solver::printOptimizationValue(
     unsigned int cost )
 {
     outputBuilder->foundModelOptimization( *this, cost, numberOfOptimizationLevels );
+}
+
+void
+Solver::printCautiousConsequences(
+    const Vector< Var >& answers )
+{
+    outputBuilder->startModel();
+    for( unsigned int i = 0; i < answers.size(); ++i )
+        outputBuilder->printVariable( answers[ i ], true );
+    outputBuilder->endModel();
 }
 
 void

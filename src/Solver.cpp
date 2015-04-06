@@ -1018,6 +1018,13 @@ Solver::removeSatisfied(
         assert_msg( clauses[ i ] != NULL, "Current clause is NULL" );
         Clause* currentPointer = clauses[ i ];
         Clause& current = *currentPointer;
+        
+        if( !current.isLearned() && !current.canBeDeleted() )
+        {
+            ++i;
+            continue;
+        }
+
         uint64_t size = current.size();
         if( incremental_ )
         {            

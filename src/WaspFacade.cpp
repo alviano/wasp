@@ -30,6 +30,7 @@
 
 #include "MinisatHeuristic.h"
 #include "outputBuilders/MultiOutputBuilder.h"
+#include "QueryInterface.h"
 
 void
 WaspFacade::readInput()
@@ -83,6 +84,13 @@ WaspFacade::solve()
         if( printDimacs )
         {
             solver.printDimacs();
+            return;
+        }
+        
+        if( queryAlgorithm != NO_QUERY )
+        {
+            QueryInterface queryInterface( solver );
+            queryInterface.computeCautiousConsequences( queryAlgorithm );
             return;
         }
         

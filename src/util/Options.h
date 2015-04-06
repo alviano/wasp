@@ -47,6 +47,9 @@ namespace wasp
             static bool backwardPartialChecks;
             static bool bumpActivityAfterPartialCheck;
             
+            static unsigned int queryAlgorithm;
+            static unsigned int queryVerbosity;
+            
         private:
 
             static DELETION_POLICY deletionPolicy;
@@ -80,7 +83,7 @@ namespace wasp
             
             static bool minimizeUnsatCore;
             
-            static bool stratification;
+            static bool stratification;                        
     };
 }
 

@@ -63,6 +63,8 @@ class WaspFacade
         inline void setMinimizeUnsatCore( bool value ) { solver.setMinimizeUnsatCore( value ); }
         inline void setStratification( bool value ) { stratification = value; }
         
+        inline void setQueryAlgorithm( unsigned int value ) { queryAlgorithm = value; }
+        
         inline unsigned int solveWithWeakConstraints();        
 
     private:
@@ -76,6 +78,8 @@ class WaspFacade
         WEAK_CONSTRAINTS_ALG weakConstraintsAlg;
         bool disjCoresPreprocessing;
         bool stratification;
+        
+        unsigned int queryAlgorithm;
 };
 
 WaspFacade::WaspFacade() : numberOfModels( 0 ), maxModels( 1 ), printProgram( false ), printDimacs( false ), weakConstraintsAlg( OPT ), disjCoresPreprocessing( false ), stratification( true )
