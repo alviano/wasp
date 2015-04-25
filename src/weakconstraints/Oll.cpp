@@ -84,7 +84,7 @@ Oll::runWeighted()
     {
         if( solver.solve( assumptions ) != INCOHERENT )
         {
-            unsigned int newUb = solver.computeCostOfModel();
+            uint64_t newUb = solver.computeCostOfModel();
             if( newUb < ub )
             {
                 ub = newUb;
@@ -120,8 +120,8 @@ Oll::runWeighted()
 bool
 Oll::processCoreOll(
     vector< Literal >& literals,
-    vector< unsigned int >& weights,
-    unsigned int minWeight )
+    vector< uint64_t >& weights,
+    uint64_t minWeight )
 {
     trace_msg( weakconstraints, 2, "Processing core for algorithm OLL" );
     
@@ -187,8 +187,8 @@ Oll::processCoreOll(
 bool
 Oll::processCoreOll(
     vector< Literal >& literals,
-    vector< unsigned int >& weights,
-    unsigned int minWeight,
+    vector< uint64_t >& weights,
+    uint64_t minWeight,
     unsigned int& n )
 {
     trace_msg( weakconstraints, 2, "Processing core for algorithm OLL" );
@@ -255,9 +255,9 @@ Oll::processCoreOll(
 bool
 Oll::addAggregateOll(
     vector< Literal >& literals,
-    vector< unsigned int >& weights,
-    unsigned int bound,
-    unsigned int /*weightOfOptimizationLiteral*/ )
+    vector< uint64_t >& weights,
+    uint64_t bound,
+    uint64_t /*weightOfOptimizationLiteral*/ )
 {
     if( literals.size() == 1 )
     {
@@ -348,10 +348,10 @@ Oll::foundUnsat()
     }
 
     vector< Literal > literals;
-    vector< unsigned int > weights;
+    vector< uint64_t > weights;
 
     unsigned int n = 0;
-    unsigned int minWeight = computeMinWeight();
+    uint64_t minWeight = computeMinWeight();
     if( !processCoreOll( literals, weights, minWeight, n ) )
         return false;
     lb += minWeight;

@@ -27,7 +27,7 @@ class MultiOutputBuilder : public CompetitionOutputBuilder
 {
     public:
         MultiOutputBuilder() : lastModel(""), optimum( false ) {}
-        virtual void foundModelOptimization( Solver& solver, unsigned int cost, unsigned int numberOfLevels );
+        virtual void foundModelOptimization( Solver& solver, uint64_t cost, unsigned int numberOfLevels );
         virtual void optimumFound();
         virtual void startModel();
         virtual void printVariable( Var v, bool );
@@ -35,7 +35,7 @@ class MultiOutputBuilder : public CompetitionOutputBuilder
         virtual void onProgramIncoherent();        
         virtual void onFinish();        
         virtual void onKill();
-        virtual void foundLowerBound( unsigned int lb );
+        virtual void foundLowerBound( uint64_t lb );
         
     private:
         string lastModel;

@@ -47,13 +47,13 @@ class Aggregate : public Propagator, public Reason
         
         inline unsigned int size() const { return literals.size() - 1; }
 
-        inline void addLiteral( Literal lit, unsigned int weight ) { literals.push_back( lit ); weights.push_back( weight ); watched.push_back( true ); }        
+        inline void addLiteral( Literal lit, uint64_t weight ) { literals.push_back( lit ); weights.push_back( weight ); watched.push_back( true ); }        
         
         inline Literal getLiteral( unsigned int i ) const { assert( i < literals.size() ); return literals[ i ]; }
-        inline unsigned int getWeight( unsigned int i ) const { assert( i < weights.size() ); return weights[ i ]; }
+        inline uint64_t getWeight( unsigned int i ) const { assert( i < weights.size() ); return weights[ i ]; }
         
-        unsigned int getLevelOfBackjump( const Solver& solver, unsigned int bound );
-        bool updateBound( Solver& solver, unsigned int bound );
+        unsigned int getLevelOfBackjump( const Solver& solver, uint64_t bound );
+        bool updateBound( Solver& solver, uint64_t bound );
         inline bool isTrue() const;        
         
         inline Literal operator[]( unsigned int idx ) const { assert_msg( ( idx > 0 && idx < literals.size() ), "Index is " << idx << " - literals: " << literals.size() ); return literals[ idx ]; }
@@ -76,13 +76,13 @@ class Aggregate : public Propagator, public Reason
         inline Aggregate( const Aggregate& orig );
         
         vector< Literal > literals;
-        vector< unsigned int > weights;
+        vector< uint64_t > weights;
         vector< bool > watched;
         
         int active;
         
-        int counterW1;
-        int counterW2;
+        int64_t counterW1;
+        int64_t counterW2;
         
         unsigned int umax;
         Vector< int > trail;
@@ -108,7 +108,7 @@ class Aggregate : public Propagator, public Reason
         void merge( int left, int center, int right )
         {
             Literal* auxLiterals = new Literal[ right + 1 ];
-            unsigned int* auxWeights = new unsigned int[ right + 1 ];
+            uint64_t* auxWeights = new uint64_t[ right + 1 ];
 
             int i, j;
             for( i = center + 1; i > left; i-- )
@@ -152,8 +152,8 @@ Aggregate::isTrue() const
 {
     int position = -1;
     unsigned int index = 1; 
-    unsigned int counter = ( position > 0 ? counterW2 : counterW1 );
-    return ( counter < weights[ index ] );
+    int64_t counter = ( position > 0 ? counterW2 : counterW1 );
+    return ( counter < ( int64_t ) weights[ index ] );
 }
 
 #endif

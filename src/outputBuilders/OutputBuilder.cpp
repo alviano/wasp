@@ -24,14 +24,12 @@ extern int EXIT_CODE;
 void
 OutputBuilder::foundModelOptimization(
     Solver& solver,
-    unsigned int cost,
+    uint64_t cost,
     unsigned int numberOfLevels )
 {
     cout << COST;
     for( int i = numberOfLevels - 1; i >= 0; --i )
-    {
         cout << " " << solver.getCostOfLevel( i, cost ) << WEIGHT_LEVEL_WEAKCONSTRAINT_SEPARATOR << ( i + 1 );
-    }
     #ifdef TRACE_ON
         cout << " = " << cost;
     #endif
@@ -47,7 +45,7 @@ OutputBuilder::optimumFound()
 
 void
 OutputBuilder::foundLowerBound(
-    unsigned int )
+    uint64_t )
 {
 }
 

@@ -36,9 +36,9 @@ class OutputBuilder
         virtual void endModel() = 0;
         virtual void onProgramIncoherent() = 0;
         virtual void greetings(){}
-        virtual void foundModelOptimization( Solver& solver, unsigned int cost, unsigned int numberOfLevels );
+        virtual void foundModelOptimization( Solver& solver, uint64_t cost, unsigned int numberOfLevels );
         virtual void optimumFound();
-        virtual void foundLowerBound( unsigned int );
+        virtual void foundLowerBound( uint64_t );
         virtual void onKill();
         virtual void onFinish();
 };

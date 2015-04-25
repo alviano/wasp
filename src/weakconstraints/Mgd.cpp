@@ -21,14 +21,14 @@
 unsigned int
 Mgd::run()
 {
-    unsigned int minCost = UINT_MAX;
+    uint64_t minCost = UINT64_MAX;
     unsigned int numberOfModels = 0;
     
     solver.sortOptimizationLiterals();
     while( solver.solve() == COHERENT )
     {
         numberOfModels++;
-        unsigned int modelCost = solver.computeCostOfModel();
+        uint64_t modelCost = solver.computeCostOfModel();
         if( modelCost < minCost )
         {
             minCost = modelCost;
@@ -42,12 +42,12 @@ Mgd::run()
             break;
         
         vector< Literal > literals;
-        vector< unsigned int > weights;
+        vector< uint64_t > weights;
         
         for( unsigned int i = 0; i < solver.numberOfOptimizationLiterals(); i++ )
         {
             Literal l = solver.getOptimizationLiteral( i ).lit;
-            unsigned weight = solver.getOptimizationLiteral( i ).weight;
+            uint64_t weight = solver.getOptimizationLiteral( i ).weight;
             assert( !solver.isUndefined( l ) );
             if( solver.getDecisionLevel( l ) == 0 )
             {

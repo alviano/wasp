@@ -22,7 +22,7 @@
 unsigned int
 Opt::run()
 {
-    trace_msg( weakconstraints, 1, "Starting algorithm OPT" );        
+    trace_msg( weakconstraints, 1, "Starting algorithm " << ( disableprefchoices_ ? "BASIC" : "OPT" ) );
     solver.sortOptimizationLiterals();
     createOptimizationAggregate();
     
@@ -33,7 +33,7 @@ Opt::run()
     {
         numberOfModels++;
         solver.printAnswerSet();
-        unsigned int modelCost = solver.computeCostOfModel(); 
+        uint64_t modelCost = solver.computeCostOfModel(); 
 
         solver.printOptimizationValue( modelCost );
         trace_msg( weakconstraints, 2, "Decision level of solver: " << solver.getCurrentDecisionLevel() );
@@ -68,14 +68,14 @@ Opt::createOptimizationAggregate()
     assert_msg( aggregate == NULL, "Aggregate has been created" );
     assert_msg( solver.getCurrentDecisionLevel() == 0, "The decision level is " << solver.getCurrentDecisionLevel() );
     vector< Literal > literals;
-    vector< unsigned int > weights;
+    vector< uint64_t > weights;
 
-    unsigned int bound = 1;
+    uint64_t bound = 1;
     for( unsigned int i = 0; i < solver.numberOfOptimizationLiterals(); i++ )
     {
         OptimizationLiteralData& optData = solver.getOptimizationLiteral( i );
         Literal lit = optData.lit;
-        unsigned int weight = optData.weight;
+        uint64_t weight = optData.weight;
          
         if( !solver.isUndefined( lit ) )
             continue;
@@ -91,7 +91,7 @@ Opt::createOptimizationAggregate()
 
 bool
 Opt::updateOptimizationAggregate(
-    unsigned int modelCost )
+    uint64_t modelCost )
 {
     assert( aggregate != NULL );    
     trace_msg( weakconstraints, 2, "Precomputed cost is " << solver.getPrecomputedCost() );

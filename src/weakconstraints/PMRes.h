@@ -35,7 +35,7 @@ class PMRes : public WeakInterface
         unsigned int runUnweighted();
                 
         bool addAuxClauses( vector< Literal >& optLiterals );
-        bool addAuxClausesCompressed( vector< Literal > &optLiterals, unsigned int minWeight );
+        bool addAuxClausesCompressed( vector< Literal > &optLiterals, uint64_t minWeight );
         bool addClauseToSolver( Clause* clause );
 //        bool addClauseToSolverAndCheckDuplicatesAndTautological( Clause* clause );
         Var relaxClause( Clause* clause );        

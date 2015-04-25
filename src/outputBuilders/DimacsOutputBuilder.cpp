@@ -67,7 +67,7 @@ DimacsOutputBuilder::greetings()
 void
 DimacsOutputBuilder::foundModelOptimization(
     Solver&,
-    unsigned int cost,
+    uint64_t cost,
     unsigned int )
 {
     cout << OPTIMUM_DIMACS << " " << cost << endl;
@@ -82,7 +82,7 @@ DimacsOutputBuilder::optimumFound()
 
 void
 DimacsOutputBuilder::foundLowerBound(
-    unsigned int lb )
+    uint64_t lb )
 {
     cout << OPTIMUM_DIMACS << " " << lb << endl;
 }

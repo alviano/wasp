@@ -30,7 +30,7 @@ using namespace std;
 class WeakInterface
 {
     public:
-        WeakInterface( Solver& s ) : solver( s ), numberOfCalls( 0 ), lb( 0 ), ub( UINT_MAX ), disjCoresPreprocessing( false ), stratification( true ), weight( UINT_MAX ) {}
+        WeakInterface( Solver& s ) : solver( s ), numberOfCalls( 0 ), lb( 0 ), ub( UINT64_MAX ), disjCoresPreprocessing( false ), stratification( true ), weight( UINT64_MAX ) {}
         virtual ~WeakInterface() {}
         virtual unsigned int run() = 0;
         
@@ -40,12 +40,12 @@ class WeakInterface
         
     protected:
         bool disjointCorePreprocessing();
-        bool createFalseAggregate( const vector< Literal >& literals, const vector< unsigned int >& weights, unsigned int bound );
-        Aggregate* createAndReturnFalseAggregate( const vector< Literal >& literals, const vector< unsigned int >& weights, unsigned int bound );
-        Aggregate* createAggregate( Var aggrId, const vector< Literal >& literals, const vector< unsigned int >& weights );
-        bool processAndAddAggregate( Aggregate* aggregate, unsigned int bound );        
+        bool createFalseAggregate( const vector< Literal >& literals, const vector< uint64_t >& weights, uint64_t bound );
+        Aggregate* createAndReturnFalseAggregate( const vector< Literal >& literals, const vector< uint64_t >& weights, uint64_t bound );
+        Aggregate* createAggregate( Var aggrId, const vector< Literal >& literals, const vector< uint64_t >& weights );
+        bool processAndAddAggregate( Aggregate* aggregate, uint64_t bound );        
         inline void computeAssumptionsAND();
-        unsigned int computeMinWeight();
+        uint64_t computeMinWeight();
         inline Var addAuxVariable();
         inline bool visited( Var v, unsigned int value ) const { assert( v > 0 && v < inUnsatCore.size() ); return inUnsatCore[ v ] == value; }
         inline bool visited( Var v ) const { return visited( v, numberOfCalls ); }
@@ -62,15 +62,15 @@ class WeakInterface
         unsigned int numberOfCalls;
         vector< Literal > assumptions;
         
-        unsigned int lb;
-        unsigned int ub;
+        uint64_t lb;
+        uint64_t ub;
         
         bool disjCoresPreprocessing;
         bool stratification;
 
     private:
-        vector< unsigned int > weights;        
-        unsigned int weight;        
+        vector< uint64_t > weights;        
+        uint64_t weight;        
         
         inline void computeAssumptionsANDOnlyOriginal( unsigned int originalNumberOfOptLiterals );
 };
@@ -138,9 +138,9 @@ WeakInterface::preprocessingWeights()
 {
     solver.sortOptimizationLiterals();
     for( unsigned int i = 0; i < solver.numberOfOptimizationLiterals(); i++ )
-        weights.push_back( solver.getOptimizationLiteral( i ).weight );
+        weights.push_back( solver.getOptimizationLiteral( i ).weight );    
         
-    vector< unsigned int >::iterator it = unique( weights.begin(), weights.end() );
+    vector< uint64_t >::iterator it = unique( weights.begin(), weights.end() );
     weights.erase( it, weights.end() );
 }
 
@@ -170,13 +170,13 @@ WeakInterface::changeWeight()
 {
     if( weight == 0 )
         return false;
-    unsigned int max = 0;
+    uint64_t max = 0;
     for( unsigned int i = 0; i < solver.numberOfOptimizationLiterals(); i++ )
     {
         if( solver.getOptimizationLiteral( i ).isRemoved() )
             continue;
         
-        unsigned int currentWeight = solver.getOptimizationLiteral( i ).weight;
+        uint64_t currentWeight = solver.getOptimizationLiteral( i ).weight;
         if( currentWeight < weight && currentWeight <= ub && currentWeight > max )
             max = currentWeight;        
     }

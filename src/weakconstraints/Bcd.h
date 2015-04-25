@@ -50,48 +50,48 @@ class BcdData
             }
         }
         
-        inline void addElement( Literal lit, unsigned int weight )
+        inline void addElement( Literal lit, uint64_t weight )
         {
             literals_.push_back( lit );
-            weights_.push_back( weight );
-            upperBound_ += weight;
+            weights_.push_back( weight );            
+            upperBound_ += weight;            
         }
         
         inline void computeMiddle()
         {
-            middle_ = ( lowerBound_ + 1 == upperBound_ ) ? upperBound_ : ( upperBound_ + lowerBound_ ) / 2;
+            middle_ = ( lowerBound_ + 1 == upperBound_ ) ? upperBound_ : ( upperBound_ + lowerBound_ ) / 2;            
         }
 
-        inline void restore() { removed_ = 0; }
-        inline void remove() { removed_ = 1; }
+        inline void restore() { removed_ = false; }
+        inline void remove() { removed_ = true; }
         inline bool isRemoved() { return removed_; }        
-        inline unsigned lb() const { return lowerBound_; }
-        inline unsigned ub() const { return upperBound_; }
-        inline unsigned middle() const { return middle_; }
+        inline uint64_t lb() const { return lowerBound_; }
+        inline uint64_t ub() const { return upperBound_; }
+        inline uint64_t middle() const { return middle_; }
 
-        inline void setLb( unsigned int lb ) { lowerBound_ = lb; }
-        inline void setUb( unsigned int ub ) { upperBound_ = ub; }
+        inline void setLb( uint64_t lb ) { lowerBound_ = lb; }
+        inline void setUb( uint64_t ub ) { upperBound_ = ub; }
         
         inline unsigned int numberOfLiterals() const { assert( literals_.size() == weights_.size() ); return literals_.size(); }
         inline Literal getLiteral( unsigned int pos ) const { assert( pos < literals_.size() ); return literals_[ pos ]; }
-        inline unsigned int getWeight( unsigned int pos ) const { assert( pos < weights_.size() ); return weights_[ pos ]; }
+        inline uint64_t getWeight( unsigned int pos ) const { assert( pos < weights_.size() ); return weights_[ pos ]; }
         
         inline vector< Literal >& getLiterals() { return literals_; }
-        inline vector< unsigned int >& getWeights() { return weights_; }
+        inline vector< uint64_t >& getWeights() { return weights_; }
         
         inline Var getAggregateAux() const { return aggregateAux; }
         inline void setAggregateAux( Var v ) { aggregateAux = v; }
         
         inline void sort() { mergesort( 0, literals_.size() - 1 ); }        
     private:
-        unsigned int lowerBound_;
-        unsigned int middle_;
-        unsigned int upperBound_ : 31;
-        unsigned int removed_ : 1;
+        uint64_t lowerBound_;
+        uint64_t middle_;
+        uint64_t upperBound_;
+        bool removed_;
         Var aggregateAux;        
 
         vector< Literal > literals_;
-        vector< unsigned int > weights_;
+        vector< uint64_t > weights_;
         
         void mergesort( int left, int right )
         {
@@ -107,7 +107,7 @@ class BcdData
         void merge( int left, int center, int right )
         {
             Literal* auxLiterals = new Literal[ right + 1 ];
-            unsigned int* auxWeights = new unsigned int[ right + 1 ];
+            uint64_t* auxWeights = new uint64_t[ right + 1 ];
 
             int i, j;
             for( i = center + 1; i > left; i-- )
@@ -142,7 +142,7 @@ class BcdData
 class Bcd : public WeakInterface
 {
     public:
-        inline Bcd( Solver& s ) : WeakInterface( s ) {}
+        inline Bcd( Solver& s ) : WeakInterface( s ), numberOfModels( 0 ) {}
         inline ~Bcd();        
         unsigned int run();
 
@@ -151,7 +151,7 @@ class Bcd : public WeakInterface
         inline bool hasToFinishBcd() const;
         void createBcdData( vector< BcdData* >& intersectingCores );
 //        bool createFalseAggregate( BcdData* bcd );
-        inline unsigned int computeCostOfBcdData( const BcdData* bcdData ) const;        
+        inline uint64_t computeCostOfBcdData( const BcdData* bcdData ) const;        
         bool addAggregateBcd( BcdData* bcdData );
         inline Var addBinaryClauseForAggregateBcd( Var aggrId );
 
@@ -251,11 +251,11 @@ Bcd::hasToFinishBcd() const
     return true;
 }
 
-unsigned int
+uint64_t
 Bcd::computeCostOfBcdData(
     const BcdData* bcdData ) const
 {
-    unsigned int upper = 0;
+    uint64_t upper = 0;
     const BcdData& bcd = *bcdData;
     for( unsigned int j = 0; j < bcd.numberOfLiterals(); j++ )
         if( solver.isTrue( bcd.getLiteral( j ) ) )

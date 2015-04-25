@@ -45,7 +45,7 @@ PMRes::runUnweighted()
         computeAssumptionsAND();
     }
 
-    unsigned int cost = solver.computeCostOfModel();
+    uint64_t cost = solver.computeCostOfModel();
     solver.printAnswerSet();
     solver.printOptimizationValue( cost );
 
@@ -61,9 +61,9 @@ PMRes::runWeighted()
     
     preprocessingWeights();
     changeWeight();
-    computeAssumptionsANDStratified();        
-    
-    initInUnsatCore();    
+    computeAssumptionsANDStratified();
+
+    initInUnsatCore();
 
     solver.setComputeUnsatCores( true );
     solver.turnOffSimplifications();
@@ -72,7 +72,7 @@ PMRes::runWeighted()
     {
         if( solver.solve( assumptions ) != INCOHERENT )
         {
-            unsigned int newUb = solver.computeCostOfModel();
+            uint64_t newUb = solver.computeCostOfModel();
             if( newUb < ub )
             {
                 ub = newUb;
@@ -172,7 +172,7 @@ PMRes::foundUnsat()
         Var v = unsatCore[ i ].getVariable();
         visit( v );
     }        
-    unsigned int minWeight = computeMinWeight();
+    uint64_t minWeight = computeMinWeight();
     lb += minWeight;
     solver.foundLowerBound( lb );
     vector< Literal > optLiterals;
@@ -240,7 +240,7 @@ PMRes::foundUnsat()
 bool
 PMRes::addAuxClausesCompressed(
     vector< Literal >& optLiterals,
-    unsigned int minWeight )
+    uint64_t minWeight )
 {
     assert( !optLiterals.empty() );
     vector< Literal > auxLits;
@@ -304,51 +304,11 @@ PMRes::addAuxClausesCompressed(
     return true;
 }
 
-//bool
-//PMRes::addClauseToSolverAndCheckDuplicatesAndTautological(
-//    Clause* clause )
-//{
-//    if( clause->removeDuplicatesAndCheckIfTautological() )
-//    {
-//        delete clause;
-//        return true;
-//    }    
-//    return addClauseToSolver( clause );
-//}
-
 bool
 PMRes::addClauseToSolver(
     Clause* clause )
 {
     return solver.addClauseRuntime( clause );
-//    unsigned int size = clausePointer->size();
-//    Clause& clause = *clausePointer;    
-//    bool res;
-//    switch( size )
-//    {
-//        case 0:
-//            res = false;
-//            delete clausePointer;
-//            break;
-//
-//        case 1:
-//            res = solver.addClause( clause[ 0 ] );
-//            delete clausePointer;
-//            break;
-//
-//        case 2:
-//            res = solver.addClause( clause[ 0 ], clause[ 1 ] );
-//            delete clausePointer;
-//            break;
-//
-//        default:
-//            res = solver.addClause( clausePointer );
-//            if( res )
-//                solver.attachClause( clause );
-//            break;
-//    }
-//
-//    return res;
 }
 
 Var
@@ -357,15 +317,6 @@ PMRes::relaxClause(
 {
     Clause& clause = *clausePointer;
     Var aux = addAuxVariable();
-//    for( unsigned int i = 0; i < clause.size(); i++ )
-//    {
-//        Clause* c1 = new Clause( 2 );
-//        c1->addLiteral( Literal( aux, NEGATIVE ) );
-//        c1->addLiteral( clause[ i ] );
-//        trace_msg( weakconstraints, 4, "Adding clause " << *c1 );
-//        if( !addClauseToSolver( c1 ) )
-//            return false;        
-//    }
     
     clause.addLiteral( Literal( aux, POSITIVE ) );    
     return aux;

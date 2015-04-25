@@ -52,9 +52,9 @@ class Oll : public WeakInterface
         unsigned int runUnweighted();
 
     protected:
-        bool processCoreOll( vector< Literal >& literals, vector< unsigned int >& weights, unsigned int minWeight );
-        bool processCoreOll( vector< Literal >& literals, vector< unsigned int >& weights, unsigned int minWeight, unsigned int& n );
-        bool addAggregateOll( vector< Literal >& literals, vector< unsigned int >& weights, unsigned int bound, unsigned int weightOfOptimizationLiteral );
+        bool processCoreOll( vector< Literal >& literals, vector< uint64_t >& weights, uint64_t minWeight );
+        bool processCoreOll( vector< Literal >& literals, vector< uint64_t >& weights, uint64_t minWeight, unsigned int& n );
+        bool addAggregateOll( vector< Literal >& literals, vector< uint64_t >& weights, uint64_t bound, uint64_t weightOfOptimizationLiteral );
 //        inline Var addBinaryClauseForAggregateOll( Var aggrId, unsigned int weightOfOptimizationLiteral );
         inline bool hasOllData( Var v ) const;
         inline OllData* getOllData( Var v );

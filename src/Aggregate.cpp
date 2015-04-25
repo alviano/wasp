@@ -79,18 +79,18 @@ Aggregate::onLiteralFalse(
     }
     
     unsigned int index = ( position > 0 ? position : -position ); 
-    int& counter = ( position > 0 ? counterW2 : counterW1 );
+    int64_t& counter = ( position > 0 ? counterW2 : counterW1 );
 
     trace_msg( aggregates, 2, "Updating counter. Old value: " << counter << " - New value: " << counter - weights[ index ] );
     
-    if( counter < (int) weights[ index ] )
+    if( counter < ( int64_t ) weights[ index ] )
     {
         assert_msg( solver.getDecisionLevel( currentLiteral ) == 0, "Literal " << currentLiteral << " in " << *this << " has a decision level " << solver.getDecisionLevel( currentLiteral ) );
         trace_msg( aggregates, 3, "A conflict happened." );        
         solver.assignLiteral( currentLiteral, this );
         return false;
     }
-    assert( counter >= (int) weights[ index ] );
+    assert( counter >= ( int64_t ) weights[ index ] );
     counter -= weights[ index ];
     watched[ index ] = false;
     
@@ -98,7 +98,7 @@ Aggregate::onLiteralFalse(
         trail.push_back( position );
 
     trace_msg( aggregates, 2, "Umax: " << umax << " - size: " << size() );
-    while( umax < literals.size() && (int) weights[ umax ] > counter )
+    while( umax < literals.size() && ( int64_t ) weights[ umax ] > counter )
     {
         if( watched[ umax ] )
         {
@@ -156,10 +156,10 @@ Aggregate::checkDecisionLevelsOrder(
 bool
 Aggregate::updateBound(
     Solver& solver,
-    unsigned int bound )
+    uint64_t bound )
 {
     trace_msg( aggregates, 1, "Updating bound. New value: " << bound );
-    unsigned int sumOfWeights = 0;    
+    uint64_t sumOfWeights = 0;    
     for( unsigned int i = 2; i < weights.size(); i++ )
     {
         if( weights[ i ] > bound )
@@ -170,8 +170,8 @@ Aggregate::updateBound(
     }
     trace_msg( aggregates, 1, "Sum of weights: " << sumOfWeights );    
 
-    int w1 = ( sumOfWeights - bound + 1 );
-    int w = max( w1, (int) bound );
+    int64_t w1 = ( sumOfWeights - bound + 1 );
+    int64_t w = max( w1, ( int64_t ) bound );
 
     counterW1 = sumOfWeights - w1 + w;
     counterW2 = sumOfWeights - bound + w;
@@ -201,9 +201,9 @@ Aggregate::updateBound(
 unsigned int
 Aggregate::getLevelOfBackjump(
     const Solver& solver,
-    unsigned int bound )
+    uint64_t bound )
 {    
-    unsigned int sum = 0;
+    uint64_t sum = 0;
     unsigned int level = 1;
     for( int i = trail.size() - 1; i >= 0; i-- )
     {

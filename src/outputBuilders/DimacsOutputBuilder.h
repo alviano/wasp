@@ -30,9 +30,9 @@ class DimacsOutputBuilder : public OutputBuilder
         virtual void endModel();
         virtual void onProgramIncoherent();
         virtual void greetings();
-        virtual void foundModelOptimization( Solver&, unsigned int cost, unsigned int );
+        virtual void foundModelOptimization( Solver&, uint64_t cost, unsigned int );
         virtual void optimumFound();
-        virtual void foundLowerBound( unsigned int );
+        virtual void foundLowerBound( uint64_t );
     
         inline void setMaxsat() { maxsat = true; }
     private:

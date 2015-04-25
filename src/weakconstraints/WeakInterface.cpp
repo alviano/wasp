@@ -21,8 +21,8 @@
 bool
 WeakInterface::createFalseAggregate(
     const vector< Literal >& literals,
-    const vector< unsigned int >& weights,
-    unsigned int bound )
+    const vector< uint64_t >& weights,
+    uint64_t bound )
 {
     assert( literals.size() == weights.size() );
     solver.unrollToZero();
@@ -56,8 +56,8 @@ WeakInterface::createFalseAggregate(
 Aggregate*
 WeakInterface::createAndReturnFalseAggregate(
     const vector< Literal >& literals,
-    const vector< unsigned int >& weights,
-    unsigned int bound )
+    const vector< uint64_t >& weights,
+    uint64_t bound )
 {
     assert( literals.size() == weights.size() );
     solver.unrollToZero();
@@ -90,7 +90,7 @@ Aggregate*
 WeakInterface::createAggregate(
     Var aggrId,
     const vector< Literal >& literals,
-    const vector< unsigned int >& weights )
+    const vector< uint64_t >& weights )
 {
     assert( literals.size() == weights.size() );
 
@@ -106,7 +106,7 @@ WeakInterface::createAggregate(
 bool
 WeakInterface::processAndAddAggregate(
     Aggregate* aggregate,
-    unsigned int bound )
+    uint64_t bound )
 {    
     trace_msg( weakconstraints, 4, "Trying to add the aggregate " << *aggregate << " - with bound " << bound );
 
@@ -143,10 +143,10 @@ WeakInterface::processAndAddAggregate(
     return true;
 }
 
-unsigned int
+uint64_t
 WeakInterface::computeMinWeight()
 {
-    unsigned int minWeight = UINT_MAX;
+    uint64_t minWeight = UINT64_MAX;
     for( unsigned int i = 0; i < solver.numberOfOptimizationLiterals(); i++ )
     {
         OptimizationLiteralData& optLitData = solver.getOptimizationLiteral( i );        
@@ -156,7 +156,7 @@ WeakInterface::computeMinWeight()
             minWeight = optLitData.weight;
     }
     
-    assert( minWeight != UINT_MAX );
+    assert( minWeight != UINT64_MAX );
     trace_msg( weakconstraints, 2, "Min weight " << minWeight );
     return minWeight;
 }

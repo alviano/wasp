@@ -24,7 +24,7 @@ extern int EXIT_CODE;
 void
 MultiOutputBuilder::foundModelOptimization(
     Solver& solver,
-    unsigned int cost,
+    uint64_t cost,
     unsigned int numberOfLevels )
 {
     cout << "u " << cost << endl;
@@ -109,7 +109,7 @@ MultiOutputBuilder::onKill()
 
 void
 MultiOutputBuilder::foundLowerBound(
-    unsigned int lb )
+    uint64_t lb )
 {
     cout << "l " << lb << endl;
 }

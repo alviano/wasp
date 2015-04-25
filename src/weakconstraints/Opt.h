@@ -26,7 +26,7 @@ class Opt : public WeakInterface
     public:
         Opt( Solver& s, bool disable = false ) : WeakInterface( s ), disableprefchoices_( disable ), aggregate( NULL ) {}
         unsigned int run();
-        bool updateOptimizationAggregate( unsigned int modelCost );
+        bool updateOptimizationAggregate( uint64_t modelCost );
         void createOptimizationAggregate();
         
     private:
