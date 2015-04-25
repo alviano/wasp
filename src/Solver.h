@@ -2195,7 +2195,7 @@ Solver::deleteClausesIfNecessary()
 {
     if( glucoseHeuristic_ )
     {
-        if( conflicts >= glucoseData.currRestart * glucoseData.nbclausesBeforeReduce )
+        if( numberOfLearnedClauses() >= glucoseData.currRestart * glucoseData.nbclausesBeforeReduce )
         {
             assert( numberOfLearnedClauses() > 0 );
             glucoseData.currRestart = ( conflicts / glucoseData.nbclausesBeforeReduce ) + 1;
