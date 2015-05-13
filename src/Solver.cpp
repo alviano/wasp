@@ -104,8 +104,9 @@ Solver::~Solver()
         }
     }
     
-    for( unsigned int i = 0; i < optimizationLiterals.size(); i++ )
-        delete optimizationLiterals[ i ];
+    for( unsigned int j = 0; j < optimizationLiterals.size(); j++ )
+        for( unsigned int i = 0; i < optimizationLiterals[ j ].size(); i++ )
+            delete optimizationLiterals[ j ][ i ];
 }
 
 void
@@ -1318,17 +1319,10 @@ bool compareWeight( OptimizationLiteralData* o1, OptimizationLiteralData* o2 )
 }
 
 void
-Solver::sortOptimizationLiterals()
+Solver::sortOptimizationLiterals( unsigned int level )
 {
-    if( !weighted_ )
+    if( !isWeighted( level ) )
         return;
-    stable_sort( optimizationLiterals.begin(), optimizationLiterals.end(), compareWeight );
-}
-
-void
-Solver::simplifyOptimizationLiteralsAndUpdateLowerBound(
-    WeakInterface* w )
-{
-    simplifyOptimizationLiterals();
-    w->setLowerBound( precomputedCost );
+    assert( level < optimizationLiterals.size() );
+    stable_sort( optimizationLiterals[ level ].begin(), optimizationLiterals[ level ].end(), compareWeight );
 }

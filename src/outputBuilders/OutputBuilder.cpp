@@ -17,22 +17,15 @@
  */
 
 #include "OutputBuilder.h"
-#include "../Solver.h"
-
 extern int EXIT_CODE;
 
 void
 OutputBuilder::foundModelOptimization(
-    Solver& solver,
-    uint64_t cost,
-    unsigned int numberOfLevels )
+    const Vector< uint64_t >& costs )
 {
     cout << COST;
-    for( int i = numberOfLevels - 1; i >= 0; --i )
-        cout << " " << solver.getCostOfLevel( i, cost ) << WEIGHT_LEVEL_WEAKCONSTRAINT_SEPARATOR << ( i + 1 );
-    #ifdef TRACE_ON
-        cout << " = " << cost;
-    #endif
+    for( int i = costs.size() - 1; i >= 0; --i )
+        cout << " " << costs[ i ] << WEIGHT_LEVEL_WEAKCONSTRAINT_SEPARATOR << ( i + 1 );
     cout << endl;    
 }
 
@@ -46,11 +39,6 @@ OutputBuilder::optimumFound()
 void
 OutputBuilder::foundLowerBound(
     uint64_t )
-{
-}
-
-void
-OutputBuilder::onKill()
 {
 }
 

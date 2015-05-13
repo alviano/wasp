@@ -20,7 +20,7 @@
 #define OPTIONS_H
 
 #include <vector>
-
+#include <map>
 #include "Constants.h"
 #include "Trace.h"
 using namespace std;
@@ -83,7 +83,13 @@ namespace wasp
             
             static bool minimizeUnsatCore;
             
-            static bool stratification;                        
+            static bool stratification;
+            
+            static map< string, WEAK_CONSTRAINTS_ALG > stringToWeak;
+            
+            static WEAK_CONSTRAINTS_ALG getAlgorithm( const string& s );
+            
+            static void initMap();
     };
 }
 

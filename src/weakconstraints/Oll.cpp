@@ -30,7 +30,7 @@ Oll::run()
     if( disjCoresPreprocessing && !disjointCorePreprocessing() )
         return INCOHERENT;
     
-    if( stratification && solver.isWeighted() )
+    if( stratification && solver.isWeighted( level() ) )
         return runWeighted();
     return runUnweighted();
 }
@@ -39,8 +39,8 @@ unsigned int
 Oll::runUnweighted()
 {    
     statistics( &solver, disable() );    
-    trace_msg( weakconstraints, 1, "Starting algorithm OLL" );    
-    computeAssumptionsAND();        
+    trace_msg( weakconstraints, 1, "Starting algorithm OLL" );
+    computeAssumptions();        
     
     initInUnsatCore();    
     originalNumberOfVariables = solver.numberOfVariables();        
@@ -52,15 +52,14 @@ Oll::runUnweighted()
         if( !foundUnsat() )
             return INCOHERENT;
         assumptions.clear();
-        computeAssumptionsAND();        
+        computeAssumptions();        
     }
         
     statistics( &solver, enable() );
     statistics( &solver, endSolving() );
-    ub = solver.computeCostOfModel();
-    assert_msg( lb == ub, lb << " != " << ub );
-    solver.printAnswerSet();
-    solver.printOptimizationValue( ub );
+    uint64_t cost = solver.computeCostOfModel( level() );
+    foundAnswerSet( cost );
+    assert_msg( lb() == ub(), lb() << " != " << ub() );
     return OPTIMUM_FOUND;
 }
 
@@ -68,11 +67,11 @@ unsigned int
 Oll::runWeighted()
 {    
     statistics( &solver, disable() );
-    trace_msg( weakconstraints, 1, "Starting algorithm OLL" );    
+    trace_msg( weakconstraints, 1, "Starting algorithm OLL" );
     
     preprocessingWeights();
     changeWeight();
-    computeAssumptionsANDStratified();        
+    computeAssumptionsStratified();        
     
     initInUnsatCore();    
     originalNumberOfVariables = solver.numberOfVariables();        
@@ -84,35 +83,30 @@ Oll::runWeighted()
     {
         if( solver.solve( assumptions ) != INCOHERENT )
         {
-            uint64_t newUb = solver.computeCostOfModel();
-            if( newUb < ub )
-            {
-                ub = newUb;
-                solver.printAnswerSet();
-                solver.printOptimizationValue( ub );                
-            }
+            uint64_t cost = solver.computeCostOfModel( level() );
+            foundAnswerSet( cost );
             solver.unrollToZero();
             solver.clearConflictStatus();
             if( !changeWeight() )
                 break;
             assumptions.clear();
-            computeAssumptionsANDStratified();            
+            computeAssumptionsStratified();            
         }
         else
         {
             if( !foundUnsat() )
                 return INCOHERENT;
             assumptions.clear();
-            computeAssumptionsANDStratified();
+            computeAssumptionsStratified();
         }
         
-        if( lb == ub )
+        if( lb() == ub() )
             break;
     }
 
     statistics( &solver, enable() );
     statistics( &solver, endSolving() );    
-    assert_msg( lb == ub, lb << " != " << ub );    
+    assert_msg( lb() == ub(), lb() << " != " << ub() );    
     
     return OPTIMUM_FOUND;
 }
@@ -127,10 +121,10 @@ Oll::processCoreOll(
     
     bool trivial = false;
     Clause* clause = new Clause();
-    unsigned int originalSize = solver.numberOfOptimizationLiterals();
+    unsigned int originalSize = solver.numberOfOptimizationLiterals( level() );
     for( unsigned int i = 0; i < originalSize; i++ )
     {
-        OptimizationLiteralData& optLitData = solver.getOptimizationLiteral( i );        
+        OptimizationLiteralData& optLitData = solver.getOptimizationLiteral( level(), i );        
         if( optLitData.isRemoved() )
             continue;
 
@@ -152,7 +146,7 @@ Oll::processCoreOll(
                 clause->addLiteral( lit );
             
             if( optLitData.weight > minWeight )
-                solver.addOptimizationLiteral( lit, optLitData.weight - minWeight, UINT_MAX, true );            
+                solver.addOptimizationLiteral( lit, optLitData.weight - minWeight, level(), true );            
         }
     }
     
@@ -195,10 +189,10 @@ Oll::processCoreOll(
     
     bool trivial = false;
     Clause* clause = new Clause();
-    unsigned int originalSize = solver.numberOfOptimizationLiterals();
+    unsigned int originalSize = solver.numberOfOptimizationLiterals( level() );
     for( unsigned int i = 0; i < originalSize; i++ )
     {
-        OptimizationLiteralData& optLitData = solver.getOptimizationLiteral( i );        
+        OptimizationLiteralData& optLitData = solver.getOptimizationLiteral( level(), i );        
         if( optLitData.isRemoved() )
             continue;
 
@@ -220,7 +214,7 @@ Oll::processCoreOll(
                 clause->addLiteral( lit );
             
             if( optLitData.weight > minWeight )
-                solver.addOptimizationLiteral( lit, optLitData.weight - minWeight, UINT_MAX, true );            
+                solver.addOptimizationLiteral( lit, optLitData.weight - minWeight, level(), true );            
         }
     }
     
@@ -231,7 +225,7 @@ Oll::processCoreOll(
         Var auxVar = addAuxVariable();
         literals.push_back( Literal( auxVar, POSITIVE ) );
         weights.push_back( 1 );
-        solver.addOptimizationLiteral( Literal( auxVar, NEGATIVE ), minWeight, UINT_MAX, true );
+        solver.addOptimizationLiteral( Literal( auxVar, NEGATIVE ), minWeight, level(), true );
         newVars.push_back( auxVar );
     }
     
@@ -354,8 +348,8 @@ Oll::foundUnsat()
     uint64_t minWeight = computeMinWeight();
     if( !processCoreOll( literals, weights, minWeight, n ) )
         return false;
-    lb += minWeight;
-    solver.foundLowerBound( lb );    
+    incrementLb( minWeight );
+    solver.foundLowerBound( lb() );    
     if( !addAggregateOll( literals, weights, n + 1, minWeight ) )
         return false;        
 

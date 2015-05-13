@@ -25,7 +25,7 @@ class Mgd : public WeakInterface
 {
     public:
         Mgd( Solver& s ) : WeakInterface( s ) {}
-        unsigned int run();    
+        unsigned int run();
 };
 
 #endif

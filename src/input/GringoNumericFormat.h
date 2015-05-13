@@ -472,7 +472,8 @@ private:
     void cleanWeightConstraint( WeightConstraintRule* rule );
     void addOptimizationRules();
     void addOptimizationRule( WeightConstraintRule* rule );
-    void computeLinearCostsForOptimizationRules( vector< uint64_t >& maxCostOfLevelOfOptimizationRules, vector< int >& literals, vector< uint64_t >& weights, vector< unsigned int >& levels );
+//    void computeLinearCostsForOptimizationRules( vector< uint64_t >& maxCostOfLevelOfOptimizationRules, vector< int >& literals, vector< uint64_t >& weights, vector< unsigned int >& levels );
+    void addOptimizationRules( vector< int >& literals, vector< uint64_t >& weights, vector< unsigned int >& levels );
     
     void createCrule( Literal head, Var varToSkip, NormalRule* rule );
     void addDependencies( Literal head, NormalRule* rule );

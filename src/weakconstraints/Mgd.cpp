@@ -21,33 +21,26 @@
 unsigned int
 Mgd::run()
 {
-    uint64_t minCost = UINT64_MAX;
-    unsigned int numberOfModels = 0;
-    
-    solver.sortOptimizationLiterals();
-    while( solver.solve() == COHERENT )
+    unsigned int numberOfModels = 0;    
+
+    solver.sortOptimizationLiterals( level() );
+    while( solver.solve( assumptions ) == COHERENT )
     {
         numberOfModels++;
-        uint64_t modelCost = solver.computeCostOfModel();
-        if( modelCost < minCost )
-        {
-            minCost = modelCost;
-            solver.printAnswerSet();        
-            solver.printOptimizationValue( modelCost );
-        }
+        uint64_t cost = solver.computeCostOfModel( level() );
+        foundAnswerSet( cost );
 
-        assert( modelCost >= solver.getPrecomputedCost() );
-        modelCost -= solver.getPrecomputedCost();
+        assert( ub() >= solver.getPrecomputedCost( level() ) );
+        uint64_t modelCost = ub() - solver.getPrecomputedCost( level() );
         if( modelCost == 0 || solver.getCurrentDecisionLevel() == 0 )
             break;
-        
+
         vector< Literal > literals;
         vector< uint64_t > weights;
-        
-        for( unsigned int i = 0; i < solver.numberOfOptimizationLiterals(); i++ )
+        for( unsigned int i = 0; i < solver.numberOfOptimizationLiterals( level() ); i++ )
         {
-            Literal l = solver.getOptimizationLiteral( i ).lit;
-            uint64_t weight = solver.getOptimizationLiteral( i ).weight;
+            Literal l = solver.getOptimizationLiteral( level(), i ).lit;
+            uint64_t weight = solver.getOptimizationLiteral( level(), i ).weight;
             assert( !solver.isUndefined( l ) );
             if( solver.getDecisionLevel( l ) == 0 )
             {
@@ -57,28 +50,34 @@ Mgd::run()
                 continue;
             }
 
-            if( !solver.getOptimizationLiteral( i ).isRemoved() )
-            {
-                if( solver.isTrue( l ) )
-                {
-                    literals.push_back( l );
-                    weights.push_back( weight );
-                    solver.getOptimizationLiteral( i ).remove();
-                }
-            }
-            else
+            if( solver.getOptimizationLiteral( level(), i ).isRemoved() || solver.isTrue( l ) )
             {
                 literals.push_back( l );
-                weights.push_back( weight );                    
+                weights.push_back( weight );
+                solver.getOptimizationLiteral( level(), i ).remove();
             }
         }
         
-        if( !createFalseAggregate( literals, weights, modelCost ) )
+        resetSolver();
+        Var aggrId = addAuxVariable();
+        Aggregate* aggregate = createAggregate( aggrId, literals, weights );
+        if( !processAndAddAggregate( aggregate, modelCost ) )
             break;
+        assumptions.push_back( Literal( aggrId, NEGATIVE ) );
+//        if( !createFalseAggregate( literals, weights, modelCost ) )
+//            break;
     }
 
+    resetSolver();
     if( numberOfModels > 0 )
+    {
+        #ifndef NDEBUG
+        bool result =
+        #endif
+        createAggregateFromOptimizationLiterals();
+        assert( result );
         return OPTIMUM_FOUND;
+    }
     
     return INCOHERENT;
 }

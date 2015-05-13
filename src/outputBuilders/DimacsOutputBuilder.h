@@ -30,7 +30,7 @@ class DimacsOutputBuilder : public OutputBuilder
         virtual void endModel();
         virtual void onProgramIncoherent();
         virtual void greetings();
-        virtual void foundModelOptimization( Solver&, uint64_t cost, unsigned int );
+        virtual void foundModelOptimization( const Vector< uint64_t >& );
         virtual void optimumFound();
         virtual void foundLowerBound( uint64_t );
     

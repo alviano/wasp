@@ -25,52 +25,26 @@ using namespace std;
 
 int EXIT_CODE = 0;
 
-class SignalException : public runtime_error
+void my_handler( int )
 {
-    public:
-        SignalException( const string& _message ) : runtime_error( _message ) {}
-};
-
-class SignalHandler
-{
-    public:        
-        SignalHandler()
-        {            
-        }
-        
-        void init()
-        {
-            signal( SIGTERM, SignalHandler::interrupted );
-            signal( SIGINT, SignalHandler::interrupted );
-            signal( SIGXCPU, SignalHandler::interrupted );
-        }
-        
-        static void interrupted( int )
-        {
-            throw SignalException( "Killed. Bye!" );
-        }            
-};
+    cerr << "Killed: Bye!" << endl;
+    EXIT_CODE = 11;
+    exit( EXIT_CODE );
+}
 
 int main( int argc, char** argv )
 {
-    wasp::Options::parse( argc, argv );    
-    WaspFacade waspFacade;     
+    wasp::Options::parse( argc, argv );
+    WaspFacade waspFacade;
     wasp::Options::setOptions( waspFacade );        
-    try
-    {
-        SignalHandler signalHandler;
-        signalHandler.init();        
-        waspFacade.readInput();
-        waspFacade.solve();
-        waspFacade.onFinish();
-    }
-    catch ( SignalException& exceptions )
-    {
-        waspFacade.onKill();
-        cerr << exceptions.what() << endl;
-        EXIT_CODE = 11;
-    }    
     
+    signal( SIGINT, my_handler );
+    signal( SIGTERM, my_handler );
+    signal( SIGXCPU, my_handler );
+    
+    waspFacade.readInput();
+    waspFacade.solve();
+    waspFacade.onFinish();    
     return EXIT_CODE;
 }
 

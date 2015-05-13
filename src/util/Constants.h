@@ -62,17 +62,16 @@
 #define OPT 0
 #define MGD 1
 #define OLL 2
-#define MGDOLL 3
-#define BCD 4
-#define BB 5
-#define PMRES 6
-#define OLLBB 7
-#define OLLBBREST 8
+#define BB 3
+#define PMRES 4
+#define OLLBB 5
+#define OLLBBREST 6
 
 #define INCOHERENT 0
 #define COHERENT 1
 #define OPTIMUM_FOUND 2
-#define INTERRUPTED 3
+#define OPTIMUM_FOUND_STOP 3
+#define INTERRUPTED 4
 
 #define VERSION "2.0"
 

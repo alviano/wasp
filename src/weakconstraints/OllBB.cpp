@@ -26,9 +26,7 @@ OllBB::run()
     solver.turnOffSimplifications();
     initInUnsatCore();
     originalNumberOfVariables = solver.numberOfVariables();
-    solver.sortOptimizationLiterals();
-    strategyModelGuided->createOptimizationAggregate();
-    solver.simplifyOptimizationLiteralsAndUpdateLowerBound( this );
+    solver.sortOptimizationLiterals( level() );
     initHeuristicValues();
     
     unsigned int i = 0;
@@ -36,63 +34,76 @@ OllBB::run()
     {
         setAndUpdateHeuristicValues();
         unsigned int res;
-        trace_msg( weakconstraints, 1, i << " iteration" );
+        trace_msg( weakconstraints, 2, "Iteration " << i );
         if( i++ % 2 == 0 )
             res = oll();
         else
             res = bb();
         
-        if( lb == ub || res == OPTIMUM_FOUND )
-            return OPTIMUM_FOUND;        
+        if( lb() == ub() || res == OPTIMUM_FOUND )
+        {
+            if( !strategyModelGuided->completedLevel() )
+                return OPTIMUM_FOUND_STOP;
+            return OPTIMUM_FOUND;
+        }
         
         if( res == INCOHERENT )
-            return numberOfModels == 0 ? INCOHERENT : OPTIMUM_FOUND;
-    }    
+        {
+            if( numberOfModels == 0 )
+                return INCOHERENT;
+            else
+            {
+                if( !strategyModelGuided->completedLevel() )
+                    return OPTIMUM_FOUND_STOP;
+                return OPTIMUM_FOUND;
+            }
+        }
+    }
 }
 
 unsigned int
 OllBB::bb()
 {
-    trace_msg( weakconstraints, 1, "Starting BB" );
+    trace_msg( weakconstraints, 3, "Starting BB" );
     solver.unrollToZero();
     assumptions.clear();
+    addOptimizationLiteralInAssumptions();
+
     solver.setComputeUnsatCores( false );    
     unsigned int res = solver.solve();
     while( res == COHERENT )
     {
         numberOfModels++;
-        solver.printAnswerSet();
-        ub = solver.computeCostOfModel(); 
-
-        solver.printOptimizationValue( ub );
-        trace_msg( weakconstraints, 2, "Decision level of solver: " << solver.getCurrentDecisionLevel() );
-        if( ub == lb || ub == 0 || solver.getCurrentDecisionLevel() == 0 )
+        uint64_t modelCost = solver.computeCostOfModel( level() );
+        foundAnswerSet( modelCost );
+        trace_msg( weakconstraints, 4, "Decision level of solver: " << solver.getCurrentDecisionLevel() );
+        if( ub() == lb() || ub() == 0 || solver.getCurrentDecisionLevel() == 0 )
             break;
         
-        trace_msg( weakconstraints, 2, "Updating bound of optimization aggregate. Model cost: " << ub );        
-        if( !strategyModelGuided->updateOptimizationAggregate( ub ) )
+        trace_msg( weakconstraints, 4, "Updating bound of optimization aggregate. Model cost: " << ub() );        
+        if( !strategyModelGuided->updateOptimizationAggregate( modelCost ) )
         {
-            trace_msg( weakconstraints, 3, "Failed updating of optimization aggregate: return" );
+            trace_msg( weakconstraints, 5, "Failed updating of optimization aggregate: return" );
             break;        
         }                
         
-        trace_msg( weakconstraints, 2, "Calling solver..." );
+        trace_msg( weakconstraints, 4, "Calling solver..." );
         res = solver.solve();
     }
 
     if( res == INTERRUPTED )
-        return res;
-    return OPTIMUM_FOUND;
+        return res;    
+    return OPTIMUM_FOUND;    
 }
 
 unsigned int
 OllBB::oll()
 {
-    trace_msg( weakconstraints, 1, "Starting OLL" );
+    trace_msg( weakconstraints, 3, "Starting OLL" );
     solver.unrollToZero();        
     assumptions.clear();
     solver.setComputeUnsatCores( true );    
-    computeAssumptionsAND();    
+    computeAssumptions();    
     unsigned int res = solver.solve( assumptions );    
     while( res == INCOHERENT )
     {        
@@ -100,7 +111,7 @@ OllBB::oll()
             return INCOHERENT;
         
         assumptions.clear();
-        computeAssumptionsAND();
+        computeAssumptions();
         
         res = solver.solve( assumptions );        
     }
@@ -108,10 +119,8 @@ OllBB::oll()
     if( res == INTERRUPTED )
         return res;
 
-    ub = solver.computeCostOfModel();
-    assert_msg( lb == ub, lb << " != " << ub );
-    solver.printAnswerSet();
-    solver.printOptimizationValue( ub );
+    foundAnswerSet( solver.computeCostOfModel( level() ) );
+    assert_msg( lb() == ub(), lb() << " != " << ub() );
     numberOfModels++;
     
     return OPTIMUM_FOUND;    

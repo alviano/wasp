@@ -28,7 +28,6 @@ using namespace std;
 #include "Solver.h"
 #include "input/Dimacs.h"
 #include "weakconstraints/WeakInterface.h"
-#include "weakconstraints/Bcd.h"
 #include "weakconstraints/Mgd.h"
 #include "weakconstraints/Oll.h"
 #include "weakconstraints/Opt.h"
@@ -44,7 +43,6 @@ class WaspFacade
         void readInput();
         void solve();
         inline void onFinish() { solver.onFinish(); }
-        inline void onKill() { solver.onKill(); }
         
         inline void greetings(){ solver.greetings(); }
         
@@ -92,10 +90,6 @@ WaspFacade::solveWithWeakConstraints()
     WeakInterface* w = NULL;    
     switch( weakConstraintsAlg )
     {
-        case BCD:
-            w = new Bcd( solver );      
-            break;
-
         case MGD:
             w = new Mgd( solver );
             break;
@@ -118,14 +112,7 @@ WaspFacade::solveWithWeakConstraints()
 
         case OLLBBREST:
             w = new OllBB( solver, true );
-            break;
-
-        case MGDOLL:
-            if( solver.isWeighted() )
-                w = new Mgd( solver );
-            else
-                w = new Oll( solver );                
-            break;
+            break;        
 
         case OLL:
         default:            
@@ -133,11 +120,11 @@ WaspFacade::solveWithWeakConstraints()
             break;
     }
     
-    if( weakConstraintsAlg != OLLBB && weakConstraintsAlg != OLLBBREST )
-        solver.simplifyOptimizationLiteralsAndUpdateLowerBound( w );
+//    if( weakConstraintsAlg != OLLBB && weakConstraintsAlg != OLLBBREST )
+//        solver.simplifyOptimizationLiteralsAndUpdateLowerBound( w );
     w->setDisjCoresPreprocessing( disjCoresPreprocessing );
     w->setStratification( stratification );
-    unsigned int res = w->run();    
+    unsigned int res = w->solve();    
     delete w;
     return res;
 }

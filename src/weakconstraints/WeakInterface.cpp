@@ -18,6 +18,10 @@
 
 #include "WeakInterface.h"
 
+unsigned int WeakInterface::level_ = 0;
+uint64_t WeakInterface::lb_ = 0;
+uint64_t WeakInterface::ub_ = UINT64_MAX;
+
 bool
 WeakInterface::createFalseAggregate(
     const vector< Literal >& literals,
@@ -25,22 +29,25 @@ WeakInterface::createFalseAggregate(
     uint64_t bound )
 {
     assert( literals.size() == weights.size() );
-    solver.unrollToZero();
-    
+    assert( solver.getCurrentDecisionLevel() == 0 );
+    assert( !solver.conflictDetected() );
+
     solver.addVariableRuntime();    
     Var aggregateVar = solver.numberOfVariables();
     Literal aggregateLit( aggregateVar, POSITIVE );    
-    Aggregate* aggregate = createAggregate( aggregateVar, literals, weights );   
-    
+    Aggregate* aggregate = createAggregate( aggregateVar, literals, weights );
+    trace_msg( weakconstraints, 4, "Created aggregate " << *aggregate << " - with bound " << bound );
     assert( aggregate->size() >= 1 );
     #ifndef NDEBUG
     bool res =
     #endif
     solver.addClauseRuntime( aggregateLit.getOppositeLiteral() );
     assert( res );
+        
+    //aggregate is already false: return
     if( !aggregate->updateBound( solver, bound ) )
-        return false;    
-
+        return true;
+    
     solver.attachAggregate( *aggregate );
     solver.addAggregate( aggregate );
     
@@ -50,7 +57,7 @@ WeakInterface::createFalseAggregate(
     if( solver.conflictDetected() )
         return false;
     
-    return aggregate;
+    return true;
 }
 
 Aggregate*
@@ -143,13 +150,36 @@ WeakInterface::processAndAddAggregate(
     return true;
 }
 
+bool
+WeakInterface::createAggregateFromOptimizationLiterals()
+{
+    assert( solver.getCurrentDecisionLevel() == 0 );
+    assert( !solver.conflictDetected() );
+    trace_msg( weakconstraints, 3, "Creating aggregate from optimization literals for level " << level() );
+    solver.sortOptimizationLiterals( level() );
+    vector< Literal > literals;
+    vector< uint64_t > weights;
+    assert( ub_ >= solver.getPrecomputedCost( level() ) );
+    uint64_t cost = ( ub_ - solver.getPrecomputedCost( level() ) ) + 1;
+    for( unsigned int i = 0; i < solver.numberOfOptimizationLiterals( level() ); i++ )
+    {
+        OptimizationLiteralData& opt = solver.getOptimizationLiteral( level(), i );
+        if( opt.isRemoved() )
+            continue;
+        literals.push_back( opt.lit );
+        weights.push_back( opt.weight );
+    }
+
+    return createFalseAggregate( literals, weights, cost );    
+}
+
 uint64_t
 WeakInterface::computeMinWeight()
 {
     uint64_t minWeight = UINT64_MAX;
-    for( unsigned int i = 0; i < solver.numberOfOptimizationLiterals(); i++ )
+    for( unsigned int i = 0; i < solver.numberOfOptimizationLiterals( level() ); i++ )
     {
-        OptimizationLiteralData& optLitData = solver.getOptimizationLiteral( i );        
+        OptimizationLiteralData& optLitData = solver.getOptimizationLiteral( level(), i );        
         if( optLitData.isRemoved() )
             continue;
         if( visited( optLitData.lit.getVariable() ) && minWeight > optLitData.weight )
@@ -164,17 +194,17 @@ WeakInterface::computeMinWeight()
 bool
 WeakInterface::disjointCorePreprocessing()
 {
-    computeAssumptionsAND();
+    computeAssumptions();
     initInUnsatCore();
     
     solver.setComputeUnsatCores( true );
     solver.turnOffSimplifications();
 
-    unsigned int originalNumberOfOptLiterals = solver.numberOfOptimizationLiterals();
+    unsigned int originalNumberOfOptLiterals = solver.numberOfOptimizationLiterals( level() );
     while( true )
     {
         if( solver.solve( assumptions ) != INCOHERENT )
-        {
+        {            
             solver.clearConflictStatus();
             solver.unrollToZero();
             assumptions.clear();
@@ -185,8 +215,80 @@ WeakInterface::disjointCorePreprocessing()
             return false;
         
         assumptions.clear();
-        computeAssumptionsANDOnlyOriginal( originalNumberOfOptLiterals );
+        computeAssumptionsOnlyOriginal( originalNumberOfOptLiterals );
     }        
     
     return true;
+}
+
+unsigned int
+WeakInterface::solve()
+{
+    unsigned int res = OPTIMUM_FOUND;
+    for( int i = solver.numberOfLevels() - 1; i >= 0; i-- )
+    {
+        level_ = i;
+        lb_ = solver.simplifyOptimizationLiterals( level() );
+        ub_ = UINT64_MAX;
+        trace_msg( weakconstraints, 1, "Solving level " << level() << ": lb=" << lb_ << ", ub=" << ub_ );
+        
+        res = run();
+        if( res == INCOHERENT )
+            return res;
+        else if( res == OPTIMUM_FOUND_STOP )
+            return OPTIMUM_FOUND;
+        
+        solver.unrollToZero();
+        solver.clearConflictStatus();
+        clearAssumptions();
+        if( !hardening() )
+            return res;
+    }
+    
+    return res;
+}
+
+bool
+WeakInterface::hardening()
+{
+    trace_msg( weakconstraints, 2, "Starting hardening: lb=" << lb_ << ", ub=" << ub_ );
+    for( unsigned int i = 0; i < solver.numberOfOptimizationLiterals( level() ); i++ )
+    {
+        OptimizationLiteralData& opt = solver.getOptimizationLiteral( level(), i );
+        if( opt.removed )
+            continue;
+
+        trace_msg( weakconstraints, 3, "Considering literal " << opt.lit << " - Weight: " << opt.weight );
+        if( lb_ + opt.weight > ub_ )
+        {
+            if( !solver.addClauseRuntime( opt.lit.getOppositeLiteral() ) )
+                return false;
+        }
+        
+        assert( !solver.conflictDetected() );
+    }
+    
+    return true;
+}
+
+void
+WeakInterface::foundAnswerSet(
+    uint64_t cost )
+{
+    trace_msg( weakconstraints, 2, "Found answer set with cost " << cost  << " - upper bound " << ub_ );
+    if( cost >= ub_ )
+        return;
+
+    ub_ = cost;
+    solver.printAnswerSet();
+    Vector< uint64_t > costs;
+    solver.computeCostOfModel( costs );
+    solver.printOptimizationValue( costs );
+}
+
+void
+WeakInterface::resetSolver()
+{
+    solver.unrollToZero();
+    solver.clearConflictStatus();
 }

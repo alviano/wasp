@@ -85,7 +85,6 @@ class Solver
         
         inline void greetings(){ outputBuilder->greetings(); }
         inline void onFinish() { outputBuilder->onFinish(); }
-        inline void onKill() { outputBuilder->onKill(); }
         
         inline unsigned int solve();
         inline unsigned int solve( vector< Literal >& assumptions );
@@ -162,7 +161,7 @@ class Solver
         inline void foundIncoherence();
         inline bool hasUndefinedLiterals();
         inline void printAnswerSet();
-        inline void printOptimizationValue( uint64_t cost );
+        inline void printOptimizationValue( const Vector< uint64_t >& costs );
         inline void printCautiousConsequences( const Vector< Var >& answers );        
         inline void optimumFound();
         
@@ -256,13 +255,16 @@ class Solver
         
 //        inline void setOptimizationAggregate( Aggregate* optAggregate ) { assert( optAggregate != NULL ); optimizationAggregate = optAggregate; }
         inline void addOptimizationLiteral( Literal lit, uint64_t weight, unsigned int level, bool isAux );
-        inline uint64_t computeCostOfModel();
+        inline uint64_t computeCostOfModel( unsigned int level );
+//        inline uint64_t computeCostOfModel();
+        inline void computeCostOfModel( Vector< uint64_t >& );
+        inline void setLevels( unsigned int n );
 //        inline bool updateOptimizationAggregate( unsigned int modelCost );        
         
-        inline uint64_t getCostOfLevel( unsigned int levelIndex, uint64_t totalCost ) const;
-        inline void setMaxCostOfLevelOfOptimizationRules( vector< uint64_t >& m ) { maxCostOfLevelOfOptimizationRules.swap( m ); }
-        inline void setNumberOfOptimizationLevels( unsigned int n ) { numberOfOptimizationLevels = n; }        
-        inline void addPreferredChoicesFromOptimizationLiterals();
+//        inline uint64_t getCostOfLevel( unsigned int levelIndex, uint64_t totalCost ) const;
+//        inline void setMaxCostOfLevelOfOptimizationRules( vector< uint64_t >& m ) { maxCostOfLevelOfOptimizationRules.swap( m ); }
+//        inline void setNumberOfOptimizationLevels( unsigned int n ) { numberOfOptimizationLevels = n; }        
+        inline void addPreferredChoicesFromOptimizationLiterals( unsigned int level );
         inline void removePrefChoices() { minisatHeuristic->removePrefChoices(); }
         
         inline bool isTrue( Var v ) const { return variables.isTrue( v ); }
@@ -411,27 +413,30 @@ class Solver
         inline void setComputeUnsatCores( bool b ) { computeUnsatCores_ = b; }
         inline const Clause* getUnsatCore() const { return unsatCore; }
         
-        inline OptimizationLiteralData& getOptimizationLiteral( unsigned int pos ) { assert( pos < optimizationLiterals.size() ); return *optimizationLiterals[ pos ]; }
-        inline unsigned int numberOfOptimizationLiterals() const { return optimizationLiterals.size(); }
-        void sortOptimizationLiterals();
+        inline OptimizationLiteralData& getOptimizationLiteral( unsigned int level, unsigned int pos );
+        inline unsigned int numberOfOptimizationLiterals( unsigned int level ) const { assert( level < optimizationLiterals.size() ); return optimizationLiterals[ level ].size(); }
+        inline unsigned int numberOfLevels() const { return optimizationLiterals.size(); }
+        void sortOptimizationLiterals( unsigned int level );
         
 //        inline Aggregate* createAggregate( const vector< Literal >& literals, const vector< unsigned int >& weights );
         
-        inline bool isWeighted() const { return weighted_; }
-        inline void setWeighted() { weighted_ = true; }
+        inline bool isWeighted( unsigned int level ) const { assert( level < weighted_.size() ); return weighted_[ level ]; }
+        inline void setWeighted( unsigned int level ) { assert( level < weighted_.size() ); weighted_[ level ] = true; }
         
         inline void setMaxNumberOfChoices( unsigned int max ) { maxNumberOfChoices = max; }
         inline void setMaxNumberOfRestarts( unsigned int max ) { maxNumberOfRestarts = max; }
-        inline uint64_t getPrecomputedCost() const { return precomputedCost; }
-        
-        void simplifyOptimizationLiteralsAndUpdateLowerBound( WeakInterface* );
+        inline uint64_t getPrecomputedCost( unsigned int level ) const { assert( level < precomputedCosts.size() ); return precomputedCosts[ level ]; }
+//        inline uint64_t getPrecomputedCost() const { return precomputedCost; }                
         
         inline void foundLowerBound( uint64_t lb ) { outputBuilder->foundLowerBound( lb ); }
         inline bool incremental() const { return incremental_; }
         
-        inline bool isOptimizationProblem() const { return numberOfOptimizationLiterals() > 0; }
+        inline bool isOptimizationProblem() const { return !optimizationLiterals.empty(); }
         
         inline bool propagateFixpoint();
+        
+        inline uint64_t simplifyOptimizationLiterals( unsigned int level );
+//        inline void simplifyOptimizationLiterals();
                
     private:
         HCComponent* hcComponentForChecker;
@@ -450,7 +455,6 @@ class Solver
         
         bool checkVariablesState();
         inline void setEliminated( Var v, unsigned int value, Clause* definition ) { variables.setEliminated( v, value, definition ); }        
-        inline void simplifyOptimizationLiterals();
         
         Solver( const Solver& ) : learning( *this ), dependencyGraph( NULL )
         {
@@ -499,7 +503,8 @@ class Solver
         vector< Aggregate* > aggregates;
         
 //        Aggregate* optimizationAggregate;
-        unsigned int numberOfOptimizationLevels;
+//        unsigned int numberOfOptimizationLevels;
+        vector< uint64_t > precomputedCosts;
         uint64_t precomputedCost;
                 
         bool callSimplifications_;
@@ -591,8 +596,9 @@ class Solver
             
         } glucoseData;
         
-        vector< OptimizationLiteralData* > optimizationLiterals;
-        vector< uint64_t > maxCostOfLevelOfOptimizationRules;        
+        vector< vector< OptimizationLiteralData* > > optimizationLiterals;
+        vector< bool > weighted_;
+//        vector< uint64_t > maxCostOfLevelOfOptimizationRules;        
         
         Vector< DataStructures* > variableDataStructures;
         
@@ -605,8 +611,7 @@ class Solver
         bool partialChecks;
         bool computeUnsatCores_;
         bool minimizeUnsatCore_;
-        Clause* unsatCore;
-        bool weighted_;
+        Clause* unsatCore;        
         unsigned int maxNumberOfChoices;
         unsigned int numberOfChoices;
         unsigned int maxNumberOfRestarts;
@@ -645,7 +650,7 @@ Solver::Solver()
     literalsInClauses( 0 ),
     literalsInLearnedClauses( 0 ),
 //    optimizationAggregate( NULL ),
-    numberOfOptimizationLevels( 0 ),
+//    numberOfOptimizationLevels( 0 ),
     precomputedCost( 0 ),
     callSimplifications_( true ),
     glucoseHeuristic_( true ),
@@ -658,7 +663,6 @@ Solver::Solver()
     computeUnsatCores_( false ),
     minimizeUnsatCore_( true ),
     unsatCore( NULL ),
-    weighted_( false ),
     maxNumberOfChoices( UINT_MAX ),
     numberOfChoices( 0 ),
     maxNumberOfRestarts( UINT_MAX ),
@@ -692,7 +696,7 @@ unsigned int
 Solver::solve(
     vector< Literal >& assumptions )
 {
-    incremental_ = true;
+    incremental_ = !assumptions.empty();
     numberOfAssumptions = assumptions.size();
     for( unsigned int i = 0; i < assumptions.size(); i++ )
         setAssumption( assumptions[ i ], true );
@@ -891,7 +895,10 @@ Solver::addClauseRuntime(
 {
     if( isTrue( literal ) )
         return true;
+    if( isFalse( literal ) )
+        return false;
     assert( currentDecisionLevel == 0 );
+    assert( !conflictDetected() );
     assignLiteral( literal );
     assert( isTrue( literal ) );
     assert( !conflictDetected() );
@@ -1189,9 +1196,9 @@ Solver::printAnswerSet()
 
 void
 Solver::printOptimizationValue(
-    uint64_t cost )
+    const Vector< uint64_t >& costs )
 {
-    outputBuilder->foundModelOptimization( *this, cost, numberOfOptimizationLevels );
+    outputBuilder->foundModelOptimization( costs );
 }
 
 void
@@ -1747,20 +1754,50 @@ Solver::propagateWithPropagators(
 }
 
 uint64_t
-Solver::computeCostOfModel()
+Solver::computeCostOfModel(
+    unsigned int level )
 {
-    uint64_t cost = precomputedCost;
-    for( unsigned int i = 0; i < numberOfOptimizationLiterals(); i++ )
+    uint64_t cost = getPrecomputedCost( level );
+    for( unsigned int i = 0; i < numberOfOptimizationLiterals( level ); i++ )
     {        
-        assert( getOptimizationLiteral( i ).lit != Literal::null );        
+        assert( getOptimizationLiteral( level, i ).lit != Literal::null );        
         //This is the first aux
-        if( getOptimizationLiteral( i ).isAux() )
+        if( getOptimizationLiteral( level, i ).isAux() )
             continue;
-        if( isTrue( getOptimizationLiteral( i ).lit ) )
-            cost += getOptimizationLiteral( i ).weight;        
+        if( isTrue( getOptimizationLiteral( level, i ).lit ) )
+            cost += getOptimizationLiteral( level, i ).weight;        
     }
-        
     return cost;
+}
+
+void
+Solver::computeCostOfModel(
+    Vector< uint64_t >& costs )
+{
+    for( unsigned int i = 0; i < optimizationLiterals.size(); i++ )
+        costs.push_back( computeCostOfModel( i ) );
+}
+
+//uint64_t
+//Solver::computeCostOfModel()
+//{
+//    uint64_t cost = 0;
+//    for( unsigned int j = 0; j < optimizationLiterals.size(); j++ )
+//        cost += computeCostOfModel( j );    
+//    return cost;
+//}
+
+void
+Solver::setLevels(
+    unsigned int n )
+{
+    for( unsigned int i = 0; i < n; i++ )
+    {
+        optimizationLiterals.push_back( vector< OptimizationLiteralData* >() );
+        precomputedCosts.push_back( 0 );
+        weighted_.push_back( false );
+    }
+    assert( optimizationLiterals.size() == precomputedCosts.size() );
 }
 
 void
@@ -1777,27 +1814,33 @@ Solver::addOptimizationLiteral(
     opt.level = level;
     opt.removed = 0;
     opt.aux = aux ? 1 : 0;
-    optimizationLiterals.push_back( optPointer );
+    assert_msg( level < optimizationLiterals.size(), level << " >= " << optimizationLiterals.size() );
+    assert_msg( level < precomputedCosts.size(), level << " >= " << precomputedCosts.size() );
+    assert_msg( level < weighted_.size(), level << " >= " << weighted_.size() );
+    optimizationLiterals[ level ].push_back( optPointer );
+    if( weight > 1 )
+        setWeighted( level );
     getDataStructure( lit ).setOptLit( true );    
 }
 
-uint64_t
-Solver::getCostOfLevel(
-    unsigned int levelIndex,
-    uint64_t totalCost ) const
-{    
-    assert_msg( levelIndex + 1 < maxCostOfLevelOfOptimizationRules.size(), "Index is " << levelIndex << " - Elements " << totalCost );
-    return ( totalCost % maxCostOfLevelOfOptimizationRules[ levelIndex + 1 ] ) / maxCostOfLevelOfOptimizationRules[ levelIndex ];
-}
+//uint64_t
+//Solver::getCostOfLevel(
+//    unsigned int levelIndex,
+//    uint64_t totalCost ) const
+//{    
+//    assert_msg( levelIndex + 1 < maxCostOfLevelOfOptimizationRules.size(), "Index is " << levelIndex << " - Elements " << totalCost );
+//    return ( totalCost % maxCostOfLevelOfOptimizationRules[ levelIndex + 1 ] ) / maxCostOfLevelOfOptimizationRules[ levelIndex ];
+//}
 
 void
-Solver::addPreferredChoicesFromOptimizationLiterals()
+Solver::addPreferredChoicesFromOptimizationLiterals(
+    unsigned int level )
 {
     assert( currentDecisionLevel == 0 );
-    for( unsigned int i = 0; i < numberOfOptimizationLiterals(); i++ )
+    for( unsigned int i = 0; i < numberOfOptimizationLiterals( level ); i++ )
     {
-        if( isUndefined( getOptimizationLiteral( i ).lit ) )
-            minisatHeuristic->addPreferredChoice( getOptimizationLiteral( i ).lit.getOppositeLiteral() );
+        if( isUndefined( getOptimizationLiteral( level, i ).lit ) )
+            minisatHeuristic->addPreferredChoice( getOptimizationLiteral( level, i ).lit.getOppositeLiteral() );
     }
 }
 
@@ -2310,6 +2353,16 @@ Solver::modelIsValidUnderAssumptions(
     return true;
 }
 
+OptimizationLiteralData&
+Solver::getOptimizationLiteral(
+    unsigned int level,
+    unsigned int pos )
+{
+    assert( level < optimizationLiterals.size() );    
+    assert( pos < optimizationLiterals[ level ].size() );
+    return *optimizationLiterals[ level ][ pos ];
+}
+
 void
 Solver::computeUnsatCore()
 {
@@ -2435,21 +2488,32 @@ Solver::propagateFixpoint()
     return true;
 }
 
-void
-Solver::simplifyOptimizationLiterals()
-{    
-    assert( precomputedCost == 0 );
+uint64_t
+Solver::simplifyOptimizationLiterals(
+    unsigned int level )
+{
+    assert( getPrecomputedCost( level ) == 0 );
+    vector< OptimizationLiteralData* >& optLiterals = optimizationLiterals[ level ];
     unsigned int j = 0;
-    for( unsigned int i = 0; i < optimizationLiterals.size(); i++ )
+    for( unsigned int i = 0; i < optLiterals.size(); i++ )
     {
-        optimizationLiterals[ j ] = optimizationLiterals[ i ];        
-        if( isTrue( optimizationLiterals[ j ]->lit ) )
-            precomputedCost += optimizationLiterals[ j ]->weight;
+        optLiterals[ j ] = optLiterals[ i ];
+        if( isTrue( optLiterals[ j ]->lit ) )
+            precomputedCosts[ level ] += optLiterals[ j ]->weight;
         else
             ++j;
     }
-    optimizationLiterals.resize( j );    
+    optLiterals.resize( j );
+    return precomputedCosts[ level ];
 }
+
+//void
+//Solver::simplifyOptimizationLiterals()
+//{
+//    assert( precomputedCost == 0 );
+//    for( unsigned int l = 0; l < optimizationLiterals.size(); l++ )
+//        precomputedCost += simplifyOptimizationLiterals( l );    
+//}
 
 #endif
 

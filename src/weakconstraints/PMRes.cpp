@@ -23,7 +23,7 @@ PMRes::run()
 {
     if( disjCoresPreprocessing && !disjointCorePreprocessing() )
         return INCOHERENT;
-    if( stratification && solver.isWeighted() )
+    if( stratification && solver.isWeighted( level() ) )
         return runWeighted();
     return runUnweighted();
 }
@@ -32,7 +32,7 @@ unsigned int
 PMRes::runUnweighted()
 {
     trace_msg( weakconstraints, 1, "Starting algorithm PMRes" );
-    computeAssumptionsAND();    
+    computeAssumptions();    
     initInUnsatCore();
 
     solver.setComputeUnsatCores( true );
@@ -42,14 +42,12 @@ PMRes::runUnweighted()
         if( !foundUnsat() )
             return INCOHERENT;
         assumptions.clear();
-        computeAssumptionsAND();
+        computeAssumptions();
     }
 
-    uint64_t cost = solver.computeCostOfModel();
-    solver.printAnswerSet();
-    solver.printOptimizationValue( cost );
-
-    assert_msg( lb == cost, lb << " != " << cost );    
+    uint64_t cost = solver.computeCostOfModel( level() );
+    foundAnswerSet( cost );    
+    assert_msg( lb() == cost, lb() << " != " << cost );    
     return OPTIMUM_FOUND;
 }
 
@@ -57,11 +55,11 @@ unsigned int
 PMRes::runWeighted()
 {
     statistics( &solver, disable() );
-    trace_msg( weakconstraints, 1, "Starting algorithm OLL" );    
+    trace_msg( weakconstraints, 1, "Starting algorithm PMRes" );    
     
     preprocessingWeights();
     changeWeight();
-    computeAssumptionsANDStratified();
+    computeAssumptionsStratified();
 
     initInUnsatCore();
 
@@ -72,35 +70,30 @@ PMRes::runWeighted()
     {
         if( solver.solve( assumptions ) != INCOHERENT )
         {
-            uint64_t newUb = solver.computeCostOfModel();
-            if( newUb < ub )
-            {
-                ub = newUb;
-                solver.printAnswerSet();
-                solver.printOptimizationValue( ub );                
-            }
+            uint64_t cost = solver.computeCostOfModel( level() );
+            foundAnswerSet( cost );
             solver.unrollToZero();
             solver.clearConflictStatus();
             if( !changeWeight() )
                 break;
             assumptions.clear();
-            computeAssumptionsANDStratified();
+            computeAssumptionsStratified();
         }
         else
         {
             if( !foundUnsat() )
                 return INCOHERENT;
             assumptions.clear();
-            computeAssumptionsANDStratified();
+            computeAssumptionsStratified();
         }
         
-        if( lb == ub )
+        if( lb() == ub() )
             break;
     }
 
     statistics( &solver, enable() );
     statistics( &solver, endSolving() );    
-    assert_msg( lb == ub, lb << " != " << ub );    
+    assert_msg( lb() == ub(), lb() << " != " << ub() );    
     
     return OPTIMUM_FOUND;
 }
@@ -124,7 +117,7 @@ PMRes::addAuxClauses(
         clause->addLiteral( Literal( aux, NEGATIVE ) );
         Var relaxVar = relaxClause( clause );
 
-        solver.addOptimizationLiteral( Literal( relaxVar, POSITIVE ), 1, UINT_MAX, true );
+        solver.addOptimizationLiteral( Literal( relaxVar, POSITIVE ), 1, level(), true );
         trace_msg( weakconstraints, 4, "Adding clause " << *clause );
         if( !addClauseToSolver( clause ) )
             return false;
@@ -173,19 +166,19 @@ PMRes::foundUnsat()
         visit( v );
     }        
     uint64_t minWeight = computeMinWeight();
-    lb += minWeight;
-    solver.foundLowerBound( lb );
+    incrementLb( minWeight );
+    solver.foundLowerBound( lb() );
     vector< Literal > optLiterals;
 
     bool trivial = false;
     Clause* clause = new Clause();
     trace_msg( weakconstraints, 1, "Computing hard clause " );
-    unsigned int originalSize = solver.numberOfOptimizationLiterals();
+    unsigned int originalSize = solver.numberOfOptimizationLiterals( level() );
 
-    unsigned int atLevelZeroWeight = 0;
+    uint64_t atLevelZeroWeight = 0;
     for( unsigned int i = 0; i < originalSize; i++ )
     {
-        OptimizationLiteralData& data = solver.getOptimizationLiteral( i );
+        OptimizationLiteralData& data = solver.getOptimizationLiteral( level(), i );
         Literal lit = data.lit;
         if( data.isRemoved() || !visited( lit.getVariable() ) )
             continue;
@@ -207,7 +200,7 @@ PMRes::foundUnsat()
             optLiterals.push_back( lit.getOppositeLiteral() );
 
             if( data.weight > minWeight )
-                solver.addOptimizationLiteral( lit, data.weight - minWeight, UINT_MAX, true );
+                solver.addOptimizationLiteral( lit, data.weight - minWeight, level(), true );
         }
         else
         {
@@ -232,7 +225,7 @@ PMRes::foundUnsat()
     {
         trace_msg( weakconstraints, 1, "Derived empty clause" );
         if( atLevelZeroWeight > minWeight )
-            lb += atLevelZeroWeight - minWeight;
+            incrementLb( atLevelZeroWeight - minWeight );
     }       
     return true;
 }
@@ -264,7 +257,7 @@ PMRes::addAuxClausesCompressed(
         clause->addLiteral( auxLits[ i + 1 ].getOppositeLiteral() );
         Var relaxVar = relaxClause( clause );
 
-        solver.addOptimizationLiteral( Literal( relaxVar, POSITIVE ), minWeight, UINT_MAX, true );
+        solver.addOptimizationLiteral( Literal( relaxVar, POSITIVE ), minWeight, level(), true );
         trace_msg( weakconstraints, 4, "Adding clause1 " << *clause );
         if( !addClauseToSolver( clause ) )
             return false;

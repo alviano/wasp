@@ -27,7 +27,7 @@ class MultiOutputBuilder : public CompetitionOutputBuilder
 {
     public:
         MultiOutputBuilder() : lastModel(""), optimum( false ) {}
-        virtual void foundModelOptimization( Solver& solver, uint64_t cost, unsigned int numberOfLevels );
+        virtual void foundModelOptimization( const Vector< uint64_t >& costs );
         virtual void optimumFound();
         virtual void startModel();
         virtual void printVariable( Var v, bool );

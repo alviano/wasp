@@ -24,6 +24,7 @@
 
 #include <getopt.h>
 #include <cstdlib>
+#include <map>
 
 namespace wasp
 {
@@ -87,14 +88,7 @@ namespace wasp
 #define OPTIONID_backward_partialchecks ( 'z' + 106 )
     
 /* WEAK CONSTRAINTS OPTIONS */
-#define OPTIONID_opt ( 'z' + 200 )
-#define OPTIONID_mgd ( 'z' + 201 )
-#define OPTIONID_oll ( 'z' + 202 )
-#define OPTIONID_mgdoll ( 'z' + 203 )    
-#define OPTIONID_bcd ( 'z' + 204 )
-#define OPTIONID_bb ( 'z' + 205 )
-#define OPTIONID_pmres ( 'z' + 206 )
-#define OPTIONID_ollbb ( 'z' + 207 )
+#define OPTIONID_weakconstraintsalgorithm ( 'z' + 200 )
 
 #define OPTIONID_disjcores ( 'z' + 215 )
 #define OPTIONID_minimize ( 'z' + 216 )
@@ -154,6 +148,8 @@ bool Options::stratification = true;
 
 unsigned int Options::queryAlgorithm = NO_QUERY;
 unsigned int Options::queryVerbosity = 0;
+
+map< string, WEAK_CONSTRAINTS_ALG > Options::stringToWeak;
     
 void
 Options::parse(
@@ -162,6 +158,7 @@ Options::parse(
 {
     // It will store the option code.
     int code;
+    initMap();
     
     do{
         // For each option there is an instance of option.
@@ -228,14 +225,7 @@ Options::parse(
                 { "bump-activity-partialchecks", no_argument, NULL, OPTIONID_bumpactivityafterpartialchecks },  
                 
                 /* WEAK CONSTRAINTS */
-                { "mgd", no_argument, NULL, OPTIONID_mgd },
-                { "opt", no_argument, NULL, OPTIONID_opt },
-                { "mgdoll", no_argument, NULL, OPTIONID_mgdoll },
-                { "oll", no_argument, NULL, OPTIONID_oll },
-                { "bcd", no_argument, NULL, OPTIONID_bcd },
-                { "basic", no_argument, NULL, OPTIONID_bb },
-                { "pmres", no_argument, NULL, OPTIONID_pmres },
-                { "interleaving", optional_argument, NULL, OPTIONID_ollbb },
+                { "weakconstraints-algorithm", required_argument, NULL, OPTIONID_weakconstraintsalgorithm },
                 { "enable-disjcores", no_argument, NULL, OPTIONID_disjcores },
                 { "minimize-unsatcore", no_argument, NULL, OPTIONID_minimize },
                 { "disable-stratification", no_argument, NULL, OPTIONID_stratification },
@@ -456,43 +446,12 @@ Options::parse(
                 bumpActivityAfterPartialCheck = true;
                 break;
 
-            case OPTIONID_opt:
-                weakConstraintsAlg = OPT;
-                break;
-                
-            case OPTIONID_mgd:
-                weakConstraintsAlg = MGD;
-                break;
-
-            case OPTIONID_oll:
-                weakConstraintsAlg = OLL;
-                break;
-
-            case OPTIONID_mgdoll:
-                weakConstraintsAlg = MGDOLL;
-                break;
-                
-            case OPTIONID_bcd:
-                weakConstraintsAlg = BCD;
-                break;
-                
-            case OPTIONID_bb:
-                weakConstraintsAlg = BB;
-                break;
-                
-            case OPTIONID_pmres:
-                weakConstraintsAlg = PMRES;
-                break;
-                
-            case OPTIONID_ollbb:
-                weakConstraintsAlg = OLLBB;
+            case OPTIONID_weakconstraintsalgorithm:
                 if( optarg )
-                {                    
-                    unsigned int value = atoi( optarg );
-                    if( value == 1 )
-                        weakConstraintsAlg = OLLBBREST;
-                }
-                break;
+                    weakConstraintsAlg = getAlgorithm( string( optarg ) );
+                else
+                    ErrorMessage::errorGeneric( "Inserted invalid algorithm for weak constraints." );
+                break;            
                 
             case OPTIONID_disjcores:
                 disjCoresPreprocessing = true;
@@ -564,4 +523,28 @@ Options::setOptions(
     waspFacade.setQueryAlgorithm( queryAlgorithm );
 }
 
+WEAK_CONSTRAINTS_ALG
+Options::getAlgorithm(
+    const string& s )
+{   
+    map< string, WEAK_CONSTRAINTS_ALG >::iterator it = stringToWeak.find( s );
+    if( it == stringToWeak.end() )
+        ErrorMessage::errorGeneric( "Inserted invalid algorithm for weak constraints." );
+    
+    return it->second;    
+}
+
+void
+Options::initMap()
+{
+    stringToWeak[ "oll" ] = OLL;
+    stringToWeak[ "opt" ] = OPT;
+    stringToWeak[ "mgd" ] = MGD;
+    stringToWeak[ "pmres" ] = PMRES;
+    stringToWeak[ "basic" ] = BB;
+    stringToWeak[ "interleaving-restarts" ] = OLLBBREST;
+    stringToWeak[ "interleaving-choices" ] = OLLBB;    
+}
+
 };
+

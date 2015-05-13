@@ -20,12 +20,10 @@
 #define OUTPUTBUILDER_H
 
 #include "../util/Constants.h"
+#include "../stl/Vector.h"
 
 #include <iostream>
-#include <list>
 using namespace std;
-
-class Solver;
 
 class OutputBuilder
 {
@@ -36,10 +34,9 @@ class OutputBuilder
         virtual void endModel() = 0;
         virtual void onProgramIncoherent() = 0;
         virtual void greetings(){}
-        virtual void foundModelOptimization( Solver& solver, uint64_t cost, unsigned int numberOfLevels );
+        virtual void foundModelOptimization( const Vector< uint64_t >& costs );
         virtual void optimumFound();
         virtual void foundLowerBound( uint64_t );
-        virtual void onKill();
         virtual void onFinish();
 };
 

@@ -399,8 +399,6 @@ GringoNumericFormat::readOptimizationRule(
     while( counter < negativeSize )
     {        
         input.read( weight );
-        if( weight > 1 )
-            solver.setWeighted();
         weightConstraintRule->addNegativeLiteralWeight( weight );
         bound += weight;
         ++counter;
@@ -408,8 +406,6 @@ GringoNumericFormat::readOptimizationRule(
     while( counter < size )
     {
         input.read( weight );
-        if( weight > 1 )
-            solver.setWeighted();
         weightConstraintRule->addPositiveLiteralWeight( weight );
         bound += weight;
         ++counter;
@@ -1726,9 +1722,7 @@ GringoNumericFormat::addOptimizationRule(
 //    
     weightConstraintRule->sort();
     trace_msg( parser, 2, "Sorted weight constraint rule " << *weightConstraintRule );
-    optimizationRules.push_back( weightConstraintRule );
-    if( optimizationRules.size() > 1 )
-        solver.setWeighted();
+    optimizationRules.push_back( weightConstraintRule );   
 }
 
 void
@@ -2431,7 +2425,7 @@ GringoNumericFormat::cleanWeightConstraint(
 
 void
 GringoNumericFormat::addOptimizationRules()
-{    
+{
     if( optimizationRules.empty() )
     {
         trace_msg( parser, 4, "Program has no optimization rule" );
@@ -2439,15 +2433,16 @@ GringoNumericFormat::addOptimizationRules()
     }
  
     trace_msg( parser, 4, "Adding " << optimizationRules.size() << " optimization rules" );
-    vector< uint64_t > maxCostOfLevelOfWeakConstraints;
+//    vector< uint64_t > maxCostOfLevelOfWeakConstraints;
     vector< int > literals;
     vector< uint64_t > weights;
     vector< unsigned int > levels;
-    computeLinearCostsForOptimizationRules( maxCostOfLevelOfWeakConstraints, literals, weights, levels );
-    
+//    computeLinearCostsForOptimizationRules( maxCostOfLevelOfWeakConstraints, literals, weights, levels );
+    addOptimizationRules( literals, weights, levels );
+    solver.setLevels( optimizationRules.size() );
     for( unsigned int j = 0; j < literals.size(); j++ )
     {        
-        Literal lit = solver.getLiteral( literals[ j ] );        
+        Literal lit = solver.getLiteral( literals[ j ] );
         if( solver.isTrue( lit ) )
         {
             assert( lit != Literal::null );
@@ -2460,34 +2455,50 @@ GringoNumericFormat::addOptimizationRules()
             solver.addOptimizationLiteral( lit, weights[ j ], levels[ j ], false );
         }
     }
-
-    solver.setMaxCostOfLevelOfOptimizationRules( maxCostOfLevelOfWeakConstraints );
-    solver.setNumberOfOptimizationLevels( optimizationRules.size() );
+//    solver.setMaxCostOfLevelOfOptimizationRules( maxCostOfLevelOfWeakConstraints );
 }
 
+//void
+//GringoNumericFormat::computeLinearCostsForOptimizationRules(
+//    vector< uint64_t >& maxCostOfLevelOfOptimizationRules,
+//    vector< int >& literals,
+//    vector< uint64_t >& weights,
+//    vector< unsigned int >& levels )
+//{
+//    maxCostOfLevelOfOptimizationRules.push_back( 1 );
+//    uint64_t currentMaxCost = 1;
+//    for( unsigned int i = 0; i < optimizationRules.size(); i++ )
+//    {
+//        WeightConstraintRule* optimizationRule = optimizationRules[ i ];
+//        for( unsigned int j = 0; j < optimizationRule->size(); j++ )
+//        {
+//            uint64_t newWeight = optimizationRule->getWeight( j ) * maxCostOfLevelOfOptimizationRules.back();
+//            currentMaxCost += newWeight;
+//
+//            literals.push_back( optimizationRule->getLiteral( j ) );
+//            weights.push_back( newWeight );
+//            levels.push_back( i + 1 );            
+//        }
+//        assert_msg( currentMaxCost >= maxCostOfLevelOfOptimizationRules.back(), currentMaxCost << " < " << maxCostOfLevelOfOptimizationRules.back() );
+//        maxCostOfLevelOfOptimizationRules.push_back( currentMaxCost );
+//    }
+//}
+
 void
-GringoNumericFormat::computeLinearCostsForOptimizationRules(
-    vector< uint64_t >& maxCostOfLevelOfOptimizationRules,
+GringoNumericFormat::addOptimizationRules(
     vector< int >& literals,
     vector< uint64_t >& weights,
     vector< unsigned int >& levels )
 {
-    maxCostOfLevelOfOptimizationRules.push_back( 1 );
-    uint64_t currentMaxCost = 1;
     for( unsigned int i = 0; i < optimizationRules.size(); i++ )
     {
         WeightConstraintRule* optimizationRule = optimizationRules[ i ];
         for( unsigned int j = 0; j < optimizationRule->size(); j++ )
         {
-            uint64_t newWeight = optimizationRule->getWeight( j ) * maxCostOfLevelOfOptimizationRules.back();
-            currentMaxCost += newWeight;
-
             literals.push_back( optimizationRule->getLiteral( j ) );
-            weights.push_back( newWeight );
-            levels.push_back( i + 1 );            
-        }
-        assert_msg( currentMaxCost >= maxCostOfLevelOfOptimizationRules.back(), currentMaxCost << " < " << maxCostOfLevelOfOptimizationRules.back() );
-        maxCostOfLevelOfOptimizationRules.push_back( currentMaxCost );
+            weights.push_back( optimizationRule->getWeight( j ) );
+            levels.push_back( i );            
+        }        
     }
 }
 

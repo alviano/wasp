@@ -24,14 +24,17 @@
 class Opt : public WeakInterface
 {
     public:
-        Opt( Solver& s, bool disable = false ) : WeakInterface( s ), disableprefchoices_( disable ), aggregate( NULL ) {}
+        Opt( Solver& s, bool disable = false ) : WeakInterface( s ), disableprefchoices_( disable ), aggregate( NULL ), varId( 0 ) {}
         unsigned int run();
         bool updateOptimizationAggregate( uint64_t modelCost );
-        void createOptimizationAggregate();
-        
+        bool completedLevel();
+        Literal getAssumptionToAdd() { return varId == 0 ? Literal::null : Literal( varId, NEGATIVE ); }
+    
     private:
         bool disableprefchoices_;
-        Aggregate* aggregate;        
+        Aggregate* aggregate;
+        Var varId;
+        void createOptimizationAggregate( uint64_t modelCost );        
 };
 
 #endif

@@ -72,6 +72,7 @@ Dimacs::readAllClauses(
             VariableNames::setToBePrinted( solver.numberOfVariables() );
         }
         
+        solver.setLevels( 1 );
         while( readWeightedClause( input ) )
             numOfClauses++;
     }

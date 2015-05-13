@@ -87,21 +87,6 @@ inline int irand( double& seed, int size) { return ( int )( drand( seed ) * size
 //}
 
 void
-MinisatHeuristic::removePrefChoices()
-{
-    unsigned int j = 0;
-    for( unsigned int i = 0; i < preferredChoices.size(); i++ )
-    {
-        preferredChoices[ j ] = preferredChoices[ i ];
-        
-        if( !solver.isTrue( preferredChoices[ i ] ) )
-            j++;
-    }
-    
-    preferredChoices.resize( j );
-}
-
-void
 MinisatHeuristic::simplifyVariablesAtLevelZero()
 {
     for( unsigned int i = 0; i < vars.size(); )

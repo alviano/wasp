@@ -29,7 +29,7 @@ class OllBB : public Oll
 {
     public:
         inline OllBB( Solver& s, bool useRestarts = false ) : Oll( s ), numberOfModels( 0 ), useRestarts_( useRestarts ), increment( 0 ), counter( 0 )
-        {            
+        {
             strategyModelGuided = new Opt( s, true );
         }
         unsigned int run();
@@ -46,6 +46,8 @@ class OllBB : public Oll
         
         inline void initHeuristicValues();
         inline void setAndUpdateHeuristicValues();
+        
+        inline void addOptimizationLiteralInAssumptions();
         
         Opt* strategyModelGuided;
 };
@@ -71,6 +73,15 @@ OllBB::setAndUpdateHeuristicValues()
     useRestarts_ ? solver.setMaxNumberOfRestarts( counter ) : solver.setMaxNumberOfChoices( counter );
     counter += increment;
     increment *= 1.05;    
+}
+
+void
+OllBB::addOptimizationLiteralInAssumptions()
+{
+    assert( assumptions.empty() );
+    Literal lit = strategyModelGuided->getAssumptionToAdd();
+    if( lit != Literal::null )
+        assumptions.push_back( lit );
 }
 
 #endif

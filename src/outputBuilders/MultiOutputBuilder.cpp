@@ -18,22 +18,17 @@
 
 #include "MultiOutputBuilder.h"
 #include "../util/VariableNames.h"
-#include "../Solver.h"
 extern int EXIT_CODE;
 
 void
 MultiOutputBuilder::foundModelOptimization(
-    Solver& solver,
-    uint64_t cost,
-    unsigned int numberOfLevels )
+    const Vector< uint64_t >& costs )
 {
-    cout << "u " << cost << endl;
-    modelStream.str(std::string());
+//    cout << "u " << cost << endl;
+    modelStream.str( std::string() );
     modelStream << COST;
-    for( int i = numberOfLevels - 1; i >= 0; --i )
-    {
-        modelStream << " " << solver.getCostOfLevel( i, cost ) << WEIGHT_LEVEL_WEAKCONSTRAINT_SEPARATOR << ( i + 1 );
-    }
+    for( int i = costs.size() - 1; i >= 0; --i )
+        modelStream << " " << costs[ i ] << WEIGHT_LEVEL_WEAKCONSTRAINT_SEPARATOR << ( i + 1 );
     lastWeight = modelStream.str();
 }
 
@@ -48,7 +43,7 @@ void
 MultiOutputBuilder::startModel()
 {
     EXIT_CODE = 10;
-    modelStream.str(std::string());
+    modelStream.str( std::string() );
     modelStream << ANSWER << endl;
 }
 
@@ -60,9 +55,7 @@ MultiOutputBuilder::printVariable(
     if( VariableNames::isHidden( variable ) )
         return;
     if( isTrue )
-    {
-        modelStream << VariableNames::getName( variable ) << ". ";
-    }
+        modelStream << VariableNames::getName( variable ) << ". ";    
 }
 
 void

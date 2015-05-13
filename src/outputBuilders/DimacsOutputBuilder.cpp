@@ -66,11 +66,10 @@ DimacsOutputBuilder::greetings()
 
 void
 DimacsOutputBuilder::foundModelOptimization(
-    Solver&,
-    uint64_t cost,
-    unsigned int )
+    const Vector< uint64_t >& costs )
 {
-    cout << OPTIMUM_DIMACS << " " << cost << endl;
+    assert( costs.size() == 1 );
+    cout << OPTIMUM_DIMACS << " " << costs[ 0 ] << endl;
 }
 
 void
