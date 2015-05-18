@@ -16,7 +16,7 @@ make
 and pray!
 
 Other compiling options are also available:
-* `make BUILD=stats` enables the usage statistics
+* `make BUILD=stats` enables the usage of statistics
 * `make BUILD=trace` enables the possibility to trace the internal behavior of WASP
 * `make BUILD=debug` compiles WASP for debugging
 
