@@ -215,7 +215,7 @@ Dimacs::readWeightedClause(
         relaxationVarsWeights.push_back( weight );
         trace_msg( parser, 1, "Adding weighted clause " << *clause << " to the solver. Weight: " << weight );        
         solver.setFrozen( newVar );
-        solver.addOptimizationLiteral( Literal( newVar, NEGATIVE ), weight, 1, false );        
+        solver.addOptimizationLiteral( Literal( newVar, NEGATIVE ), weight, 0, false );        
         return solver.addClause( clause );
     }
     else
