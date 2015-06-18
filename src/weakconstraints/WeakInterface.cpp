@@ -164,7 +164,7 @@ WeakInterface::createAggregateFromOptimizationLiterals()
     for( unsigned int i = 0; i < solver.numberOfOptimizationLiterals( level() ); i++ )
     {
         OptimizationLiteralData& opt = solver.getOptimizationLiteral( level(), i );
-        if( opt.isRemoved() )
+        if( mixedApproach && opt.isRemoved() )
             continue;
         literals.push_back( opt.lit );
         weights.push_back( opt.weight );

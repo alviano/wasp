@@ -31,6 +31,7 @@ class OllBB : public Oll
         inline OllBB( Solver& s, bool useRestarts = false ) : Oll( s ), numberOfModels( 0 ), useRestarts_( useRestarts ), increment( 0 ), counter( 0 )
         {
             strategyModelGuided = new Opt( s, true );
+            strategyModelGuided->setMixedApproach();
         }
         unsigned int run();
         

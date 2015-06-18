@@ -25,17 +25,21 @@ using namespace std;
 
 int EXIT_CODE = 0;
 
+WaspFacade* waspFacadePointer = NULL;
+
 void my_handler( int )
 {
     cerr << "Killed: Bye!" << endl;
     EXIT_CODE = 11;
+    delete waspFacadePointer;
     exit( EXIT_CODE );
 }
 
 int main( int argc, char** argv )
 {
     wasp::Options::parse( argc, argv );
-    WaspFacade waspFacade;
+    waspFacadePointer = new WaspFacade();
+    WaspFacade& waspFacade = *waspFacadePointer;
     wasp::Options::setOptions( waspFacade );        
     
     signal( SIGINT, my_handler );
@@ -44,7 +48,8 @@ int main( int argc, char** argv )
     
     waspFacade.readInput();
     waspFacade.solve();
-    waspFacade.onFinish();    
+    waspFacade.onFinish();
+    delete waspFacadePointer; 
     return EXIT_CODE;
 }
 
