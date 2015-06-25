@@ -24,8 +24,9 @@ OutputBuilder::foundModelOptimization(
     const Vector< uint64_t >& costs )
 {
     cout << COST;
+    int level = 1;
     for( int i = costs.size() - 1; i >= 0; --i )
-        cout << " " << costs[ i ] << WEIGHT_LEVEL_WEAKCONSTRAINT_SEPARATOR << ( i + 1 );
+        cout << " " << costs[ i ] << WEIGHT_LEVEL_WEAKCONSTRAINT_SEPARATOR << ( level++ );
     cout << endl;    
 }
 

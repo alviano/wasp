@@ -223,14 +223,25 @@ WeakInterface::disjointCorePreprocessing()
 
 unsigned int
 WeakInterface::solve()
-{
+{    
+    if( wasp::Options::computeFirstModel )
+    {
+        if( solver.solve() == INCOHERENT )
+            return INCOHERENT;
+
+        uint64_t cost = solver.computeCostOfModel( level() );
+        foundAnswerSet( cost );
+        solver.unrollToZero();
+        solver.clearConflictStatus();
+    }
+    
     unsigned int res = OPTIMUM_FOUND;
-    for( int i = solver.numberOfLevels() - 1; i >= 0; i-- )
+    for( unsigned int i = 0; i < solver.numberOfLevels(); i++ )
     {
         level_ = i;
         lb_ = solver.simplifyOptimizationLiterals( level() );
         ub_ = UINT64_MAX;
-        trace_msg( weakconstraints, 1, "Solving level " << level() << ": lb=" << lb_ << ", ub=" << ub_ );
+        trace_msg( weakconstraints, 1, "Solving level " << level() << ": lb=" << lb_ << ", ub=" << ub_ );                
         
         res = run();
         if( res == INCOHERENT )

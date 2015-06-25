@@ -49,6 +49,7 @@ namespace wasp
             
             static unsigned int queryAlgorithm;
             static unsigned int queryVerbosity;
+            static bool computeFirstModel;
             
         private:
 
@@ -83,7 +84,7 @@ namespace wasp
             
             static bool minimizeUnsatCore;
             
-            static bool stratification;
+            static bool stratification;                        
             
             static map< string, WEAK_CONSTRAINTS_ALG > stringToWeak;
             

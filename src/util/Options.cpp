@@ -93,6 +93,7 @@ namespace wasp
 #define OPTIONID_disjcores ( 'z' + 215 )
 #define OPTIONID_minimize ( 'z' + 216 )
 #define OPTIONID_stratification ( 'z' + 217 )
+#define OPTIONID_firstmodel ( 'z' + 218 )
     
 /* QUERY OPTIONS */
 #define OPTIONID_queryalgorithm ( 'z' + 300 )
@@ -145,6 +146,7 @@ WEAK_CONSTRAINTS_ALG Options::weakConstraintsAlg = OLL;
 bool Options::disjCoresPreprocessing = false;
 bool Options::minimizeUnsatCore = false;
 bool Options::stratification = true;
+bool Options::computeFirstModel = false;
 
 unsigned int Options::queryAlgorithm = NO_QUERY;
 unsigned int Options::queryVerbosity = 0;
@@ -229,6 +231,7 @@ Options::parse(
                 { "enable-disjcores", no_argument, NULL, OPTIONID_disjcores },
                 { "minimize-unsatcore", no_argument, NULL, OPTIONID_minimize },
                 { "disable-stratification", no_argument, NULL, OPTIONID_stratification },
+                { "compute-firstmodel", no_argument, NULL, OPTIONID_firstmodel },
 
                 /* QUERY */
                 { "query-algorithm", optional_argument, NULL, OPTIONID_queryalgorithm },
@@ -463,6 +466,10 @@ Options::parse(
                 
             case OPTIONID_stratification:
                 stratification = false;
+                break;
+                
+            case OPTIONID_firstmodel:
+                computeFirstModel = true;
                 break;
                 
             case OPTIONID_queryalgorithm:
