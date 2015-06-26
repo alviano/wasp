@@ -93,6 +93,7 @@ GringoNumericFormat::parse(
     readTrueAtoms( input );
     readFalseAtoms( input );
     readErrorNumber( input );
+    propagate();
 
 //    trace_msg( parser, 1, "Apply bimander to at-most-one constraints" );
 //    for( unsigned i = 0; i < delayedAggregateRewriting.size(); ++i )
