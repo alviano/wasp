@@ -1111,17 +1111,36 @@ void
 GringoNumericFormat::readErrorNumber(
     Istream& input )
 {
+    char b;
     unsigned int errorNumber;
-    input.read( errorNumber );;
+    input.read( b );
+    if( b == 'E' )
+    {
+        unsigned int nextAtom;
+        input.read( nextAtom );
+
+        createStructures( nextAtom );
+
+        while( nextAtom != 0 )
+        {
+            NormalRule* r = new NormalRule();
+            r->literals.push_back( Literal::newPossiblySupportedHeadAtom( nextAtom ) );            
+            r->literals.push_back( Literal::newDoubleNegatedBodyLiteral( nextAtom ) );
+            add( r, 0 );
+            input.read( nextAtom );
+        }
+        input.read( errorNumber );
+    }
+    else
+    {
+        errorNumber = b - '0';
+    }    
 
     if( errorNumber != 1 ) {
         stringstream ss;
         ss << "read error message number " << errorNumber;
         ErrorMessage::errorDuringParsing( ss.str() );
         exit( 0 );
-    }
-    else
-    {
     }
 }
 
