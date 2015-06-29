@@ -47,3 +47,8 @@ void
 OutputBuilder::onFinish()
 {
 }
+
+void
+OutputBuilder::onKill()
+{
+}

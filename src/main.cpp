@@ -31,6 +31,7 @@ void my_handler( int )
 {
     cerr << "Killed: Bye!" << endl;
     EXIT_CODE = 11;
+    waspFacadePointer->onKill();
     delete waspFacadePointer;
     exit( EXIT_CODE );
 }

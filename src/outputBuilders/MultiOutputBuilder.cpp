@@ -18,13 +18,13 @@
 
 #include "MultiOutputBuilder.h"
 #include "../util/VariableNames.h"
+#include "../util/Options.h"
 extern int EXIT_CODE;
 
 void
 MultiOutputBuilder::foundModelOptimization(
     const Vector< uint64_t >& costs )
 {
-//    cout << "u " << cost << endl;
     modelStream.str( std::string() );
     modelStream << COST;
     for( int i = costs.size() - 1; i >= 0; --i )
@@ -79,7 +79,8 @@ MultiOutputBuilder::onFinish()
 {    
     if( lastModel != "" )
     {
-        cout << "v" << endl;
+        if( !wasp::Options::printLastModelOnly )
+            cout << "v" << endl;
         cout << lastModel;
         cout << lastWeight << endl;
         if( optimum )
@@ -92,7 +93,8 @@ MultiOutputBuilder::onKill()
 {
     if( lastModel != "" )
     {
-        cout << "v" << endl;
+        if( !wasp::Options::printLastModelOnly )
+            cout << "v" << endl;
         cout << lastModel;
         cout << lastWeight << endl;
         if( optimum )
@@ -104,5 +106,6 @@ void
 MultiOutputBuilder::foundLowerBound(
     uint64_t lb )
 {
-    cout << "l " << lb << endl;
+    if( !wasp::Options::printLastModelOnly )        
+        cout << "l " << lb << endl;
 }

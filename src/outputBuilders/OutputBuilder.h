@@ -38,6 +38,7 @@ class OutputBuilder
         virtual void optimumFound();
         virtual void foundLowerBound( uint64_t );
         virtual void onFinish();
+        virtual void onKill();
 };
 
 #endif

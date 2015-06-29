@@ -43,6 +43,7 @@ class WaspFacade
         void readInput();
         void solve();
         inline void onFinish() { solver.onFinish(); }
+        inline void onKill() { solver.onKill(); }
         
         inline void greetings(){ solver.greetings(); }
         

@@ -85,6 +85,7 @@ class Solver
         
         inline void greetings(){ outputBuilder->greetings(); }
         inline void onFinish() { outputBuilder->onFinish(); }
+        inline void onKill();
         
         inline unsigned int solve();
         inline unsigned int solve( vector< Literal >& assumptions );
@@ -678,6 +679,13 @@ Solver::Solver()
     variableDataStructures.push_back( NULL );
     variableDataStructures.push_back( NULL );
     fromLevelToPropagators.push_back( 0 );
+}
+
+void
+Solver::onKill()
+{
+    if( outputBuilder )
+        outputBuilder->onKill();    
 }
 
 unsigned int

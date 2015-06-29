@@ -66,7 +66,8 @@ class Help
             cout << "--printdimacs                          - Print the input program in the dimacs format and exit" << endl;
             cout << "--silent                               - Print models with no spaces and lines" << endl;
             cout << "--third-competition-output             - Print models according to the third competition output" << endl;
-            cout << "--competition-output                   - Print models according to the fourth competition output" << endl;            
+            cout << "--competition-output                   - Print models according to the fourth competition output" << endl;   
+            cout << "--printlatestmodel                     - Print the latest computed model" << endl;   
             cout << separator << endl;
             
             cout << "Heuristics options                     " << endl << endl;
