@@ -51,6 +51,7 @@ namespace wasp
             static unsigned int queryVerbosity;
             static bool computeFirstModel;
             static bool printLastModelOnly;
+            static bool stratification;
             
         private:
 
@@ -83,9 +84,7 @@ namespace wasp
             
             static bool disjCoresPreprocessing;
             
-            static bool minimizeUnsatCore;
-            
-            static bool stratification;                        
+            static bool minimizeUnsatCore;                                          
             
             static map< string, WEAK_CONSTRAINTS_ALG > stringToWeak;
             

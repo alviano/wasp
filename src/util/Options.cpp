@@ -534,7 +534,6 @@ Options::setOptions(
     waspFacade.setWeakConstraintsAlgorithm( weakConstraintsAlg );
     waspFacade.setDisjCoresPreprocessing( disjCoresPreprocessing );
     waspFacade.setMinimizeUnsatCore( minimizeUnsatCore );
-    waspFacade.setStratification( stratification );
     waspFacade.setQueryAlgorithm( queryAlgorithm );
 }
 

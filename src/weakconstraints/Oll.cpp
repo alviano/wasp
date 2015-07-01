@@ -30,7 +30,7 @@ Oll::run()
     if( disjCoresPreprocessing && !disjointCorePreprocessing() )
         return INCOHERENT;
     
-    if( stratification && solver.isWeighted( level() ) )
+    if( wasp::Options::stratification && solver.isWeighted( level() ) )
         return runWeighted();
     return runUnweighted();
 }

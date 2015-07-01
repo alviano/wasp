@@ -437,7 +437,12 @@ GringoNumericFormat::readOptimizationRule(
                 weightConstraintRule->addPositiveLiteral( id );
                 weightConstraintRule->addPositiveLiteralWeight( weight );
             }
-        }        
+        }
+        else
+        {
+            //Quick fix
+            wasp::Options::stratification = false;
+        }
     }
         
     assert( weightConstraintRule->sameSizeOfInternalVectors() );
