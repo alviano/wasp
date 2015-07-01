@@ -380,18 +380,23 @@ GringoNumericFormat::readOptimizationRule(
     
     unsigned int counter = 0;
     WeightConstraintRule* weightConstraintRule = new WeightConstraintRule( 0, UINT64_MAX );
+    
+    Vector< int64_t > tmps;
+    Vector< uint64_t > weights;
     while( counter < negativeSize )
     {
         input.read( tmp );
         createStructures( tmp );
-        weightConstraintRule->addNegativeLiteral( tmp );
+//        weightConstraintRule->addNegativeLiteral( tmp );
         ++counter;
+        tmps.push_back( -tmp );
     }
     while( counter < size )
     {
         input.read( tmp );
         createStructures( tmp );
-        weightConstraintRule->addPositiveLiteral( tmp );
+//        weightConstraintRule->addPositiveLiteral( tmp );
+        tmps.push_back( tmp );
         ++counter;
     }
 
@@ -400,16 +405,39 @@ GringoNumericFormat::readOptimizationRule(
     while( counter < negativeSize )
     {        
         input.read( weight );
-        weightConstraintRule->addNegativeLiteralWeight( weight );
+//        weightConstraintRule->addNegativeLiteralWeight( weight );
+        weights.push_back( weight );
         bound += weight;
         ++counter;
     }
     while( counter < size )
     {
         input.read( weight );
-        weightConstraintRule->addPositiveLiteralWeight( weight );
+//        weightConstraintRule->addPositiveLiteralWeight( weight );
+        weights.push_back( weight );
         bound += weight;
         ++counter;
+    }
+    
+    assert( tmps.size() == weights.size() );
+    for( unsigned int i = 0; i < tmps.size(); i++ )
+    {
+        int64_t id = tmps[ i ];
+        assert( id != 0 );
+        uint64_t weight = weights[ i ];
+        if( weight > 0 )
+        {
+            if( id < 0 )
+            {
+                weightConstraintRule->addNegativeLiteral( -id );
+                weightConstraintRule->addNegativeLiteralWeight( weight );
+            }
+            else
+            {
+                weightConstraintRule->addPositiveLiteral( id );
+                weightConstraintRule->addPositiveLiteralWeight( weight );
+            }
+        }        
     }
         
     assert( weightConstraintRule->sameSizeOfInternalVectors() );
