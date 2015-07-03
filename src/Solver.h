@@ -426,6 +426,7 @@ class Solver
         
         inline void setMaxNumberOfChoices( unsigned int max ) { maxNumberOfChoices = max; }
         inline void setMaxNumberOfRestarts( unsigned int max ) { maxNumberOfRestarts = max; }
+        inline void setMaxNumberOfSeconds( unsigned int max ) { maxNumberOfSeconds = max; }
         inline uint64_t getPrecomputedCost( unsigned int level ) const { assert( level < precomputedCosts.size() ); return precomputedCosts[ level ]; }
 //        inline uint64_t getPrecomputedCost() const { return precomputedCost; }                
         
@@ -617,6 +618,7 @@ class Solver
         unsigned int numberOfChoices;
         unsigned int maxNumberOfRestarts;
         unsigned int numberOfRestarts;
+        unsigned int maxNumberOfSeconds;
         
         bool incremental_;
         
@@ -668,6 +670,7 @@ Solver::Solver()
     numberOfChoices( 0 ),
     maxNumberOfRestarts( UINT_MAX ),
     numberOfRestarts( 0 ),
+    maxNumberOfSeconds( UINT_MAX ),
     incremental_( false )
 {
     dependencyGraph = new DependencyGraph( *this );

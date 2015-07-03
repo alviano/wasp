@@ -222,10 +222,11 @@ unsigned int
 Solver::solveWithoutPropagators(
     vector< Literal >& assumptions )
 {
+    time_t START_TIME = time( 0 );
     trace( solving, 1, "Starting solving.\n" );
     
     if( hasNextVariableToPropagate() )
-        goto propagationLabel;
+        goto propagationLabel;        
     
     while( hasUndefinedLiterals() )
     {
@@ -258,7 +259,7 @@ Solver::solveWithoutPropagators(
             statistics( this, endSolving() );
             return INCOHERENT;
         }
-        if( ++numberOfChoices > maxNumberOfChoices  || numberOfRestarts > maxNumberOfRestarts )
+        if( ++numberOfChoices > maxNumberOfChoices  || numberOfRestarts > maxNumberOfRestarts || ( time( 0 ) - START_TIME ) > maxNumberOfSeconds )
             return INTERRUPTED;        
         
         propagationLabel:;
@@ -306,12 +307,13 @@ unsigned int
 Solver::solvePropagators(
     vector< Literal >& assumptions )
 {
+    time_t START_TIME = time( 0 );    
     trace( solving, 1, "Starting solving.\n" );    
     if( hasNextVariableToPropagate() )
         goto propagationLabel;
     
     if( !postPropagators.empty() )
-        goto postPropagationLabel;
+        goto postPropagationLabel;    
     
     while( hasUndefinedLiterals() )
     {        
@@ -324,8 +326,8 @@ Solver::solvePropagators(
             statistics( this, endSolving() );
             return INCOHERENT;
         }
-        if( ++numberOfChoices > maxNumberOfChoices || numberOfRestarts > maxNumberOfRestarts )
-            return INTERRUPTED; 
+        if( ++numberOfChoices > maxNumberOfChoices || numberOfRestarts > maxNumberOfRestarts || ( time( 0 ) - START_TIME ) > maxNumberOfSeconds )
+            return INTERRUPTED;        
         propagationLabel:;
         Var variableToPropagate;
         while( hasNextVariableToPropagate() )

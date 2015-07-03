@@ -226,7 +226,7 @@ WeakInterface::solve()
 {    
     if( wasp::Options::computeFirstModel )
     {
-        solver.setMaxNumberOfChoices( wasp::Options::budget );
+        solver.setMaxNumberOfSeconds( wasp::Options::budget );
         unsigned int result = solver.solve();
         if( result == INCOHERENT )
             return result;
