@@ -149,6 +149,7 @@ bool Options::disjCoresPreprocessing = false;
 bool Options::minimizeUnsatCore = false;
 bool Options::stratification = true;
 bool Options::computeFirstModel = false;
+unsigned Options::budget = UINT_MAX;
 
 unsigned int Options::queryAlgorithm = NO_QUERY;
 unsigned int Options::queryVerbosity = 0;
@@ -234,7 +235,7 @@ Options::parse(
                 { "enable-disjcores", no_argument, NULL, OPTIONID_disjcores },
                 { "minimize-unsatcore", no_argument, NULL, OPTIONID_minimize },
                 { "disable-stratification", no_argument, NULL, OPTIONID_stratification },
-                { "compute-firstmodel", no_argument, NULL, OPTIONID_firstmodel },
+                { "compute-firstmodel", optional_argument, NULL, OPTIONID_firstmodel },
 
                 /* QUERY */
                 { "query-algorithm", optional_argument, NULL, OPTIONID_queryalgorithm },
@@ -478,6 +479,8 @@ Options::parse(
                 
             case OPTIONID_firstmodel:
                 computeFirstModel = true;
+                if( optarg )
+                    budget = atoi( optarg );                    
                 break;
                 
             case OPTIONID_queryalgorithm:

@@ -50,6 +50,7 @@ namespace wasp
             static unsigned int queryAlgorithm;
             static unsigned int queryVerbosity;
             static bool computeFirstModel;
+            static unsigned int budget;
             static bool printLastModelOnly;
             static bool stratification;
             

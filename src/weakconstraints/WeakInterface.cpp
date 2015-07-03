@@ -226,11 +226,16 @@ WeakInterface::solve()
 {    
     if( wasp::Options::computeFirstModel )
     {
-        if( solver.solve() == INCOHERENT )
-            return INCOHERENT;
-
-        uint64_t cost = solver.computeCostOfModel( level() );
-        foundAnswerSet( cost );
+        solver.setMaxNumberOfChoices( wasp::Options::computeFirstModel );
+        unsigned int result = solver.solve();
+        if( result == INCOHERENT )
+            return result;
+        solver.setMaxNumberOfChoices( UINT_MAX );
+        if( result != INTERRUPTED )
+        {        
+            uint64_t cost = solver.computeCostOfModel( level() );
+            foundAnswerSet( cost );
+        }
         solver.unrollToZero();
         solver.clearConflictStatus();
     }

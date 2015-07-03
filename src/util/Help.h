@@ -96,6 +96,7 @@ class Help
             cout << "--enable-disjcores                     - Enable disjoint cores preprocessing (only for core-guided)" << endl;
             cout << "--minimize-unsatcore                   - Enable minimization of unsat cores (only for core-guided)" << endl;
             cout << "--disable-stratification               - Disable stratification (only for core-guided)" << endl;
+            cout << "--compute-firstmodel=budget            - Compute a model before starting the algorithm. In addition, budget may specify the maximum number of choices allowed." << endl;
 
             cout << separator << endl;
             cout << "Query options                          " << endl << endl;
