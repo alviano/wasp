@@ -228,9 +228,9 @@ WeakInterface::solve()
     {
         solver.setMaxNumberOfSeconds( wasp::Options::budget );
         unsigned int result = solver.solve();
-        if( result == INCOHERENT )
-            return result;
         solver.setMaxNumberOfSeconds( UINT_MAX );
+        if( result == INCOHERENT )
+            return result;        
         if( result != INTERRUPTED )
         {        
             uint64_t cost = solver.computeCostOfModel( level() );
