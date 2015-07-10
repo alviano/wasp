@@ -241,7 +241,7 @@ WeakInterface::solve()
     }
     
     unsigned int res = OPTIMUM_FOUND;
-    for( unsigned int i = 0; i < solver.numberOfLevels(); i++ )
+    for( int i = solver.numberOfLevels() - 1; i >= 0; i-- )
     {
         level_ = i;
         lb_ = solver.simplifyOptimizationLiterals( level() );
