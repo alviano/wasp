@@ -2419,13 +2419,16 @@ Solver::minimizeUnsatCore(
     for( unsigned int i = 0; i < unsatCore->size(); i++ )
     {
         Literal lit = unsatCore->getAt( i );        
-        Literal toAdd;
-        if( getDataStructure( lit ).isOptLit() )            
-            toAdd = lit.getOppositeLiteral();
-        else if( getDataStructure( lit.getOppositeLiteral() ).isOptLit() )
-            toAdd = lit;
-        else
+        if( !getDataStructure( lit ).isOptLit() /*&& !getDataStructure( lit.getOppositeLiteral() ).isOptLit()*/ )
             continue;
+                
+        Literal toAdd = lit.getOppositeLiteral();
+//        if( getDataStructure( lit ).isOptLit() )            
+//            toAdd = lit.getOppositeLiteral();
+//        else if( getDataStructure( lit.getOppositeLiteral() ).isOptLit() )
+//            toAdd = lit;
+//        else
+//            continue;
         assumptions.push_back( toAdd );
         setAssumption( toAdd, true );
     }

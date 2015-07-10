@@ -573,7 +573,7 @@ Learning::analyzeFinal(
     learnedClause->setLearned();
 
     assert( solver.isAssumption( lit.getVariable() ) );
-    learnedClause->addLiteralInLearnedClause( lit );
+    learnedClause->addLiteralInLearnedClause( solver.createFromAssignedVariable( lit.getVariable() ) );
     if( solver.getCurrentDecisionLevel() == 0 )
     {
         trace_msg( weakconstraints, 2, "Conflict at level 0. Unsat core " << *learnedClause );
