@@ -160,7 +160,8 @@ Learning::getNextLiteralToNavigate()
         assert( !solver.isUndefined( next.getVariable() ) );
         solver.unrollLastVariable();
         assert( solver.isUndefined( next.getVariable() ) );
-
+        
+        assert_msg( solver.getCurrentDecisionLevel() == solver.getDecisionLevel( next ), "Mismatch of solver decision level " << solver.getCurrentDecisionLevel() << " and level of next literal " << next << " whose level is " << solver.getDecisionLevel( next ) );
         if( isVisited( next.getVariable(), numberOfCalls ) )
         {
             --pendingVisitedVariables;

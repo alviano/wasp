@@ -76,7 +76,8 @@ private:
     void computeGusStructures();
     void computeSCCs();
     void computeSCCsDisjunctive();
-    void createClausesForShift( const Vector< Var >& headAtoms, Vector< Var >& auxVars, Var bodyLiteral );
+    void createClausesForShift( const Vector< Var >& headAtoms, Vector< Var >& auxVars, Literal bodyLiteral );
+    void createPropagatorForDisjunction( const Vector< Var >& headAtoms, Vector< Var >& auxVars, Literal bodyLiteral );
     void addBinaryImplication( Literal lit1, Literal lit2 );
     void computeCompletion();
     void simplify();
@@ -101,6 +102,8 @@ private:
     
     void cleanData();
     
+    Rule* getRule( unsigned int id ) { assert( id < normalRules.size() ); return normalRules[ id ]; }
+    
 //    Literal getLiteralForInputVar( unsigned int id, unsigned int sign );
 //    Literal getLiteralForAuxVar( unsigned int id, unsigned int sign );
 
@@ -112,7 +115,7 @@ private:
     
     unsigned propagatedLiterals;
     
-    void add( Rule* rule, unsigned int numberOfTrueHeadAtoms );
+    void add( Rule* rule, bool isChoice, unsigned int numberOfTrueHeadAtoms );
     void add( WeightConstraint* rule );
     bool addUndefinedLiteral( Clause* clause, Literal lit );
     void removeAndCheckSupport( Rule* rule );
@@ -148,10 +151,14 @@ private:
     void clearDataStructures();
     void cleanRules();
     
+    Literal createAuxForBody( Rule* rule, Vector< Var >& headAtoms );
+    
     Clause* normalRuleToClause( Rule* );
+    
+    Aggregate* createPseudoBooleanConstraint( Vector< Literal >& literals, Vector< uint64_t > & weights, uint64_t bound );
+    Aggregate* createAggregate( Vector< Literal >& literals, Vector< uint64_t > & weights, uint64_t bound, Literal aggregateLiteral );
 
-    Vector< Rule* > normalRules;
-    Vector< Rule* > disjunctiveRules;
+    Vector< Rule* > normalRules;    
     Vector< WeightConstraint* > weightConstraintRules;
     Vector< WeightConstraint* > delayedAggregateRewriting;
     Vector< WeightConstraint* > optimizationRules;
@@ -165,10 +172,11 @@ private:
     unordered_map< Var, unordered_set< PostPropagator* > > literalsPostPropagator[ 2 ];
     
     bool usedDictionary;
+    unsigned int numberOfDisjunctiveRules;
 };
 
 GringoNumericFormat::GringoNumericFormat(
-    Solver& s ) : solver( s ), propagatedLiterals( 0 ), readNormalRule_numberOfCalls( 0 ), usedDictionary( false )
+    Solver& s ) : solver( s ), propagatedLiterals( 0 ), readNormalRule_numberOfCalls( 0 ), usedDictionary( false ), numberOfDisjunctiveRules( 0 )
 {
     atomData.push_back( AtomData( false ) );
     createStructures( 1 );

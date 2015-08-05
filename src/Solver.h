@@ -39,6 +39,7 @@ using namespace std;
 #include "PostPropagator.h"
 #include "DependencyGraph.h"
 #include "Aggregate.h"
+#include "DisjunctionPropagator.h"
 #include "util/Constants.h"
 #include "WatchedList.h"
 #include "stl/BoundedQueue.h"
@@ -248,8 +249,9 @@ class Solver
         
         inline Satelite* getSatelite() { return satelite; }
         
+        inline void addDisjunctionPropagator( DisjunctionPropagator* disj ) { assert( disj != NULL ); disjunctionPropagators.push_back( disj ); }
         inline void addAggregate( Aggregate* aggr ) { assert( aggr != NULL ); aggregates.push_back( aggr ); }
-        inline bool hasPropagators() const { return ( !tight() || !aggregates.empty() ); }
+        inline bool hasPropagators() const { return ( !tight() || !aggregates.empty() || !disjunctionPropagators.empty() ); }
         
         inline void turnOffSimplifications() { callSimplifications_ = false; }
         inline bool callSimplifications() const { return callSimplifications_; }
@@ -503,6 +505,7 @@ class Solver
         
         vector< GUSData* > gusDataVector;
         vector< Aggregate* > aggregates;
+        vector< DisjunctionPropagator* > disjunctionPropagators;
         
 //        Aggregate* optimizationAggregate;
 //        unsigned int numberOfOptimizationLevels;
@@ -865,7 +868,7 @@ Solver::cleanAndAddClause(
     
     trace_msg( solving, 10, "Clause after simplification: " << *clause );
     
-    assert( allUndefined( *clause ) );
+    assert( allUndefined( *clause ) );    
     return addClause( clause );
 }
 

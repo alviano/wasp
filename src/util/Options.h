@@ -54,6 +54,8 @@ namespace wasp
             static bool printLastModelOnly;
             static bool stratification;
             
+            static SHIFT_STRATEGY shiftStrategy;
+            
         private:
 
             static DELETION_POLICY deletionPolicy;
@@ -89,7 +91,11 @@ namespace wasp
             
             static map< string, WEAK_CONSTRAINTS_ALG > stringToWeak;
             
+            static map< string, SHIFT_STRATEGY > stringToShift;
+            
             static WEAK_CONSTRAINTS_ALG getAlgorithm( const string& s );
+            
+            static SHIFT_STRATEGY getShiftStrategy( const string& s );
             
             static void initMap();
     };

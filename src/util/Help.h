@@ -36,16 +36,19 @@ class Help
 
             #ifdef TRACE_ON
             cout << "Trace options                          " << endl << endl;
-            cout << "--trace-parser=<verbosity>             - Trace parser." << endl;
-            cout << "--trace-solving=<verbosity>            - Trace solver." << endl;
-            cout << "--trace-learning=<verbosity>           - Trace learning." << endl;
-            cout << "--trace-heuristic=<verbosity>          - Trace heuristic." << endl;
+            cout << "--trace-aggregates=<verbosity>         - Trace aggregates propagation." << endl;
+            cout << "--trace-disjunction=<verbosity>        - Trace disjunction propagator." << endl;
             cout << "--trace-enumeration=<verbosity>        - Trace enumeration." << endl;
-            cout << "--trace-satelite=<verbosity>           - Trace satelite simplifications." << endl;
+            cout << "--trace-heuristic=<verbosity>          - Trace heuristic." << endl;
+            cout << "--trace-learning=<verbosity>           - Trace learning." << endl;
             cout << "--trace-modelchecker=<verbosity>       - Trace model checker." << endl;
-            cout << "--trace-unfoundedset=<verbosity>       - Trace unfounded set function." << endl;            
+            cout << "--trace-parser=<verbosity>             - Trace parser." << endl;
+            cout << "--trace-satelite=<verbosity>           - Trace satelite simplifications." << endl;
+            cout << "--trace-solver=<verbosity>            - Trace solver." << endl;
+            cout << "--trace-unfoundedset=<verbosity>       - Trace computation of unfounded sets." << endl;
+            cout << "--trace-weakconstraints=<verbosity>    - Trace weak constraints algorithms." << endl;
             cout << separator << endl;
-            #endif
+            #endif                
 
 //            cout << "Restart options                       " << endl << endl;
 //            cout << "--sequence-based-restarts=<N>          - Luby et al. sequence using N as number of conflicts." << endl;
@@ -105,6 +108,13 @@ class Help
             cout << "       =or                             - Enable overestimate reduction" << endl;
             cout << "--query-verbosity=(0,1,2)              - Enable verbosity of queries algorithms" << endl;
 
+            cout << separator << endl;
+            cout << "Shift options                          " << endl << endl;
+            cout << "--shift-strategy                       - Enable options for shift" << endl;
+            cout << "       =naive                          - Enable naive strategy" << endl;
+            cout << "       =propagator                     - Enable the usage of a propagator" << endl;
+            cout << "       =lr                             - Enable left/right strategy" << endl;            
+            
             cout << separator << endl;
             cout << "General options                        " << endl << endl;
             cout << "--dimacs                               - Enable dimacs format as input and outputs" << endl;

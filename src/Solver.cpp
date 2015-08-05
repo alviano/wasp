@@ -63,6 +63,13 @@ Solver::~Solver()
         aggregates.pop_back();
     }
     
+    while( !disjunctionPropagators.empty() )
+    {
+        assert( disjunctionPropagators.back() );
+        delete disjunctionPropagators.back();
+        disjunctionPropagators.pop_back();
+    }
+    
     while( !cyclicComponents.empty() )
     {
         delete cyclicComponents.back();

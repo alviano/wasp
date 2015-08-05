@@ -48,6 +48,7 @@ namespace wasp
 #define OPTIONID_trace_satelite ( 'z' + 8 )
 #define OPTIONID_trace_aggregates ( 'z' + 9 )
 #define OPTIONID_trace_weakconstraints ( 'z' + 10 )
+#define OPTIONID_trace_disjunction ( 'z' + 11 )
 
 /* OUTPUT OPTIONS */
 #define OPTIONID_silent ( 'z' + 20 )
@@ -87,6 +88,7 @@ namespace wasp
 #define OPTIONID_forward_partialchecks ( 'z' + 104 )
 #define OPTIONID_bumpactivityafterpartialchecks ( 'z' + 105 )
 #define OPTIONID_backward_partialchecks ( 'z' + 106 )
+#define OPTIONID_shift_strategy ( 'z' + 107 )
     
 /* WEAK CONSTRAINTS OPTIONS */
 #define OPTIONID_weakconstraintsalgorithm ( 'z' + 200 )
@@ -155,7 +157,11 @@ unsigned int Options::queryAlgorithm = NO_QUERY;
 unsigned int Options::queryVerbosity = 0;
 
 map< string, WEAK_CONSTRAINTS_ALG > Options::stringToWeak;
-    
+
+SHIFT_STRATEGY Options::shiftStrategy = SHIFT_NAIVE;
+
+map< string, WEAK_CONSTRAINTS_ALG > Options::stringToShift;
+
 void
 Options::parse(
     int argc,
@@ -179,7 +185,7 @@ Options::parse(
             {
                 /* TRACE OPTIONS */
                 { "trace-parser", required_argument, NULL, OPTIONID_trace_parser },
-                { "trace-solving", required_argument, NULL, OPTIONID_trace_solving },
+                { "trace-solver", required_argument, NULL, OPTIONID_trace_solving },
                 { "trace-modelchecker", required_argument, NULL, OPTIONID_trace_checker },
                 { "trace-unfoundedset", required_argument, NULL, OPTIONID_trace_us },
                 { "trace-heuristic", required_argument, NULL, OPTIONID_trace_heuristic },
@@ -188,6 +194,7 @@ Options::parse(
                 { "trace-satelite", required_argument, NULL, OPTIONID_trace_satelite },
                 { "trace-aggregates", required_argument, NULL, OPTIONID_trace_aggregates },
                 { "trace-weakconstraints", required_argument, NULL, OPTIONID_trace_weakconstraints },
+                { "trace-disjunction", required_argument, NULL, OPTIONID_trace_disjunction },
 
                 /* OUTPUT OPTIONS */
                 { "competition-output", no_argument, NULL, OPTIONID_competition_output },
@@ -236,6 +243,9 @@ Options::parse(
                 { "minimize-unsatcore", no_argument, NULL, OPTIONID_minimize },
                 { "disable-stratification", no_argument, NULL, OPTIONID_stratification },
                 { "compute-firstmodel", optional_argument, NULL, OPTIONID_firstmodel },
+                
+                /* SHIFT STRATEGY */
+                { "shift-strategy", required_argument, NULL, OPTIONID_shift_strategy },
 
                 /* QUERY */
                 { "query-algorithm", optional_argument, NULL, OPTIONID_queryalgorithm },
@@ -304,6 +314,10 @@ Options::parse(
             
             case OPTIONID_trace_weakconstraints:
                 setTraceLevel( weakconstraints, atoi( optarg ) );
+                break;
+                
+            case OPTIONID_trace_disjunction:
+                setTraceLevel( disjunction, atoi( optarg ) );
                 break;
 
             case OPTIONID_competition_output:
@@ -463,7 +477,14 @@ Options::parse(
                     weakConstraintsAlg = getAlgorithm( string( optarg ) );
                 else
                     ErrorMessage::errorGeneric( "Inserted invalid algorithm for weak constraints." );
-                break;            
+                break;
+                
+            case OPTIONID_shift_strategy:
+                if( optarg )
+                    shiftStrategy = getShiftStrategy( string( optarg ) );
+                else
+                    ErrorMessage::errorGeneric( "Inserted invalid strategy for shift." );
+                break;
                 
             case OPTIONID_disjcores:
                 disjCoresPreprocessing = true;
@@ -551,6 +572,17 @@ Options::getAlgorithm(
     return it->second;    
 }
 
+SHIFT_STRATEGY
+Options::getShiftStrategy(
+    const string& s )
+{   
+    map< string, SHIFT_STRATEGY >::iterator it = stringToShift.find( s );
+    if( it == stringToShift.end() )
+        ErrorMessage::errorGeneric( "Inserted invalid strategy for shift." );
+    
+    return it->second;    
+}
+
 void
 Options::initMap()
 {
@@ -560,7 +592,11 @@ Options::initMap()
     stringToWeak[ "pmres" ] = PMRES;
     stringToWeak[ "basic" ] = BB;
     stringToWeak[ "interleaving-restarts" ] = OLLBBREST;
-    stringToWeak[ "interleaving-choices" ] = OLLBB;    
+    stringToWeak[ "interleaving-choices" ] = OLLBB;
+
+    stringToShift[ "naive" ] = SHIFT_NAIVE;
+    stringToShift[ "propagator" ] = SHIFT_PROPAGATOR;
+    stringToShift[ "lr" ] = SHIFT_LEFT_RIGHT;
 }
 
 };

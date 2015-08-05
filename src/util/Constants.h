@@ -59,6 +59,9 @@
 #define OVERESTIMATE_REDUCTION 1
 #define ITERATIVE_COHERENCE_TESTING 2
 
+/*
+ * Weak constraints
+ */
 #define OPT 0
 #define MGD 1
 #define OLL 2
@@ -72,6 +75,10 @@
 #define OPTIMUM_FOUND 2
 #define OPTIMUM_FOUND_STOP 3
 #define INTERRUPTED 4
+
+#define SHIFT_PROPAGATOR 0
+#define SHIFT_LEFT_RIGHT 1
+#define SHIFT_NAIVE 2
 
 #define VERSION "2.0"
 
@@ -134,6 +141,7 @@ typedef unsigned int DECISION_POLICY;
 typedef unsigned int OUTPUT_POLICY;
 typedef unsigned int RESTARTS_POLICY;
 typedef unsigned int WEAK_CONSTRAINTS_ALG;
+typedef unsigned int SHIFT_STRATEGY;
 
 #ifdef TRACE_ON
 #include <string>
