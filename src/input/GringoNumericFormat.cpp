@@ -1474,11 +1474,14 @@ GringoNumericFormat::computeSCCsDisjunctive()
                         
                         if( wasp::Options::shiftStrategy == SHIFT_PROPAGATOR )
                             createPropagatorForDisjunction( headAtoms, auxVars, addedLit );
+                        else if( wasp::Options::shiftStrategy == SHIFT_LEFT_RIGHT )
+                            createClausesForShift( headAtoms, auxVars, addedLit );
                         else
                         {
-                            assert( wasp::Options::shiftStrategy == SHIFT_LEFT_RIGHT );
-                            createClausesForShift( headAtoms, auxVars, addedLit );
+                            assert( wasp::Options::shiftStrategy == SHIFT_NORMALIZE );
+                            normalizeHeads( headAtoms, auxVars, addedLit );
                         }
+                            
                         assert( headAtoms.size() == auxVars.size() );
                         for( unsigned k = 0; k < auxVars.size(); k++ )
                         {
@@ -1553,6 +1556,30 @@ GringoNumericFormat::addBinaryImplication(
 }
 
 void
+GringoNumericFormat::addTwoAndLiteralEquivalence(
+    Literal lit1,
+    Literal lit2,
+    Literal lit3 )
+{
+    trace_msg( parser, 7, "Adding " << lit1 << " ^ " << lit2 << " <-> " << lit3 );
+    Clause* clause = new Clause( 3 );
+    clause->addLiteral( lit1.getOppositeLiteral() );
+    clause->addLiteral( lit2.getOppositeLiteral() );
+    clause->addLiteral( lit3 );
+    solver.cleanAndAddClause( clause );
+    
+    Clause* clause2 = new Clause( 2 );
+    clause2->addLiteral( lit1 );
+    clause2->addLiteral( lit3.getOppositeLiteral() );
+    solver.cleanAndAddClause( clause2 );
+    
+    Clause* clause3 = new Clause( 2 );
+    clause3->addLiteral( lit2 );
+    clause3->addLiteral( lit3.getOppositeLiteral() );
+    solver.cleanAndAddClause( clause3 );
+}
+
+void
 GringoNumericFormat::createPropagatorForDisjunction(
     const Vector< Var >& headAtoms,
     Vector< Var >& auxVars,
@@ -1563,10 +1590,8 @@ GringoNumericFormat::createPropagatorForDisjunction(
     for( unsigned int i = 0; i < headAtoms.size(); i++ )
         if( solver.isTrue( headAtoms[ i ] ) )
         {
-            if( firstTrue == 0 )
-                firstTrue = headAtoms[ i ];
-            else
-                return;            
+            firstTrue = headAtoms[ i ];
+            break;
         }
     
     trace_msg( parser, 4, "Creating propagator for disjunction" );
@@ -1604,7 +1629,10 @@ GringoNumericFormat::createPropagatorForDisjunction(
         lits.push_back( aux );
         weights.push_back( 1 );
         if( firstTrue != 0 && firstTrue != headAtoms[ i ] )
+        {
+            assert( !solver.isTrue( headAtoms[ i ] ) );
             solver.addClause( aux.getOppositeLiteral() );
+        }
     }
     solver.addDisjunctionPropagator( disjunctionPropagator );
     trace_msg( parser, 5, "Finalizing propagator" );
@@ -1727,6 +1755,94 @@ GringoNumericFormat::createClausesForShift(
     solver.addAggregate( aggregate );
     solver.attachAggregate( *aggregate );
     trace_msg( parser, 5, "Adding aggregate " << *aggregate );
+    propagatedLiterals = solver.numberOfAssignedLiterals();
+}
+
+void
+GringoNumericFormat::normalizeHeads(
+    const Vector< Var >& headAtoms,
+    Vector< Var >& auxVars,
+    Literal bodyLiteral )
+{    
+    assert( propagatedLiterals == solver.numberOfAssignedLiterals() );
+    Vector< Var > auxs;
+    Vector< Var > sAuxs;
+//    static unsigned int count = 0;
+//    count++;
+    
+    for( unsigned int i = 0; i < headAtoms.size(); i++ )
+    {
+        solver.addVariable();
+        Var v = solver.numberOfVariables();        
+        auxVars.push_back( v );
+//        VariableNames::setName( v, "s" + VariableNames::getName( headAtoms[ i ] ) + to_string( count ) );
+                
+        if( i == 0 || i == 1 )
+            continue;
+        
+//        string name = "";
+//        for( unsigned int j = i - 1; j < headAtoms.size(); j++ )
+//            name += VariableNames::getName( headAtoms[ j ] );
+//        name += to_string( count );
+        
+        solver.addVariable();
+        Var aux = solver.numberOfVariables();
+        auxs.push_back( aux );
+//        VariableNames::setName( aux, name );
+        
+        solver.addVariable();
+        Var sAux = solver.numberOfVariables();
+        sAuxs.push_back( sAux );
+//        VariableNames::setName( sAux, "s" + name );
+        addBinaryImplication( Literal( aux, NEGATIVE ), Literal( sAux, NEGATIVE ) );
+    }        
+    
+    if( headAtoms.size() > 2 )
+    {
+        for( unsigned int i = 0; i < headAtoms.size() - 1; i++ )
+        {
+            if( i == 0 )
+            {
+                if( bodyLiteral == Literal::null )
+                {
+                    addEquivalence( Literal( auxs[ i ], NEGATIVE ), Literal( auxVars[ i ], POSITIVE ) );
+                    addEquivalence( Literal( headAtoms[ i ], NEGATIVE ), Literal( sAuxs[ i ], POSITIVE ) );
+                }
+                else
+                {
+                    addTwoAndLiteralEquivalence( bodyLiteral.getOppositeLiteral(), Literal( auxs[ i ], NEGATIVE ), Literal( auxVars[ i ], POSITIVE ) );
+                    addTwoAndLiteralEquivalence( bodyLiteral.getOppositeLiteral(), Literal( headAtoms[ i ], NEGATIVE ), Literal( sAuxs[ i ], POSITIVE ) );
+                }
+            }
+            else if( i == headAtoms.size() - 2 )
+            {
+                addTwoAndLiteralEquivalence( Literal( sAuxs[ i - 1 ], POSITIVE ), Literal( headAtoms[ i ], NEGATIVE ), Literal( auxVars[ i + 1 ], POSITIVE ) );
+                addTwoAndLiteralEquivalence( Literal( sAuxs[ i - 1 ], POSITIVE ), Literal( headAtoms[ i + 1 ], NEGATIVE ), Literal( auxVars[ i ], POSITIVE ) );
+                addLiteralTwoOrEquivalence( Literal( auxs[ i - 1 ], POSITIVE ), Literal( headAtoms[ i ], POSITIVE ), Literal( headAtoms[ i + 1 ], POSITIVE ) );
+            }
+            else
+            {
+                addTwoAndLiteralEquivalence( Literal( sAuxs[ i - 1 ], POSITIVE ), Literal( auxs[ i ], NEGATIVE ), Literal( auxVars[ i ], POSITIVE ) );
+                addTwoAndLiteralEquivalence( Literal( sAuxs[ i - 1 ], POSITIVE ), Literal( headAtoms[ i ], NEGATIVE ), Literal( sAuxs[ i ], POSITIVE ) );
+                addLiteralTwoOrEquivalence( Literal( auxs[ i - 1 ], POSITIVE ), Literal( headAtoms[ i ], POSITIVE ), Literal( auxs[ i ], POSITIVE ) );
+            }            
+        }
+    }
+    else
+    {
+        assert( headAtoms.size() == 2 );
+        if( bodyLiteral == Literal::null )
+        {
+            addEquivalence( Literal( headAtoms[ 0 ], NEGATIVE ), Literal( auxVars[ 1 ], POSITIVE ) );
+            addEquivalence( Literal( headAtoms[ 1 ], NEGATIVE ), Literal( auxVars[ 0 ], POSITIVE ) );
+        }
+        else
+        {
+            addTwoAndLiteralEquivalence( bodyLiteral.getOppositeLiteral(), Literal( headAtoms[ 0 ], NEGATIVE ), Literal( auxVars[ 1 ], POSITIVE ) );
+            addTwoAndLiteralEquivalence( bodyLiteral.getOppositeLiteral(), Literal( headAtoms[ 1 ], NEGATIVE ), Literal( auxVars[ 0 ], POSITIVE ) );
+        }
+    }
+   
     propagatedLiterals = solver.numberOfAssignedLiterals();
 }
 

@@ -78,7 +78,14 @@ private:
     void computeSCCsDisjunctive();
     void createClausesForShift( const Vector< Var >& headAtoms, Vector< Var >& auxVars, Literal bodyLiteral );
     void createPropagatorForDisjunction( const Vector< Var >& headAtoms, Vector< Var >& auxVars, Literal bodyLiteral );
+    void normalizeHeads( const Vector< Var >& headAtoms, Vector< Var >& auxVars, Literal bodyLiteral );
     void addBinaryImplication( Literal lit1, Literal lit2 );
+    
+    //add a ^ b <-> c
+    void addTwoAndLiteralEquivalence( Literal lit1And, Literal lit2And, Literal litEquivalent );
+    //add a <-> b v c
+    inline void addLiteralTwoOrEquivalence( Literal litEquivalent, Literal lit1Or, Literal lit2Or ) { addTwoAndLiteralEquivalence( lit1Or.getOppositeLiteral(), lit2Or.getOppositeLiteral(), litEquivalent.getOppositeLiteral() ); }
+    inline void addEquivalence( Literal lit1, Literal lit2 );
     void computeCompletion();
     void simplify();
     void removeSatisfiedLiterals( WeightConstraint* );
@@ -202,6 +209,15 @@ GringoNumericFormat::~GringoNumericFormat()
         delete weightConstraintRules.back();
         weightConstraintRules.pop_back();
     }
+}
+
+void
+GringoNumericFormat::addEquivalence(
+    Literal lit1,
+    Literal lit2 )
+{
+    addBinaryImplication( lit1, lit2 );
+    addBinaryImplication( lit2, lit1 );
 }
 
 #endif

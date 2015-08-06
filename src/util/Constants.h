@@ -78,7 +78,8 @@
 
 #define SHIFT_PROPAGATOR 0
 #define SHIFT_LEFT_RIGHT 1
-#define SHIFT_NAIVE 2
+#define SHIFT_NORMALIZE 2
+#define SHIFT_NAIVE 3
 
 #define VERSION "2.0"
 

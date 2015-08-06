@@ -597,6 +597,7 @@ Options::initMap()
     stringToShift[ "naive" ] = SHIFT_NAIVE;
     stringToShift[ "propagator" ] = SHIFT_PROPAGATOR;
     stringToShift[ "lr" ] = SHIFT_LEFT_RIGHT;
+    stringToShift[ "normalize" ] = SHIFT_NORMALIZE;
 }
 
 };
