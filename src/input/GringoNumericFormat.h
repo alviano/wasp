@@ -171,6 +171,7 @@ private:
     Vector< WeightConstraint* > optimizationRules;
     vector< AtomData > atomData;
     Vector< Clause* > crules;
+    Vector< pair< Var, Literal > > auxs;
     //vector< Rule* > constraints;
     
     unsigned readNormalRule_numberOfCalls;

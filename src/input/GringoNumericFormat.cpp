@@ -1291,7 +1291,24 @@ GringoNumericFormat::computeGusStructures()
         else
             processRecursiveNegativeCrule( crule );
     }
-    crules.shrink( j );    
+    crules.shrink( j );
+    
+    
+    for( unsigned int i = 0; i < auxs.size(); i++ )
+    {        
+        Var variable = auxs[ i ].first;
+        Component* component = solver.getComponent( variable );
+        if( component == NULL )
+            continue;        
+        assert( component != NULL );
+        component->setAuxVariable( variable );
+        Literal literal = auxs[ i ].second;
+        trace_msg( parser, 2, "Creating GUS data structures for variable " << Literal( variable, POSITIVE ) << ", which has 1 supporting literal: " << literal.getOppositeLiteral() );        
+        assert( solver.inTheSameComponent( literal.getVariable(), variable ) );
+        component->addAuxVariableSupportedByLiteral( variable, literal.getOppositeLiteral() );
+        component->addInternalLiteralForVariable( variable, literal.getOppositeLiteral() );        
+    }
+    auxs.clearAndDelete();
 }
 
 void
@@ -1487,7 +1504,12 @@ GringoNumericFormat::computeSCCsDisjunctive()
                         {
                             atomData[ headAtoms[ k ] ].crule->addLiteral( Literal( auxVars[ k ], POSITIVE ) );
                             if( addedLit.isPositiveBodyLiteral() )
-                                solver.addEdgeInDependencyGraph( headAtoms[ k ], addedVar );
+                            {
+                                solver.addEdgeInDependencyGraph( auxVars[ k ], addedVar );
+                                solver.addEdgeInDependencyGraph( headAtoms[ k ], auxVars[ k ] );
+                                
+                                auxs.push_back( pair< Var, Literal >( auxVars[ k ], addedLit ) );
+                            }
                         }
                     }
                 }
