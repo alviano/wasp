@@ -1489,15 +1489,26 @@ GringoNumericFormat::computeSCCsDisjunctive()
                         solver.cleanAndAddClause( normalRuleToClause( rule ) );                        
                         Vector< Var > auxVars;
                         
-                        if( wasp::Options::shiftStrategy == SHIFT_PROPAGATOR )
-                            createPropagatorForDisjunction( headAtoms, auxVars, addedLit );
-                        else if( wasp::Options::shiftStrategy == SHIFT_LEFT_RIGHT )
-                            createClausesForShift( headAtoms, auxVars, addedLit );
-                        else
+                        switch( wasp::Options::shiftStrategy )
                         {
-                            assert( wasp::Options::shiftStrategy == SHIFT_NORMALIZE );
-                            normalizeHeads( headAtoms, auxVars, addedLit );
-                        }
+                            case SHIFT_PROPAGATOR:
+                                createPropagatorForDisjunction( headAtoms, auxVars, addedLit );
+                                break;
+                            case SHIFT_LEFT_RIGHT:
+                                createClausesForShift( headAtoms, auxVars, addedLit );
+                                break;
+                            case SHIFT_NORMALIZE:
+                                normalizeHeads( headAtoms, auxVars, addedLit );
+                                break;
+                            case SHIFT_QUADRATIC:
+                                quadraticStrategy( headAtoms, auxVars, addedLit );
+                                break;
+                            case SHIFT_QUADRATIC_AGGREGATE:
+                                quadraticStrategyAggregate( headAtoms, auxVars, addedLit );
+                                break;
+                            default:
+                                ErrorMessage::errorDuringParsing( "Unknown shift strategy" );
+                        }                        
                             
                         assert( headAtoms.size() == auxVars.size() );
                         for( unsigned k = 0; k < auxVars.size(); k++ )
@@ -1520,8 +1531,9 @@ GringoNumericFormat::computeSCCsDisjunctive()
             trace_msg( parser, 5, "New crule: " << *crule );
         }
     }
-
-    solver.computeStrongConnectedComponents();
+    
+    solver.propagateAtLevelZero();
+    solver.computeStrongConnectedComponents();    
 }
 
 Literal
@@ -1865,6 +1877,120 @@ GringoNumericFormat::normalizeHeads(
         }
     }
    
+    propagatedLiterals = solver.numberOfAssignedLiterals();
+}
+
+void
+GringoNumericFormat::quadraticStrategy(
+    const Vector< Var >& headAtoms,
+    Vector< Var >& auxVars,
+    Literal bodyLiteral )
+{    
+    assert( propagatedLiterals == solver.numberOfAssignedLiterals() );
+    
+    Vector< Literal > lits;
+    Vector< uint64_t > weights;
+    
+    if( bodyLiteral != Literal::null )
+    {
+        lits.push_back( bodyLiteral );
+        weights.push_back( 2 );
+    }
+    for( unsigned int i = 0; i < headAtoms.size(); i++ )
+    {
+        solver.addVariable();
+        Var v = solver.numberOfVariables();
+        auxVars.push_back( v );
+        addBinaryImplication( Literal( v, POSITIVE ), Literal( headAtoms[ i ], POSITIVE ) );
+        lits.push_back( Literal( headAtoms[ i ], POSITIVE ) );
+        weights.push_back( 1 );
+        lits.push_back( Literal( v, POSITIVE ) );
+        weights.push_back( 1 );
+    }        
+    
+    assert( headAtoms.size() == auxVars.size() );
+    for( unsigned int i = 0; i < headAtoms.size(); i++ )
+    {
+        Var head = headAtoms[ i ];
+        for( unsigned int j = 0; j < auxVars.size(); j++ )
+        {
+            if( i == j )
+                continue;
+            Var aux = auxVars[ j ];                
+            addBinaryImplication( Literal( head, POSITIVE ), Literal( aux, NEGATIVE ) );
+        }
+        
+        if( bodyLiteral != Literal::null )
+            addBinaryImplication( bodyLiteral, Literal( auxVars[ i ], NEGATIVE ) );
+    }
+    
+    Aggregate* aggregate = createPseudoBooleanConstraint( lits, weights, 2 );
+    solver.addAggregate( aggregate );
+    solver.attachAggregate( *aggregate );
+    trace_msg( parser, 5, "Adding aggregate " << *aggregate );
+    propagatedLiterals = solver.numberOfAssignedLiterals();
+}
+
+void
+GringoNumericFormat::quadraticStrategyAggregate(
+    const Vector< Var >& headAtoms,
+    Vector< Var >& auxVars,
+    Literal bodyLiteral )
+{    
+    assert( propagatedLiterals == solver.numberOfAssignedLiterals() );
+    
+    Vector< Literal > lits;
+    Vector< uint64_t > weights;
+    
+    if( bodyLiteral != Literal::null )
+    {
+        lits.push_back( bodyLiteral );
+        weights.push_back( 2 );
+    }
+    for( unsigned int i = 0; i < headAtoms.size(); i++ )
+    {
+        solver.addVariable();
+        Var v = solver.numberOfVariables();
+        auxVars.push_back( v );
+        addBinaryImplication( Literal( v, POSITIVE ), Literal( headAtoms[ i ], POSITIVE ) );
+        lits.push_back( Literal( headAtoms[ i ], POSITIVE ) );
+        weights.push_back( 1 );
+        lits.push_back( Literal( v, POSITIVE ) );
+        weights.push_back( 1 );
+    }        
+    
+    assert( headAtoms.size() == auxVars.size() );
+    for( unsigned int i = 0; i < headAtoms.size(); i++ )
+    {
+        Var head = headAtoms[ i ];
+        Vector< Literal > ls;
+        Vector< uint64_t > wt;
+        
+        ls.push_back( Literal( head, NEGATIVE ) );
+        wt.push_back( headAtoms.size() - 1 );
+        
+        for( unsigned int j = 0; j < auxVars.size(); j++ )
+        {
+            if( i == j )
+                continue;
+            Var aux = auxVars[ j ];                
+            ls.push_back( Literal( aux, NEGATIVE ) );
+            wt.push_back( 1 );
+        }                
+        
+        if( bodyLiteral != Literal::null )
+            addBinaryImplication( bodyLiteral, Literal( auxVars[ i ], NEGATIVE ) );
+        
+        Aggregate* aggr = createPseudoBooleanConstraint( ls, wt, headAtoms.size() - 1 );
+        solver.addAggregate( aggr );
+        solver.attachAggregate( *aggr );
+        trace_msg( parser, 5, "Adding aggregate " << *aggr );
+    }
+    
+    Aggregate* aggregate = createPseudoBooleanConstraint( lits, weights, 2 );
+    solver.addAggregate( aggregate );
+    solver.attachAggregate( *aggregate );
+    trace_msg( parser, 5, "Adding aggregate " << *aggregate );
     propagatedLiterals = solver.numberOfAssignedLiterals();
 }
 
@@ -2984,7 +3110,7 @@ GringoNumericFormat::createPseudoBooleanConstraint(
     Literal aggregateLit( 1, NEGATIVE );
     Aggregate* aggregate = createAggregate( literals, weights, bound, aggregateLit );
     assert( solver.isTrue( aggregateLit ) );
-    aggregate->onLiteralFalse( solver, aggregateLit.getOppositeLiteral(), 1 );
+    aggregate->onLiteralFalse( solver, aggregateLit.getOppositeLiteral(), 1 );    
     return aggregate;
 }
 

@@ -114,7 +114,9 @@ class Help
             cout << "       =naive                          - Enable naive strategy" << endl;
             cout << "       =propagator                     - Enable the usage of a propagator" << endl;
             cout << "       =lr                             - Enable left/right strategy" << endl;
-            cout << "       =normalize                      - Enable normalization of heads" << endl;            
+            cout << "       =normalize                      - Enable normalization of heads" << endl;
+            cout << "       =quadratic                      - Enable quadratic strategy" << endl;
+            cout << "       =quadratic-aggregate            - Enable quadratic strategy with aggregate" << endl;            
             
             cout << separator << endl;
             cout << "General options                        " << endl << endl;

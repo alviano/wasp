@@ -598,6 +598,8 @@ Options::initMap()
     stringToShift[ "propagator" ] = SHIFT_PROPAGATOR;
     stringToShift[ "lr" ] = SHIFT_LEFT_RIGHT;
     stringToShift[ "normalize" ] = SHIFT_NORMALIZE;
+    stringToShift[ "quadratic" ] = SHIFT_QUADRATIC;
+    stringToShift[ "quadratic-aggregate" ] = SHIFT_QUADRATIC_AGGREGATE;
 }
 
 };

@@ -79,6 +79,8 @@ private:
     void createClausesForShift( const Vector< Var >& headAtoms, Vector< Var >& auxVars, Literal bodyLiteral );
     void createPropagatorForDisjunction( const Vector< Var >& headAtoms, Vector< Var >& auxVars, Literal bodyLiteral );
     void normalizeHeads( const Vector< Var >& headAtoms, Vector< Var >& auxVars, Literal bodyLiteral );
+    void quadraticStrategy( const Vector< Var >& headAtoms, Vector< Var >& auxVars, Literal bodyLiteral );
+    void quadraticStrategyAggregate( const Vector< Var >& headAtoms, Vector< Var >& auxVars, Literal bodyLiteral );
     void addBinaryImplication( Literal lit1, Literal lit2 );
     
     //add a ^ b <-> c

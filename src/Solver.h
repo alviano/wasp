@@ -138,6 +138,7 @@ class Solver
         inline void assignLiteral( Clause* implicant );
         inline void assignLiteral( Literal literal, Reason* implicant );
         
+        inline bool propagateAtLevelZero();
         inline bool propagateLiteralAsDeterministicConsequence( Literal literal );
         inline bool propagateLiteralAsDeterministicConsequenceSatelite( Literal literal );
         
@@ -1419,6 +1420,22 @@ void
 Solver::startIterationOnAssignedVariable()
 {
     variables.startIterationOnAssignedVariable();
+}
+
+bool
+Solver::propagateAtLevelZero()
+{
+    while( hasNextVariableToPropagate() )
+    {
+        Var variableToPropagate = getNextVariableToPropagate();
+        propagateAtLevelZero( variableToPropagate );
+
+        if( conflictDetected() )
+            return false;
+    }    
+    assert( !conflictDetected() );
+
+    return true;
 }
 
 bool
