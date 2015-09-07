@@ -660,6 +660,16 @@ GringoNumericFormat::readCount(
         ErrorMessage::errorDuringParsing( "Size must be greater than or equal to negative size." );
     }
     
+    if( size < bound )
+    {
+        while( size-- > 0 )
+        {
+            input.read( tmp );
+            createStructures( tmp );
+        }
+        solver.addClause( Literal( id, NEGATIVE ) );
+        return;
+    }
     assert( size >= bound );
 
     WeightConstraintRule* weightConstraintRule = new WeightConstraintRule( id, bound );    
