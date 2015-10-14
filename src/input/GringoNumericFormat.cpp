@@ -1809,6 +1809,8 @@ GringoNumericFormat::normalizeHeads(
         solver.addVariable();
         Var v = solver.numberOfVariables();        
         auxVars.push_back( v );
+        
+        addBinaryImplication( Literal( v, POSITIVE ), Literal( headAtoms[ i ], POSITIVE ) );
 //        VariableNames::setName( v, "s" + VariableNames::getName( headAtoms[ i ] ) + to_string( count ) );
                 
         if( i == 0 || i == 1 )
