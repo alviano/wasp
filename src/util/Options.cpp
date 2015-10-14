@@ -89,6 +89,7 @@ namespace wasp
 #define OPTIONID_bumpactivityafterpartialchecks ( 'z' + 105 )
 #define OPTIONID_backward_partialchecks ( 'z' + 106 )
 #define OPTIONID_shift_strategy ( 'z' + 107 )
+#define OPTIONID_shift_onedef ( 'z' + 108 )
     
 /* WEAK CONSTRAINTS OPTIONS */
 #define OPTIONID_weakconstraintsalgorithm ( 'z' + 200 )
@@ -159,6 +160,8 @@ unsigned int Options::queryVerbosity = 0;
 map< string, WEAK_CONSTRAINTS_ALG > Options::stringToWeak;
 
 SHIFT_STRATEGY Options::shiftStrategy = SHIFT_NAIVE;
+
+bool Options::oneDefShift = false;
 
 map< string, WEAK_CONSTRAINTS_ALG > Options::stringToShift;
 
@@ -246,6 +249,7 @@ Options::parse(
                 
                 /* SHIFT STRATEGY */
                 { "shift-strategy", required_argument, NULL, OPTIONID_shift_strategy },
+                { "enable-shift-onedef", no_argument, NULL, OPTIONID_shift_onedef },
 
                 /* QUERY */
                 { "query-algorithm", optional_argument, NULL, OPTIONID_queryalgorithm },
@@ -484,6 +488,10 @@ Options::parse(
                     shiftStrategy = getShiftStrategy( string( optarg ) );
                 else
                     ErrorMessage::errorGeneric( "Inserted invalid strategy for shift." );
+                break;
+                
+            case OPTIONID_shift_onedef:
+                oneDefShift = true;
                 break;
                 
             case OPTIONID_disjcores:

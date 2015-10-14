@@ -1657,7 +1657,7 @@ GringoNumericFormat::createPropagatorForDisjunction(
         disjunctionPropagator->addOriginalAndAuxLiterals( headLit, aux );
         solver.setFrozen( v );
         solver.setFrozen( headLit.getVariable() );
-//        addBinaryImplication( aux, headLit );
+        addBinaryImplication( aux, headLit );
         lits.push_back( headLit );
         weights.push_back( 1 );
         lits.push_back( aux );
@@ -2009,7 +2009,7 @@ GringoNumericFormat::computeSCCs()
             continue;        
         assert( data.numberOfHeadOccurrences > 0 );
         
-        if( data.numberOfHeadOccurrences == 1 )
+        if( !wasp::Options::oneDefShift && data.numberOfHeadOccurrences == 1 )
         {
             trace_msg( parser, 3, "Only one defining rule" );
             for( unsigned j = 0; j < data.headOccurrences.size(); ++j )

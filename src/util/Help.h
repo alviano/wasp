@@ -116,7 +116,8 @@ class Help
             cout << "       =lr                             - Enable left/right strategy" << endl;
             cout << "       =normalize                      - Enable normalization of heads" << endl;
             cout << "       =quadratic                      - Enable quadratic strategy" << endl;
-            cout << "       =quadratic-aggregate            - Enable quadratic strategy with aggregate" << endl;            
+            cout << "       =quadratic-aggregate            - Enable quadratic strategy with aggregate" << endl;
+            cout << "--enable-shift-onedef                  - Enable shift also for atoms with one defition" << endl;
             
             cout << separator << endl;
             cout << "General options                        " << endl << endl;

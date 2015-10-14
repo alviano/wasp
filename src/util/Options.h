@@ -56,6 +56,8 @@ namespace wasp
             
             static SHIFT_STRATEGY shiftStrategy;
             
+            static bool oneDefShift;
+            
         private:
 
             static DELETION_POLICY deletionPolicy;
@@ -87,7 +89,7 @@ namespace wasp
             
             static bool disjCoresPreprocessing;
             
-            static bool minimizeUnsatCore;                                          
+            static bool minimizeUnsatCore;                                                                  
             
             static map< string, WEAK_CONSTRAINTS_ALG > stringToWeak;
             
