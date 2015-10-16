@@ -123,6 +123,7 @@ class Help
             cout << "General options                        " << endl << endl;
             cout << "--dimacs                               - Enable dimacs format as input and outputs" << endl;
             cout << "--help                                 - Print this guide and exit" << endl;
+            cout << "--disable-simplifications              - Disable the simplifications of satelite" << endl;
 //            cout << "--stdin                                - Write a description." << endl;
 //            cout << "--time-limit                           - Write a description." << endl;
         }

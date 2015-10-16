@@ -90,6 +90,7 @@ namespace wasp
 #define OPTIONID_backward_partialchecks ( 'z' + 106 )
 #define OPTIONID_shift_strategy ( 'z' + 107 )
 #define OPTIONID_shift_onedef ( 'z' + 108 )
+#define OPTIONID_simplifications ( 'z' + 109 )
     
 /* WEAK CONSTRAINTS OPTIONS */
 #define OPTIONID_weakconstraintsalgorithm ( 'z' + 200 )
@@ -165,6 +166,8 @@ bool Options::oneDefShift = false;
 
 map< string, WEAK_CONSTRAINTS_ALG > Options::stringToShift;
 
+bool Options::simplifications = true;
+
 void
 Options::parse(
     int argc,
@@ -234,6 +237,7 @@ Options::parse(
                 { "stdin", no_argument, NULL, OPTIONID_stdin },
                 { "time-limit", required_argument, NULL, OPTIONID_time_limit },
                 { "max-cost", required_argument, NULL, OPTIONID_max_cost },
+                { "disable-simplifications", no_argument, NULL, OPTIONID_simplifications },
                 
                 { "exchange-clauses", no_argument, NULL, OPTIONID_exchange_clauses },
                 { "forward-partialchecks", no_argument, NULL, OPTIONID_forward_partialchecks },  
@@ -440,6 +444,10 @@ Options::parse(
             case OPTIONID_dimacs:
                 outputPolicy = DIMACS_OUTPUT;
                 break; 
+                
+            case OPTIONID_simplifications:
+                simplifications = false;
+                break;
                 
             case OPTIONID_help:
                 Help::printHelp();

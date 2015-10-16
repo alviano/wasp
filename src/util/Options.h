@@ -58,6 +58,8 @@ namespace wasp
             
             static bool oneDefShift;
             
+            static bool simplifications;
+            
         private:
 
             static DELETION_POLICY deletionPolicy;
