@@ -19,10 +19,11 @@
 #ifndef MINISATHEURISTIC_H
 #define MINISATHEURISTIC_H
 
-#include "util/Options.h"
-#include "util/Trace.h"
-#include "Literal.h"
-#include "stl/Heap.h"
+#include "../util/Options.h"
+#include "../util/Trace.h"
+#include "../Literal.h"
+#include "../stl/Heap.h"
+#include "HeuristicStrategy.h"
 
 #include <cassert>
 #include <iostream>
@@ -36,34 +37,47 @@ struct ActivityComparator
     ActivityComparator( const Vector< Activity >& a ) : act( a ) {}
 };
 
-class MinisatHeuristic
+class MinisatHeuristic : public HeuristicStrategy
 {
     public:
         inline MinisatHeuristic( Solver& s );
-        inline ~MinisatHeuristic(){};
+        virtual ~MinisatHeuristic(){};
 
-        Literal makeAChoice();
         inline void onNewVariable( Var v );
         inline void onNewVariableRuntime( Var v );
-        inline void onLiteralInvolvedInConflict( Literal literal );
+        inline void onLitInvolvedInConflict( Literal literal );
         inline void onUnrollingVariable( Var var );
-        inline void variableDecayActivity(){ trace_msg( heuristic, 1, "Calling decay activity" ); variableIncrement *= variableDecay; }
-        inline void addPreferredChoice( Literal lit ){ assert( lit != Literal::null ); preferredChoices.push_back( lit ); }
-        inline void removePrefChoices() { preferredChoices.clear(); }
-        void simplifyVariablesAtLevelZero();
-        inline bool bumpActivity( Var var ){ assert( var < act.size() ); return ( ( act[ var ] += variableIncrement ) > 1e100 ); }        
+        inline void onConflict() { variableDecayActivity(); }
+        inline void onLitInImportantClause( Literal lit ) { bumpActivity( lit.getVariable() ); };
+        inline void onFinishedSimplifications() { simplifyVariablesAtLevelZero(); }        
+        
+        //Unused methods
+        inline void addedVarName( Var, const string& ) {}
+        inline void onDeletion() {}
+        inline void onFinishedParsing() {}        
+        inline void onLearningClause( unsigned int, unsigned int ) {}
+        inline void onLitAtLevelZero( Literal ) {}
+        inline void onLitInLearntClause( Literal ) {}
+        inline void onRestart() {}
+        inline void onAnswerSet() {}
+        inline void onStartingSolver( unsigned int, unsigned int ) {}
+        inline void onVariableElimination( Var ) {}
+        
+    protected:
+        Literal makeAChoiceProtected();        
         
     private:        
-        inline void rescaleActivity();        
+        inline void rescaleActivity();
         inline void variableBumpActivity( Var variable );
         void randomChoice();
+        inline void variableDecayActivity(){ trace_msg( heuristic, 1, "Calling decay activity" ); variableIncrement *= variableDecay; }
+        void simplifyVariablesAtLevelZero();
+        inline bool bumpActivity( Var var ){ assert( var < act.size() ); return ( ( act[ var ] += variableIncrement ) > 1e100 ); }
 
-        Solver& solver;
         Activity variableIncrement;
         Activity variableDecay;
         
         Vector< Activity > act;
-        vector< Literal > preferredChoices;
         
         vector< Var > vars;
 
@@ -72,7 +86,7 @@ class MinisatHeuristic
 };
 
 MinisatHeuristic::MinisatHeuristic( Solver& s ) :
-    solver( s ), variableIncrement( 1.0 ), variableDecay( 1 / 0.95 ), chosenVariable( 0 ), heap( ActivityComparator( act ) )
+    HeuristicStrategy( s ), variableIncrement( 1.0 ), variableDecay( 1 / 0.95 ), chosenVariable( 0 ), heap( ActivityComparator( act ) )
 {
     act.push_back( 0.0 );
 }
@@ -116,7 +130,7 @@ MinisatHeuristic::onNewVariableRuntime(
 }
 
 void 
-MinisatHeuristic::onLiteralInvolvedInConflict( 
+MinisatHeuristic::onLitInvolvedInConflict( 
     Literal literal )
 {
     variableBumpActivity( literal.getVariable() );
@@ -130,4 +144,3 @@ MinisatHeuristic::onUnrollingVariable(
 }
 
 #endif
-

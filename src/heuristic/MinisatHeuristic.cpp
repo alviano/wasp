@@ -19,22 +19,13 @@
 #include "MinisatHeuristic.h"
 
 #include <cassert>
-#include "Literal.h"
-#include "Solver.h"
+#include "../Literal.h"
+#include "../Solver.h"
 
 Literal
-MinisatHeuristic::makeAChoice()
+MinisatHeuristic::makeAChoiceProtected()
 {
     trace_msg( heuristic, 1, "Starting MiniSAT heuristic" );
-    if( !preferredChoices.empty() )
-    {
-        for( unsigned int i = 0; i < preferredChoices.size(); i++ )
-        {
-            if( solver.isUndefined( preferredChoices[ i ].getVariable() ) )
-                return preferredChoices[ i ];
-        }        
-    }
-    
     chosenVariable = 0;
     //randomChoice();
     

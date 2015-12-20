@@ -34,7 +34,7 @@ using namespace std;
 #include "util/Assert.h"
 #include "Satelite.h"
 #include "Restart.h"
-#include "MinisatHeuristic.h"
+#include "heuristic/HeuristicStrategy.h"
 #include "util/Statistics.h"
 #include "PostPropagator.h"
 #include "DependencyGraph.h"
@@ -43,6 +43,7 @@ using namespace std;
 #include "WatchedList.h"
 #include "stl/BoundedQueue.h"
 #include "Component.h"
+#include "heuristic/MinisatHeuristic.h"
 class HCComponent;
 class WeakInterface;
 
@@ -120,6 +121,8 @@ class Solver
         void addLearnedClause( Clause* learnedClause, bool optimizeBinary );
         bool addClauseFromModelAndRestart();
         
+        inline void setChoiceHeuristic( HeuristicStrategy* strategy ){ assert( strategy != NULL ); delete choiceHeuristic; choiceHeuristic = strategy; }
+        
         inline Literal getLiteral( int lit );
 //        inline Var getVariable( unsigned int var );
         
@@ -169,6 +172,7 @@ class Solver
         void unroll( unsigned int level );
         inline void unrollOne();
         inline void unrollLastVariable();
+        inline bool unrollVariable( Var v );
         
         /* OPTIONS */
         inline void setOutputBuilder( OutputBuilder* value );        
@@ -200,7 +204,7 @@ class Solver
         inline void deleteLearnedClause( ClauseIterator iterator );
         inline void deleteClause( Clause* clause );
         inline void removeClauseNoDeletion( Clause* clause );
-        inline void deleteClauses() { glucoseHeuristic_ ? glucoseDeletion() : minisatDeletion(); }
+        inline void deleteClauses() { choiceHeuristic->onDeletion(); glucoseHeuristic_ ? glucoseDeletion() : minisatDeletion(); }
         void minisatDeletion();
         void glucoseDeletion();
         inline void decrementActivity(){ deletionCounters.increment *= deletionCounters.decrement; }
@@ -215,7 +219,7 @@ class Solver
         
 //        inline void initClauseData( Clause* clause ) { assert( heuristic != NULL ); heuristic->initClauseData( clause ); }
 //        inline Heuristic* getHeuristic() { return heuristic; }
-        inline void onLiteralInvolvedInConflict( Literal l ) { minisatHeuristic->onLiteralInvolvedInConflict( l ); }
+        inline void onLitInvolvedInConflict( Literal l ) { choiceHeuristic->onLitInvolvedInConflict( l ); }
         inline void finalizeDeletion( unsigned int newVectorSize ) { learnedClauses.resize( newVectorSize ); }        
         
         inline void setRestart( Restart* r );
@@ -266,7 +270,7 @@ class Solver
 //        inline void setMaxCostOfLevelOfOptimizationRules( vector< uint64_t >& m ) { maxCostOfLevelOfOptimizationRules.swap( m ); }
 //        inline void setNumberOfOptimizationLevels( unsigned int n ) { numberOfOptimizationLevels = n; }        
         inline void addPreferredChoicesFromOptimizationLiterals( unsigned int level );
-        inline void removePrefChoices() { minisatHeuristic->removePrefChoices(); }
+        inline void removePrefChoices() { choiceHeuristic->removePrefChoices(); }
         
         inline bool isTrue( Var v ) const { return variables.isTrue( v ); }
         inline bool isFalse( Var v ) const { return variables.isFalse( v ); }        
@@ -366,7 +370,7 @@ class Solver
         inline void learnedClauseUsedForConflict( Clause* clause );
         inline unsigned int computeLBD( const Clause& clause );
         
-        inline void bumpActivity( Var v ) { minisatHeuristic->bumpActivity( v ); }
+        inline void onLitInImportantClause( Literal lit ) { choiceHeuristic->onLitInImportantClause( lit ); }
         
         inline bool glucoseHeuristic() const { return glucoseHeuristic_; }
         inline void disableGlucoseHeuristic() { glucoseHeuristic_ = false; }
@@ -439,6 +443,12 @@ class Solver
         
         inline uint64_t simplifyOptimizationLiterals( unsigned int level );
 //        inline void simplifyOptimizationLiterals();
+        
+        inline void onFinishedParsing(){ choiceHeuristic->onFinishedParsing(); }
+        inline void addedVarName( Var var ) { choiceHeuristic->addedVarName( var, VariableNames::getName( var ) ); }
+        inline void onStartingSolver( unsigned int nVars, unsigned int nClauses ) { choiceHeuristic->onStartingSolver( nVars, nClauses ); }
+        inline void assignedLiteral( Literal lit ) { if( getCurrentDecisionLevel() == 0 ) choiceHeuristic->onLitAtLevelZero( lit ); }
+        inline void addedLiteralInLearnedClause( Literal lit ) { choiceHeuristic->onLitInLearntClause( lit ); }        
                
     private:
         HCComponent* hcComponentForChecker;
@@ -478,7 +488,7 @@ class Solver
         Learning learning;
         OutputBuilder* outputBuilder;        
         
-        MinisatHeuristic* minisatHeuristic;
+        HeuristicStrategy* choiceHeuristic;
         Restart* restart;
         Satelite* satelite;                
         
@@ -675,7 +685,8 @@ Solver::Solver()
 {
     dependencyGraph = new DependencyGraph( *this );
     satelite = new Satelite( *this );
-    minisatHeuristic = new MinisatHeuristic( *this );
+    
+    choiceHeuristic = new MinisatHeuristic( *this );
     deletionCounters.init();
     glucoseData.init();
     VariableNames::addVariable();
@@ -745,7 +756,7 @@ Solver::addVariableInternal()
 {
     VariableNames::addVariable();
     variables.push_back();    
-    minisatHeuristic->onNewVariable( variables.numberOfVariables() );
+    choiceHeuristic->onNewVariable( variables.numberOfVariables() );
     learning.onNewVariable();
     glucoseData.onNewVariable();
     
@@ -773,7 +784,7 @@ void
 Solver::addVariableRuntime()
 {
     addVariableInternal();
-    minisatHeuristic->onNewVariableRuntime( numberOfVariables() );
+    choiceHeuristic->onNewVariableRuntime( numberOfVariables() );
 }
 
 Literal
@@ -798,6 +809,7 @@ Solver::assignLiteral(
     Literal literal )
 {
     assert( !conflictDetected() );
+    assignedLiteral( literal );
     if( !variables.assign( currentDecisionLevel, literal ) )
     {
         conflictLiteral = literal;
@@ -811,6 +823,7 @@ Solver::assignLiteral(
 {
     assert( implicant != NULL );
     assert( !conflictDetected() );
+    assignedLiteral( implicant->getAt( 0 ) );
     if( !variables.assign( currentDecisionLevel, implicant ) )
     {
         conflictLiteral = implicant->getAt( 0 );
@@ -826,6 +839,7 @@ Solver::assignLiteral(
     assert( implicant != NULL );
     
     assert( !conflictDetected() );
+    assignedLiteral( lit );
     if( !variables.assign( currentDecisionLevel, lit, implicant ) )
     {
         conflictLiteral = lit;
@@ -1091,7 +1105,7 @@ Solver::incrementCurrentDecisionLevel()
 void
 Solver::unrollLastVariable()
 {    
-    minisatHeuristic->onUnrollingVariable( variables.unrollLastVariable() );
+    choiceHeuristic->onUnrollingVariable( variables.unrollLastVariable() );
 }
 
 void
@@ -1101,12 +1115,27 @@ Solver::unrollOne()
 }
 
 bool
+Solver::unrollVariable(
+    Var v )
+{
+    assert( v >= 1 && v <= numberOfVariables() );
+    if( getDecisionLevel( v ) == 0 || getDecisionLevel( v ) <= numberOfAssumptions )
+        return false;
+    
+    while( currentDecisionLevel > 0 && currentDecisionLevel > numberOfAssumptions && isUndefined( v ) )
+        unrollOne();
+    
+    return isUndefined( v );
+}
+
+bool
 Solver::doRestart()
 {
     assert( currentDecisionLevel != 0 );
     trace( solving, 2, "Performing restart.\n" );
     numberOfRestarts++;
     restart->onRestart();
+    choiceHeuristic->onRestart();
     
     assert( incremental_ || numberOfAssumptions == 0 );
     if( currentDecisionLevel > numberOfAssumptions )
@@ -1202,6 +1231,7 @@ Solver::hasUndefinedLiterals()
 void
 Solver::printAnswerSet()
 {
+    choiceHeuristic->onAnswerSet();
     variables.printAnswerSet( outputBuilder );
 }
 
@@ -1266,7 +1296,9 @@ Solver::chooseLiteral(
     
     if( choice != Literal::null )
         goto end;    
-    choice = minisatHeuristic->makeAChoice();    
+    choice = choiceHeuristic->makeAChoice();
+    if( choice == Literal::null )
+        return false;
     
     end:;
     trace_msg( solving, 1, "Choice: " << choice );
@@ -1304,7 +1336,7 @@ Solver::analyzeConflict()
         releaseClause( learnedClause );
         if( !addClauseRuntime( tmpLit ) )
             return false;
-            
+        choiceHeuristic->onLearningClause( 1, 1 );    
 //        assignLiteral( learnedClause->getAt( 0 ) );
 //        assert( isTrue( learnedClause->getAt( 0 ) ) );
 //        assert( !conflictDetected() );
@@ -1344,7 +1376,7 @@ Solver::analyzeConflict()
         assert_msg( unrollLevel < currentDecisionLevel, "Trying to backjump from level " << unrollLevel << " to level " << currentDecisionLevel );
         trace_msg( solving, 2, "Learned clause and backjumping to level " << unrollLevel );
         addLearnedClause( learnedClause, true );        
-
+        choiceHeuristic->onLearningClause( learnedClause->lbd(), learnedClause->size() );
         unroll( unrollLevel );
         clearConflictStatus();                        
         if( size != 2 )
@@ -1566,7 +1598,7 @@ Solver::preprocessing()
     if( callSimplifications() && !satelite->simplify() )
         return false;
 
-    minisatHeuristic->simplifyVariablesAtLevelZero();
+    choiceHeuristic->onFinishedSimplifications();
     clearVariableOccurrences();
     attachWatches();
     clearComponents();
@@ -1608,6 +1640,7 @@ Solver::onEliminatingVariable(
     variables.onEliminatingVariable( variable );
     eliminatedVariables.push_back( variable );
     setEliminated( variable, sign, definition );
+    choiceHeuristic->onVariableElimination( variable );
 }
 
 void
@@ -1851,7 +1884,7 @@ Solver::addPreferredChoicesFromOptimizationLiterals(
     for( unsigned int i = 0; i < numberOfOptimizationLiterals( level ); i++ )
     {
         if( isUndefined( getOptimizationLiteral( level, i ).lit ) )
-            minisatHeuristic->addPreferredChoice( getOptimizationLiteral( level, i ).lit.getOppositeLiteral() );
+            choiceHeuristic->addPreferredChoice( getOptimizationLiteral( level, i ).lit.getOppositeLiteral() );
     }
 }
 

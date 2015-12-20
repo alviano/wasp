@@ -54,24 +54,21 @@ namespace wasp
             static bool printLastModelOnly;
             static bool stratification;
             
-        private:
-
-            static DELETION_POLICY deletionPolicy;
-
-            static unsigned int deletionThreshold;
+            static unsigned int interpreter;
+            static char* heuristic_scriptname;
             
-            static DECISION_POLICY decisionPolicy;
+        private:
 
             static vector< const char* > inputFiles;
 
-            static unsigned int decisionThreshold;
-            
             static unsigned int maxModels;
 
             static OUTPUT_POLICY outputPolicy;
 
             static bool printProgram;
             static bool printDimacs;
+            
+            static bool minisatPolicy;
 
             static RESTARTS_POLICY restartsPolicy;
             

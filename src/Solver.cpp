@@ -87,7 +87,7 @@ Solver::~Solver()
         variableDataStructures.pop_back();
     }
     
-    delete minisatHeuristic;
+    delete choiceHeuristic;
     
     for( unsigned int i = 1; i <= variables.numberOfVariables(); i++ )
     {        
@@ -285,7 +285,7 @@ Solver::solveWithoutPropagators(
                     statistics( this, endSolving() );
                     return INCOHERENT;
                 }
-                minisatHeuristic->variableDecayActivity();
+                choiceHeuristic->onConflict();
                 assert_msg( hasNextVariableToPropagate() || getCurrentDecisionLevel() == numberOfAssumptions || getCurrentDecisionLevel() == 0, getCurrentDecisionLevel() << " != " << numberOfAssumptions );
             }
         }
@@ -354,7 +354,7 @@ Solver::solvePropagators(
                     trace_msg( solving, 1, "Failure occurs during the computation of the clause" );
                     return INCOHERENT;
                 }
-                minisatHeuristic->variableDecayActivity();
+                choiceHeuristic->onConflict();
                 assert_msg( hasNextVariableToPropagate() || getCurrentDecisionLevel() == numberOfAssumptions || getCurrentDecisionLevel() == 0, getCurrentDecisionLevel() << " != " << numberOfAssumptions );
             }
         }

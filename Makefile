@@ -47,6 +47,23 @@ linkflags.stats0x = \
  -lm
 ####
 
+SCRIPT = no
+scriptsc.perl = -I/usr/local/include -I$(shell perl -MConfig -e 'print $$Config{archlib}')/CORE/
+scriptsld.perl = -L$(shell perl -MConfig -e 'print $$Config{archlib}')/CORE/ -L/usr/local/lib/ -lperl
+cxxscripts.perl = -DENABLE_PERL
+
+scriptsc.python = $(shell python2.7-config --cflags | sed "s/-Wshorten-64-to-32//g" | sed "s/-Wstrict-prototypes//g" | sed "s/-arch i386//g" | sed "s/-DNDEBUG//g" | sed "s/-Os//g" )
+scriptsld.python = $(shell python2.7-config --ldflags | sed "s/-Wshorten-64-to-32//g" | sed "s/-Wstrict-prototypes//g")
+cxxscripts.python = -DENABLE_PYTHON
+
+scriptsc.all = -I/usr/local/include -I$(shell perl -MConfig -e 'print $$Config{archlib}')/CORE/ $(shell python2.7-config --cflags | sed "s/-Wshorten-64-to-32//g" | sed "s/-Wstrict-prototypes//g" | sed "s/-arch i386//g" | sed "s/-DNDEBUG//g" | sed "s/-Os//g" )
+scriptsld.all = -L$(shell perl -MConfig -e 'print $$Config{archlib}')/CORE/ -L/usr/local/lib/ -lperl $(shell python2.7-config --ldflags | sed "s/-Wshorten-64-to-32//g" | sed "s/-Wstrict-prototypes//g")
+cxxscripts.all = -DENABLE_PERL -DENABLE_PYTHON
+
+scriptsc.no =
+scriptld.no =
+cxxscripts.no =
+
 SOURCE_DIR = src
 BUILD_DIR = build/$(BUILD)
 
@@ -57,6 +74,10 @@ CXXFLAGS = $(cxxflags.$(BUILD))
 LINK = $(GCC)
 LINKFLAGS = $(linkflags.$(BUILD))
 
+SCRIPT_CFLAGS = $(scriptsc.$(SCRIPT))
+SCRIPT_LDFLAGS = $(scriptsld.$(SCRIPT))
+CXX_SCRIPTS = $(cxxscripts.$(SCRIPT))
+
 SRCS = $(shell find $(SOURCE_DIR) -name '*.cpp')
 
 OBJS = $(patsubst $(SOURCE_DIR)%.cpp,$(BUILD_DIR)%.o, $(SRCS))
@@ -65,17 +86,17 @@ DEPS = $(patsubst $(SOURCE_DIR)%.cpp,$(BUILD_DIR)%.d, $(SRCS))
 all: $(BINARY)
 
 $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(SCRIPT_CFLAGS) $(SCRIPT_LDFLAGS) $(CXX_SCRIPTS) -c $< -o $@
 
 $(BUILD_DIR)/%.d: $(SOURCE_DIR)/%.cpp
 	mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) -MM -MT '$(@:.d=.o)' $< -MF $@
+	$(CXX) $(CXXFLAGS) $(SCRIPT_CFLAGS) $(SCRIPT_LDFLAGS) $(CXX_SCRIPTS) -MM -MT '$(@:.d=.o)' $< -MF $@
 	
 $(BINARY): $(OBJS) $(DEPS)
-	$(LINK) $(LINKFLAGS) $(LIBS) $(OBJS) -o $(BINARY)
+	$(LINK) $(LINKFLAGS) $(SCRIPT_CFLAGS) $(SCRIPT_LDFLAGS) $(CXX_SCRIPTS) $(LIBS) $(OBJS) -o $(BINARY)
 
 static: $(OBJS) $(DEPS)
-	$(LINK) $(LINKFLAGS) $(LIBS) $(OBJS) -static -o $(BINARY)
+	$(LINK) $(LINKFLAGS) $(SCRIPT_CFLAGS) $(SCRIPT_LDFLAGS) $(CXX_SCRIPTS) $(LIBS) $(OBJS) -static -o $(BINARY)
 
 run: $(BINARY)
 	./$(BINARY)
@@ -86,10 +107,12 @@ TESTS_DIR = tests
 
 TESTS_TESTER = $(TESTS_DIR)/pyregtest.py
 
-TESTS_COMMAND_AllAnswerSets = $(BINARY) -n 0 --silent
-TESTS_COMMAND_gringo = gringo | $(BINARY) -n 0 --silent
+COMMAND = $(BINARY) -n 0 --silent
+
+TESTS_COMMAND_AllAnswerSets = $(COMMAND)
+TESTS_COMMAND_gringo = gringo3 | $(COMMAND)
 TESTS_COMMAND_SatModel = $(BINARY)
-TESTS_COMMAND_WeakConstraints = $(BINARY) -n 0 --silent
+TESTS_COMMAND_WeakConstraints = $(COMMAND)
 
 TESTS_CHECKER_AllAnswerSets = $(TESTS_DIR)/allAnswerSets.checker.py
 TESTS_CHECKER_SatModels = $(TESTS_DIR)/satModels.checker.py

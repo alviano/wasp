@@ -71,10 +71,18 @@ class Help
             cout << separator << endl;
             
             cout << "Heuristics options                     " << endl << endl;
-//            cout << "--heuristic-berkmin                    - Berkmin-like heuristic with look ahead for choosing polarity." << endl;
-//            cout << "--heuristic-berkmin-cache              - Berkmin-like heuristic with cache for choosing polarity." << endl;
-//            cout << "--heuristic-firstundefined             - Choose always the first undefined literal." << endl;
-            cout << "--heuristic-minisat                    - Enable minisat heuristic" << endl;
+            cout << "--minisat-policy                       - Enable minisat policy for deletion" << endl;
+            
+            #if defined(ENABLE_PERL) || defined(ENABLE_PYTHON)
+            cout << "--heuristic-interpreter                - Enable the usage of external heuristics" << endl;
+            #ifdef ENABLE_PERL
+            cout << "       =perl                           - Use perl as interpreter" << endl;
+            #endif
+            #ifdef ENABLE_PYTHON
+            cout << "       =python                         - Use python as interpreter" << endl;            
+            #endif
+            cout << "--heuristic-scriptname                 - Specify the name of the script" << endl;
+            #endif
             cout << separator << endl;
 
             cout << "Model Checker options                  " << endl << endl;

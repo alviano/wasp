@@ -95,6 +95,7 @@ GringoNumericFormat::parse(
     readErrorNumber( input );
     propagate();
 
+    solver.onFinishedParsing();
 //    trace_msg( parser, 1, "Apply bimander to at-most-one constraints" );
 //    for( unsigned i = 0; i < delayedAggregateRewriting.size(); ++i )
 //        atMostOneBimander( delayedAggregateRewriting[ i ] );
@@ -1071,6 +1072,7 @@ GringoNumericFormat::readAtomsTable(
         createStructures( nextAtom );
         input.getline( name, 1024 );
         VariableNames::setName( nextAtom, name );
+        solver.addedVarName( nextAtom );
         trace_msg( parser, 6, "Set name " << name << " for atom " << nextAtom );
         
         if( wasp::Options::queryAlgorithm != NO_QUERY )

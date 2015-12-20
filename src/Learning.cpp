@@ -139,12 +139,13 @@ Learning::onConflict(
                 {
                     Clause* c = ( Clause* ) implicant;
                     if( c->lbd() < lbd )
-                        solver.bumpActivity( v );
+                        solver.onLitInImportantClause( Literal( v, POSITIVE ) );
                 }
             }        
         }
     }
-    
+    for( unsigned int i = 0; i < learnedClause->size(); i++ )
+        solver.addedLiteralInLearnedClause( learnedClause->getAt( i ) );
     trace_msg( learning, 1, "Learned Clause: " << *learnedClause );    
     
     return learnedClause;
@@ -210,7 +211,7 @@ Learning::onNavigatingLiteral(
 {
     assert( literal != Literal::null );    
     assert( solver.getDecisionLevel( literal ) > 0 );    
-    solver.onLiteralInvolvedInConflict( literal );
+    solver.onLitInvolvedInConflict( literal );
  
     if( solver.getDecisionLevel( literal ) == decisionLevel )    
         addLiteralToNavigate( literal );    

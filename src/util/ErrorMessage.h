@@ -20,7 +20,6 @@
 #define ERRORMESSAGE_H
 
 #include <string>
-#include <iostream>
 using namespace std;
 
 #include "Constants.h"
@@ -35,8 +34,7 @@ class ErrorMessage
         
         static void errorDuringParsing( const char* errorMessage )
         {
-            cerr << ERRORPARSING << ": " << errorMessage << endl;
-            exit( ERRORPARSINGCODE );
+            printMessageAndExit( errorMessage, ERRORPARSING, ERRORPARSINGCODE );
         }
         
         static void errorGeneric( const string& errorMessage )
@@ -46,8 +44,14 @@ class ErrorMessage
         
         static void errorGeneric( const char* errorMessage )
         {
-            cerr << ERRORGENERIC << ": " << errorMessage << endl;
-            exit( ERRORGENERICCODE );
+            printMessageAndExit( errorMessage, ERRORGENERIC, ERRORGENERICCODE );            
+        }
+        
+    private:
+        static void printMessageAndExit( const char* errorMessage, const char* errorType, unsigned int errorExitCode )
+        {
+            fprintf( stderr, "%s: %s\n", errorType, errorMessage );
+            exit( errorExitCode );
         }
 };
 

@@ -28,7 +28,6 @@
 #include "outputBuilders/CompetitionOutputBuilder.h"
 #include "outputBuilders/DimacsOutputBuilder.h"
 
-#include "MinisatHeuristic.h"
 #include "outputBuilders/MultiOutputBuilder.h"
 #include "QueryInterface.h"
 
@@ -39,10 +38,8 @@ WaspFacade::readInput()
     cin >> tmp;
 
     if( !cin.good() && !cin.eof() )
-    {   
         ErrorMessage::errorDuringParsing( "Unexpected symbol." );
-    }    
-
+    
     cin.putback( tmp );
     switch ( tmp )
     {
@@ -63,7 +60,6 @@ WaspFacade::readInput()
         {
             GringoNumericFormat gringo( solver );
             gringo.parse();
-//            solver.setOutputBuilder( new WaspOutputBuilder() );
             greetings();
             break;
         }
@@ -93,7 +89,7 @@ WaspFacade::solve()
             queryInterface.computeCautiousConsequences( queryAlgorithm );
             return;
         }
-        
+        solver.onStartingSolver( solver.numberOfVariables(), solver.numberOfClauses() );
         if( !solver.isOptimizationProblem() )
         {            
             while( solver.solve() == COHERENT )
@@ -144,60 +140,9 @@ WaspFacade::solve()
 }
 
 void
-WaspFacade::setDeletionPolicy(
-    DELETION_POLICY deletionPolicy,
-    unsigned int /*deletionThreshold*/ )
+WaspFacade::setMinisatPolicy()
 {
-    switch( deletionPolicy )
-    {
-//        case RESTARTS_BASED_DELETION_POLICY:
-//            heuristic->setDeletionStrategy( new RestartsBasedDeletionStrategy( solver ) );
-//            break;
-//            
-//        case MINISAT_DELETION_POLICY:
-//            heuristic->setDeletionStrategy( new MinisatDeletionStrategy( solver ) );
-//            break;
-//            
-//        case GLUCOSE_DELETION_POLICY:
-//            heuristic->setDeletionStrategy( new GlueBasedDeletionStrategy( solver, deletionThreshold ) );
-//            break;
-//
-//        case AGGRESSIVE_DELETION_POLICY:
-//        default:
-//            heuristic->setDeletionStrategy( new AggressiveDeletionStrategy( solver ) );
-//            break;
-    }
-}
-
-void
-WaspFacade::setDecisionPolicy(
-    DECISION_POLICY decisionPolicy,
-    unsigned int /*threshold*/ )
-{
-    switch( decisionPolicy )
-    {
-//        case HEURISTIC_BERKMIN:
-//            assert( threshold > 0 );
-//            heuristic->setDecisionStrategy( new BerkminHeuristic( solver, threshold ) );
-//            break;
-//            
-//        case HEURISTIC_BERKMIN_CACHE:
-//            assert( threshold > 0 );
-//            heuristic->setDecisionStrategy( new BerkminHeuristicWithCache( solver, threshold ) );            
-//            break;
-//        
-//        case HEURISTIC_FIRST_UNDEFINED:
-//            heuristic->setDecisionStrategy( new FirstUndefinedHeuristic( solver ) );
-//            break;
-//            
-        case HEURISTIC_MINISAT:
-            solver.setMinisatHeuristic();
-            break;
-//    
-//        default:
-//            heuristic->setDecisionStrategy( new BerkminHeuristic( solver, 512 ) );
-//            break;
-    }
+    solver.setMinisatHeuristic();
 }
 
 void

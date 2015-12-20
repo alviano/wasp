@@ -33,11 +33,6 @@
 #define ELIMINATED_BY_DISTRIBUTION 2
 #define NOT_ELIMINATED 3
 
-#define AGGRESSIVE_DELETION_POLICY 0
-#define RESTARTS_BASED_DELETION_POLICY 1
-#define MINISAT_DELETION_POLICY 2
-#define GLUCOSE_DELETION_POLICY 3
-
 #define HEURISTIC_BERKMIN 0
 #define HEURISTIC_FIRST_UNDEFINED 1
 #define HEURISTIC_MINISAT 2
@@ -73,12 +68,25 @@
 #define OPTIMUM_FOUND_STOP 3
 #define INTERRUPTED 4
 
+#if defined(ENABLE_PYTHON) && defined(ENABLE_PERL)
+    #define SCRIPT_STRINGS " [scripts: PERL/PYTHON]" 
+#else
+    #if defined(ENABLE_PYTHON)
+        #define SCRIPT_STRINGS " [script: PERL]" 
+    #else
+        #if defined(ENABLE_PERL)
+            #define SCRIPT_STRINGS " [script: PERL]" 
+        #else
+            #define SCRIPT_STRINGS "" 
+        #endif
+    #endif
+#endif
 #define VERSION "2.0"
 
 /*
  * Wasp constants
  */
-#define WASP_STRING "WASP " VERSION "\n"
+#define WASP_STRING "WASP " VERSION SCRIPT_STRINGS"\n"
 #define NOMODEL "INCOHERENT"
 #define NOMODEL_COMPETITION_OUTPUT "INCONSISTENT"
 #define ANSWER "ANSWER"
@@ -122,6 +130,13 @@
 #define GRINGO_LINE_SEPARATOR 0
 #define GRINGO_BPLUS "B+"
 #define GRINGO_BMINUS "B-"
+
+/*
+ * Interpreters
+ */
+#define NO_INTERPRETER 0
+#define PYTHON_INTERPRETER 1
+#define PERL_INTERPRETER 2
 
 /*
  * New types

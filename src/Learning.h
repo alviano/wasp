@@ -88,7 +88,7 @@ class Learning
          * This method computes the next literal to navigate in the implication graph.
          * The most recent (in the order of derivation) literal should be processed before.          
          * 
-         * @return the next lStrategyiteral to consider.
+         * @return the next literal to consider.
          */
         Literal getNextLiteralToNavigate();
         

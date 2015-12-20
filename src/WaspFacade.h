@@ -33,6 +33,7 @@ using namespace std;
 #include "weakconstraints/Opt.h"
 #include "weakconstraints/PMRes.h"
 #include "weakconstraints/OllBB.h"
+#include "heuristic/ExternalHeuristic.h"
 
 class WaspFacade
 {
@@ -47,8 +48,7 @@ class WaspFacade
         
         inline void greetings(){ solver.greetings(); }
         
-        void setDeletionPolicy( DELETION_POLICY, unsigned int deletionThreshold );
-        void setDecisionPolicy( DECISION_POLICY, unsigned int heuristicLimit );
+        void setMinisatPolicy();
         void setOutputPolicy( OUTPUT_POLICY );
         void setRestartsPolicy( RESTARTS_POLICY, unsigned int threshold );
 
@@ -80,12 +80,14 @@ class WaspFacade
 };
 
 WaspFacade::WaspFacade() : numberOfModels( 0 ), maxModels( 1 ), printProgram( false ), printDimacs( false ), weakConstraintsAlg( OPT ), disjCoresPreprocessing( false )
-{   
+{
+    if( wasp::Options::interpreter != NO_INTERPRETER )
+        solver.setChoiceHeuristic( new ExternalHeuristic( solver, wasp::Options::heuristic_scriptname, wasp::Options::interpreter ) );
 }
 
 unsigned int
 WaspFacade::solveWithWeakConstraints()
-{    
+{
     WeakInterface* w = NULL;    
     switch( weakConstraintsAlg )
     {
