@@ -177,7 +177,7 @@ void ExternalHeuristic::onFinishedParsing()
 void ExternalHeuristic::onStartingParsing()
 {
     if( check_onStartingParsing )
-        interpreter->callVoidMethod( method_onStartingParsing );
+        interpreter->callVoidMethod( method_onStartingParsing );    
 }
 
 void ExternalHeuristic::onFinishedSimplifications()

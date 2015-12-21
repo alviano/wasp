@@ -32,6 +32,8 @@ MyPythonInterpreter::MyPythonInterpreter( char* filename ) : Interpreter()
     Py_DECREF( pName );
     if( pModule == NULL )
     {
+        if (PyErr_Occurred())
+            PyErr_Print();
         string message = "Module " + string( filename ) + " does not exist.\n";        
         ErrorMessage::errorGeneric( message );
     }
@@ -60,7 +62,7 @@ void MyPythonInterpreter::callListMethod( const string& method_name, const vecto
         if(result && PyList_Check(result))
         {
             int size = PyList_Size(result);
-            for(int i = size; i >= 0; i--)
+            for(int i = size - 1; i >= 0; i--)
             {
                 PyObject* item = PyList_GetItem(result, i);                
                 if (PyInt_Check(item))
@@ -70,6 +72,11 @@ void MyPythonInterpreter::callListMethod( const string& method_name, const vecto
                 }
             }
             Py_XDECREF(result);            
+        }
+        else
+        {
+            if (PyErr_Occurred())
+                PyErr_Print();        
         }
         Py_XDECREF(pArgs);
     }
@@ -114,6 +121,12 @@ bool MyPythonInterpreter::checkMethod( const string& method_name ) const
     PyObject* pFunc = PyObject_GetAttrString(pModule,method_name.c_str());
     if(pFunc && PyCallable_Check(pFunc))
        res = true;
+    else
+    {
+        if (PyErr_Occurred())
+            PyErr_Clear();
+    }
+        
     Py_XDECREF(pFunc);
     return res;
 }

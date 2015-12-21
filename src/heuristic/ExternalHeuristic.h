@@ -41,7 +41,7 @@
 #define method_onChoiceContradictory "onChoiceContradictory"
 #define method_ignorePolarity "ignorePolarity"
 
-#define error_choicevars "Method " method_choiceVars "is not well-formed: see the documentation for more information"
+#define error_choicevars "Method " method_choiceVars " is not well-formed: see the documentation for more information"
 
 #include "interpreters/Interpreter.h"
 #include "HeuristicStrategy.h"
