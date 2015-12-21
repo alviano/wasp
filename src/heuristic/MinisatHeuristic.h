@@ -62,6 +62,7 @@ class MinisatHeuristic : public HeuristicStrategy
         inline void onAnswerSet() {}
         inline void onStartingSolver( unsigned int, unsigned int ) {}
         inline void onVariableElimination( Var ) {}
+        inline void onStartingParsing() {}
         
     protected:
         Literal makeAChoiceProtected();        

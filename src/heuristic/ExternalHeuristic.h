@@ -35,6 +35,7 @@
 #define method_fallback "fallback"
 #define method_onVariableElimination "onVariableElimination"
 #define method_onUnrollingVariable "onUnrollingVariable"
+#define method_onStartingParsing "onStartingParsing"
 
 #define method_choiceVars "choiceVars"
 #define method_onChoiceContradictory "onChoiceContradictory"
@@ -65,7 +66,9 @@ class ExternalHeuristic : public HeuristicStrategy
         void onStartingSolver( unsigned int nVars, unsigned int nClauses );
         void onLitInImportantClause( Literal lit );
         void onVariableElimination( Var var );
-        void onUnrollingVariable( Var v );        
+        void onUnrollingVariable( Var v );
+        void onStartingParsing();
+
         
         void onNewVariable( Var v )
         {
@@ -112,6 +115,7 @@ class ExternalHeuristic : public HeuristicStrategy
         bool check_onLitInImportantClause;
         bool check_onVariableElimination;
         bool check_onUnrollingVariable;
+        bool check_onStartingParsing;
         
         vector< int > choices;
         int status;

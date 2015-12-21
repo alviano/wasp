@@ -67,6 +67,7 @@ ExternalHeuristic::ExternalHeuristic( Solver& s, char* filename, unsigned int in
     check_onLitInImportantClause = interpreter->checkMethod( method_onLitInImportantClause );
     check_onVariableElimination = interpreter->checkMethod( method_onVariableElimination );
     check_onUnrollingVariable = interpreter->checkMethod( method_onUnrollingVariable );
+    check_onStartingParsing = interpreter->checkMethod( method_onStartingParsing );
     status = CHOICE;    
     numberOfFallbackSteps = 0;
     unrollVariable = 0;    
@@ -171,6 +172,12 @@ void ExternalHeuristic::onFinishedParsing()
                 solver.setFrozen( v );
         }
     }
+}
+
+void ExternalHeuristic::onStartingParsing()
+{
+    if( check_onStartingParsing )
+        interpreter->callVoidMethod( method_onStartingParsing );
 }
 
 void ExternalHeuristic::onFinishedSimplifications()

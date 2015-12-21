@@ -448,7 +448,8 @@ class Solver
         inline void addedVarName( Var var ) { choiceHeuristic->addedVarName( var, VariableNames::getName( var ) ); }
         inline void onStartingSolver( unsigned int nVars, unsigned int nClauses ) { choiceHeuristic->onStartingSolver( nVars, nClauses ); }
         inline void assignedLiteral( Literal lit ) { if( getCurrentDecisionLevel() == 0 ) choiceHeuristic->onLitAtLevelZero( lit ); }
-        inline void addedLiteralInLearnedClause( Literal lit ) { choiceHeuristic->onLitInLearntClause( lit ); }        
+        inline void addedLiteralInLearnedClause( Literal lit ) { choiceHeuristic->onLitInLearntClause( lit ); }
+        inline void onStartingParsing() { choiceHeuristic->onStartingParsing(); }
                
     private:
         HCComponent* hcComponentForChecker;

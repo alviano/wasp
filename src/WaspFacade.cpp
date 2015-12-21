@@ -40,7 +40,8 @@ WaspFacade::readInput()
     if( !cin.good() && !cin.eof() )
         ErrorMessage::errorDuringParsing( "Unexpected symbol." );
     
-    cin.putback( tmp );
+    solver.onStartingParsing();
+    cin.putback( tmp );    
     switch ( tmp )
     {
         case COMMENT_DIMACS:
@@ -48,19 +49,19 @@ WaspFacade::readInput()
         {
             DimacsOutputBuilder* d = new DimacsOutputBuilder();
             solver.setOutputBuilder( d );
+            greetings();
             Dimacs dimacs( solver );
             dimacs.parse();
             if( dimacs.isMaxsat() )
                 d->setMaxsat();
-            greetings();
             break;
         }
 
         default:
         {
+            greetings();            
             GringoNumericFormat gringo( solver );
             gringo.parse();
-            greetings();
             break;
         }
     }

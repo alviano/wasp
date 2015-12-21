@@ -53,6 +53,7 @@ class HeuristicStrategy
         virtual void onUnrollingVariable( Var v ) = 0;
         virtual void onLitInImportantClause( Literal lit ) = 0;
         virtual void onVariableElimination( Var var ) = 0;
+        virtual void onStartingParsing() = 0;
         
         inline void addPreferredChoice( Literal lit ){ assert( lit != Literal::null ); preferredChoices.push_back( lit ); }
         inline void removePrefChoices() { preferredChoices.clear(); }
