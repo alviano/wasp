@@ -68,6 +68,7 @@ ExternalHeuristic::ExternalHeuristic( Solver& s, char* filename, unsigned int in
     check_onVariableElimination = interpreter->checkMethod( method_onVariableElimination );
     check_onUnrollingVariable = interpreter->checkMethod( method_onUnrollingVariable );
     check_onStartingParsing = interpreter->checkMethod( method_onStartingParsing );
+    check_partialInterpretation = interpreter->checkMethod( method_partialInterpretation );
     status = CHOICE;    
     numberOfFallbackSteps = 0;
     unrollVariable = 0;    
@@ -80,7 +81,17 @@ ExternalHeuristic::~ExternalHeuristic()
 
 void ExternalHeuristic::choiceVars( vector< int >& result, int& status )
 {
-    interpreter->callListMethod( method_choiceVars, result );
+    vector< int > interpretation;
+    if( check_partialInterpretation )
+    {
+        for( unsigned int i = 1; i <= solver.numberOfVariables(); i++ )
+        {
+            if( solver.isUndefined( i ) )
+                continue;
+            interpretation.push_back( solver.isTrue( i ) ? i : -i );                
+        }
+    }    
+    interpreter->callListMethod( method_choiceVars, interpretation, result );
     unsigned int size = result.size();
     if( size == 0 )
         ErrorMessage::errorGeneric( error_choicevars );

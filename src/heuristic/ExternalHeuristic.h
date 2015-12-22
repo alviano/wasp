@@ -40,6 +40,7 @@
 #define method_choiceVars "choiceVars"
 #define method_onChoiceContradictory "onChoiceContradictory"
 #define method_ignorePolarity "ignorePolarity"
+#define method_partialInterpretation "partialInterpretation"
 
 #define error_choicevars "Method " method_choiceVars " is not well-formed: see the documentation for more information"
 
@@ -123,6 +124,7 @@ class ExternalHeuristic : public HeuristicStrategy
         Var unrollVariable;
         vector< Literal > previousChoices;
         bool ignorePolarity;
+        bool check_partialInterpretation;
 };
 
 #endif
