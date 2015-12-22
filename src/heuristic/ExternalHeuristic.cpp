@@ -86,7 +86,7 @@ void ExternalHeuristic::choiceVars( vector< int >& result, int& status )
     {
         for( unsigned int i = 1; i <= solver.numberOfVariables(); i++ )
         {
-            if( solver.isUndefined( i ) )
+            if( solver.hasBeenEliminated( i ) || solver.isUndefined( i ) )
                 continue;
             interpretation.push_back( solver.isTrue( i ) ? i : -i );                
         }
