@@ -66,6 +66,8 @@ Component::getClauseToPropagate(
             return NULL;
         assert( clauseToPropagate == NULL );
         clauseToPropagate = learning.learnClausesFromUnfoundedSet( unfoundedSet );
+        solver.onUnfoundedSet( unfoundedSet );
+        solver.onLoopFormula( clauseToPropagate );
         clausesToDelete.push_back( clauseToPropagate );
         trace_msg( unfoundedset, 2, "Reasons of unfounded sets: " << *clauseToPropagate );
         goto begin;

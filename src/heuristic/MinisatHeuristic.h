@@ -29,6 +29,7 @@
 #include <iostream>
 using namespace std;
 class Solver;
+class Clause;
 
 struct ActivityComparator
 {
@@ -55,7 +56,7 @@ class MinisatHeuristic : public HeuristicStrategy
         inline void addedVarName( Var, const string& ) {}
         inline void onDeletion() {}
         inline void onFinishedParsing() {}        
-        inline void onLearningClause( unsigned int, unsigned int ) {}
+        inline void onLearningClause( unsigned int, const Clause* ) {}
         inline void onLitAtLevelZero( Literal ) {}
         inline void onLitInLearntClause( Literal ) {}
         inline void onRestart() {}
@@ -63,6 +64,10 @@ class MinisatHeuristic : public HeuristicStrategy
         inline void onStartingSolver( unsigned int, unsigned int ) {}
         inline void onVariableElimination( Var ) {}
         inline void onStartingParsing() {}
+        inline void onStartingSimplifications() {}
+        inline void onUnfoundedSet( const Vector< Var >& ) {}
+        inline void onLoopFormula( const Clause* ) {}
+
         
     protected:
         Literal makeAChoiceProtected();        

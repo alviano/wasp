@@ -60,7 +60,7 @@ ExternalHeuristic::ExternalHeuristic( Solver& s, char* filename, unsigned int in
     check_onLearningClause = interpreter->checkMethod( method_onLearningClause );
     check_onLitAtLevelZero = interpreter->checkMethod( method_onLitAtLevelZero );
     check_onLitInvolvedInConflict = interpreter->checkMethod( method_onLitInvolvedInConflict );
-    check_onLitInLearntClause = interpreter->checkMethod( method_onLitInLearntClause );
+    check_onStartingSimplifications = interpreter->checkMethod( method_onStartingSimplifications );
     check_onRestart = interpreter->checkMethod( method_onRestart );
     check_onAnswerSet = interpreter->checkMethod( method_onAnswerSet );
     check_onStartingSolver = interpreter->checkMethod( method_onStartingSolver );
@@ -69,6 +69,8 @@ ExternalHeuristic::ExternalHeuristic( Solver& s, char* filename, unsigned int in
     check_onUnrollingVariable = interpreter->checkMethod( method_onUnrollingVariable );
     check_onStartingParsing = interpreter->checkMethod( method_onStartingParsing );
     check_partialInterpretation = interpreter->checkMethod( method_partialInterpretation );
+    check_onUnfoundedSet = interpreter->checkMethod( method_onUnfoundedSet );
+    check_onLoopFormula = interpreter->checkMethod( method_onLoopFormula );
     status = CHOICE;    
     numberOfFallbackSteps = 0;
     unrollVariable = 0;    
@@ -191,6 +193,37 @@ void ExternalHeuristic::onStartingParsing()
         interpreter->callVoidMethod( method_onStartingParsing );    
 }
 
+void ExternalHeuristic::onStartingSimplifications()
+{
+    if( check_onStartingSimplifications )
+        interpreter->callVoidMethod( method_onStartingSimplifications );
+}
+
+void ExternalHeuristic::onUnfoundedSet( const Vector< Var >& unfoundedSet )
+{
+    if( check_onUnfoundedSet )
+    {
+        vector< int > v( unfoundedSet.size() );
+        for( unsigned int i = 0; i < unfoundedSet.size(); i++ )
+            v.push_back( unfoundedSet[ i ] );
+        interpreter->callVoidMethod( method_onUnfoundedSet, v );
+    }
+}
+
+void ExternalHeuristic::onLoopFormula( const Clause* clause )
+{
+    if( check_onLoopFormula )
+    {
+        unsigned int size = clause->size();
+        vector< int > v( size + 2 );
+        v.push_back( clause->lbd() );
+        v.push_back( size );
+        for( unsigned int i = 0; i < clause->size(); i++ )
+            v.push_back( clause->getAt( i ).getId() );
+        interpreter->callVoidMethod( method_onLearningClause, v );
+    }
+}
+
 void ExternalHeuristic::onFinishedSimplifications()
 {
     if( check_onFinishedSimplifications )
@@ -199,10 +232,18 @@ void ExternalHeuristic::onFinishedSimplifications()
         minisatHeuristic->onFinishedSimplifications();
 }
 
-void ExternalHeuristic::onLearningClause( unsigned int lbd, unsigned int size )
+void ExternalHeuristic::onLearningClause( unsigned int lbd, const Clause* clause )
 {
     if( check_onLearningClause )
-        interpreter->callVoidMethod( method_onLearningClause, lbd, size );
+    {
+        unsigned int size = clause->size();
+        vector< int > v( size + 2 );
+        v.push_back( lbd );
+        v.push_back( size );
+        for( unsigned int i = 0; i < clause->size(); i++ )
+            v.push_back( clause->getAt( i ).getId() );
+        interpreter->callVoidMethod( method_onLearningClause, v );
+    }
 }
 
 void ExternalHeuristic::onLitAtLevelZero( Literal lit )
@@ -217,12 +258,6 @@ void ExternalHeuristic::onLitInvolvedInConflict( Literal lit )
         interpreter->callVoidMethod( method_onLitInvolvedInConflict, lit.isPositive() ? lit.getVariable() : -lit.getVariable() );
     if( minisatHeuristic )
         minisatHeuristic->onLitInvolvedInConflict( lit );
-}
-
-void ExternalHeuristic::onLitInLearntClause( Literal lit )
-{
-    if( check_onLitInLearntClause )
-        interpreter->callVoidMethod( method_onLitInLearntClause, lit.isPositive() ? lit.getVariable() : -lit.getVariable() );
 }
 
 void ExternalHeuristic::onRestart()

@@ -144,8 +144,6 @@ Learning::onConflict(
             }        
         }
     }
-    for( unsigned int i = 0; i < learnedClause->size(); i++ )
-        solver.addedLiteralInLearnedClause( learnedClause->getAt( i ) );
     trace_msg( learning, 1, "Learned Clause: " << *learnedClause );    
     
     return learnedClause;

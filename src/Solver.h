@@ -448,8 +448,11 @@ class Solver
         inline void addedVarName( Var var ) { choiceHeuristic->addedVarName( var, VariableNames::getName( var ) ); }
         inline void onStartingSolver( unsigned int nVars, unsigned int nClauses ) { choiceHeuristic->onStartingSolver( nVars, nClauses ); }
         inline void assignedLiteral( Literal lit ) { if( getCurrentDecisionLevel() == 0 ) choiceHeuristic->onLitAtLevelZero( lit ); }
-        inline void addedLiteralInLearnedClause( Literal lit ) { choiceHeuristic->onLitInLearntClause( lit ); }
+//        inline void addedLiteralInLearnedClause( Literal lit ) { choiceHeuristic->onLitInLearntClause( lit ); }
         inline void onStartingParsing() { choiceHeuristic->onStartingParsing(); }
+        
+        inline void onUnfoundedSet( const Vector< Var >& unfoundedSet ) { choiceHeuristic->onUnfoundedSet( unfoundedSet ); }
+        inline void onLoopFormula( const Clause* clause ) { choiceHeuristic->onLoopFormula( clause ); }
                
     private:
         HCComponent* hcComponentForChecker;
@@ -1334,10 +1337,10 @@ Solver::analyzeConflict()
         unrollToZero();
         clearConflictStatus();
         Literal tmpLit = learnedClause->getAt( 0 );
+        choiceHeuristic->onLearningClause( 1, learnedClause );
         releaseClause( learnedClause );
         if( !addClauseRuntime( tmpLit ) )
-            return false;
-        choiceHeuristic->onLearningClause( 1, 1 );    
+            return false;        
 //        assignLiteral( learnedClause->getAt( 0 ) );
 //        assert( isTrue( learnedClause->getAt( 0 ) ) );
 //        assert( !conflictDetected() );
@@ -1377,7 +1380,7 @@ Solver::analyzeConflict()
         assert_msg( unrollLevel < currentDecisionLevel, "Trying to backjump from level " << unrollLevel << " to level " << currentDecisionLevel );
         trace_msg( solving, 2, "Learned clause and backjumping to level " << unrollLevel );
         addLearnedClause( learnedClause, true );        
-        choiceHeuristic->onLearningClause( learnedClause->lbd(), learnedClause->size() );
+        choiceHeuristic->onLearningClause( learnedClause->lbd(), learnedClause );
         unroll( unrollLevel );
         clearConflictStatus();                        
         if( size != 2 )
@@ -1595,7 +1598,8 @@ Solver::preprocessing()
 
     statistics( this, beforePreprocessing( numberOfVariables(), numberOfAssignedLiterals(), numberOfClauses() ) );
     assert( satelite != NULL );
-    assert( checkVariablesState() );    
+    assert( checkVariablesState() );   
+    choiceHeuristic->onStartingSimplifications();
     if( callSimplifications() && !satelite->simplify() )
         return false;
 
