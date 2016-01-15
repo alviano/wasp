@@ -71,6 +71,8 @@ ExternalHeuristic::ExternalHeuristic( Solver& s, char* filename, unsigned int in
     check_partialInterpretation = interpreter->checkMethod( method_partialInterpretation );
     check_onUnfoundedSet = interpreter->checkMethod( method_onUnfoundedSet );
     check_onLoopFormula = interpreter->checkMethod( method_onLoopFormula );
+    check_initFallback = interpreter->checkMethod( method_initFallback );
+    check_factorFallback = interpreter->checkMethod( method_factorFallback );
     status = CHOICE;    
     numberOfFallbackSteps = 0;
     unrollVariable = 0;    
@@ -229,7 +231,51 @@ void ExternalHeuristic::onFinishedSimplifications()
     if( check_onFinishedSimplifications )
         interpreter->callVoidMethod( method_onFinishedSimplifications );
     if( minisatHeuristic )
-        minisatHeuristic->onFinishedSimplifications();
+    {
+        minisatHeuristic->onFinishedSimplifications();        
+        initFallback();
+        factorFallback();
+    }
+}
+
+void ExternalHeuristic::initFallback()
+{
+    if( !check_initFallback )
+        return;
+    assert( minisatHeuristic );
+    vector< int > output;
+    interpreter->callListMethod( method_initFallback, output );
+    if( output.size() % 2 != 0 )
+        ErrorMessage::errorGeneric( error_initfallback );
+    for( unsigned int i = 0; i < output.size() - 1; i = i + 2 )
+    {
+        int var = output[ i ];
+        if( var <= 0 || ( unsigned int ) var > solver.numberOfVariables() )
+            ErrorMessage::errorGeneric( "Variable " + to_string( var ) + " does not exist." );
+        
+        int value = output[ i + 1 ];        
+        minisatHeuristic->init( var, value );
+    }
+}
+
+void ExternalHeuristic::factorFallback()
+{
+    if( !check_factorFallback )
+        return;
+    assert( minisatHeuristic );
+    vector< int > output;
+    interpreter->callListMethod( method_factorFallback, output );
+    if( output.size() % 2 != 0 )
+        ErrorMessage::errorGeneric( error_factorfallback );
+    for( unsigned int i = 0; i < output.size() - 1; i = i + 2 )
+    {
+        int var = output[ i ];
+        if( var <= 0 || ( unsigned int ) var > solver.numberOfVariables() )
+            ErrorMessage::errorGeneric( "Variable " + to_string( var ) + " does not exist." );
+        
+        int value = output[ i + 1 ];
+        minisatHeuristic->setFactor( var, value );
+    }
 }
 
 void ExternalHeuristic::onLearningClause( unsigned int lbd, const Clause* clause )

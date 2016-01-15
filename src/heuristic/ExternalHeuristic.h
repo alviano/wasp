@@ -55,8 +55,12 @@
 
 //Fallback
 #define method_fallback "fallback"
+#define method_initFallback "initFallback"
+#define method_factorFallback "factorFallback"
 
 #define error_choicevars "Method " method_choiceVars " is not well-formed: see the documentation for more information"
+#define error_initfallback "Method " method_initFallback " is not well-formed: see the documentation for more information"
+#define error_factorfallback "Method " method_factorFallback " is not well-formed: see the documentation for more information"
 
 #include "interpreters/Interpreter.h"
 #include "HeuristicStrategy.h"
@@ -85,6 +89,9 @@ class ExternalHeuristic : public HeuristicStrategy
         void onStartingSimplifications();
         void onUnfoundedSet( const Vector< Var >& unfoundedSet );
         void onLoopFormula( const Clause* clause );
+        
+        void initFallback();
+        void factorFallback();
 
         void onNewVariable( Var v )
         {
@@ -135,6 +142,8 @@ class ExternalHeuristic : public HeuristicStrategy
         bool check_onStartingParsing;
         bool check_onUnfoundedSet;
         bool check_onLoopFormula;
+        bool check_initFallback;
+        bool check_factorFallback;
         
         vector< int > choices;
         int status;
