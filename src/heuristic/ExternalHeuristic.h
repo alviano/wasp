@@ -57,6 +57,7 @@
 #define method_fallback "fallback"
 #define method_initFallback "initFallback"
 #define method_factorFallback "factorFallback"
+#define method_signFallback "signFallback"
 
 #define error_choicevars "Method " method_choiceVars " is not well-formed: see the documentation for more information"
 #define error_initfallback "Method " method_initFallback " is not well-formed: see the documentation for more information"
@@ -92,6 +93,7 @@ class ExternalHeuristic : public HeuristicStrategy
         
         void initFallback();
         void factorFallback();
+        void signFallback();
 
         void onNewVariable( Var v )
         {
@@ -144,6 +146,7 @@ class ExternalHeuristic : public HeuristicStrategy
         bool check_onLoopFormula;
         bool check_initFallback;
         bool check_factorFallback;
+        bool check_signFallback;
         
         vector< int > choices;
         int status;

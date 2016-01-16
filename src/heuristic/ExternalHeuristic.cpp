@@ -73,6 +73,7 @@ ExternalHeuristic::ExternalHeuristic( Solver& s, char* filename, unsigned int in
     check_onLoopFormula = interpreter->checkMethod( method_onLoopFormula );
     check_initFallback = interpreter->checkMethod( method_initFallback );
     check_factorFallback = interpreter->checkMethod( method_factorFallback );
+    check_signFallback = interpreter->checkMethod( method_signFallback );
     status = CHOICE;    
     numberOfFallbackSteps = 0;
     unrollVariable = 0;    
@@ -235,6 +236,7 @@ void ExternalHeuristic::onFinishedSimplifications()
         minisatHeuristic->onFinishedSimplifications();        
         initFallback();
         factorFallback();
+        signFallback();
     }
 }
 
@@ -275,6 +277,24 @@ void ExternalHeuristic::factorFallback()
         
         int value = output[ i + 1 ];
         minisatHeuristic->setFactor( var, value );
+    }
+}
+
+void ExternalHeuristic::signFallback()
+{
+    if( !check_signFallback )
+        return;
+    assert( minisatHeuristic );
+    vector< int > output;
+    interpreter->callListMethod( method_signFallback, output );
+    for( unsigned int i = 0; i < output.size(); i++ )
+    {
+        int lit = output[ i ];
+        Var var = lit > 0 ? lit : -lit;
+        if( var != 0 && var > solver.numberOfVariables() )
+            ErrorMessage::errorGeneric( "Variable " + to_string( var ) + " does not exist." );
+        
+        minisatHeuristic->setSign( lit );
     }
 }
 

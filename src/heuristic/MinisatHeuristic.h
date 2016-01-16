@@ -71,6 +71,7 @@ class MinisatHeuristic : public HeuristicStrategy
         
         inline void init( Var v, unsigned int value );
         inline void setFactor( Var v, unsigned int factor );
+        inline void setSign( int lit );
 
     protected:
         Literal makeAChoiceProtected();
@@ -87,7 +88,8 @@ class MinisatHeuristic : public HeuristicStrategy
         Activity variableDecay;
         
         Vector< Activity > act;
-        Vector< unsigned int > factors; 
+        Vector< unsigned int > factors;
+        Vector< unsigned int > signs;
         vector< Var > vars;        
 
         Var chosenVariable;
@@ -99,6 +101,7 @@ MinisatHeuristic::MinisatHeuristic( Solver& s ) :
 {
     act.push_back( 0.0 );
     factors.push_back( 1 );
+    signs.push_back( UINT_MAX );
 }
 
 void
@@ -106,7 +109,7 @@ MinisatHeuristic::init(
     Var v,
     unsigned int value )
 {
-    assert( var < act.size() );
+    assert( v < act.size() );
     act[ v ] = value;
     if( heap.inHeap( v ) )
         heap.decrease( v );
@@ -117,10 +120,19 @@ MinisatHeuristic::setFactor(
     Var v,
     unsigned int factor )
 {
-    assert( var < factors.size() );
+    assert( v < factors.size() );
     factors[ v ] = factor;
     if( heap.inHeap( v ) )
         heap.decrease( v );
+}
+
+void
+MinisatHeuristic::setSign(
+    int lit )
+{
+    Var v = lit > 0 ? lit : -lit;
+    assert( v < signs.size() );
+    signs[ v ] = lit > 0 ? POSITIVE : NEGATIVE;
 }
 
 void
@@ -152,6 +164,7 @@ MinisatHeuristic::onNewVariable(
     act.push_back( 0.0 );
     vars.push_back( v );
     factors.push_back( 1 );
+    signs.push_back( UINT_MAX );
 }
 
 void

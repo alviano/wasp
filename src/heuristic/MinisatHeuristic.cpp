@@ -45,6 +45,9 @@ MinisatHeuristic::makeAChoiceProtected()
     assert_msg( solver.isUndefined( chosenVariable ), "The literal must be undefined" );
     trace_msg( heuristic, 1, "Ending MiniSAT heuristic" );
 
+    if( signs[ chosenVariable ] != UINT_MAX )
+        return Literal( chosenVariable, signs[ chosenVariable ] );
+    
     //FIXME: Maybe in future we want to add the right minisat policy    
     if( solver.getCachedTruthValue( chosenVariable ) != UNDEFINED )
         return solver.getCachedTruthValue( chosenVariable ) == TRUE ? Literal( chosenVariable, POSITIVE ) : Literal( chosenVariable, NEGATIVE );
