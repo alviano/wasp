@@ -57,6 +57,8 @@ class HeuristicStrategy
         virtual void onLitInImportantClause( Literal lit ) = 0;
 
         //Solving
+        virtual void onNewClause( const Clause* ) = 0;
+        virtual void onNewBinaryClause( Literal lit1, Literal lit2 ) = 0;
         virtual void onStartingSolver( unsigned int nVars, unsigned int nClauses ) = 0;
         virtual void onDeletion() = 0;
         virtual void onRestart() = 0;

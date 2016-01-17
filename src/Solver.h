@@ -905,6 +905,7 @@ Solver::addClause(
 {    
     if( !callSimplifications() )
     {
+        choiceHeuristic->onNewBinaryClause( lit1, lit2 );
         addBinaryClause( lit1, lit2 );
     }
     else
@@ -1557,7 +1558,8 @@ Solver::attachWatches()
             deleteClause( currentPointer );
         }
         else
-        {                    
+        {
+            choiceHeuristic->onNewClause( currentPointer );
             if( current.size() == 2 )
             {     
                 addBinaryClause( current[ 0 ], current[ 1 ] );        

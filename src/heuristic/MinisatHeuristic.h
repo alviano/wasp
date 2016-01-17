@@ -68,6 +68,8 @@ class MinisatHeuristic : public HeuristicStrategy
         inline void onStartingSimplifications() {}
         inline void onUnfoundedSet( const Vector< Var >& ) {}
         inline void onLoopFormula( const Clause* ) {}
+        inline void onNewClause( const Clause* ) {}
+        inline void onNewBinaryClause( Literal, Literal ) {}
         
         inline void init( Var v, unsigned int value );
         inline void setFactor( Var v, unsigned int factor );

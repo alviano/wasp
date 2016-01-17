@@ -74,6 +74,7 @@ ExternalHeuristic::ExternalHeuristic( Solver& s, char* filename, unsigned int in
     check_initFallback = interpreter->checkMethod( method_initFallback );
     check_factorFallback = interpreter->checkMethod( method_factorFallback );
     check_signFallback = interpreter->checkMethod( method_signFallback );
+    check_onNewClause = interpreter->checkMethod( method_onNewClause );
     status = CHOICE;    
     numberOfFallbackSteps = 0;
     unrollVariable = 0;    
@@ -202,31 +203,6 @@ void ExternalHeuristic::onStartingSimplifications()
         interpreter->callVoidMethod( method_onStartingSimplifications );
 }
 
-void ExternalHeuristic::onUnfoundedSet( const Vector< Var >& unfoundedSet )
-{
-    if( check_onUnfoundedSet )
-    {
-        vector< int > v( unfoundedSet.size() );
-        for( unsigned int i = 0; i < unfoundedSet.size(); i++ )
-            v.push_back( unfoundedSet[ i ] );
-        interpreter->callVoidMethod( method_onUnfoundedSet, v );
-    }
-}
-
-void ExternalHeuristic::onLoopFormula( const Clause* clause )
-{
-    if( check_onLoopFormula )
-    {
-        unsigned int size = clause->size();
-        vector< int > v( size + 2 );
-        v.push_back( clause->lbd() );
-        v.push_back( size );
-        for( unsigned int i = 0; i < clause->size(); i++ )
-            v.push_back( clause->getAt( i ).getId() );
-        interpreter->callVoidMethod( method_onLearningClause, v );
-    }
-}
-
 void ExternalHeuristic::onFinishedSimplifications()
 {
     if( check_onFinishedSimplifications )
@@ -298,17 +274,69 @@ void ExternalHeuristic::signFallback()
     }
 }
 
+void ExternalHeuristic::onNewClause( const Clause* clause )
+{
+    if( check_onNewClause )
+    {
+        vector< int > v;
+        v.reserve( clause->size() );
+        for( unsigned int i = 0; i < clause->size(); i++ )
+            v.push_back( clause->getAt( i ).getId() );
+        interpreter->callVoidMethod( method_onNewClause, v );
+    }
+}
+
+void ExternalHeuristic::onNewBinaryClause( Literal lit1, Literal lit2 )
+{
+    if( check_onNewClause )
+    {
+        vector< int > v;
+        v.push_back( lit1.getId() );
+        v.push_back( lit2.getId() );
+        interpreter->callVoidMethod( method_onNewClause, v );        
+    }
+}
+
+
 void ExternalHeuristic::onLearningClause( unsigned int lbd, const Clause* clause )
 {
     if( check_onLearningClause )
     {
         unsigned int size = clause->size();
-        vector< int > v( size + 2 );
+        vector< int > v;
+        v.reserve( size + 2 );
         v.push_back( lbd );
         v.push_back( size );
         for( unsigned int i = 0; i < clause->size(); i++ )
             v.push_back( clause->getAt( i ).getId() );
         interpreter->callVoidMethod( method_onLearningClause, v );
+    }
+}
+
+void ExternalHeuristic::onLoopFormula( const Clause* clause )
+{
+    if( check_onLoopFormula )
+    {
+        unsigned int size = clause->size();
+        vector< int > v;
+        v.reserve( size + 2 );
+        v.push_back( clause->lbd() );
+        v.push_back( size );
+        for( unsigned int i = 0; i < clause->size(); i++ )
+            v.push_back( clause->getAt( i ).getId() );
+        interpreter->callVoidMethod( method_onLearningClause, v );
+    }
+}
+
+void ExternalHeuristic::onUnfoundedSet( const Vector< Var >& unfoundedSet )
+{
+    if( check_onUnfoundedSet )
+    {
+        vector< int > v;
+        v.reserve( unfoundedSet.size() );
+        for( unsigned int i = 0; i < unfoundedSet.size(); i++ )
+            v.push_back( unfoundedSet[ i ] );
+        interpreter->callVoidMethod( method_onUnfoundedSet, v );
     }
 }
 

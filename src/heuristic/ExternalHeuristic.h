@@ -37,6 +37,7 @@
 //#define method_onLitInLearntClause "onLitInLearntClause"
 
 //Solving
+#define method_onNewClause "onNewClause"
 #define method_onStartingSolver "onStartingSolver"
 #define method_onDeletion "onDeletion"
 #define method_onRestart "onRestart"
@@ -90,6 +91,8 @@ class ExternalHeuristic : public HeuristicStrategy
         void onStartingSimplifications();
         void onUnfoundedSet( const Vector< Var >& unfoundedSet );
         void onLoopFormula( const Clause* clause );
+        void onNewClause( const Clause* clause );
+        void onNewBinaryClause( Literal lit1, Literal lit2 );
         
         void initFallback();
         void factorFallback();
@@ -147,6 +150,7 @@ class ExternalHeuristic : public HeuristicStrategy
         bool check_initFallback;
         bool check_factorFallback;
         bool check_signFallback;
+        bool check_onNewClause;
         
         vector< int > choices;
         int status;
