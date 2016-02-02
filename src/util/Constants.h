@@ -72,7 +72,7 @@
     #define SCRIPT_STRINGS " [scripts: PERL/PYTHON]" 
 #else
     #if defined(ENABLE_PYTHON)
-        #define SCRIPT_STRINGS " [script: PERL]" 
+        #define SCRIPT_STRINGS " [script: PYTHON]" 
     #else
         #if defined(ENABLE_PERL)
             #define SCRIPT_STRINGS " [script: PERL]" 

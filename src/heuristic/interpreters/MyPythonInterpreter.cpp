@@ -55,7 +55,7 @@ void MyPythonInterpreter::callListMethod( const string& method_name, const vecto
         PyObject* pArgs = PyTuple_New(parameters.size());
         for(unsigned int i = 0; i < parameters.size(); i++)
         {
-            PyObject* pParam = PyInt_FromSize_t(parameters[i]);
+            PyObject* pParam = Py_BuildValue("i",parameters[i]);
             PyTuple_SetItem(pArgs, i, pParam);            
         }
         PyObject* result = PyObject_CallObject(pFunc, pArgs);
