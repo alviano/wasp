@@ -1541,7 +1541,8 @@ Solver::attachWatches()
             deleteClause( currentPointer );
         }
         else
-        {                    
+        {
+            statistics( this, onAddingClauseAfterSatelite( current.size() ) );
             if( current.size() == 2 )
             {     
                 addBinaryClause( current[ 0 ], current[ 1 ] );        

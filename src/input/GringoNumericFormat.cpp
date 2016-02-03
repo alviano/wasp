@@ -194,6 +194,7 @@ GringoNumericFormat::readChoiceRule(
     }
     rule->addDoubleNegLiteral( head[ 0 ] );
 
+    statistics( &solver, readChoiceRule() );
     for( unsigned i = 1; i < headSize; ++i )
     {
         if( atomData[ head[ i ] ].readNormalRule_negativeLiterals == readNormalRule_numberOfCalls )
@@ -311,8 +312,9 @@ GringoNumericFormat::readDisjunctiveRule(
     
     if( headSize == 0 )
     {
-        bodyToConstraint( rule );
+        bodyToConstraint( rule );        
         delete rule;
+        statistics( &solver, readConstraint() );
     }
     else if( headSize == 1 )
     {
@@ -320,11 +322,13 @@ GringoNumericFormat::readDisjunctiveRule(
         {
             addFact( head[ 0 ] );
             delete rule;
+            statistics( &solver, readDisjunctiveRule() );
         }
         else
         {
             rule->addHeadAtom( head[ 0 ] );
             add( rule, false, numberOfTrueHeadAtoms );
+            statistics( &solver, readDisjunctiveRule() );
         }
     }
     else
@@ -333,6 +337,7 @@ GringoNumericFormat::readDisjunctiveRule(
             rule->addHeadAtom( head[ i ] );        
         add( rule, false, numberOfTrueHeadAtoms );
         numberOfDisjunctiveRules++;
+        statistics( &solver, readDisjunctiveRule() );
     }
 }
 
@@ -417,7 +422,7 @@ GringoNumericFormat::readOptimizationRule(
         
     assert( weightConstraintRule->sameSizeOfInternalVectors() );
     weightConstraintRule->setBound( bound );
-    
+    statistics( &solver, readWeakConstraints( size ) );
     addOptimizationRule( weightConstraintRule );
 }
 
@@ -552,19 +557,22 @@ GringoNumericFormat::readNormalRule(
     if( atomData[ head ].readNormalRule_negativeLiterals == readNormalRule_numberOfCalls )
     {
         bodyToConstraint( rule );
+        statistics( &solver, readConstraint() );
         delete rule;
     }
     else if( rule->isFact() )
     {
         delete rule;
         addFact( head );
+        statistics( &solver, readNormalRule() );
     }
     else
     {
         add( rule, false, solver.isTrue( head ) ? 1 : 0 );
         if( firing )
             solver.addClause( Literal( head, POSITIVE ) );
-    }
+        statistics( &solver, readNormalRule() );
+    }    
 }
 
 void
@@ -610,6 +618,7 @@ GringoNumericFormat::readConstraint(
     }
     trace_msg( parser, 2, "Adding clause " << *clause );
     solver.cleanAndAddClause( clause );
+    statistics( &solver, readConstraint() );
 }
 
 void
@@ -657,6 +666,7 @@ GringoNumericFormat::readCount(
     
     assert( weightConstraintRule->sameSizeOfInternalVectors() );
     add( weightConstraintRule );
+    statistics( &solver, readCount() );
 }
 
 void
@@ -724,6 +734,7 @@ GringoNumericFormat::readSum(
   
     assert( weightConstraintRule->sameSizeOfInternalVectors() );
     add( weightConstraintRule );
+    statistics( &solver, readSum() );
 }
 
 void
@@ -1330,6 +1341,7 @@ GringoNumericFormat::createStructures(
         solver.addVariable();
         solver.addEdgeInDependencyGraph( solver.numberOfVariables(), 0 );
         atomData.push_back( AtomData( false ) );
+        statistics( &solver, addedAtom() );
     }
 }
 

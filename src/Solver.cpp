@@ -263,7 +263,6 @@ Solver::solveWithoutPropagators(
         if( !chooseLiteral( assumptions ) )
         {
             trace_msg( solving, 1, "INCONSISTENT" );
-            statistics( this, endSolving() );
             return INCOHERENT;
         }
         if( ++numberOfChoices > maxNumberOfChoices  || numberOfRestarts > maxNumberOfRestarts || ( time( 0 ) - START_TIME ) > maxNumberOfSeconds )
@@ -282,14 +281,12 @@ Solver::solveWithoutPropagators(
                 if( getCurrentDecisionLevel() == 0 )
                 {
                     trace( solving, 1, "Conflict at level 0: return. \n");
-                    statistics( this, endSolving() );
                     return INCOHERENT;
                 }
                 
                 if( !analyzeConflict() )
                 {
                     trace_msg( solving, 1, "INCONSISTENT" );
-                    statistics( this, endSolving() );
                     return INCOHERENT;
                 }
                 minisatHeuristic->variableDecayActivity();
@@ -303,9 +300,7 @@ Solver::solveWithoutPropagators(
     
     completeModel();
     assert_msg( getNumberOfUndefined() == 0, "Found a model with " << getNumberOfUndefined() << " undefined variables." );
-    assert_msg( allClausesSatisfied(), "The model found is not correct." );
-    
-    statistics( this, endSolving() );
+    assert_msg( allClausesSatisfied(), "The model found is not correct." );        
     
     return modelIsValidUnderAssumptions( assumptions ) ? COHERENT : INCOHERENT;
 }
@@ -330,7 +325,6 @@ Solver::solvePropagators(
         if( !chooseLiteral( assumptions ) )
         {
             trace_msg( solving, 1, "Failure occurs while choosing a new Literal" );
-            statistics( this, endSolving() );
             return INCOHERENT;
         }
         if( ++numberOfChoices > maxNumberOfChoices || numberOfRestarts > maxNumberOfRestarts || ( time( 0 ) - START_TIME ) > maxNumberOfSeconds )
@@ -351,13 +345,11 @@ Solver::solvePropagators(
                 if( getCurrentDecisionLevel() == 0 )
                 {
                     trace( solving, 1, "Conflict at level 0: return. \n");
-                    statistics( this, endSolving() );
                     return INCOHERENT;
                 }
                 
                 if( !analyzeConflict() )
                 {
-                    statistics( this, endSolving() );
                     trace_msg( solving, 1, "Failure occurs during the computation of the clause" );
                     return INCOHERENT;
                 }
@@ -410,7 +402,6 @@ Solver::solvePropagators(
                 {
                     clearConflictStatus();
                     delete clauseToPropagate;
-                    statistics( this, endSolving() );
                     return INCOHERENT;
                 }
                 else if( size == 1 )
@@ -471,7 +462,6 @@ Solver::solvePropagators(
     assert_msg( getNumberOfUndefined() == 0, "Found a model with " << getNumberOfUndefined() << " undefined variables." );
     assert_msg( allClausesSatisfied(), "The model found is not correct." );
     
-    statistics( this, endSolving() );
     return modelIsValidUnderAssumptions( assumptions ) ? COHERENT : INCOHERENT;
 }
 

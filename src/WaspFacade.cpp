@@ -91,6 +91,7 @@ WaspFacade::solve()
         {
             QueryInterface queryInterface( solver );
             queryInterface.computeCautiousConsequences( queryAlgorithm );
+            statistics( &solver, endSolving() );
             return;
         }
         
@@ -130,6 +131,7 @@ WaspFacade::solve()
                     solver.optimumFound();
                     break;
             }
+            statistics( &solver, endSolving() );
             return;
         }
     }
@@ -139,6 +141,7 @@ WaspFacade::solve()
         trace_msg( enumeration, 1, "No model found." );
         solver.foundIncoherence();
     }
+    statistics( &solver, endSolving() );
     
 //    solver.printLearnedClauses();
 }

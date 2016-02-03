@@ -160,7 +160,7 @@ HCComponent::testModel()
     if( assumptionLiteral != Literal::null )
         checker.addClause( assumptionLiteral.getOppositeLiteral() );
     assert( !checker.conflictDetected() );
-    statistics( &checker, endCheckerInvokation( time( 0 ) ) );
+    statistics( &checker, endCheckerInvocation( time( 0 ) ) );
 
     if( solver.exchangeClauses() )
         sendLearnedClausesToSolver();
@@ -498,7 +498,7 @@ void HCComponent::checkModel(
     assert( checker.getCurrentDecisionLevel() == 0 );
     trace_action( modelchecker, 2, { printVector( assumptions, "Assumptions" ); } );
     trace_action( modelchecker, 2, { printVector( unfoundedSetCandidates, "Unfounded set candidates" ); } );
-    statistics( &checker, startCheckerInvokation( trail.size() != ( hcVariables.size() + externalLiterals.size() ), time( 0 ) ) );
+    statistics( &checker, startCheckerInvocation( trail.size() != ( hcVariables.size() + externalLiterals.size() ), time( 0 ) ) );
     checker.clearConflictStatus();
     
     if( checker.solve( assumptions ) == COHERENT )
