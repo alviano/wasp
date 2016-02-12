@@ -109,14 +109,14 @@ class Help
             cout << "--query-verbosity=(0,1,2)              - Enable verbosity of queries algorithms" << endl;
 
             cout << separator << endl;
-            cout << "Shift options                          " << endl << endl;
-            cout << "--shift-strategy                       - Enable options for shift" << endl;
-            cout << "       =naive                          - Enable naive strategy" << endl;
-            cout << "       =propagator                     - Enable the usage of a propagator" << endl;
-            cout << "       =lr                             - Enable left/right strategy" << endl;
-            cout << "       =normalize                      - Enable normalization of heads" << endl;
-            cout << "       =quadratic                      - Enable quadratic strategy" << endl;
-            cout << "       =quadratic-aggregate            - Enable quadratic strategy with aggregate" << endl;
+            cout << "Disjunction options                    " << endl << endl;
+            cout << "--disjunction                          - Enable options for handling disjunctive rules" << endl;
+            cout << "       =shift                          - Perform the shift of disjunctive rules" << endl;
+            cout << "       =propagator                     - Use propagator for inferences" << endl;
+//            cout << "       =lr                             - Enable left/right strategy" << endl;
+            cout << "       =compv                          - Perform the disjunctive completion" << endl;
+//            cout << "       =quadratic                      - Enable quadratic strategy" << endl;
+//            cout << "       =quadratic-aggregate            - Enable quadratic strategy with aggregate" << endl;
             cout << "--enable-shift-onedef                  - Enable shift also for atoms with one defition" << endl;
             
             cout << separator << endl;

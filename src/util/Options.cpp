@@ -252,7 +252,7 @@ Options::parse(
                 { "compute-firstmodel", optional_argument, NULL, OPTIONID_firstmodel },
                 
                 /* SHIFT STRATEGY */
-                { "shift-strategy", required_argument, NULL, OPTIONID_shift_strategy },
+                { "disjunction", required_argument, NULL, OPTIONID_shift_strategy },
                 { "enable-shift-onedef", no_argument, NULL, OPTIONID_shift_onedef },
 
                 /* QUERY */
@@ -610,12 +610,12 @@ Options::initMap()
     stringToWeak[ "interleaving-restarts" ] = OLLBBREST;
     stringToWeak[ "interleaving-choices" ] = OLLBB;
 
-    stringToShift[ "naive" ] = SHIFT_NAIVE;
+    stringToShift[ "shift" ] = SHIFT_NAIVE;
     stringToShift[ "propagator" ] = SHIFT_PROPAGATOR;
-    stringToShift[ "lr" ] = SHIFT_LEFT_RIGHT;
-    stringToShift[ "normalize" ] = SHIFT_NORMALIZE;
-    stringToShift[ "quadratic" ] = SHIFT_QUADRATIC;
-    stringToShift[ "quadratic-aggregate" ] = SHIFT_QUADRATIC_AGGREGATE;
+//    stringToShift[ "lr" ] = SHIFT_LEFT_RIGHT;
+    stringToShift[ "completion" ] = SHIFT_NORMALIZE;
+//    stringToShift[ "quadratic" ] = SHIFT_QUADRATIC;
+//    stringToShift[ "quadratic-aggregate" ] = SHIFT_QUADRATIC_AGGREGATE;
 }
 
 };
