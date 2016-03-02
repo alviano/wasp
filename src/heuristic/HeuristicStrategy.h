@@ -63,7 +63,8 @@ class HeuristicStrategy
         virtual void onDeletion() = 0;
         virtual void onRestart() = 0;
         virtual void onAnswerSet() = 0;
-        virtual void onUnrollingVariable( Var v ) = 0;
+        virtual void onLitTrue( Literal lit ) = 0;
+        virtual void onVarUndefined( Var v ) = 0;
         
         //ASP
         virtual void onUnfoundedSet( const Vector< Var >& ) = 0;

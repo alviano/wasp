@@ -43,6 +43,8 @@
 #define method_onRestart "onRestart"
 #define method_onAnswerSet "onAnswerSet"
 #define method_onUnrollingVariable "onUnrollingVariable"
+#define method_onLitTrue "onLiteralTrue"
+#define method_onVarUndefined "onVariableUndefined"
 
 //Choice
 #define method_choiceVars "choiceVars"
@@ -94,6 +96,9 @@ class ExternalHeuristic : public HeuristicStrategy
         void onNewClause( const Clause* clause );
         void onNewBinaryClause( Literal lit1, Literal lit2 );
         
+        void onLitTrue( Literal lit );
+        void onVarUndefined( Var v );
+        
         void initFallback();
         void factorFallback();
         void signFallback();
@@ -137,7 +142,6 @@ class ExternalHeuristic : public HeuristicStrategy
         bool check_onLearningClause;
         bool check_onLitAtLevelZero;
         bool check_onLitInvolvedInConflict;
-        bool check_onLitInLearntClause;
         bool check_onRestart;
         bool check_onAnswerSet;
         bool check_onStartingSolver;
@@ -151,6 +155,8 @@ class ExternalHeuristic : public HeuristicStrategy
         bool check_factorFallback;
         bool check_signFallback;
         bool check_onNewClause;
+        bool check_onLitTrue;
+        bool check_onVarUndefined;
         
         vector< int > choices;
         int status;

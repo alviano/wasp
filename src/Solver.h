@@ -447,7 +447,7 @@ class Solver
         inline void onFinishedParsing(){ choiceHeuristic->onFinishedParsing(); }
         inline void addedVarName( Var var ) { choiceHeuristic->addedVarName( var, VariableNames::getName( var ) ); }
         inline void onStartingSolver( unsigned int nVars, unsigned int nClauses ) { choiceHeuristic->onStartingSolver( nVars, nClauses ); }
-        inline void assignedLiteral( Literal lit ) { if( getCurrentDecisionLevel() == 0 ) choiceHeuristic->onLitAtLevelZero( lit ); }
+        inline void assignedLiteral( Literal lit );
 //        inline void addedLiteralInLearnedClause( Literal lit ) { choiceHeuristic->onLitInLearntClause( lit ); }
         inline void onStartingParsing() { choiceHeuristic->onStartingParsing(); }
         
@@ -704,6 +704,21 @@ Solver::onKill()
 {
     if( outputBuilder )
         outputBuilder->onKill();    
+}
+
+void
+Solver::assignedLiteral(
+    Literal
+    #if defined(ENABLE_PYTHON) || defined(ENABLE_PERL)
+    lit
+    #endif
+)
+{
+    #if defined(ENABLE_PYTHON) || defined(ENABLE_PERL)
+    if ( getCurrentDecisionLevel() == 0 )
+        choiceHeuristic->onLitAtLevelZero( lit );
+    choiceHeuristic->onLitTrue( lit );
+    #endif
 }
 
 unsigned int
@@ -1110,7 +1125,7 @@ Solver::incrementCurrentDecisionLevel()
 void
 Solver::unrollLastVariable()
 {    
-    choiceHeuristic->onUnrollingVariable( variables.unrollLastVariable() );
+    choiceHeuristic->onVarUndefined( variables.unrollLastVariable() );
 }
 
 void

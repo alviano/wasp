@@ -75,6 +75,9 @@ ExternalHeuristic::ExternalHeuristic( Solver& s, char* filename, unsigned int in
     check_factorFallback = interpreter->checkMethod( method_factorFallback );
     check_signFallback = interpreter->checkMethod( method_signFallback );
     check_onNewClause = interpreter->checkMethod( method_onNewClause );
+    check_onLitTrue = interpreter->checkMethod( method_onLitTrue );
+    check_onVarUndefined = interpreter->checkMethod( method_onVarUndefined );
+
     status = CHOICE;    
     numberOfFallbackSteps = 0;
     unrollVariable = 0;    
@@ -313,6 +316,18 @@ void ExternalHeuristic::onLearningClause( unsigned int lbd, const Clause* clause
     }
 }
 
+void ExternalHeuristic::onLitTrue( Literal lit )
+{
+    if( check_onLitTrue )
+        interpreter->callVoidMethod( method_onLitTrue, lit.getId() );
+}
+
+void ExternalHeuristic::onVarUndefined( Var v )
+{
+    if( check_onVarUndefined )
+        interpreter->callVoidMethod( method_onVarUndefined, v );
+}
+
 void ExternalHeuristic::onLoopFormula( const Clause* clause )
 {
     if( check_onLoopFormula )
@@ -404,7 +419,7 @@ void ExternalHeuristic::onUnrollingVariable( Var var )
     if( check_onUnrollingVariable )
         interpreter->callVoidMethod( method_onUnrollingVariable, var );
     if( minisatHeuristic )
-        minisatHeuristic->onUnrollingVariable( var );
+        minisatHeuristic->onVarUndefined( var );
 }
 
 void ExternalHeuristic::onChoiceContradictory( int choice )

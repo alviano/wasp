@@ -48,7 +48,7 @@ class MinisatHeuristic : public HeuristicStrategy
         inline void onNewVariable( Var v );
         inline void onNewVariableRuntime( Var v );
         inline void onLitInvolvedInConflict( Literal literal );
-        inline void onUnrollingVariable( Var var );
+        inline void onVarUndefined( Var var );
         inline void onConflict() { variableDecayActivity(); }
         inline void onLitInImportantClause( Literal lit ) { bumpActivity( lit.getVariable() ); };
         inline void onFinishedSimplifications() { simplifyVariablesAtLevelZero(); }        
@@ -70,6 +70,7 @@ class MinisatHeuristic : public HeuristicStrategy
         inline void onLoopFormula( const Clause* ) {}
         inline void onNewClause( const Clause* ) {}
         inline void onNewBinaryClause( Literal, Literal ) {}
+        inline void onLitTrue( Literal ) {}        
         
         inline void init( Var v, unsigned int value );
         inline void setFactor( Var v, unsigned int factor );
@@ -185,7 +186,7 @@ MinisatHeuristic::onLitInvolvedInConflict(
 }
 
 void
-MinisatHeuristic::onUnrollingVariable(
+MinisatHeuristic::onVarUndefined(
     Var variable )
 {
     heap.push( variable );
