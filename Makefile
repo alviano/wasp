@@ -11,6 +11,10 @@ cxxflags.trace = \
  -Wall -Wextra -std=c++11 -DTRACE_ON
 linkflags.trace = \
  -lm
+cxxflags.tracerelease = \
+ -Wall -Wextra -std=c++11 -DTRACE_ON -DNDEBUG -O3
+linkflags.tracerelease = \
+ -lm
 cxxflags.release = \
  -Wall -Wextra -std=c++11 -DNDEBUG -O3
 linkflags.release = \

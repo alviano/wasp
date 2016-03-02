@@ -66,7 +66,6 @@ ExternalHeuristic::ExternalHeuristic( Solver& s, char* filename, unsigned int in
     check_onStartingSolver = interpreter->checkMethod( method_onStartingSolver );
     check_onLitInImportantClause = interpreter->checkMethod( method_onLitInImportantClause );
     check_onVariableElimination = interpreter->checkMethod( method_onVariableElimination );
-    check_onUnrollingVariable = interpreter->checkMethod( method_onUnrollingVariable );
     check_onStartingParsing = interpreter->checkMethod( method_onStartingParsing );
     check_partialInterpretation = interpreter->checkMethod( method_partialInterpretation );
     check_onUnfoundedSet = interpreter->checkMethod( method_onUnfoundedSet );
@@ -128,7 +127,7 @@ void ExternalHeuristic::choiceVars( vector< int >& result, int& status )
                 ErrorMessage::errorGeneric( error_choicevars );
         }
         if( status == FALLBACK_HEURISTIC )
-            numberOfFallbackSteps = result[ 2 ] <= 0 ? INT_MAX : result[ 2 ];
+            numberOfFallbackSteps = result[ 2 ] <= 0 ? INT_MAX : result[ 2 ];            
         else if ( status == UNROLL )
             unrollVariable = result[ 2 ];
     }
@@ -322,12 +321,6 @@ void ExternalHeuristic::onLitTrue( Literal lit )
         interpreter->callVoidMethod( method_onLitTrue, lit.getId() );
 }
 
-void ExternalHeuristic::onVarUndefined( Var v )
-{
-    if( check_onVarUndefined )
-        interpreter->callVoidMethod( method_onVarUndefined, v );
-}
-
 void ExternalHeuristic::onLoopFormula( const Clause* clause )
 {
     if( check_onLoopFormula )
@@ -414,10 +407,10 @@ void ExternalHeuristic::onVariableElimination( Var var )
         interpreter->callVoidMethod( method_onVariableElimination, var );
 }
 
-void ExternalHeuristic::onUnrollingVariable( Var var )
+void ExternalHeuristic::onVarUndefined( Var var )
 {
-    if( check_onUnrollingVariable )
-        interpreter->callVoidMethod( method_onUnrollingVariable, var );
+    if( check_onVarUndefined )
+        interpreter->callVoidMethod( method_onVarUndefined, var );
     if( minisatHeuristic )
         minisatHeuristic->onVarUndefined( var );
 }
@@ -498,7 +491,6 @@ Literal ExternalHeuristic::makeAChoiceProtected()
             status = CHOICE;
             choices.clear();
             previousChoices.clear();
-            numberOfFallbackSteps = INT_MAX;
             goto init;
         }
         

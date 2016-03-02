@@ -18,6 +18,8 @@
 
 #include "VariableNames.h"
 #include "Assert.h"
+#include <sstream>
+using namespace std;
 vector< string > VariableNames::variables;
 bool VariableNames::toBePrinted = false;
 

@@ -42,7 +42,6 @@
 #define method_onDeletion "onDeletion"
 #define method_onRestart "onRestart"
 #define method_onAnswerSet "onAnswerSet"
-#define method_onUnrollingVariable "onUnrollingVariable"
 #define method_onLitTrue "onLiteralTrue"
 #define method_onVarUndefined "onVariableUndefined"
 
@@ -88,7 +87,6 @@ class ExternalHeuristic : public HeuristicStrategy
         void onStartingSolver( unsigned int nVars, unsigned int nClauses );
         void onLitInImportantClause( Literal lit );
         void onVariableElimination( Var var );
-        void onUnrollingVariable( Var v );
         void onStartingParsing();
         void onStartingSimplifications();
         void onUnfoundedSet( const Vector< Var >& unfoundedSet );

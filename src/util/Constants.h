@@ -150,19 +150,5 @@ typedef unsigned int OUTPUT_POLICY;
 typedef unsigned int RESTARTS_POLICY;
 typedef unsigned int WEAK_CONSTRAINTS_ALG;
 
-#ifdef TRACE_ON
-#include <string>
-#include <sstream>
-
-template < class T >
-std::string toString( const T& t )
-{
-    std::stringstream ss;
-    ss << t;
-    return ss.str();
-}
-#endif
-
-
 #endif
 
