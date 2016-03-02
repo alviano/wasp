@@ -42,7 +42,7 @@
 #define method_onDeletion "onDeletion"
 #define method_onRestart "onRestart"
 #define method_onAnswerSet "onAnswerSet"
-#define method_onLitTrue "onLiteralTrue"
+#define method_onLitsTrue "onLiteralsTrue"
 #define method_onVarUndefined "onVariableUndefined"
 
 //Choice
@@ -121,9 +121,15 @@ class ExternalHeuristic : public HeuristicStrategy
         const static unsigned int FALLBACK_HEURISTIC = 2;
         const static unsigned int UNROLL = 3;
         const static unsigned int TRIGGER_INCOHERENCE = 4;
+        
+        void sendTrueLiterals();
 
         //mandatory
         void choiceVars( vector< int >& vars, int& status );
+        
+        void clearStatus();
+        void resetPreviousChoices();
+        void resetInterpretationToSend();
         
         //mandatory
         void onChoiceContradictory( int choice );
@@ -153,10 +159,11 @@ class ExternalHeuristic : public HeuristicStrategy
         bool check_factorFallback;
         bool check_signFallback;
         bool check_onNewClause;
-        bool check_onLitTrue;
+        bool check_onLitsTrue;
         bool check_onVarUndefined;
         
         vector< int > choices;
+        vector< int > interpretationToSend;
         int status;
         int numberOfFallbackSteps;
         Var unrollVariable;

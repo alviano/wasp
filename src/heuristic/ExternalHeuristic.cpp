@@ -74,7 +74,7 @@ ExternalHeuristic::ExternalHeuristic( Solver& s, char* filename, unsigned int in
     check_factorFallback = interpreter->checkMethod( method_factorFallback );
     check_signFallback = interpreter->checkMethod( method_signFallback );
     check_onNewClause = interpreter->checkMethod( method_onNewClause );
-    check_onLitTrue = interpreter->checkMethod( method_onLitTrue );
+    check_onLitsTrue = interpreter->checkMethod( method_onLitsTrue );
     check_onVarUndefined = interpreter->checkMethod( method_onVarUndefined );
 
     status = CHOICE;    
@@ -100,6 +100,7 @@ void ExternalHeuristic::choiceVars( vector< int >& result, int& status )
         }
     }    
     interpreter->callListMethod( method_choiceVars, interpretation, result );
+    sendTrueLiterals();
     unsigned int size = result.size();
     if( size == 0 )
         ErrorMessage::errorGeneric( error_choicevars );
@@ -143,7 +144,7 @@ void ExternalHeuristic::onConflict()
 {
     if( minisatHeuristic )
         minisatHeuristic->onConflict();
-    choices.clear();
+    choices.clear();    
     if( check_onConflict )
     {
         Literal previous = Literal::null;
@@ -165,7 +166,8 @@ void ExternalHeuristic::onConflict()
             previous = lit;
         }
         interpreter->callVoidMethod( method_onConflict, previous.getId() );
-    }    
+    }
+    resetInterpretationToSend();
 }
 
 void ExternalHeuristic::onDeletion()
@@ -317,8 +319,17 @@ void ExternalHeuristic::onLearningClause( unsigned int lbd, const Clause* clause
 
 void ExternalHeuristic::onLitTrue( Literal lit )
 {
-    if( check_onLitTrue )
-        interpreter->callVoidMethod( method_onLitTrue, lit.getId() );
+    if( check_onLitsTrue )
+        interpretationToSend.push_back( lit.getId() );        
+}
+
+void ExternalHeuristic::sendTrueLiterals()
+{
+    if( check_onLitsTrue && !interpretationToSend.empty() )
+    {        
+        interpreter->callVoidMethod( method_onLitsTrue, interpretationToSend );
+        interpretationToSend.clear();
+    }   
 }
 
 void ExternalHeuristic::onLoopFormula( const Clause* clause )
@@ -366,8 +377,7 @@ void ExternalHeuristic::onRestart()
 {
     if( check_onRestart )
         interpreter->callVoidMethod( method_onRestart );
-    choices.clear();
-    previousChoices.clear();
+    clearStatus();
 }
 
 void ExternalHeuristic::onAnswerSet()
@@ -430,7 +440,7 @@ Literal ExternalHeuristic::makeAChoiceProtected()
     }
 
     begin:;
-    if( choices.empty() )
+    if( choices.empty() )        
         choiceVars( choices, status );
 
     if( status == CHOICE )
@@ -457,8 +467,7 @@ Literal ExternalHeuristic::makeAChoiceProtected()
             if( solver.isFalse( lit ) )
             {
                onChoiceContradictory( choice );
-               choices.clear();
-               previousChoices.pop_back();
+               clearStatus();
                goto begin;
             }
         }
@@ -471,16 +480,14 @@ Literal ExternalHeuristic::makeAChoiceProtected()
         {
             solver.doRestart();
             status = CHOICE;
-            choices.clear();
-            previousChoices.clear();
+            clearStatus();
             goto begin;
         }
             
         if( status == TRIGGER_INCOHERENCE )
         {
             status = CHOICE;
-            choices.clear();
-            previousChoices.clear();
+            clearStatus();
             return Literal::null;
         }
         
@@ -489,8 +496,7 @@ Literal ExternalHeuristic::makeAChoiceProtected()
             if( minisatHeuristic == NULL )
                 ErrorMessage::errorGeneric( "Fallback heuristic has not been initialized. Please, add the fallback method in your script." );
             status = CHOICE;
-            choices.clear();
-            previousChoices.clear();
+            clearStatus();
             goto init;
         }
         
@@ -501,6 +507,8 @@ Literal ExternalHeuristic::makeAChoiceProtected()
             
             solver.unrollVariable( unrollVariable );
             unrollVariable = 0;
+            resetPreviousChoices();
+            resetInterpretationToSend();
         }
     }
     
@@ -514,4 +522,42 @@ Literal ExternalHeuristic::makeAChoiceProtected()
     ErrorMessage::errorGeneric( "There are no other choices, maybe you want to add a fallback heuristic." );
     //Useless, just to remove the warning.
     return Literal::null;
+}
+
+void ExternalHeuristic::clearStatus()
+{
+    choices.clear();
+    previousChoices.clear();
+    interpretationToSend.clear();
+}
+
+void ExternalHeuristic::resetPreviousChoices()
+{
+    if( check_onConflict )
+    {
+        while( !previousChoices.empty() )
+        {
+            if( solver.isUndefined( previousChoices.back() ) )
+                previousChoices.pop_back();
+            else
+                break;
+        }        
+    }
+}
+
+void ExternalHeuristic::resetInterpretationToSend()
+{
+    if( check_onLitsTrue )
+    {
+        while( !interpretationToSend.empty() )
+        {
+            Var v = interpretationToSend.back() > 0 ? interpretationToSend.back() : -interpretationToSend.back();
+            unsigned int sign = interpretationToSend.back() > 0 ? POSITIVE : NEGATIVE;
+            Literal lit( v, sign );
+            if( solver.isUndefined( lit ) )
+                interpretationToSend.pop_back();
+            else
+                break;
+        }        
+    }
 }
