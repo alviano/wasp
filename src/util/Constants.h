@@ -69,7 +69,6 @@
 #define PMRES 4
 #define OLLBB 5
 #define OLLBBREST 6
-#define PROGRESSIONOLL 7
 
 #define INCOHERENT 0
 #define COHERENT 1

@@ -626,7 +626,6 @@ Options::initMap()
     stringToWeak[ "basic" ] = BB;
     stringToWeak[ "interleaving-restarts" ] = OLLBBREST;
     stringToWeak[ "interleaving-choices" ] = OLLBB;
-    stringToWeak[ "progression-oll" ] = PROGRESSIONOLL; 
 
     stringToShift[ "shift" ] = SHIFT_NAIVE;
     stringToShift[ "propagator" ] = SHIFT_PROPAGATOR;

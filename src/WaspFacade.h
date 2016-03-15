@@ -33,7 +33,6 @@ using namespace std;
 #include "weakconstraints/Opt.h"
 #include "weakconstraints/PMRes.h"
 #include "weakconstraints/OllBB.h"
-#include "weakconstraints/ProgressionOll.h"
 
 class WaspFacade
 {
@@ -112,11 +111,7 @@ WaspFacade::solveWithWeakConstraints()
 
         case OLLBBREST:
             w = new OllBB( solver, true );
-            break;        
-
-        case PROGRESSIONOLL:
-            w = new ProgressionOll( solver );
-            break;
+            break;                
             
         case OLL:
         default:            

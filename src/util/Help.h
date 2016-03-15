@@ -96,7 +96,6 @@ class Help
             cout << "       =pmres                          - Core-guided algorithm pmres" << endl;
             cout << "       =interleaving-restarts          - Mixed approach between oll and basic - restarts based" << endl;
             cout << "       =interleaving-choices           - Mixed approach between oll and basic - choices based" << endl;
-            cout << "       =progression-oll                - Use progression combined with algorithm oll" << endl;
             cout << "--enable-disjcores                     - Enable disjoint cores preprocessing (only for core-guided)" << endl;
             cout << "--minimize-unsatcore                   - Enable minimization of unsat cores (only for core-guided)" << endl;
             cout << "--disable-stratification               - Disable stratification (only for core-guided)" << endl;
