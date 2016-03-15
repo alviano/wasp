@@ -77,7 +77,7 @@ WaspFacade::solve()
     {
         solver.printProgram();
         return;
-    }   
+    }
     
     if( solver.preprocessing() )
     {
@@ -93,7 +93,7 @@ WaspFacade::solve()
             queryInterface.computeCautiousConsequences( queryAlgorithm );
             statistics( &solver, endSolving() );
             return;
-        }
+        }        
         
         if( !solver.isOptimizationProblem() )
         {            

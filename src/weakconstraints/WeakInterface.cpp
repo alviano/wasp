@@ -203,11 +203,17 @@ WeakInterface::disjointCorePreprocessing()
     unsigned int originalNumberOfOptLiterals = solver.numberOfOptimizationLiterals( level() );
     while( true )
     {
-        if( solver.solve( assumptions ) != INCOHERENT )
-        {            
+        unsigned int result = solver.solve( assumptions );
+        if( result != INCOHERENT )
+        {
+            if( result == COHERENT )
+            {
+                uint64_t cost = solver.computeCostOfModel( level() );
+                foundAnswerSet( cost );
+            }
             solver.clearConflictStatus();
             solver.unrollToZero();
-            assumptions.clear();
+            assumptions.clear();            
             break;
         }
 
@@ -307,4 +313,54 @@ WeakInterface::resetSolver()
 {
     solver.unrollToZero();
     solver.clearConflictStatus();
+}
+
+const Clause*
+WeakInterface::minimizeUnsatCore()
+{
+    const Clause* unsatCore = solver.getUnsatCore();
+    assert( unsatCore != NULL );
+    if( unsatCore->size() <= 1 || !wasp::Options::expensiveMinimization )
+        return unsatCore;
+
+    Clause* originalCore = new Clause();
+    originalCore->copyLiterals( *unsatCore );    
+    
+    unsigned int max = 1;    
+    unsigned int otherMax = 1;
+    begin:;
+    vector< Literal > assumptions;    
+    resetSolver();
+    for( unsigned int i = 0; i < max && i < originalCore->size(); i++ )
+    {
+        Literal lit = originalCore->getAt( i );
+        if( !solver.getDataStructure( lit ).isOptLit() )
+            continue;
+
+        Literal toAdd = lit.getOppositeLiteral();
+        assumptions.push_back( toAdd );
+    }
+
+    solver.setMaxNumberOfSeconds( wasp::Options::minimizationBudget );
+    unsigned int result = solver.solve( assumptions );
+    solver.setMaxNumberOfSeconds( UINT_MAX );
+    if( result == INCOHERENT )
+    {
+        resetSolver();
+        cout << "COST (oldCore,newCore)=(" << originalCore->size() << "," << solver.getUnsatCore()->size() << ")" << endl;
+        delete originalCore;
+        return solver.getUnsatCore();
+    }
+    else if( result == COHERENT )
+    {
+        uint64_t cost = solver.computeCostOfModel( level() );
+        foundAnswerSet( cost );        
+    }
+    if( max + otherMax > originalCore->size() )
+        otherMax = 1;        
+    max += otherMax;
+    otherMax = otherMax * 2;
+    if( max >= originalCore->size() )
+        return originalCore;
+    goto begin;
 }

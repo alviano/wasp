@@ -58,6 +58,7 @@ class WeakInterface
         inline void computeAssumptionsStratified();
         inline bool changeWeight();
         bool hardening();
+        const Clause* minimizeUnsatCore();
         
         virtual void foundAnswerSet( uint64_t cost );        
         virtual bool foundUnsat() { return true; }

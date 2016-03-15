@@ -371,7 +371,9 @@ Component::iterationOnAuxSupportedByThis(
 
 void
 Component::foundSourcePointer(
-    Var variableWithSourcePointer )
+    Var variableWithSourcePointer,
+    vector< Var >& vars,
+    vector< Literal >& lits )
 {
     assert( getGUSData( variableWithSourcePointer ).isFounded() );
     for( unsigned int i = 0; i < getGUSData( variableWithSourcePointer ).possiblySupportedByThis[ POSITIVE ].size(); i++ )
@@ -380,8 +382,10 @@ Component::foundSourcePointer(
         assert( solver.getComponent( var ) == this );
         if( !solver.isFalse( var ) && !getGUSData( var ).isFounded() )
         {
-            trace_msg( unfoundedset, 1, "Literal " << Literal( variableWithSourcePointer ) << " is a source pointer of " << Literal( var, POSITIVE ) );            
-            propagateSourcePointer( var, Literal( variableWithSourcePointer ) );
+            trace_msg( unfoundedset, 1, "Literal " << Literal( variableWithSourcePointer ) << " is a source pointer of " << Literal( var, POSITIVE ) ); 
+            vars.push_back( var );
+            lits.push_back( Literal( variableWithSourcePointer ) );
+//            propagateSourcePointer( var, Literal( variableWithSourcePointer ) );
         }
     }
     
@@ -394,7 +398,9 @@ Component::foundSourcePointer(
         
         trace_msg( unfoundedset, 1, "Literal " << Literal( variableWithSourcePointer ) << " is a source pointer of " << Literal( var, POSITIVE ) );        
         assert_msg( !getGUSData( var ).isFounded(), "Variable " << Literal( var, POSITIVE ) << " is founded" );
-        propagateSourcePointer( var, Literal( variableWithSourcePointer ) );        
+        vars.push_back( var );
+        lits.push_back( Literal( variableWithSourcePointer ) );
+//        propagateSourcePointer( var, Literal( variableWithSourcePointer ) );        
     }
 }
 
@@ -734,24 +740,38 @@ Component::propagateSourcePointer(
     Var var,
     Literal literal )
 {
-    assert( !solver.isFalse( var ) );
-    assert( !getGUSData( var ).isFounded() );
-    if( getGUSData( var ).isAux() )
+    vector< Var > vars;
+    vector< Literal > lits;
+    vars.push_back( var );
+    lits.push_back( literal );
+    while( !vars.empty() )
     {
-        assert( find( getGUSData( var ).literals.begin(), getGUSData( var ).literals.end(), literal ) != getGUSData( var ).literals.end() );
-        assert( getGUSData( var ).numberOfSupporting > 0 );
-        getGUSData( var ).numberOfSupporting--;
-        if( getGUSData( var ).numberOfSupporting > 0 )
-            return;
-        assert( getGUSData( var ).numberOfSupporting == 0 );
-    }
-    else
-    {
-        getGUSData( var ).sourcePointer = literal;    
-    }
+        Var var = vars.back();
+        Literal literal = lits.back();
+        
+        vars.pop_back();
+        lits.pop_back();
+        assert( !solver.isFalse( var ) );
+        if( getGUSData( var ).isFounded() )
+            continue;
+        if( getGUSData( var ).isAux() )
+        {
+            assert( find( getGUSData( var ).literals.begin(), getGUSData( var ).literals.end(), literal ) != getGUSData( var ).literals.end() );
+            assert( getGUSData( var ).numberOfSupporting > 0 );
+            getGUSData( var ).numberOfSupporting--;
+            if( getGUSData( var ).numberOfSupporting > 0 )
+                continue;
+            assert( getGUSData( var ).numberOfSupporting == 0 );
+        }
+        else
+        {
+            getGUSData( var ).sourcePointer = literal;    
+        }
 
-    setFounded( var );
-    foundSourcePointer( var );
+        setFounded( var );
+        foundSourcePointer( var, vars, lits );
+        assert( vars.size() == lits.size() );
+    }
 }
 
 Clause*

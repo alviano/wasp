@@ -30,6 +30,9 @@ Oll::run()
     if( disjCoresPreprocessing && !disjointCorePreprocessing() )
         return INCOHERENT;
     
+    if( ub() == lb() )
+        return OPTIMUM_FOUND;
+    
     if( wasp::Options::stratification && solver.isWeighted( level() ) )
         return runWeighted();
     return runUnweighted();
@@ -323,8 +326,10 @@ Oll::foundUnsat()
 {
     vector< unsigned int > auxVariablesInUnsatCore;
     ++numberOfCalls;
-    assert( solver.getUnsatCore() != NULL );
-    const Clause& unsatCore = *( solver.getUnsatCore() );
+    
+    const Clause* core = minimizeUnsatCore();
+    assert( core != NULL );
+    const Clause& unsatCore = *( core );
     
     //The incoherence does not depend on weak constraints
     if( unsatCore.size() == 0 )
@@ -349,7 +354,8 @@ Oll::foundUnsat()
     if( !processCoreOll( literals, weights, minWeight, n ) )
         return false;
     incrementLb( minWeight );
-    solver.foundLowerBound( lb() );    
+    solver.foundLowerBound( lb() ); 
+    cout << "COST lb " << lb() << endl;
     if( !addAggregateOll( literals, weights, n + 1, minWeight ) )
         return false;        
 

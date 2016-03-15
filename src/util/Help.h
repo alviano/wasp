@@ -96,11 +96,13 @@ class Help
             cout << "       =pmres                          - Core-guided algorithm pmres" << endl;
             cout << "       =interleaving-restarts          - Mixed approach between oll and basic - restarts based" << endl;
             cout << "       =interleaving-choices           - Mixed approach between oll and basic - choices based" << endl;
+            cout << "       =progression-oll                - Use progression combined with algorithm oll" << endl;
             cout << "--enable-disjcores                     - Enable disjoint cores preprocessing (only for core-guided)" << endl;
             cout << "--minimize-unsatcore                   - Enable minimization of unsat cores (only for core-guided)" << endl;
             cout << "--disable-stratification               - Disable stratification (only for core-guided)" << endl;
             cout << "--compute-firstmodel=budget            - Compute a model before starting the algorithm. In addition, budget may specify the maximum number of seconds allowed." << endl;
-
+            cout << "--expensive-minimize-unsatcore=budget  - Enable progression-based minimization of unsat cores (only for core-guided). In addition, budget may specify the maximum number of seconds allowed for each check." << endl;
+            
             cout << separator << endl;
             cout << "Query options                          " << endl << endl;
             cout << "--query-algorithm                      - Compute cautious consequences according to the specified algorithm" << endl;

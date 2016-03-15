@@ -33,6 +33,7 @@ using namespace std;
 #include "weakconstraints/Opt.h"
 #include "weakconstraints/PMRes.h"
 #include "weakconstraints/OllBB.h"
+#include "weakconstraints/ProgressionOll.h"
 
 class WaspFacade
 {
@@ -63,7 +64,7 @@ class WaspFacade
         
         inline void setQueryAlgorithm( unsigned int value ) { queryAlgorithm = value; }
         
-        inline unsigned int solveWithWeakConstraints();        
+        inline unsigned int solveWithWeakConstraints();               
 
     private:
         Solver solver;
@@ -113,6 +114,10 @@ WaspFacade::solveWithWeakConstraints()
             w = new OllBB( solver, true );
             break;        
 
+        case PROGRESSIONOLL:
+            w = new ProgressionOll( solver );
+            break;
+            
         case OLL:
         default:            
             w = new Oll( solver );

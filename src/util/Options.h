@@ -58,7 +58,10 @@ namespace wasp
             
             static bool oneDefShift;
             
-            static bool simplifications;
+            static bool simplifications;            
+            
+            static bool expensiveMinimization;
+            static unsigned int minimizationBudget;
             
         private:
 

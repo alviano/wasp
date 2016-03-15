@@ -441,8 +441,8 @@ class Solver
         inline bool propagateFixpoint();
         
         inline uint64_t simplifyOptimizationLiterals( unsigned int level );
-//        inline void simplifyOptimizationLiterals();
-               
+//        inline void simplifyOptimizationLiterals();               
+
     private:
         HCComponent* hcComponentForChecker;
         PostPropagator* afterConflictPropagator;
@@ -1542,7 +1542,7 @@ Solver::attachWatches()
         }
         else
         {
-            statistics( this, onAddingClauseAfterSatelite( current.size() ) );
+            statistics( this, onAddingClauseAfterSatelite( current.size() ) );            
             if( current.size() == 2 )
             {     
                 addBinaryClause( current[ 0 ], current[ 1 ] );        

@@ -109,7 +109,7 @@ class Component : public PostPropagator
         bool iterationOnSupportedByThisInternal( Literal lit );
         void iterationOnAuxSupportedByThis( Literal lit );        
 
-        void foundSourcePointer( Var var );
+        void foundSourcePointer( Var var, vector< Var >& vars, vector< Literal >& lits );
         inline void lookForANewSourcePointer( Var var );
         void propagateSourcePointer( Var var, Literal literal );
         inline void addExternalLiteral( Var var, Literal literal );

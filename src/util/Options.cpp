@@ -100,6 +100,8 @@ namespace wasp
 #define OPTIONID_stratification ( 'z' + 217 )
 #define OPTIONID_firstmodel ( 'z' + 218 )
     
+#define OPTIONID_expensiveminimization ( 'z' + 219 )
+    
 /* QUERY OPTIONS */
 #define OPTIONID_queryalgorithm ( 'z' + 300 )
 #define OPTIONID_queryverbosity ( 'z' + 301 )
@@ -167,6 +169,10 @@ bool Options::oneDefShift = false;
 map< string, WEAK_CONSTRAINTS_ALG > Options::stringToShift;
 
 bool Options::simplifications = true;
+
+bool Options::expensiveMinimization = false;
+
+unsigned int Options::minimizationBudget = UINT_MAX;
 
 void
 Options::parse(
@@ -250,6 +256,7 @@ Options::parse(
                 { "minimize-unsatcore", no_argument, NULL, OPTIONID_minimize },
                 { "disable-stratification", no_argument, NULL, OPTIONID_stratification },
                 { "compute-firstmodel", optional_argument, NULL, OPTIONID_firstmodel },
+                { "expensive-minimize-unsatcore", optional_argument, NULL, OPTIONID_expensiveminimization },
                 
                 /* SHIFT STRATEGY */
                 { "disjunction", required_argument, NULL, OPTIONID_shift_strategy },
@@ -356,7 +363,7 @@ Options::parse(
                 outputPolicy = MULTI;
                 printLastModelOnly = true;
                 break;
-
+                
             case OPTIONID_berkminheuristic:
                 if( optarg )
                 {
@@ -520,6 +527,16 @@ Options::parse(
                     budget = atoi( optarg );                    
                 break;
                 
+            case OPTIONID_expensiveminimization:
+                expensiveMinimization = true;
+                if( optarg )
+                {
+                    minimizationBudget = atoi( optarg );
+                    if( minimizationBudget <= 0 )
+                        ErrorMessage::errorGeneric( "Budget must be strictly greater than 0." );
+                }
+                break;
+                
             case OPTIONID_queryalgorithm:
                 queryAlgorithm = ITERATIVE_COHERENCE_TESTING;
                 if( optarg )
@@ -609,6 +626,7 @@ Options::initMap()
     stringToWeak[ "basic" ] = BB;
     stringToWeak[ "interleaving-restarts" ] = OLLBBREST;
     stringToWeak[ "interleaving-choices" ] = OLLBB;
+    stringToWeak[ "progression-oll" ] = PROGRESSIONOLL; 
 
     stringToShift[ "shift" ] = SHIFT_NAIVE;
     stringToShift[ "propagator" ] = SHIFT_PROPAGATOR;
