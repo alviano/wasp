@@ -151,7 +151,6 @@ class ExternalHeuristic : public HeuristicStrategy
         bool check_onStartingSolver;
         bool check_onLitInImportantClause;
         bool check_onVariableElimination;
-        bool check_onUnrollingVariable;
         bool check_onStartingParsing;
         bool check_onUnfoundedSet;
         bool check_onLoopFormula;

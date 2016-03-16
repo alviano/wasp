@@ -44,6 +44,7 @@ using namespace std;
 #include "stl/BoundedQueue.h"
 #include "Component.h"
 #include "heuristic/MinisatHeuristic.h"
+#include "ExternalPropagator.h"
 class HCComponent;
 class WeakInterface;
 
@@ -133,7 +134,7 @@ class Solver
         inline bool hasNextAssignedVariable() const;
         inline void startIterationOnAssignedVariable();
 
-        inline unsigned int getCurrentDecisionLevel();
+        inline unsigned int getCurrentDecisionLevel() const;
         inline void incrementCurrentDecisionLevel();
         
         inline void assignLiteral( Literal literal );
@@ -253,7 +254,9 @@ class Solver
         inline Satelite* getSatelite() { return satelite; }
         
         inline void addAggregate( Aggregate* aggr ) { assert( aggr != NULL ); aggregates.push_back( aggr ); }
-        inline bool hasPropagators() const { return ( !tight() || !aggregates.empty() ); }
+        inline void addExternalPropagator( ExternalPropagator* prop ) { assert( prop != NULL ); externalPropagators.push_back( prop ); }
+        inline void endPreprocessing();
+        inline bool hasPropagators() const { return ( !tight() || !aggregates.empty() || !externalPropagators.empty() ); }                
         
         inline void turnOffSimplifications() { callSimplifications_ = false; }
         inline bool callSimplifications() const { return callSimplifications_; }
@@ -445,7 +448,7 @@ class Solver
 //        inline void simplifyOptimizationLiterals();
         
         inline void onFinishedParsing(){ choiceHeuristic->onFinishedParsing(); }
-        inline void addedVarName( Var var ) { choiceHeuristic->addedVarName( var, VariableNames::getName( var ) ); }
+        inline void addedVarName( Var var );
         inline void onStartingSolver( unsigned int nVars, unsigned int nClauses ) { choiceHeuristic->onStartingSolver( nVars, nClauses ); }
         inline void assignedLiteral( Literal lit );
 //        inline void addedLiteralInLearnedClause( Literal lit ) { choiceHeuristic->onLitInLearntClause( lit ); }
@@ -517,6 +520,7 @@ class Solver
         
         vector< GUSData* > gusDataVector;
         vector< Aggregate* > aggregates;
+        vector< ExternalPropagator* > externalPropagators;
         
 //        Aggregate* optimizationAggregate;
 //        unsigned int numberOfOptimizationLevels;
@@ -716,9 +720,22 @@ Solver::assignedLiteral(
 {
     #if defined(ENABLE_PYTHON) || defined(ENABLE_PERL)
     if ( getCurrentDecisionLevel() == 0 )
+    {
         choiceHeuristic->onLitAtLevelZero( lit );
+        for( unsigned int i = 0; i < externalPropagators.size(); i++ )
+            externalPropagators[ i ]->onLitAtLevelZero( lit );
+    }
     choiceHeuristic->onLitTrue( lit );
     #endif
+}
+
+void
+Solver::addedVarName(
+    Var var )
+{
+    choiceHeuristic->addedVarName( var, VariableNames::getName( var ) );
+    for( unsigned int i = 0; i < externalPropagators.size(); i++ )
+        externalPropagators[ i ]->addedVarName( var, VariableNames::getName( var ) );
 }
 
 unsigned int
@@ -1108,7 +1125,7 @@ Solver::hasNextVariableToPropagate() const
 }
 
 unsigned int
-Solver::getCurrentDecisionLevel()
+Solver::getCurrentDecisionLevel() const
 {
     return currentDecisionLevel;
 }
@@ -1604,6 +1621,13 @@ Solver::clearComponents()
     cyclicComponents.resize( j );
 }
 
+void
+Solver::endPreprocessing()
+{
+    for( unsigned int i = 0; i < externalPropagators.size(); i++ )
+        externalPropagators[ i ]->endParsing( *this );
+}
+
 bool
 Solver::preprocessing()
 {
@@ -1620,7 +1644,7 @@ Solver::preprocessing()
     if( callSimplifications() && !satelite->simplify() )
         return false;
 
-    choiceHeuristic->onFinishedSimplifications();
+    choiceHeuristic->onFinishedSimplifications();    
     clearVariableOccurrences();
     attachWatches();
     clearComponents();
@@ -1663,6 +1687,8 @@ Solver::onEliminatingVariable(
     eliminatedVariables.push_back( variable );
     setEliminated( variable, sign, definition );
     choiceHeuristic->onVariableElimination( variable );
+    for( unsigned int i = 0; i < externalPropagators.size(); i++ )
+        externalPropagators[ i ]->onAtomElimination( variable );    
 }
 
 void

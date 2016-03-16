@@ -61,6 +61,8 @@ namespace wasp
 /* HEURISTIC OPTIONS */
 #define OPTIONID_heuristic_interpreter ( 'z' + 30 )
 #define OPTIONID_heuristic_scriptname ( 'z' + 31 )
+#define OPTIONID_heuristic_pluginsinterpreter ( 'z' + 32 )
+#define OPTIONID_heuristic_plugins ( 'z' + 33 )
 
 #define OPTIONID_minisatheuristic ( 'z' + 40 )
 
@@ -109,6 +111,7 @@ bool Options::printLastModelOnly = false;
 bool Options::minisatPolicy = false;
 
 unsigned int Options::interpreter = NO_INTERPRETER;
+unsigned int Options::plugins_interpreter = NO_INTERPRETER;
 char* Options::heuristic_scriptname = NULL;
 
 RESTARTS_POLICY Options::restartsPolicy = SEQUENCE_BASED_RESTARTS_POLICY;
@@ -141,7 +144,17 @@ unsigned int Options::queryAlgorithm = NO_QUERY;
 unsigned int Options::queryVerbosity = 0;
 
 map< string, WEAK_CONSTRAINTS_ALG > Options::stringToWeak;
-    
+
+vector< string > Options::pluginsFilenames;
+
+void split( const string &s, char delim, vector< string >& output )
+{
+    stringstream ss( s );
+    string item;
+    while( getline( ss, item, delim ) )
+        output.push_back( item );    
+}
+
 void
 Options::parse(
     int argc,
@@ -191,6 +204,8 @@ Options::parse(
                 /* HEURISTIC */
                 { "heuristic-interpreter", required_argument, NULL, OPTIONID_heuristic_interpreter },
                 { "heuristic-scriptname", required_argument, NULL, OPTIONID_heuristic_scriptname },
+                { "plugins-interpreter", required_argument, NULL, OPTIONID_heuristic_pluginsinterpreter },
+                { "plugins-files", required_argument, NULL, OPTIONID_heuristic_plugins },
                 #endif
                 /* RESTART OPTIONS */                
 //                { "geometric-restarts", optional_argument, NULL, OPTIONID_geometric_restarts },
@@ -341,6 +356,28 @@ Options::parse(
             case OPTIONID_heuristic_scriptname:
                 if( optarg )
                     heuristic_scriptname = optarg;
+                break;
+                
+            case OPTIONID_heuristic_pluginsinterpreter:
+                if( optarg )
+                {
+                    #ifdef ENABLE_PERL
+                    if( !strcmp( optarg, "perl" ) )
+                        plugins_interpreter = PERL_INTERPRETER;
+                    else
+                    #endif
+                    #ifdef ENABLE_PYTHON
+                    if( !strcmp( optarg, "python" ) )
+                        plugins_interpreter = PYTHON_INTERPRETER;
+                    else
+                    #endif                    
+                        ErrorMessage::errorGeneric( "Unkwown interpreter." );
+                }
+                break;
+                
+            case OPTIONID_heuristic_plugins:
+                if( optarg )
+                    split( string( optarg ), ',', pluginsFilenames );
                 break;
                 
             case OPTIONID_sequence_based_restarts:

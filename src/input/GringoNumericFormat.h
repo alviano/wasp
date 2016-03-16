@@ -432,6 +432,7 @@ private:
     
     void cleanData();
     
+    void addExternalPropagators();
 //    Literal getLiteralForInputVar( unsigned int id, unsigned int sign );
 //    Literal getLiteralForAuxVar( unsigned int id, unsigned int sign );
 

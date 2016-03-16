@@ -82,6 +82,14 @@ class Help
             cout << "       =python                         - Use python as interpreter" << endl;            
             #endif
             cout << "--heuristic-scriptname                 - Specify the name of the script" << endl;
+            cout << "--plugins-interpreter                  - Enable the usage of external plugins" << endl;
+            #ifdef ENABLE_PERL
+            cout << "       =perl                           - Use perl as interpreter" << endl;
+            #endif
+            #ifdef ENABLE_PYTHON
+            cout << "       =python                         - Use python as interpreter" << endl;            
+            #endif
+            cout << "--plugins-files=file1,file2,...,filen  - Specify a list of plugins" << endl;
             #endif
             cout << separator << endl;
 

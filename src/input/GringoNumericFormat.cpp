@@ -6,6 +6,7 @@
 #include "../Aggregate.h"
 #include "../util/Istream.h"
 #include "../HCComponent.h"
+#include "../ExternalPropagator.h"
 
 #include <cassert>
 #include <iostream>
@@ -30,6 +31,7 @@ GringoNumericFormat::parse(
 
     uint64_t value = 0;
     statistics( &solver, startParsing() );
+    addExternalPropagators();
     while( loop )
     {
         unsigned int type;
@@ -87,7 +89,7 @@ GringoNumericFormat::parse(
             return;
             
         propagate();
-    }
+    }        
 
     readAtomsTable( input );
     readTrueAtoms( input );
@@ -101,7 +103,7 @@ GringoNumericFormat::parse(
 //        atMostOneBimander( delayedAggregateRewriting[ i ] );
 //    delayedAggregateRewriting.clear();
     
-    simplify();
+    simplify();    
     
     bodiesDictionary.clear();
 
@@ -111,8 +113,8 @@ GringoNumericFormat::parse(
 //    cout << "cc" << endl;
     if( solver.numberOfClauses() + normalRules.size() > 1000000 )
         solver.turnOffSimplifications();
-
-    statistics( &solver, endParsing() );
+    
+    statistics( &solver, endParsing() );    
     statistics( &solver, startSCCs() );
     computeSCCs();
     statistics( &solver, endSCCs() );
@@ -127,7 +129,7 @@ GringoNumericFormat::parse(
     }    
     addWeightConstraints();
     addOptimizationRules();
-    clearDataStructures();
+    clearDataStructures();    
     statistics( &solver, startCompletion() );
     computeCompletion();    
     statistics( &solver, endCompletion() );
@@ -139,7 +141,8 @@ GringoNumericFormat::parse(
 //    cout << "occs\n";
 //    for( unsigned i = 1; i < 10; i++)
 //        cout << c[i] << endl;
-//    cout << "Solving..." << endl;
+//    cout << "Solving..." << endl; 
+    solver.endPreprocessing();
 }
 
 void
@@ -2818,4 +2821,15 @@ GringoNumericFormat::isSupporting(
             return true;
 
     return false;
+}
+
+void
+GringoNumericFormat::addExternalPropagators()
+{
+    for( unsigned int i = 0; i < wasp::Options::pluginsFilenames.size(); i++ )
+    {
+        string filename = wasp::Options::pluginsFilenames[ i ];        
+        ExternalPropagator* prop = new ExternalPropagator( filename.c_str(), wasp::Options::plugins_interpreter );
+        solver.addExternalPropagator( prop );
+    }
 }

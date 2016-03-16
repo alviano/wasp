@@ -55,11 +55,13 @@ namespace wasp
             static bool stratification;
             
             static unsigned int interpreter;
+            static unsigned int plugins_interpreter;
             static char* heuristic_scriptname;
+            static vector< string > pluginsFilenames;
             
         private:
 
-            static vector< const char* > inputFiles;
+            static vector< const char* > inputFiles;            
 
             static unsigned int maxModels;
 

@@ -35,6 +35,7 @@ class Literal
         static const Literal conflict;
 
         inline explicit Literal( Var v = 0, unsigned int sign = POSITIVE );
+        inline explicit Literal( int lit, bool, bool );
         
         inline ~Literal();
 
@@ -100,6 +101,24 @@ Literal::Literal(
     assert( sign == 0 || sign == 1 );
     assert( ( sign == 0 && isPositive() ) || ( sign == 1 && !isPositive() ) );
     assert( getVariable() == v );
+}
+
+Literal::Literal(
+    int lit,
+    bool,
+    bool )
+{
+    assert( lit != 0 );
+    if( lit > 0 )
+    {
+        variable = lit;
+        sign = POSITIVE;
+    }
+    else
+    {
+        variable = -lit;
+        sign = NEGATIVE;
+    }    
 }
 
 Literal::~Literal()
