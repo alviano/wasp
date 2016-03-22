@@ -102,6 +102,8 @@ void MyPythonInterpreter::callVoidMethod( const string& method_name, int param1,
         PyObject* result = PyObject_CallObject(pFunc, pArgs);
         if(result)
             Py_XDECREF(result);
+        else if (PyErr_Occurred())
+            PyErr_Print();
         Py_XDECREF(pArgs);
     }
     else
