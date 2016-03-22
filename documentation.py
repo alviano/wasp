@@ -17,8 +17,9 @@ def getAtomsToFreeze():
     return atoms
 
 #nofica quando un letterale tra quelli indicati in getLiterals() diventa falso
+#lit è il letterale, pos è la posizione nella lista lits del metodo getLiterals
 #restituisce un insieme di letterali da inferire come true
-def onLiteralFalse(lit):
+def onLiteralFalse(lit, pos):
     output = []
     return output
 
