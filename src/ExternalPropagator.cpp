@@ -59,7 +59,7 @@ ExternalPropagator::onLiteralFalse(
     int pos )
 {
     vector< int > output;
-    interpreter->callListMethod( method_plugins_onLiteralFalse, literal.getId(), pos, output );
+    interpreter->callListMethod( method_plugins_onLiteralTrue, literal.getOppositeLiteral().getId(), pos, output );
     trail.push_back( literal );
     if( output.empty() )
         return false;
@@ -120,7 +120,7 @@ ExternalPropagator::attachWatches(
 void
 ExternalPropagator::checkWellFormed()
 {
-    bool check = interpreter->checkMethod( method_plugins_onLiteralFalse ) &&
+    bool check = interpreter->checkMethod( method_plugins_onLiteralTrue ) &&
                  interpreter->checkMethod( method_plugins_onLiteralsUndefined ) &&
                  interpreter->checkMethod( method_plugins_getLiterals ) &&
                  interpreter->checkMethod( method_plugins_getReason ) &&
@@ -129,7 +129,7 @@ ExternalPropagator::checkWellFormed()
     if( !check )
     {
         ErrorMessage::errorGeneric( "Methods " + 
-                                    string( method_plugins_onLiteralFalse ) + ", " + 
+                                    string( method_plugins_onLiteralTrue ) + ", " + 
                                     string( method_plugins_onLiteralsUndefined ) + ", " + 
                                     string( method_plugins_getLiterals ) + ", and " + 
                                     string( method_plugins_getReason ) + ", and " +

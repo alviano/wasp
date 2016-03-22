@@ -29,7 +29,7 @@ class Interpreter;
 #define method_plugins_getLiterals "getLiterals"
 #define method_plugins_getAtomsToFreeze "getAtomsToFreeze"
 #define method_onStartingSolver "onStartingSolver"
-#define method_plugins_onLiteralFalse "onLiteralFalse"
+#define method_plugins_onLiteralTrue "onLiteralTrue"
 #define method_plugins_onLiteralsUndefined "onLiteralsUndefined"
 #define method_plugins_onLitAtLevelZero "onLitAtLevelZero"
 #define method_plugins_getReason "getReason"
