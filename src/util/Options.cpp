@@ -99,8 +99,8 @@ namespace wasp
 #define OPTIONID_minimize ( 'z' + 216 )
 #define OPTIONID_stratification ( 'z' + 217 )
 #define OPTIONID_firstmodel ( 'z' + 218 )
-    
-#define OPTIONID_expensiveminimization ( 'z' + 219 )
+#define OPTIONID_minimizationstrategy ( 'z' + 219 )
+#define OPTIONID_minimizationbudget ( 'z' + 220 )
     
 /* QUERY OPTIONS */
 #define OPTIONID_queryalgorithm ( 'z' + 300 )
@@ -166,11 +166,13 @@ SHIFT_STRATEGY Options::shiftStrategy = SHIFT_NAIVE;
 
 bool Options::oneDefShift = false;
 
-map< string, WEAK_CONSTRAINTS_ALG > Options::stringToShift;
+map< string, SHIFT_STRATEGY > Options::stringToShift;
+
+map< string, unsigned int > Options::stringToMinimization;
 
 bool Options::simplifications = true;
 
-bool Options::expensiveMinimization = false;
+unsigned int Options::minimizationStrategy = MINIMIZATION_OFF;
 
 unsigned int Options::minimizationBudget = UINT_MAX;
 
@@ -253,10 +255,11 @@ Options::parse(
                 /* WEAK CONSTRAINTS */
                 { "weakconstraints-algorithm", required_argument, NULL, OPTIONID_weakconstraintsalgorithm },
                 { "enable-disjcores", no_argument, NULL, OPTIONID_disjcores },
-                { "minimize-unsatcore", no_argument, NULL, OPTIONID_minimize },
+                { "trim-core", no_argument, NULL, OPTIONID_minimize },
                 { "disable-stratification", no_argument, NULL, OPTIONID_stratification },
                 { "compute-firstmodel", optional_argument, NULL, OPTIONID_firstmodel },
-                { "expensive-minimize-unsatcore", optional_argument, NULL, OPTIONID_expensiveminimization },
+                { "minimization-strategy", required_argument, NULL, OPTIONID_minimizationstrategy },
+                { "minimization-budget", required_argument, NULL, OPTIONID_minimizationbudget },
                 
                 /* SHIFT STRATEGY */
                 { "disjunction", required_argument, NULL, OPTIONID_shift_strategy },
@@ -527,14 +530,16 @@ Options::parse(
                     budget = atoi( optarg );                    
                 break;
                 
-            case OPTIONID_expensiveminimization:
-                expensiveMinimization = true;
+            case OPTIONID_minimizationstrategy:
                 if( optarg )
-                {
-                    minimizationBudget = atoi( optarg );
-                    if( minimizationBudget <= 0 )
-                        ErrorMessage::errorGeneric( "Budget must be strictly greater than 0." );
-                }
+                    minimizationStrategy = getMinimizationStrategy( string( optarg ) );
+                else
+                    ErrorMessage::errorGeneric( "Inserted invalid strategy for minimization." );                
+                break;
+                
+            case OPTIONID_minimizationbudget:
+                if( optarg )
+                    minimizationBudget = atoi( optarg );                    
                 break;
                 
             case OPTIONID_queryalgorithm:
@@ -616,6 +621,17 @@ Options::getShiftStrategy(
     return it->second;    
 }
 
+SHIFT_STRATEGY
+Options::getMinimizationStrategy(
+    const string& s )
+{   
+    map< string, unsigned int >::iterator it = stringToMinimization.find( s );
+    if( it == stringToMinimization.end() )
+        ErrorMessage::errorGeneric( "Inserted invalid strategy for minimization." );
+    
+    return it->second;    
+}
+
 void
 Options::initMap()
 {
@@ -633,6 +649,9 @@ Options::initMap()
     stringToShift[ "completion" ] = SHIFT_NORMALIZE;
 //    stringToShift[ "quadratic" ] = SHIFT_QUADRATIC;
 //    stringToShift[ "quadratic-aggregate" ] = SHIFT_QUADRATIC_AGGREGATE;
+    
+    stringToMinimization[ "progression" ] = MINIMIZATION_PROGRESSION;
+    stringToMinimization[ "linearsearch" ] = MINIMIZATION_LINEARSEARCH;
 }
 
 };

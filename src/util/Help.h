@@ -97,10 +97,13 @@ class Help
             cout << "       =interleaving-restarts          - Mixed approach between oll and basic - restarts based" << endl;
             cout << "       =interleaving-choices           - Mixed approach between oll and basic - choices based" << endl;
             cout << "--enable-disjcores                     - Enable disjoint cores preprocessing (only for core-guided)" << endl;
-            cout << "--minimize-unsatcore                   - Enable minimization of unsat cores (only for core-guided)" << endl;
+            cout << "--trim-core                            - Enable polynomial trim of unsat cores (only for core-guided)" << endl;
             cout << "--disable-stratification               - Disable stratification (only for core-guided)" << endl;
-            cout << "--compute-firstmodel=budget            - Compute a model before starting the algorithm. In addition, budget may specify the maximum number of seconds allowed." << endl;
-            cout << "--expensive-minimize-unsatcore=budget  - Enable progression-based minimization of unsat cores (only for core-guided). In addition, budget may specify the maximum number of seconds allowed for each check." << endl;
+            cout << "--compute-firstmodel=budget            - Compute a model before starting the algorithm. In addition, budget may specify the maximum number of seconds allowed" << endl;
+            cout << "--minimization-strategy                - Expensive minimization of unsat cores (only for core-guided)" << endl;
+            cout << "       =progression                    - Use progression" << endl;
+            cout << "       =linearsearch                   - Use linear search" << endl;        
+            cout << "--minimization-budget=budget           - Limit the running time (in seconds) of the solver during the minimization" << endl;
             
             cout << separator << endl;
             cout << "Query options                          " << endl << endl;

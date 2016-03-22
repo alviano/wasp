@@ -87,6 +87,8 @@ class WeakInterface
         
         inline void clearAssumptions() { assumptions.clear(); }
         inline void computeAssumptionsOnlyOriginal( unsigned int originalNumberOfOptLiterals );
+        const Clause* minimizeUnsatCoreWithProgression( const Clause* );        
+        const Clause* minimizeUnsatCoreWithLinearSearch( const Clause* );
 };
 
 void

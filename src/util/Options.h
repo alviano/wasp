@@ -60,7 +60,7 @@ namespace wasp
             
             static bool simplifications;            
             
-            static bool expensiveMinimization;
+            static unsigned int minimizationStrategy;
             static unsigned int minimizationBudget;
             
         private:
@@ -100,9 +100,13 @@ namespace wasp
             
             static map< string, SHIFT_STRATEGY > stringToShift;
             
+            static map< string, unsigned int > stringToMinimization;
+            
             static WEAK_CONSTRAINTS_ALG getAlgorithm( const string& s );
             
             static SHIFT_STRATEGY getShiftStrategy( const string& s );
+            
+            static unsigned int getMinimizationStrategy( const string& s );
             
             static void initMap();
     };
