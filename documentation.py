@@ -18,7 +18,11 @@ def getAtomsToFreeze():
 
 #nofica quando un letterale tra quelli indicati in getLiterals() diventa true
 #lit è il letterale, pos è la posizione nella lista lits del metodo getLiterals
-#restituisce un insieme di letterali da inferire come true
+
+#output: 3 possibili casi:
+#output=[] non fa inferenza e non ha notifiche di onLiteralsUndefined
+#output=[0] non fa inferenza ma riceve notifiche di onLiteralsUndefined
+#output=[l1,l2,...,ln] per inferire l1, l2, ..., ln come veri e ricevere le notifiche di onLiteralsUndefined
 def onLiteralTrue(lit, pos):
     output = []
     return output
