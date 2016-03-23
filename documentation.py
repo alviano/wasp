@@ -29,7 +29,8 @@ def getReason():
     return choices
 
 #nofica quando un letterale tra quelli indicati in getLiterals() ritorna undefined
-def onLiteralsUndefined(lits):
+#il parametro è una lista di letterali
+def onLiteralsUndefined(*lits):
     return
 
 #notifica quando un letterale e' inferito true al livello 0
