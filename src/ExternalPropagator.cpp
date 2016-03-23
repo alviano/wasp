@@ -63,6 +63,8 @@ ExternalPropagator::onLiteralFalse(
     trail.push_back( literal );
     if( output.empty() )
         return false;
+    if( output.size() == 1 && output[ 0 ] == 0 )
+        return true;
     
     Clause* reason = getReason( solver );    
     //TODO: check for backjumping
@@ -88,7 +90,7 @@ ExternalPropagator::reset(
         Literal lit = trail.back();
         if( !solver.isUndefined( lit ) )
             break;
-        parameters.push_back( lit.getId() );
+        parameters.push_back( lit.getOppositeLiteral().getId() );
         trail.pop_back();
     }
 
