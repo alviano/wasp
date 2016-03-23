@@ -51,7 +51,7 @@ class ExternalPropagator : public Propagator
     private:
         inline ExternalPropagator( const ExternalPropagator& orig );
         void checkWellFormed();
-        Clause* getReason( const Solver& solver ) const;
+        Clause* getReason( Solver& solver ) const;
         void clearClausesToDelete();        
         void attachWatches( Solver& solver );
         

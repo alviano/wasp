@@ -142,7 +142,7 @@ ExternalPropagator::checkWellFormed()
 
 Clause*
 ExternalPropagator::getReason(
-    const Solver& solver ) const
+    Solver& solver ) const
 {
     vector< int > output;
     interpreter->callListMethod( method_plugins_getReason, output );
@@ -158,8 +158,8 @@ ExternalPropagator::getReason(
     }
     
     if( max < solver.getCurrentDecisionLevel() )
-        ErrorMessage::errorGeneric( "Propagator cannot unroll" );
-    
+        solver.unroll( max );
+
     return clause;
 }
 
