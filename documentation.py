@@ -16,9 +16,15 @@ def getAtomsToFreeze():
     atoms = []
     return atoms
 
+#prima di partire controlla se il programma e' incoerente per via del plugin
+#0 se il programma non e' incoerente
+#!= 0 se il programma e' coerente
+def isProgramIncoherent():
+    return 0
+#    return 1
+
 #nofica quando un letterale tra quelli indicati in getLiterals() diventa true
 #lit è il letterale, pos è la posizione nella lista lits del metodo getLiterals
-
 #output: 3 possibili casi:
 #output=[] non fa inferenza e non ha notifiche di onLiteralsUndefined
 #output=[0] non fa inferenza ma riceve notifiche di onLiteralsUndefined

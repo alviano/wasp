@@ -49,7 +49,15 @@ ExternalPropagator::ExternalPropagator(
     checkWellFormed();
     check_addedVarName = interpreter->checkMethod( method_plugins_addedVarName );
     check_onAtomElimination = interpreter->checkMethod( method_plugins_onAtomElimination );
-    check_onLitAtLevelZero = interpreter->checkMethod( method_plugins_onLitAtLevelZero );
+    check_onLitAtLevelZero = interpreter->checkMethod( method_plugins_onLitAtLevelZero );    
+}
+
+bool
+ExternalPropagator::isProgramIncoherent()
+{
+    if( interpreter->checkMethod( method_plugins_isProgramIncoherent ) )
+        return interpreter->callIntMethod( method_plugins_isProgramIncoherent );        
+    return true;
 }
 
 bool

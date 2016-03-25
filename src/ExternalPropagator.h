@@ -33,6 +33,7 @@ class Interpreter;
 #define method_plugins_onLiteralsUndefined "onLiteralsUndefined"
 #define method_plugins_onLitAtLevelZero "onLitAtLevelZero"
 #define method_plugins_getReason "getReason"
+#define method_plugins_isProgramIncoherent "isProgramIncoherent"
 
 class ExternalPropagator : public Propagator
 {
@@ -47,6 +48,7 @@ class ExternalPropagator : public Propagator
         void onAtomElimination( Var var );
         void endParsing( Solver& solver ) { attachWatches( solver ); }
         void onLitAtLevelZero( Literal lit );
+        bool isProgramIncoherent();
         
     private:
         inline ExternalPropagator( const ExternalPropagator& orig );

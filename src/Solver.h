@@ -1657,6 +1657,9 @@ Solver::preprocessing()
     callSimplifications_ = false;
     statistics( this, afterPreprocessing( numberOfAssignedLiterals(), numberOfClauses() ) );
 
+    for( unsigned int i = 0; i < externalPropagators.size(); i++ )
+        if( externalPropagators[ i ]->isProgramIncoherent() )
+            return false;
     return true;
 }
 
