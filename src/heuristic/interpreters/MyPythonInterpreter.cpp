@@ -59,19 +59,32 @@ void MyPythonInterpreter::callListMethod( const string& method_name, const vecto
             PyTuple_SetItem(pArgs, i, pParam);            
         }
         PyObject* result = PyObject_CallObject(pFunc, pArgs);
-        if(result && PyList_Check(result))
+        if(result)
         {
-            int size = PyList_Size(result);
-            for(int i = size - 1; i >= 0; i--)
+            if(PyList_Check(result))
             {
-                PyObject* item = PyList_GetItem(result, i);                
-                if (PyInt_Check(item))
+                int size = PyList_Size(result);
+                for(int i = size - 1; i >= 0; i--)
                 {
-                    int value = PyInt_AsLong(item);                    
-                    output.push_back(value);
+                    PyObject* item = PyList_GetItem(result, i);                
+                    if (PyInt_Check(item))
+                    {
+                        int value = PyInt_AsLong(item);                    
+                        output.push_back(value);
+                    }
                 }
+                Py_XDECREF(result);            
             }
-            Py_XDECREF(result);            
+            else if( PyInt_Check(result))
+            {
+                int value = PyInt_AsLong( result );
+                output.push_back( value );
+            }
+            else
+            {
+                if (PyErr_Occurred())
+                    PyErr_Print();        
+            }
         }
         else
         {

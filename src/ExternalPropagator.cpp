@@ -56,7 +56,7 @@ bool
 ExternalPropagator::isProgramIncoherent()
 {
     if( interpreter->checkMethod( method_plugins_isProgramIncoherent ) )
-        return interpreter->callIntMethod( method_plugins_isProgramIncoherent );        
+        return interpreter->callIntMethod( method_plugins_isProgramIncoherent );
     return true;
 }
 

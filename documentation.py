@@ -18,7 +18,7 @@ def getAtomsToFreeze():
 
 #prima di partire controlla se il programma e' incoerente per via del plugin
 #0 se il programma non e' incoerente
-#!= 0 se il programma e' coerente
+#!= 0 se il programma e' incoerente
 def isProgramIncoherent():
     return 0
 #    return 1
