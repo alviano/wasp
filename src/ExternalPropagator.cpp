@@ -156,18 +156,27 @@ ExternalPropagator::getReason(
     interpreter->callListMethod( method_plugins_getReason, output );
     Clause* clause = new Clause();
     clause->addLiteral( Literal::null );
-    unsigned int max = 0;
+    unsigned int max = 0;    
     for( unsigned int i = 0; i < output.size(); i++ )
     {
-        Literal l( output[ i ], true, true );        
-        clause->addLiteral( l );
-        if( solver.getDecisionLevel( l ) > max )
-            max = solver.getDecisionLevel( l );
+        Literal l( output[ i ], true, true );
+        clause->addLiteral( l );        
+        unsigned int dl = solver.getDecisionLevel( l );
+        if( dl > max )
+            max = dl;
     }
     
     if( max < solver.getCurrentDecisionLevel() )
         solver.unroll( max );
-
+    
+    unsigned int countUndefined = 0;
+    for( unsigned int i = 1; i < clause->size(); i++ )
+        if( solver.isUndefined( clause->getAt( i ) ) )
+            countUndefined++;
+    
+    if( countUndefined != 0 )
+        ErrorMessage::errorGeneric( "Reason is not well-formed" );
+    
     return clause;
 }
 
