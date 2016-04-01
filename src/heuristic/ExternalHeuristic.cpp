@@ -98,9 +98,9 @@ void ExternalHeuristic::choiceVars( vector< int >& result, int& status )
                 continue;
             interpretation.push_back( solver.isTrue( i ) ? i : -i );                
         }
-    }    
+    }
+    sendTrueLiterals();    
     interpreter->callListMethod( method_choiceVars, interpretation, result );
-    sendTrueLiterals();
     unsigned int size = result.size();
     if( size == 0 )
         ErrorMessage::errorGeneric( error_choicevars );
