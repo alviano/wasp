@@ -303,6 +303,7 @@ WeakInterface::foundAnswerSet(
 
     ub_ = cost;
     solver.printAnswerSet();
+    solver.foundUpperBound( ub_ );
     Vector< uint64_t > costs;
     solver.computeCostOfModel( costs );
     solver.printOptimizationValue( costs );

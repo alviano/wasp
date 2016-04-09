@@ -1325,3 +1325,18 @@ Solver::sortOptimizationLiterals( unsigned int level )
     assert( level < optimizationLiterals.size() );
     stable_sort( optimizationLiterals[ level ].begin(), optimizationLiterals[ level ].end(), compareWeight );
 }
+
+void
+Solver::getChoicesWithoutAssumptions(
+    vector< Literal >& assums )
+{
+    for( unsigned int i = assums.size() + 1; i <= currentDecisionLevel; i++ )
+    {
+        assert( i < choices.size() );
+        assert( isTrue( choices[ i ] ) );
+        assert( !hasImplicant( choices[ i ].getVariable() ) );
+        assert( getDecisionLevel( choices[ i ] ) == i );
+        trace_msg( enumeration, 2, "Adding literal " << choices[ i ] << " in assumptions." );        
+        assums.push_back( choices[ i ] );        
+    }
+}

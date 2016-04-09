@@ -71,6 +71,7 @@ class Help
             cout << "--third-competition-output             - Print models according to the third competition output" << endl;
             cout << "--competition-output                   - Print models according to the fourth competition output" << endl;   
             cout << "--printlatestmodel                     - Print the latest computed model" << endl;   
+            cout << "--printbounds                          - Print lower and upper bound during optimization of answer sets" << endl;   
             cout << separator << endl;
             
             cout << "Heuristics options                     " << endl << endl;
@@ -90,6 +91,7 @@ class Help
             cout << "Weak Constraints options               " << endl << endl;
             cout << "--weakconstraints-algorithm            - Compute optimization problems using the specified algorithm" << endl;
             cout << "       =basic                          - Model-guided algorithm basic" << endl;
+            cout << "       =basic-bt                       - Model-guided algorithm basic with classical backtracking after first model" << endl;
             cout << "       =mgd                            - Model-guided algorithm mgd" << endl;
             cout << "       =opt                            - Model-guided algorithm opt" << endl;
             cout << "       =oll                            - Core-guided algorithm oll" << endl;
@@ -128,6 +130,9 @@ class Help
             cout << "--dimacs                               - Enable dimacs format as input and outputs" << endl;
             cout << "--help                                 - Print this guide and exit" << endl;
             cout << "--disable-simplifications              - Disable the simplifications of satelite" << endl;
+            cout << "--enumeration-strategy                 - Select different strategy for enumeration of answer sets" << endl;
+            cout << "       =bt                             - Use backtracking for enumeration" << endl;
+            cout << "       =bc                             - Use blocking clause" << endl;
 //            cout << "--stdin                                - Write a description." << endl;
 //            cout << "--time-limit                           - Write a description." << endl;
         }

@@ -434,6 +434,7 @@ class Solver
 //        inline uint64_t getPrecomputedCost() const { return precomputedCost; }                
         
         inline void foundLowerBound( uint64_t lb ) { outputBuilder->foundLowerBound( lb ); }
+        inline void foundUpperBound( uint64_t ub ) { outputBuilder->foundUpperBound( ub ); }
         inline bool incremental() const { return incremental_; }
         
         inline bool isOptimizationProblem() const { return !optimizationLiterals.empty(); }
@@ -443,12 +444,16 @@ class Solver
         inline uint64_t simplifyOptimizationLiterals( unsigned int level );
 //        inline void simplifyOptimizationLiterals();               
 
+        void getChoicesWithoutAssumptions( vector< Literal >& choices );
+        inline unsigned int getMaxLevelOfClause( const Clause* clause ) const;
+        
     private:
         HCComponent* hcComponentForChecker;
         PostPropagator* afterConflictPropagator;
         bool exchangeClauses_;
         bool generator;
         static vector< Clause* > learnedFromAllSolvers;
+        vector< Literal > choices;
 
         unsigned int solveWithoutPropagators( vector< Literal >& assumptions );
         unsigned int solvePropagators( vector< Literal >& assumptions );
@@ -686,6 +691,7 @@ Solver::Solver()
     variableDataStructures.push_back( NULL );
     variableDataStructures.push_back( NULL );
     fromLevelToPropagators.push_back( 0 );
+    choices.push_back( Literal::null );
 }
 
 void
@@ -1402,6 +1408,10 @@ Solver::setAChoice(
     incrementCurrentDecisionLevel();
     assert( isUndefined( choice ) );
     assignLiteral( choice );
+    if( choices.size() <= currentDecisionLevel )
+        choices.push_back( choice );
+    else
+        choices[ currentDecisionLevel ] = choice;
 }
 
 Literal
@@ -2540,6 +2550,23 @@ Solver::simplifyOptimizationLiterals(
     }
     optLiterals.resize( j );
     return precomputedCosts[ level ];
+}
+
+unsigned int
+Solver::getMaxLevelOfClause(
+    const Clause* clause ) const
+{
+    assert( clause != NULL );
+    unsigned int max = 0;
+    for( unsigned int i = 0; i < clause->size(); i++ )
+    {
+        if( isUndefined( clause->getAt( i ) ) )
+            continue;
+        unsigned int dl = getDecisionLevel( clause->getAt( i ) );
+        if( dl > max )
+            max = dl;
+    }
+    return max;
 }
 
 //void

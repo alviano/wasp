@@ -69,6 +69,7 @@
 #define PMRES 4
 #define OLLBB 5
 #define OLLBBREST 6
+#define BBBT 7
 
 #define MINIMIZATION_OFF 0
 #define MINIMIZATION_PROGRESSION 1
@@ -86,6 +87,9 @@
 #define SHIFT_QUADRATIC 3
 #define SHIFT_QUADRATIC_AGGREGATE 4
 #define SHIFT_NAIVE 5
+
+#define ENUMERATION_BC 0
+#define ENUMERATION_BT 1
 
 #define VERSION "2.0"
 

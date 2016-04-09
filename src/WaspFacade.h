@@ -77,6 +77,13 @@ class WaspFacade
         bool disjCoresPreprocessing;        
         
         unsigned int queryAlgorithm;
+        
+        void enumerateModels();
+        void enumerationBlockingClause();
+        void enumerationBacktracking();
+        void flipLatestChoice( vector< Literal >& choices, vector< bool >& checked );
+        bool foundModel( vector< Literal >& assums );
+        unsigned int getMaxLevelUnsatCore( const Clause* unsatCore );
 };
 
 WaspFacade::WaspFacade() : numberOfModels( 0 ), maxModels( 1 ), printProgram( false ), printDimacs( false ), weakConstraintsAlg( OPT ), disjCoresPreprocessing( false )
@@ -111,7 +118,11 @@ WaspFacade::solveWithWeakConstraints()
 
         case OLLBBREST:
             w = new OllBB( solver, true );
-            break;                
+            break;
+            
+        case BBBT:
+            w = new Opt( solver, true );            
+            break;
             
         case OLL:
         default:            

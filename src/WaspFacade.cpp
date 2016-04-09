@@ -97,21 +97,7 @@ WaspFacade::solve()
         
         if( !solver.isOptimizationProblem() )
         {            
-            while( solver.solve() == COHERENT )
-            {
-                solver.printAnswerSet();
-                trace_msg( enumeration, 1, "Model number: " << numberOfModels + 1 );
-                if( ++numberOfModels >= maxModels )
-                {
-                    trace_msg( enumeration, 1, "Enumerated " << maxModels << "." );
-                    break;
-                }
-                else if( !solver.addClauseFromModelAndRestart() )
-                {
-                    trace_msg( enumeration, 1, "All models have been found." );
-                    break;
-                }
-            }
+            enumerateModels();
         }
         else
         {
@@ -256,4 +242,128 @@ WaspFacade::setRestartsPolicy(
             solver.setRestart( restart );
             break;
     }
+}
+
+void
+WaspFacade::enumerateModels()
+{
+    assert( wasp::Options::enumerationStrategy == ENUMERATION_BC || wasp::Options::enumerationStrategy == ENUMERATION_BT );
+    if( wasp::Options::enumerationStrategy == ENUMERATION_BC )
+        enumerationBlockingClause();
+    else
+        enumerationBacktracking();    
+}
+
+void
+WaspFacade::enumerationBlockingClause()
+{
+    while( solver.solve() == COHERENT )
+    {
+        solver.printAnswerSet();
+        trace_msg( enumeration, 1, "Model number: " << numberOfModels + 1 );
+        if( ++numberOfModels >= maxModels )
+        {
+            trace_msg( enumeration, 1, "Enumerated " << maxModels << "." );
+            break;
+        }
+        else if( !solver.addClauseFromModelAndRestart() )
+        {
+            trace_msg( enumeration, 1, "All models have been found." );
+            break;
+        }
+    }
+}
+
+void
+WaspFacade::enumerationBacktracking()
+{
+    vector< bool > checked;
+    while( checked.size() <= solver.numberOfVariables() )
+        checked.push_back( false );
+    unsigned int result = solver.solve();
+    if( result == INCOHERENT )
+        return;
+        
+    vector< Literal > assums;
+    if( !foundModel( assums ) )
+        return;
+    
+    flipLatestChoice( assums, checked );
+    if( assums.empty() )
+        return;
+    solver.setComputeUnsatCores( true );
+    begin:;
+    solver.unrollToZero();
+    solver.clearConflictStatus();
+    result = solver.solve( assums );
+    if( result == INCOHERENT )
+    {
+        const Clause* core = solver.getUnsatCore();
+        assert( core != NULL );
+        if( core->size() == 0 )
+            assums.clear();
+        
+        unsigned int bl = solver.getMaxLevelOfClause( core );
+        if( bl == 0 )
+        {
+            unsigned int k = 0;
+            for( unsigned int i = 0; i < assums.size(); i++ )
+            {
+                assums[ k ] = assums[ i ];
+                if( solver.getDecisionLevel( assums[ i ] ) != 0 )
+                    k++;
+            }
+            assums.resize( k );
+        }
+        else
+        {
+            while( !assums.empty() && solver.getDecisionLevel( assums.back() ) > bl )
+                assums.pop_back();
+        }
+    }
+    else if( !foundModel( assums ) )
+        return;
+    
+    flipLatestChoice( assums, checked );
+    if( assums.empty() )
+        return;        
+    goto begin;
+}
+
+void
+WaspFacade::flipLatestChoice(
+    vector< Literal >& choices,
+    vector< bool >& checked )
+{
+    unsigned int size;
+    while( true )
+    {
+        size = choices.size();
+        if( size == 0 )
+            return;
+        if( checked[ size ] )
+            choices.pop_back();
+        else
+            break;
+    }
+    
+    choices[ size - 1 ] = choices[ size - 1 ].getOppositeLiteral();    
+    checked[ size ] = true;
+    for( unsigned int i = size + 1; i < checked.size(); i++ )
+        checked[ i ] = false;
+}
+
+bool
+WaspFacade::foundModel(
+    vector< Literal >& assums )
+{
+    solver.printAnswerSet();
+    trace_msg( enumeration, 1, "Model number: " << numberOfModels + 1 );
+    if( ++numberOfModels >= maxModels )
+    {
+        trace_msg( enumeration, 1, "Enumerated " << maxModels << "." );
+        return false;
+    }    
+    solver.getChoicesWithoutAssumptions( assums );
+    return true;
 }

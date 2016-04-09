@@ -58,6 +58,7 @@ namespace wasp
 #define OPTIONID_printdimacs ( 'z' + 24 )
 #define OPTIONID_multi ( 'z' + 25 )
 #define OPTIONID_lastModel ( 'z' + 26 )
+#define OPTIONID_printbounds ( 'z' + 27 )
 
 /* HEURISTIC OPTIONS */
 #define OPTIONID_fuheuristic ( 'z' + 30 )
@@ -91,6 +92,7 @@ namespace wasp
 #define OPTIONID_shift_strategy ( 'z' + 107 )
 #define OPTIONID_shift_onedef ( 'z' + 108 )
 #define OPTIONID_simplifications ( 'z' + 109 )
+#define OPTIONID_enumeration ( 'z' + 110 )
     
 /* WEAK CONSTRAINTS OPTIONS */
 #define OPTIONID_weakconstraintsalgorithm ( 'z' + 200 )
@@ -126,6 +128,7 @@ OUTPUT_POLICY Options::outputPolicy = WASP_OUTPUT;
 bool Options::printProgram = false;
 bool Options::printDimacs = false;
 bool Options::printLastModelOnly = false;
+bool Options::printBounds = false;
 
 RESTARTS_POLICY Options::restartsPolicy = SEQUENCE_BASED_RESTARTS_POLICY;
 
@@ -176,6 +179,8 @@ unsigned int Options::minimizationStrategy = MINIMIZATION_OFF;
 
 unsigned int Options::minimizationBudget = UINT_MAX;
 
+unsigned int Options::enumerationStrategy = ENUMERATION_BT;
+
 void
 Options::parse(
     int argc,
@@ -218,6 +223,7 @@ Options::parse(
                 { "printdimacs", no_argument, NULL, OPTIONID_printdimacs },
                 { "multi", no_argument, NULL, OPTIONID_multi },
                 { "printlatestmodel", no_argument, NULL, OPTIONID_lastModel },
+                { "printbounds", no_argument, NULL, OPTIONID_printbounds },
 
                 /* HEURISTIC OPTIONS */
 //                { "heuristic-berkmin", optional_argument, NULL, OPTIONID_berkminheuristic },
@@ -246,6 +252,8 @@ Options::parse(
                 { "time-limit", required_argument, NULL, OPTIONID_time_limit },
                 { "max-cost", required_argument, NULL, OPTIONID_max_cost },
                 { "disable-simplifications", no_argument, NULL, OPTIONID_simplifications },
+                
+                { "enumeration-strategy", required_argument, NULL, OPTIONID_enumeration },                
                 
                 { "exchange-clauses", no_argument, NULL, OPTIONID_exchange_clauses },
                 { "forward-partialchecks", no_argument, NULL, OPTIONID_forward_partialchecks },  
@@ -365,6 +373,10 @@ Options::parse(
             case OPTIONID_lastModel:
                 outputPolicy = MULTI;
                 printLastModelOnly = true;
+                break;
+                
+            case OPTIONID_printbounds:
+                printBounds = true;
                 break;
                 
             case OPTIONID_berkminheuristic:
@@ -508,6 +520,13 @@ Options::parse(
                     ErrorMessage::errorGeneric( "Inserted invalid strategy for shift." );
                 break;
                 
+            case OPTIONID_enumeration:
+                if( optarg )
+                    enumerationStrategy = getEnumerationStrategy( string( optarg ) );
+                else 
+                    ErrorMessage::errorGeneric( "Inserted invalid strategy for enumeration." );
+                break;
+
             case OPTIONID_shift_onedef:
                 oneDefShift = true;
                 break;
@@ -632,6 +651,18 @@ Options::getMinimizationStrategy(
     return it->second;    
 }
 
+unsigned int
+Options::getEnumerationStrategy(
+    const string& s )
+{
+    if( s == "bt" )
+        return ENUMERATION_BT;
+    else if( s == "bc" )
+        return ENUMERATION_BC;
+    ErrorMessage::errorGeneric( "Inserted invalid strategy for enumeration." );
+    return ENUMERATION_BT;
+}
+
 void
 Options::initMap()
 {
@@ -642,6 +673,7 @@ Options::initMap()
     stringToWeak[ "basic" ] = BB;
     stringToWeak[ "interleaving-restarts" ] = OLLBBREST;
     stringToWeak[ "interleaving-choices" ] = OLLBB;
+    stringToWeak[ "basic-bt" ] = BBBT;
 
     stringToShift[ "shift" ] = SHIFT_NAIVE;
     stringToShift[ "propagator" ] = SHIFT_PROPAGATOR;

@@ -17,6 +17,7 @@
  */
 
 #include "OutputBuilder.h"
+#include "../util/Options.h"
 extern int EXIT_CODE;
 
 void
@@ -38,8 +39,18 @@ OutputBuilder::optimumFound()
 
 void
 OutputBuilder::foundLowerBound(
-    uint64_t )
+    uint64_t lb )
 {
+    if( wasp::Options::printBounds )
+        cout << "COST LB: " << lb << endl;
+}
+
+void
+OutputBuilder::foundUpperBound(
+    uint64_t ub )
+{
+    if( wasp::Options::printBounds )
+        cout << "COST UB: " << ub << endl;    
 }
 
 void

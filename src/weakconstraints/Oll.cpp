@@ -355,7 +355,7 @@ Oll::foundUnsat()
         return false;
     incrementLb( minWeight );
     solver.foundLowerBound( lb() ); 
-    cout << "COST lb " << lb() << endl;
+//    cout << "COST lb " << lb() << endl;
     if( !addAggregateOll( literals, weights, n + 1, minWeight ) )
         return false;        
 
