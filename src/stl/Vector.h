@@ -80,7 +80,8 @@ Vector< T >::resetCapacity(
     unsigned int add = max( ( min_cap - capacity_ + 1 ) & ~1, ( ( capacity_ >> 1 ) + 2 ) & ~1 );   // NOTE: grow by approximately 3/2
 
     T* tmpVector = new T[ capacity_ + add ];
-    memcpy( tmpVector, vector, sizeof( T ) * capacity_ );
+    if(vector!=NULL)
+        memcpy( tmpVector, vector, sizeof( T ) * capacity_ );
 
     capacity_ += add;
     delete [] vector;

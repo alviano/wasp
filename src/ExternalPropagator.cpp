@@ -78,7 +78,7 @@ ExternalPropagator::onLiteralFalse(
     //TODO: check for backjumping
     for( unsigned int i = 0; i < output.size(); i++ )
     {
-        Literal lit( output[ i ], true, true );
+        Literal lit = Literal::createLiteralFromInt( output[ i ] );
         trail.push_back( lit );
         solver.assignLiteral( lit, reason );
     }
@@ -114,7 +114,7 @@ ExternalPropagator::attachWatches(
     interpreter->callListMethod( method_plugins_getLiterals, solver.numberOfVariables(), output );
     for( unsigned int i = 0; i < output.size(); i++ )
     {
-        Literal lit( output[ i ], true, true );
+        Literal lit = Literal::createLiteralFromInt( output[ i ] );
         solver.setFrozen( lit.getVariable() );
         solver.addPropagator( lit.getOppositeLiteral(), this, i );
     }
@@ -122,7 +122,7 @@ ExternalPropagator::attachWatches(
     interpreter->callListMethod( method_plugins_getAtomsToFreeze, output );
     for( unsigned int i = 0; i < output.size(); i++ )
     {
-        Literal lit( output[ i ], true, true );
+        Literal lit = Literal::createLiteralFromInt( output[ i ] );
         solver.setFrozen( lit.getVariable() );
     }
 }
@@ -159,7 +159,7 @@ ExternalPropagator::getReason(
     unsigned int max = 0;    
     for( unsigned int i = 0; i < output.size(); i++ )
     {
-        Literal l( output[ i ], true, true );
+        Literal l = Literal::createLiteralFromInt( output[ i ] );
         clause->addLiteral( l );        
         unsigned int dl = solver.getDecisionLevel( l );
         if( dl > max )

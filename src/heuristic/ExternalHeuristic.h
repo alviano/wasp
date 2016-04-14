@@ -129,7 +129,6 @@ class ExternalHeuristic : public HeuristicStrategy
         
         void clearStatus();
         void resetPreviousChoices();
-        void resetInterpretationToSend();
         
         //mandatory
         void onChoiceContradictory( int choice );

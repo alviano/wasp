@@ -166,8 +166,7 @@ void ExternalHeuristic::onConflict()
             previous = lit;
         }
         interpreter->callVoidMethod( method_onConflict, previous.getId() );
-    }
-    resetInterpretationToSend();
+    }    
 }
 
 void ExternalHeuristic::onDeletion()
@@ -326,10 +325,20 @@ void ExternalHeuristic::onLitTrue( Literal lit )
 void ExternalHeuristic::sendTrueLiterals()
 {
     if( check_onLitsTrue && !interpretationToSend.empty() )
-    {        
+    {
+        //Removing undefined from other conflicts
+        unsigned int j = 0;
+        for( unsigned int i = 0; i < interpretationToSend.size(); i++ )
+        {
+            interpretationToSend[ j ] = interpretationToSend[ i ];
+            Literal lit = Literal::createLiteralFromInt( interpretationToSend[ i ] );
+            if( solver.isTrue( lit ) )
+                j++;
+        }
+        interpretationToSend.resize( j );        
         interpreter->callVoidMethod( method_onLitsTrue, interpretationToSend );
-        interpretationToSend.clear();
-    }   
+        interpretationToSend.clear();                
+    }
 }
 
 void ExternalHeuristic::onLoopFormula( const Clause* clause )
@@ -458,18 +467,18 @@ Literal ExternalHeuristic::makeAChoiceProtected()
 
             Literal lit( varChoice, choice > 0 ? POSITIVE : NEGATIVE );
             previousChoices.push_back( lit );
-            
+
             if( solver.isUndefined( lit ) )
                 return lit;
             
             if( ignorePolarity )
-                continue;
+                continue;            
             if( solver.isFalse( lit ) )
             {
-               onChoiceContradictory( choice );
-               clearStatus();
-               goto begin;
-            }
+                onChoiceContradictory( choice );
+                clearStatus();
+                goto begin;
+            }   
         }
         //All choices given are already true or the variable has been eliminated;
         goto begin;
@@ -507,8 +516,7 @@ Literal ExternalHeuristic::makeAChoiceProtected()
             
             solver.unrollVariable( unrollVariable );
             unrollVariable = 0;
-            resetPreviousChoices();
-            resetInterpretationToSend();
+            resetPreviousChoices();            
         }
     }
     
@@ -539,23 +547,6 @@ void ExternalHeuristic::resetPreviousChoices()
         {
             if( solver.isUndefined( previousChoices.back() ) )
                 previousChoices.pop_back();
-            else
-                break;
-        }        
-    }
-}
-
-void ExternalHeuristic::resetInterpretationToSend()
-{
-    if( check_onLitsTrue )
-    {
-        while( !interpretationToSend.empty() )
-        {
-            Var v = interpretationToSend.back() > 0 ? interpretationToSend.back() : -interpretationToSend.back();
-            unsigned int sign = interpretationToSend.back() > 0 ? POSITIVE : NEGATIVE;
-            Literal lit( v, sign );
-            if( solver.isUndefined( lit ) )
-                interpretationToSend.pop_back();
             else
                 break;
         }        
