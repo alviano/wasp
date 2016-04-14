@@ -115,6 +115,12 @@ WaspFacade::solve()
                 case OPTIMUM_FOUND:
                 default:
                     solver.optimumFound();
+                    if( maxModels > 1 )
+                    {
+                        solver.unrollToZero();
+                        solver.clearConflictStatus();
+                        enumerateModels();
+                    }
                     break;
             }
             statistics( &solver, endSolving() );
