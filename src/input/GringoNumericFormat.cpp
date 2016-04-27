@@ -1261,6 +1261,7 @@ GringoNumericFormat::computeGusStructures()
                             }
                         }
                         Clause* c = normalRuleToClause( rule );
+                        c->removeDuplicates();
                         hcComponent->addClauseToChecker( c, v );
                     }
                 }
