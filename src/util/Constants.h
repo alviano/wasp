@@ -67,8 +67,8 @@
 #define ONE 2
 #define BB 3
 #define PMRES 4
-#define OLLBB 5
-#define OLLBBREST 6
+#define ONEBB 5
+#define ONEBBREST 6
 #define BBBT 7
 
 #define MINIMIZATION_OFF 0

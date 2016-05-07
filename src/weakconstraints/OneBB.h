@@ -16,19 +16,18 @@
  *
  */
 
-#ifndef OLLBB_H
-#define OLLBB_H
+#ifndef ONEBB_H
+#define ONEBB_H
 
 #include "WeakInterface.h"
-#include "Oll.h"
+#include "One.h"
 #include "Opt.h"
-#include <unordered_map>
 using namespace std;
 
-class OllBB : public Oll
+class OneBB : public One
 {
     public:
-        inline OllBB( Solver& s, bool useRestarts = false ) : Oll( s ), numberOfModels( 0 ), useRestarts_( useRestarts ), increment( 0 ), counter( 0 )
+        inline OneBB( Solver& s, bool useRestarts = false ) : One( s ), numberOfModels( 0 ), useRestarts_( useRestarts ), increment( 0 ), counter( 0 )
         {
             strategyModelGuided = new Opt( s, true );
             strategyModelGuided->setMixedApproach();
@@ -36,7 +35,7 @@ class OllBB : public Oll
         unsigned int run();
         
     private:
-        unsigned int oll();
+        unsigned int one();
         unsigned int bb();
         
         unsigned int numberOfModels;
@@ -54,7 +53,7 @@ class OllBB : public Oll
 };
 
 void
-OllBB::initHeuristicValues()
+OneBB::initHeuristicValues()
 {
     if( useRestarts_ )
     {
@@ -69,7 +68,7 @@ OllBB::initHeuristicValues()
 }
 
 void
-OllBB::setAndUpdateHeuristicValues()
+OneBB::setAndUpdateHeuristicValues()
 {
     useRestarts_ ? solver.setMaxNumberOfRestarts( counter ) : solver.setMaxNumberOfChoices( counter );
     counter += increment;
@@ -77,7 +76,7 @@ OllBB::setAndUpdateHeuristicValues()
 }
 
 void
-OllBB::addOptimizationLiteralInAssumptions()
+OneBB::addOptimizationLiteralInAssumptions()
 {
     assert( assumptions.empty() );
     Literal lit = strategyModelGuided->getAssumptionToAdd();

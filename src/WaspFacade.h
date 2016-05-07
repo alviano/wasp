@@ -29,10 +29,10 @@ using namespace std;
 #include "input/Dimacs.h"
 #include "weakconstraints/WeakInterface.h"
 #include "weakconstraints/Mgd.h"
-#include "weakconstraints/Oll.h"
+#include "weakconstraints/One.h"
 #include "weakconstraints/Opt.h"
 #include "weakconstraints/PMRes.h"
-#include "weakconstraints/OllBB.h"
+#include "weakconstraints/OneBB.h"
 
 class WaspFacade
 {
@@ -112,12 +112,12 @@ WaspFacade::solveWithWeakConstraints()
             w = new PMRes( solver );
             break;
 
-        case OLLBB:
-            w = new OllBB( solver );
+        case ONEBB:
+            w = new OneBB( solver );
             break;
 
-        case OLLBBREST:
-            w = new OllBB( solver, true );
+        case ONEBBREST:
+            w = new OneBB( solver, true );
             break;
             
         case BBBT:
@@ -126,7 +126,7 @@ WaspFacade::solveWithWeakConstraints()
             
         case ONE:
         default:            
-            w = new Oll( solver );
+            w = new One( solver );
             break;
     }
     

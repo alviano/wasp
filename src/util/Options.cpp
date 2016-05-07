@@ -671,8 +671,8 @@ Options::initMap()
     stringToWeak[ "mgd" ] = MGD;
     stringToWeak[ "pmres" ] = PMRES;
     stringToWeak[ "basic" ] = BB;
-    stringToWeak[ "interleaving-restarts" ] = OLLBBREST;
-    stringToWeak[ "interleaving-choices" ] = OLLBB;
+    stringToWeak[ "interleaving-restarts" ] = ONEBBREST;
+    stringToWeak[ "interleaving-choices" ] = ONEBB;
     stringToWeak[ "basic-bt" ] = BBBT;
 
     stringToShift[ "shift" ] = SHIFT_NAIVE;
