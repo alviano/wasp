@@ -152,7 +152,7 @@ bool Options::backwardPartialChecks = false;
 
 bool Options::bumpActivityAfterPartialCheck = false;
 
-WEAK_CONSTRAINTS_ALG Options::weakConstraintsAlg = OLL;
+WEAK_CONSTRAINTS_ALG Options::weakConstraintsAlg = ONE;
 
 bool Options::disjCoresPreprocessing = false;
 bool Options::minimizeUnsatCore = false;
@@ -266,8 +266,8 @@ Options::parse(
                 { "trim-core", no_argument, NULL, OPTIONID_minimize },
                 { "disable-stratification", no_argument, NULL, OPTIONID_stratification },
                 { "compute-firstmodel", optional_argument, NULL, OPTIONID_firstmodel },
-                { "minimization-strategy", required_argument, NULL, OPTIONID_minimizationstrategy },
-                { "minimization-budget", required_argument, NULL, OPTIONID_minimizationbudget },
+                { "shrinking-strategy", required_argument, NULL, OPTIONID_minimizationstrategy },
+                { "shrinking-budget", required_argument, NULL, OPTIONID_minimizationbudget },
                 
                 /* SHIFT STRATEGY */
                 { "disjunction", required_argument, NULL, OPTIONID_shift_strategy },
@@ -666,7 +666,7 @@ Options::getEnumerationStrategy(
 void
 Options::initMap()
 {
-    stringToWeak[ "oll" ] = OLL;
+    stringToWeak[ "one" ] = ONE;
     stringToWeak[ "opt" ] = OPT;
     stringToWeak[ "mgd" ] = MGD;
     stringToWeak[ "pmres" ] = PMRES;

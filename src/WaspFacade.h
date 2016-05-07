@@ -124,7 +124,7 @@ WaspFacade::solveWithWeakConstraints()
             w = new Opt( solver, true );            
             break;
             
-        case OLL:
+        case ONE:
         default:            
             w = new Oll( solver );
             break;

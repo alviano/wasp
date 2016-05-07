@@ -92,17 +92,12 @@ Oll::runWeighted()
             solver.clearConflictStatus();
             if( !changeWeight() )
                 break;
-            assumptions.clear();
-            computeAssumptionsStratified();            
         }
-        else
-        {
-            if( !foundUnsat() )
-                return INCOHERENT;
-            assumptions.clear();
-            computeAssumptionsStratified();
-        }
+        else if( !foundUnsat() )
+            return INCOHERENT;
         
+        assumptions.clear();
+        computeAssumptionsStratified();
         if( lb() == ub() )
             break;
     }

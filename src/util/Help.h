@@ -44,7 +44,7 @@ class Help
             cout << "--trace-modelchecker=<verbosity>       - Trace model checker." << endl;
             cout << "--trace-parser=<verbosity>             - Trace parser." << endl;
             cout << "--trace-satelite=<verbosity>           - Trace satelite simplifications." << endl;
-            cout << "--trace-solver=<verbosity>            - Trace solver." << endl;
+            cout << "--trace-solver=<verbosity>             - Trace solver." << endl;
             cout << "--trace-unfoundedset=<verbosity>       - Trace computation of unfounded sets." << endl;
             cout << "--trace-weakconstraints=<verbosity>    - Trace weak constraints algorithms." << endl;
             cout << separator << endl;
@@ -94,7 +94,7 @@ class Help
             cout << "       =basic-bt                       - Model-guided algorithm basic with classical backtracking after first model" << endl;
             cout << "       =mgd                            - Model-guided algorithm mgd" << endl;
             cout << "       =opt                            - Model-guided algorithm opt" << endl;
-            cout << "       =oll                            - Core-guided algorithm oll" << endl;
+            cout << "       =one                            - Core-guided algorithm one" << endl;
             cout << "       =pmres                          - Core-guided algorithm pmres" << endl;
             cout << "       =interleaving-restarts          - Mixed approach between oll and basic - restarts based" << endl;
             cout << "       =interleaving-choices           - Mixed approach between oll and basic - choices based" << endl;
@@ -102,10 +102,10 @@ class Help
             cout << "--trim-core                            - Enable polynomial trim of unsat cores (only for core-guided)" << endl;
             cout << "--disable-stratification               - Disable stratification (only for core-guided)" << endl;
             cout << "--compute-firstmodel=budget            - Compute a model before starting the algorithm. In addition, budget may specify the maximum number of seconds allowed" << endl;
-            cout << "--minimization-strategy                - Expensive minimization of unsat cores (only for core-guided)" << endl;
+            cout << "--shrinking-strategy                   - Expensive minimization of unsat cores (only for core-guided)" << endl;
             cout << "       =progression                    - Use progression" << endl;
             cout << "       =linearsearch                   - Use linear search" << endl;        
-            cout << "--minimization-budget=budget           - Limit the running time (in seconds) of the solver during the minimization" << endl;
+            cout << "--shrinking-budget=budget              - Limit the running time (in seconds) of the solver during the minimization" << endl;
             
             cout << separator << endl;
             cout << "Query options                          " << endl << endl;

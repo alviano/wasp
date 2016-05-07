@@ -64,7 +64,7 @@
  */
 #define OPT 0
 #define MGD 1
-#define OLL 2
+#define ONE 2
 #define BB 3
 #define PMRES 4
 #define OLLBB 5
