@@ -31,6 +31,7 @@ class Propagator
 
         virtual bool onLiteralFalse( Solver& solver, Literal literal, int pos ) = 0;
         virtual void reset( const Solver& solver ) = 0;
+        virtual void simplifyAtLevelZero( Solver& solver ) = 0;
         
         inline bool isInVectorOfUnroll( unsigned int dl ) const;
         inline void setInVectorOfUnroll( unsigned int dl );

@@ -34,6 +34,8 @@ class Interpreter;
 #define method_plugins_onLitAtLevelZero "onLitAtLevelZero"
 #define method_plugins_getReason "getReason"
 #define method_plugins_isProgramIncoherent "isProgramIncoherent"
+#define method_plugins_simplifyAtLevelZero "simplifyAtLevelZero"
+#define method_plugins_onAnswerSet "onAnswerSet"
 
 class ExternalPropagator : public Propagator
 {
@@ -43,12 +45,14 @@ class ExternalPropagator : public Propagator
         
         virtual bool onLiteralFalse( Solver& solver, Literal literal, int pos );
         virtual void reset( const Solver& solver );
+        virtual void simplifyAtLevelZero( Solver& solver );
         
         void addedVarName( Var var, const string& name );
         void onAtomElimination( Var var );
         void endParsing( Solver& solver ) { attachWatches( solver ); }
         void onLitAtLevelZero( Literal lit );
         bool isProgramIncoherent();
+        void onAnswerSet( const Solver& solver );
         
     private:
         inline ExternalPropagator( const ExternalPropagator& orig );
@@ -56,6 +60,7 @@ class ExternalPropagator : public Propagator
         Clause* getReason( Solver& solver ) const;
         void clearClausesToDelete();        
         void attachWatches( Solver& solver );
+        void checkIdOfLiteral( const Solver& solver, int id ) const;
         
         Vector< Literal > trail;
         Interpreter* interpreter;
@@ -64,6 +69,8 @@ class ExternalPropagator : public Propagator
         bool check_addedVarName;
         bool check_onAtomElimination;
         bool check_onLitAtLevelZero;
+        bool check_simplifyAtLevelZero;
+        bool check_onAnswerSet;
 };
 
 #endif

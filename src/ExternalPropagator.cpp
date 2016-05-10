@@ -50,6 +50,8 @@ ExternalPropagator::ExternalPropagator(
     check_addedVarName = interpreter->checkMethod( method_plugins_addedVarName );
     check_onAtomElimination = interpreter->checkMethod( method_plugins_onAtomElimination );
     check_onLitAtLevelZero = interpreter->checkMethod( method_plugins_onLitAtLevelZero );    
+    check_simplifyAtLevelZero = interpreter->checkMethod( method_plugins_simplifyAtLevelZero );
+    check_onAnswerSet = interpreter->checkMethod( method_plugins_onAnswerSet );
 }
 
 bool
@@ -78,6 +80,7 @@ ExternalPropagator::onLiteralFalse(
     //TODO: check for backjumping
     for( unsigned int i = 0; i < output.size(); i++ )
     {
+        checkIdOfLiteral( solver, output[ i ] );
         Literal lit = Literal::createLiteralFromInt( output[ i ] );
         trail.push_back( lit );
         solver.assignLiteral( lit, reason );
@@ -114,6 +117,7 @@ ExternalPropagator::attachWatches(
     interpreter->callListMethod( method_plugins_getLiterals, solver.numberOfVariables(), output );
     for( unsigned int i = 0; i < output.size(); i++ )
     {
+        checkIdOfLiteral( solver, output[ i ] );
         Literal lit = Literal::createLiteralFromInt( output[ i ] );
         solver.setFrozen( lit.getVariable() );
         solver.addPropagator( lit.getOppositeLiteral(), this, i );
@@ -122,6 +126,7 @@ ExternalPropagator::attachWatches(
     interpreter->callListMethod( method_plugins_getAtomsToFreeze, output );
     for( unsigned int i = 0; i < output.size(); i++ )
     {
+        checkIdOfLiteral( solver, output[ i ] );
         Literal lit = Literal::createLiteralFromInt( output[ i ] );
         solver.setFrozen( lit.getVariable() );
     }
@@ -159,6 +164,7 @@ ExternalPropagator::getReason(
     unsigned int max = 0;    
     for( unsigned int i = 0; i < output.size(); i++ )
     {
+        checkIdOfLiteral( solver, output[ i ] );
         Literal l = Literal::createLiteralFromInt( output[ i ] );
         clause->addLiteral( l );        
         unsigned int dl = solver.getDecisionLevel( l );
@@ -206,9 +212,54 @@ ExternalPropagator::onAtomElimination(
 }
 
 void
+ExternalPropagator::simplifyAtLevelZero(
+    Solver& solver )
+{
+    if( check_simplifyAtLevelZero )
+    {
+        assert( solver.getCurrentDecisionLevel() == 0 );
+        vector< int > output;
+        interpreter->callListMethod( method_plugins_simplifyAtLevelZero, output );
+        for( unsigned int i = 0; i < output.size(); i++ )
+        {
+            checkIdOfLiteral( solver, output[ i ] );
+            if( !solver.addClause( Literal::createLiteralFromInt( output[ i ] ) ) )
+                break;
+        }
+    }
+}
+
+void
 ExternalPropagator::onLitAtLevelZero(
     Literal lit )
 {
     if( check_onLitAtLevelZero )
         interpreter->callVoidMethod( method_plugins_onLitAtLevelZero, lit.isPositive() ? lit.getVariable() : -lit.getVariable() );
+}
+
+void ExternalPropagator::onAnswerSet(
+    const Solver& solver )
+{
+    if( check_onAnswerSet )
+    {
+        vector< int > answerset;
+        for( unsigned int i = 1; i <= solver.numberOfVariables(); i++ )
+        {
+            assert( !solver.isUndefined( i ) );
+            if( solver.isTrue( i ) )
+                answerset.push_back( i );
+            else
+                answerset.push_back( -i );
+        }        
+        interpreter->callVoidMethod( method_plugins_onAnswerSet, answerset );
+    }
+}
+
+void ExternalPropagator::checkIdOfLiteral(
+    const Solver& solver,
+    int id ) const
+{
+    Var var = id > 0 ? id : -id;
+    if( var == 0 || var > solver.numberOfVariables() )
+        ErrorMessage::errorGeneric( "Variable " + to_string( var ) + " does not exist." );
 }

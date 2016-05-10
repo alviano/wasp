@@ -1270,6 +1270,8 @@ Solver::printAnswerSet()
 {
     choiceHeuristic->onAnswerSet();
     variables.printAnswerSet( outputBuilder );
+    for( unsigned int i = 0; i < externalPropagators.size(); i++ )
+        externalPropagators[ i ]->onAnswerSet( *this );
 }
 
 void
@@ -1644,7 +1646,18 @@ Solver::preprocessing()
     if( callSimplifications() && !satelite->simplify() )
         return false;
 
-    choiceHeuristic->onFinishedSimplifications();    
+    choiceHeuristic->onFinishedSimplifications();
+    
+    for( unsigned int i = 0; i < externalPropagators.size(); i++ )
+    {
+        externalPropagators[ i ]->simplifyAtLevelZero( *this );
+        if( conflictDetected() )
+        {
+            trace( solving, 1, "Conflict at level 0 detected by external propagators.\n" );
+            return false;
+        }    
+    }
+        
     clearVariableOccurrences();
     attachWatches();
     clearComponents();
@@ -1659,7 +1672,10 @@ Solver::preprocessing()
 
     for( unsigned int i = 0; i < externalPropagators.size(); i++ )
         if( externalPropagators[ i ]->isProgramIncoherent() )
+        {
+            trace( solving, 1, "Incoherence detected by external propagators.\n" );
             return false;
+        }
     return true;
 }
 
