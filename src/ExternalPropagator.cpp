@@ -69,11 +69,11 @@ ExternalPropagator::onLiteralFalse(
     int pos )
 {
     vector< int > output;
-    interpreter->callListMethod( method_plugins_onLiteralTrue, literal.getOppositeLiteral().getId(), pos, output );
-    trail.push_back( literal );
-    if( output.empty() )
-        return false;
-    if( output.size() == 1 && output[ 0 ] == 0 )
+    interpreter->callListMethod( method_plugins_onLiteralTrue, literal.getOppositeLiteral().getId(), pos, output );    
+    //True literals are stored in the trail
+    if( solver.getCurrentDecisionLevel() > 0 )
+        trail.push_back( literal.getOppositeLiteral() );
+    if( output.empty() || ( output.size() == 1 && output[ 0 ] == 0 ) )
         return true;
     
     Clause* reason = getReason( solver );    
@@ -82,6 +82,7 @@ ExternalPropagator::onLiteralFalse(
     {
         checkIdOfLiteral( solver, output[ i ] );
         Literal lit = Literal::createLiteralFromInt( output[ i ] );
+        //Literals inferred from the propagators are stored
         trail.push_back( lit );
         solver.assignLiteral( lit, reason );
     }
@@ -95,13 +96,13 @@ ExternalPropagator::reset(
 {
     if( solver.getCurrentDecisionLevel() == 0 )
         clearClausesToDelete();
-    vector< int > parameters;
+    vector< int > parameters;    
     while( !trail.empty() )
     {
         Literal lit = trail.back();
         if( !solver.isUndefined( lit ) )
             break;
-        parameters.push_back( lit.getOppositeLiteral().getId() );
+        parameters.push_back( lit.getId() );
         trail.pop_back();
     }
 
@@ -234,7 +235,7 @@ ExternalPropagator::onLitAtLevelZero(
     Literal lit )
 {
     if( check_onLitAtLevelZero )
-        interpreter->callVoidMethod( method_plugins_onLitAtLevelZero, lit.isPositive() ? lit.getVariable() : -lit.getVariable() );
+        interpreter->callVoidMethod( method_plugins_onLitAtLevelZero, lit.getId() );
 }
 
 void ExternalPropagator::onAnswerSet(
