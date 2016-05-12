@@ -13,7 +13,7 @@ linkflags.trace = \
  -lm
 cxxflags.tracerelease = \
  -Wall -Wextra -std=c++11 -DTRACE_ON -DNDEBUG -O3
-linkflags.release = \
+linkflags.tracerelease = \
  -lm
 cxxflags.release = \
  -Wall -Wextra -std=c++11 -DNDEBUG -O3
@@ -37,6 +37,10 @@ cxxflags.trace0x = \
  -Wall -Wextra -std=c++0x -DTRACE_ON
 linkflags.trace = \
  -lm
+cxxflags.tracerelease0x = \
+ -Wall -Wextra -std=c++0x -DTRACE_ON -DNDEBUG -O3
+linkflags.tracerelease0x = \
+ -lm
 cxxflags.release0x = \
  -Wall -Wextra -std=c++0x -DNDEBUG -O3
 linkflags.release0x = \
@@ -53,6 +57,9 @@ linkflags.stats0x = \
 
 SOURCE_DIR = src
 BUILD_DIR = build/$(BUILD)
+LIB_DIR = $(BUILD_DIR)/wasplib
+LIB_SRC_DIR = $(BUILD_DIR)/wasplib/src
+LIB_SRC_WASP_DIR = $(BUILD_DIR)/wasplib/wasp
 
 BINARY = $(BUILD_DIR)/wasp
 GCC = g++
@@ -62,9 +69,14 @@ LINK = $(GCC)
 LINKFLAGS = $(linkflags.$(BUILD))
 
 SRCS = $(shell find $(SOURCE_DIR) -name '*.cpp')
+SRCSCC = $(shell find $(SOURCE_DIR) -name '*.cc')
 
+LIBCPP = $(patsubst $(SOURCE_DIR)%.cpp,$(LIB_SRC_DIR)%.cpp, $(SRCS))
+LIBCC = $(patsubst $(SOURCE_DIR)%.cc,$(LIB_SRC_DIR)%.cc, $(SRCSCC))
 OBJS = $(patsubst $(SOURCE_DIR)%.cpp,$(BUILD_DIR)%.o, $(SRCS))
 DEPS = $(patsubst $(SOURCE_DIR)%.cpp,$(BUILD_DIR)%.d, $(SRCS))
+OBJSCC = $(patsubst $(SOURCE_DIR)%.cc,$(BUILD_DIR)%.o, $(SRCSCC))
+DEPSCC = $(patsubst $(SOURCE_DIR)%.cc,$(BUILD_DIR)%.d, $(SRCSCC))
 
 all: $(BINARY)
 
@@ -74,16 +86,33 @@ $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp
 $(BUILD_DIR)/%.d: $(SOURCE_DIR)/%.cpp
 	mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -MM -MT '$(@:.d=.o)' $< -MF $@
-	
-$(BINARY): $(OBJS) $(DEPS)
-	$(LINK) $(LINKFLAGS) $(LIBS) $(OBJS) -o $(BINARY)
 
-static: $(OBJS) $(DEPS)
-	$(LINK) $(LINKFLAGS) $(LIBS) $(OBJS) -static -o $(BINARY)
+$(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cc
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/%.d: $(SOURCE_DIR)/%.cc
+	mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -MM -MT '$(@:.d=.o)' $< -MF $@
+
+$(BUILD_DIR)/wasp.a:
+	ar rcs $@ $(OBJS)
+	
+$(BINARY): $(OBJS) $(OBJSCC) $(DEPS) $(DEPSCC)
+	$(LINK) $(LINKFLAGS) $(LIBS) $(OBJS) $(OBJSCC) -o $(BINARY)
+
+static: $(OBJS) $(OBJSCC) $(DEPS) $(DEPSCC)
+	$(LINK) $(LINKFLAGS) $(LIBS) $(OBJS) $(OBJSCC) -static -o $(BINARY)
 
 run: $(BINARY)
 	./$(BINARY)
 
+lib: $(BUILD_DIR)/wasp.a
+	rm -rf $(LIB_DIR)
+	mkdir -p $(LIB_DIR)
+	mv $(BUILD_DIR)/wasp.a $(LIB_DIR)
+	cp -r $(SOURCE_DIR) $(LIB_SRC_DIR)
+	rm -rf $(LIBCPP) $(LIBCC)
+	mv $(LIB_SRC_DIR) $(LIB_SRC_WASP_DIR)
 ########## Tests
 
 TESTS_DIR = tests
