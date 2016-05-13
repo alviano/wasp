@@ -70,8 +70,11 @@ class Help
             cout << "--silent                               - Print models with no spaces and lines" << endl;
             cout << "--third-competition-output             - Print models according to the third competition output" << endl;
             cout << "--competition-output                   - Print models according to the fourth competition output" << endl;   
+            cout << "--id-output                            - Print models using the internal id of atoms" << endl;
             cout << "--printlatestmodel                     - Print the latest computed model" << endl;   
-            cout << "--printbounds                          - Print lower and upper bound during optimization of answer sets" << endl;   
+            cout << "--printbounds                          - Print lower and upper bound during optimization of answer sets" << endl;
+            cout << "--printatomstable                      - Print internal dictionary for atoms used in wasp" << endl;
+
             cout << separator << endl;
             
             cout << "Heuristics options                     " << endl << endl;

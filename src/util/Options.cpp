@@ -59,6 +59,8 @@ namespace wasp
 #define OPTIONID_multi ( 'z' + 25 )
 #define OPTIONID_lastModel ( 'z' + 26 )
 #define OPTIONID_printbounds ( 'z' + 27 )
+#define OPTIONID_printatomtable ( 'z' + 28 )
+#define OPTIONID_idOutput ( 'z' + 29 )
 
 /* HEURISTIC OPTIONS */
 #define OPTIONID_fuheuristic ( 'z' + 30 )
@@ -129,6 +131,7 @@ bool Options::printProgram = false;
 bool Options::printDimacs = false;
 bool Options::printLastModelOnly = false;
 bool Options::printBounds = false;
+bool Options::printAtomTable = false;
 
 RESTARTS_POLICY Options::restartsPolicy = SEQUENCE_BASED_RESTARTS_POLICY;
 
@@ -224,6 +227,8 @@ Options::parse(
                 { "multi", no_argument, NULL, OPTIONID_multi },
                 { "printlatestmodel", no_argument, NULL, OPTIONID_lastModel },
                 { "printbounds", no_argument, NULL, OPTIONID_printbounds },
+                { "printatomstable", no_argument, NULL, OPTIONID_printatomtable },
+                { "id-output", no_argument, NULL, OPTIONID_idOutput },                
 
                 /* HEURISTIC OPTIONS */
 //                { "heuristic-berkmin", optional_argument, NULL, OPTIONID_berkminheuristic },
@@ -378,6 +383,14 @@ Options::parse(
             case OPTIONID_printbounds:
                 printBounds = true;
                 break;
+                
+            case OPTIONID_printatomtable:
+                printAtomTable = true;
+                break;
+                
+            case OPTIONID_idOutput:
+                outputPolicy = ID_OUTPUT;
+                break;                
                 
             case OPTIONID_berkminheuristic:
                 if( optarg )

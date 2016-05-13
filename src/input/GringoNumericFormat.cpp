@@ -987,18 +987,26 @@ GringoNumericFormat::readAtomsTable(
     unsigned int nextAtom;
     input.read( nextAtom );
 
+    if( wasp::Options::printAtomTable )
+        cout << "% Atoms table: start" << endl;        
+    
     char name[ 1024 ];
     while( nextAtom != 0 )
     {
         createStructures( nextAtom );
         input.getline( name, 1024 );
         VariableNames::setName( nextAtom, name );
+        if( wasp::Options::printAtomTable )
+            cout << nextAtom << " " << name << endl;
         trace_msg( parser, 6, "Set name " << name << " for atom " << nextAtom );
         
         if( wasp::Options::queryAlgorithm != NO_QUERY )
             solver.setFrozen( nextAtom );
         input.read( nextAtom );        
     }
+    
+    if( wasp::Options::printAtomTable )
+        cout << "% Atoms table: end" << endl; 
 }
 
 void

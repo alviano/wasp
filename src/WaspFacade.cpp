@@ -31,6 +31,7 @@
 #include "MinisatHeuristic.h"
 #include "outputBuilders/MultiOutputBuilder.h"
 #include "QueryInterface.h"
+#include "outputBuilders/IdOutputBuilder.h"
 
 void
 WaspFacade::readInput()
@@ -219,6 +220,10 @@ WaspFacade::setOutputPolicy(
             
         case MULTI:
             solver.setOutputBuilder( new MultiOutputBuilder() );
+            break;
+            
+        case ID_OUTPUT:
+            solver.setOutputBuilder( new IdOutputBuilder() );
             break;
             
         case WASP_OUTPUT:

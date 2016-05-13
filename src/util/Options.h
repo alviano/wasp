@@ -53,6 +53,7 @@ namespace wasp
             static unsigned int budget;
             static bool printLastModelOnly;
             static bool printBounds;
+            static bool printAtomTable;
             static bool stratification;
             
             static SHIFT_STRATEGY shiftStrategy;
