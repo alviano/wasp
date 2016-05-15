@@ -98,6 +98,7 @@ namespace wasp
     
 /* WEAK CONSTRAINTS OPTIONS */
 #define OPTIONID_weakconstraintsalgorithm ( 'z' + 200 )
+#define OPTIONID_kthreshold ( 'z' + 201 )
 
 #define OPTIONID_disjcores ( 'z' + 215 )
 #define OPTIONID_minimize ( 'z' + 216 )
@@ -156,6 +157,8 @@ bool Options::backwardPartialChecks = false;
 bool Options::bumpActivityAfterPartialCheck = false;
 
 WEAK_CONSTRAINTS_ALG Options::weakConstraintsAlg = ONE;
+
+unsigned int Options::kthreshold = 0;
 
 bool Options::disjCoresPreprocessing = false;
 bool Options::minimizeUnsatCore = false;
@@ -267,6 +270,7 @@ Options::parse(
                 
                 /* WEAK CONSTRAINTS */
                 { "weakconstraints-algorithm", required_argument, NULL, OPTIONID_weakconstraintsalgorithm },
+                { "k-threshold", required_argument, NULL, OPTIONID_kthreshold },
                 { "enable-disjcores", no_argument, NULL, OPTIONID_disjcores },
                 { "trim-core", no_argument, NULL, OPTIONID_minimize },
                 { "disable-stratification", no_argument, NULL, OPTIONID_stratification },
@@ -526,6 +530,16 @@ Options::parse(
                     ErrorMessage::errorGeneric( "Inserted invalid algorithm for weak constraints." );
                 break;
                 
+            case OPTIONID_kthreshold:
+                if( optarg )
+                {
+                    int kthreshold_ = atoi( optarg );
+                    if( kthreshold_ < 0 )
+                        ErrorMessage::errorGeneric( "Threshold for k must be >= 0." );
+                    kthreshold = kthreshold_;
+                }
+                break;
+                
             case OPTIONID_shift_strategy:
                 if( optarg )
                     shiftStrategy = getShiftStrategy( string( optarg ) );
@@ -687,6 +701,7 @@ Options::initMap()
     stringToWeak[ "interleaving-restarts" ] = ONEBBREST;
     stringToWeak[ "interleaving-choices" ] = ONEBB;
     stringToWeak[ "basic-bt" ] = BBBT;
+    stringToWeak[ "k" ] = KALG;
 
     stringToShift[ "shift" ] = SHIFT_NAIVE;
     stringToShift[ "propagator" ] = SHIFT_PROPAGATOR;

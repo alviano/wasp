@@ -56,11 +56,11 @@ Solver::~Solver()
         gusDataVector.pop_back();
     }
     
-    while( !aggregates.empty() )
+    while( !propagators.empty() )
     {
-        assert( aggregates.back() );
-        delete aggregates.back();
-        aggregates.pop_back();
+        assert( propagators.back() );
+        delete propagators.back();
+        propagators.pop_back();
     }
     
     while( !disjunctionPropagators.empty() )
@@ -715,11 +715,8 @@ void
 Solver::printProgram() const
 {
     for( ConstClauseIterator it = clauses.begin(); it != clauses.end(); ++it )
-        cout << *( *it ) << endl;        
-    
-    for( unsigned int i = 0; i < aggregates.size(); i++ )
-        cout << *aggregates[ i ] << endl;    
-}
+        cout << *( *it ) << endl;
+}    
 
 void
 Solver::printDimacs() const

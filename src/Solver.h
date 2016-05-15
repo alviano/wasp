@@ -44,6 +44,7 @@ using namespace std;
 #include "WatchedList.h"
 #include "stl/BoundedQueue.h"
 #include "Component.h"
+#include "CardinalityConstraint.h"
 class HCComponent;
 class WeakInterface;
 
@@ -131,7 +132,7 @@ class Solver
         inline bool hasNextAssignedVariable() const;
         inline void startIterationOnAssignedVariable();
 
-        inline unsigned int getCurrentDecisionLevel();
+        inline unsigned int getCurrentDecisionLevel() const;
         inline void incrementCurrentDecisionLevel();
         
         inline void assignLiteral( Literal literal );
@@ -251,8 +252,9 @@ class Solver
         inline Satelite* getSatelite() { return satelite; }
         
         inline void addDisjunctionPropagator( DisjunctionPropagator* disj ) { assert( disj != NULL ); disjunctionPropagators.push_back( disj ); }
-        inline void addAggregate( Aggregate* aggr ) { assert( aggr != NULL ); aggregates.push_back( aggr ); }
-        inline bool hasPropagators() const { return ( !tight() || !aggregates.empty() || !disjunctionPropagators.empty() ); }
+        inline void addAggregate( Aggregate* aggr ) { assert( aggr != NULL ); propagators.push_back( aggr ); }
+        inline void addCardinalityConstraint ( CardinalityConstraint* cc ) { assert( cc != NULL ); propagators.push_back( cc ); }
+        inline bool hasPropagators() const { return ( !tight() || !propagators.empty() || !disjunctionPropagators.empty() ); }
         
         inline void turnOffSimplifications() { callSimplifications_ = false; }
         inline bool callSimplifications() const { return callSimplifications_; }
@@ -347,6 +349,7 @@ class Solver
         inline void detachClauseFromAllLiterals( Clause&, Literal literal );
         
         inline void attachAggregate( Aggregate& );
+        inline void attachCardinalityConstraint( CardinalityConstraint& );
         
         inline bool isSatisfied( const Clause& clause ) const;
         inline bool allUndefined( const Clause& clause ) const;
@@ -510,7 +513,7 @@ class Solver
         inline void addInPropagatorsForUnroll( Propagator* prop );
         
         vector< GUSData* > gusDataVector;
-        vector< Aggregate* > aggregates;
+        vector< Propagator* > propagators;
         vector< DisjunctionPropagator* > disjunctionPropagators;
         
 //        Aggregate* optimizationAggregate;
@@ -1084,7 +1087,7 @@ Solver::hasNextVariableToPropagate() const
 }
 
 unsigned int
-Solver::getCurrentDecisionLevel()
+Solver::getCurrentDecisionLevel() const
 {
     return currentDecisionLevel;
 }
@@ -2008,6 +2011,14 @@ Solver::attachAggregate(
         if( !isFalse( aggregateLiteral ) )
             addPropagator( lit, &aggregate, j );
     }
+}
+
+void
+Solver::attachCardinalityConstraint(
+    CardinalityConstraint& constraint )
+{    
+    for( unsigned int i = 0; i < constraint.size(); i++ )
+        addPropagator( constraint[ i ], &constraint, i );    
 }
 
 bool

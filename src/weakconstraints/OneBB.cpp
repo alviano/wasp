@@ -25,7 +25,6 @@ OneBB::run()
 
     solver.turnOffSimplifications();
     initInUnsatCore();
-    originalNumberOfVariables = solver.numberOfVariables();
     solver.sortOptimizationLiterals( level() );
     initHeuristicValues();
     
@@ -99,7 +98,7 @@ OneBB::bb()
 unsigned int
 OneBB::one()
 {
-    trace_msg( weakconstraints, 3, "Starting OLL" );
+    trace_msg( weakconstraints, 3, "Starting ONE" );
     solver.unrollToZero();        
     assumptions.clear();
     solver.setComputeUnsatCores( true );    

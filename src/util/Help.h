@@ -99,8 +99,12 @@ class Help
             cout << "       =opt                            - Model-guided algorithm opt" << endl;
             cout << "       =one                            - Core-guided algorithm one" << endl;
             cout << "       =pmres                          - Core-guided algorithm pmres" << endl;
+            cout << "       =k                              - Core-guided algorithm k" << endl;
             cout << "       =interleaving-restarts          - Mixed approach between oll and basic - restarts based" << endl;
             cout << "       =interleaving-choices           - Mixed approach between oll and basic - choices based" << endl;
+            cout << "--k-threshold                          - Initialization for algorithm k. Must be >= 0" << endl;
+            cout << "       =0                              - Special case for a dynamic choice of k threshold" << endl;            
+            cout << "       =1                              - Special case for algorithm one with cardinality constraints" << endl;            
             cout << "--enable-disjcores                     - Enable disjoint cores preprocessing (only for core-guided)" << endl;
             cout << "--trim-core                            - Enable polynomial trim of unsat cores (only for core-guided)" << endl;
             cout << "--disable-stratification               - Disable stratification (only for core-guided)" << endl;

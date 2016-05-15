@@ -68,6 +68,8 @@ namespace wasp
             static unsigned int enumerationStrategy;            
             static WEAK_CONSTRAINTS_ALG weakConstraintsAlg;
             
+            static unsigned int kthreshold;
+            
         private:
 
             static DELETION_POLICY deletionPolicy;

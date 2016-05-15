@@ -16,25 +16,30 @@
  *
  */
 
-#ifndef ONE_H
-#define ONE_H
+#ifndef K_H
+#define K_H
 
 #include "WeakInterface.h"
 
-class One : public WeakInterface
+class K : public WeakInterface
 {
     public:
-        inline One( Solver& s ) : WeakInterface( s ) {}
-        virtual ~One();
+        inline K( Solver& s ) : WeakInterface( s ), kthreshold( wasp::Options::kthreshold ) {}
+        virtual ~K();
         virtual unsigned int run();        
         unsigned int runWeighted();
         unsigned int runUnweighted();
 
     protected:
-        bool processCoreOne( vector< Literal >& literals, vector< uint64_t >& weights, uint64_t minWeight, unsigned int& n );
-        bool addAggregateOne( vector< Literal >& literals, vector< uint64_t >& weights, uint64_t bound );
+        bool processCoreK( uint64_t minWeight );
+        bool addCardinalityConstraintK( vector< Literal >& literals, uint64_t bound );
         
         bool foundUnsat();
+    
+    private:
+        int kthreshold;
+        void addImplication( Literal l1, Literal l2 );
+        void initCounters( int& b, int& m, int& N, unsigned int size );
 };
 
 #endif

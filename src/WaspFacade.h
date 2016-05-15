@@ -33,6 +33,7 @@ using namespace std;
 #include "weakconstraints/Opt.h"
 #include "weakconstraints/PMRes.h"
 #include "weakconstraints/OneBB.h"
+#include "weakconstraints/K.h"
 
 class WaspFacade
 {
@@ -122,6 +123,10 @@ WaspFacade::solveWithWeakConstraints()
             
         case BBBT:
             w = new Opt( solver, true );            
+            break;
+            
+        case KALG:
+            w = new K( solver );
             break;
             
         case ONE:

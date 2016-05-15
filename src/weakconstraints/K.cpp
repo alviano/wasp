@@ -16,14 +16,14 @@
  *
  */
 
-#include "One.h"
+#include "K.h"
 
-One::~One()
+K::~K()
 {
 }
 
 unsigned int
-One::run()
+K::run()
 {
     if( disjCoresPreprocessing && !disjointCorePreprocessing() )
         return INCOHERENT;
@@ -37,13 +37,13 @@ One::run()
 }
 
 unsigned int
-One::runUnweighted()
+K::runUnweighted()
 {    
     statistics( &solver, disable() );    
-    trace_msg( weakconstraints, 1, "Starting algorithm ONE" );
+    trace_msg( weakconstraints, 1, "Starting algorithm K" );
     computeAssumptions();        
     
-    initInUnsatCore();    
+    initInUnsatCore();
 
     solver.setComputeUnsatCores( true );
     solver.turnOffSimplifications();
@@ -64,10 +64,10 @@ One::runUnweighted()
 }
 
 unsigned int
-One::runWeighted()
+K::runWeighted()
 {    
     statistics( &solver, disable() );
-    trace_msg( weakconstraints, 1, "Starting algorithm ONE" );
+    trace_msg( weakconstraints, 1, "Starting algorithm K" );
     
     preprocessingWeights();
     changeWeight();
@@ -105,15 +105,17 @@ One::runWeighted()
     return OPTIMUM_FOUND;
 }
 
+
+/*
+ * Adapted from aspino: https://github.com/alviano/aspino/
+ */
 bool
-One::processCoreOne(
-    vector< Literal >& literals,
-    vector< uint64_t >& weights,
-    uint64_t minWeight,
-    unsigned int& n )
+K::processCoreK(
+    uint64_t minWeight )
 {
-    trace_msg( weakconstraints, 2, "Processing core for algorithm One" );
+    trace_msg( weakconstraints, 2, "Processing core for algorithm K" );
     
+    vector< Literal > literals;
     bool trivial = false;
     Clause* clause = new Clause();
     unsigned int originalSize = solver.numberOfOptimizationLiterals( level() );
@@ -124,14 +126,11 @@ One::processCoreOne(
             continue;
 
         Literal lit = optLitData.lit;
-        trace_msg( weakconstraints, 3, "Considering literal " << lit << " - weight " << optLitData.weight );
         Var v = lit.getVariable();
         if( visited( v ) )
         {
-            trace_msg( weakconstraints, 4, "is in unsat core" );
-            literals.push_back( lit );
-//            weights.push_back( optLitData.weight );
-            weights.push_back( 1 );
+            trace_msg( weakconstraints, 3, lit << " is in unsat core" );
+            literals.push_back( lit.getOppositeLiteral() );
             optLitData.remove();
             
             if( solver.isTrue( lit ) )
@@ -145,25 +144,60 @@ One::processCoreOne(
         }
     }
     
-    n = literals.size();
-    vector< Var > newVars;
-    for( unsigned int i = 0; i < n - 1; i++ )
+    
+    assert( solver.getCurrentDecisionLevel() == 0 );
+       
+    int b, m, N;
+    initCounters( b, m, N, literals.size() );
+    
+    Var prec = 0;
+    while( true )
     {
-        Var auxVar = addAuxVariable();
-        literals.push_back( Literal( auxVar, POSITIVE ) );
-        weights.push_back( 1 );
-        solver.addOptimizationLiteral( Literal( auxVar, NEGATIVE ), minWeight, level(), true );
-        newVars.push_back( auxVar );
+        assert( literals.size() > 0 );
+        vector< Literal > ls;
+        int i = N;
+        if( prec != 0 )
+        {
+            ls.push_back( Literal( prec, POSITIVE ) );
+            i--;
+        }
+        
+        for( ; i > 0; i-- )
+        {
+            if( literals.size() == 0 )
+                break;            
+            ls.push_back( literals.back() );
+            literals.pop_back();
+        }
+        assert( ls.size() > 0 );
+        int bound_ = ls.size() - 1;
+        
+        if( literals.size() > 0 )
+            bound_++;
+
+        for( i = 0; i < bound_; i++ )
+        {
+            Var v = addAuxVariable();
+            ls.push_back( Literal( v, NEGATIVE ) );
+            
+            //Simmetry breaker
+            if( i != 0 )
+                addImplication( Literal( solver.numberOfVariables() - 1, POSITIVE ), Literal( v, POSITIVE ) );                
+            
+            if( i == 0 && literals.size() > 0 )
+                prec = v;
+            else
+                solver.addOptimizationLiteral( Literal( v, NEGATIVE ), minWeight, level(), true );            
+        }
+        
+        if( !addCardinalityConstraintK( ls, bound_ ) )
+            return false;
+        
+        if( literals.size() == 0 )
+            break;
     }
     
-    for( int i = newVars.size() - 1; i >= 1; i-- )
-    {
-        Clause* c = new Clause();
-        c->addLiteral( Literal( newVars[ i ], NEGATIVE ) );
-        c->addLiteral( Literal( newVars[ i - 1 ], POSITIVE ) );
-        solver.addClauseRuntime( c );        
-    }
-    
+    assert( literals.size() == 0 );    
     if( trivial )
     {
         delete clause;
@@ -174,9 +208,8 @@ One::processCoreOne(
 }
 
 bool
-One::addAggregateOne(
+K::addCardinalityConstraintK(
     vector< Literal >& literals,
-    vector< uint64_t >& weights,
     uint64_t bound )
 {
     if( literals.size() == 1 )
@@ -185,20 +218,20 @@ One::addAggregateOne(
         return true;
     }
     
-    trace_msg( weakconstraints, 2, "Adding aggregate from unsat core" );
-    Var aggrId = addAuxVariable();    
-    Aggregate* aggregate = createAggregate( aggrId, literals, weights );     
-    if( !processAndAddAggregate( aggregate, bound ) )
+    assert( solver.getCurrentDecisionLevel() == 0 );
+    CardinalityConstraint* cc = new CardinalityConstraint( literals );
+    if( !cc->setBound( bound ) )
         return false;
-    
-    assert( !solver.isTrue( aggrId ) );
-    solver.addClauseRuntime( Literal( aggrId, NEGATIVE ) );
-    assert( solver.isFalse( aggrId ) );
+    trace_msg( weakconstraints, 2, "Creating cardinality constraint " << *cc );
+    if( !cc->checkConsistent( solver ) )
+        return false;
+    solver.attachCardinalityConstraint( *cc );
+    solver.addCardinalityConstraint( cc );        
     return true;
 }
 
 bool
-One::foundUnsat()
+K::foundUnsat()
 {
     ++numberOfCalls;
     
@@ -216,15 +249,50 @@ One::foundUnsat()
     for( unsigned int i = 0; i < unsatCore.size(); i++ )
         visit( unsatCore[ i ].getVariable() );
     
-    vector< Literal > literals;
-    vector< uint64_t > weights;
-
-    unsigned int n = 0;
     uint64_t minWeight = computeMinWeight();
-    if( !processCoreOne( literals, weights, minWeight, n ) || !addAggregateOne( literals, weights, n + 1 ) )
+    
+    if( !processCoreK( minWeight ) )
         return false;
     incrementLb( minWeight );
     solver.foundLowerBound( lb() ); 
     
     return true;
+}
+
+void
+K::addImplication(
+    Literal l1,
+    Literal l2 )
+{
+    Clause* c = new Clause();
+    c->addLiteral( l1.getOppositeLiteral() );
+    c->addLiteral( l2 );
+    solver.addClauseRuntime( c );
+}
+
+void
+K::initCounters(
+    int& b,
+    int& m,
+    int& N,
+    unsigned int size )
+{
+    switch( kthreshold )
+    {        
+        case 0:
+            //Algorithm kdyn
+            b = size <= 2 ? 8 : ceil( log10( size ) * 16 );                        
+        break;
+        
+        case 1:
+            //Algorithm one
+            b = INT_MAX;
+            break;
+    
+        default:
+            b = kthreshold * 2;
+            break;
+    }
+    m = ceil( 2.0 * size / ( b - 2.0 ) );
+    N = ceil( ( size + size - 1 + 2 * ( m - 1 ) ) / ( m * 2.0 ) );
 }
