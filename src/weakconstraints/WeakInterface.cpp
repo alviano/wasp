@@ -110,6 +110,20 @@ WeakInterface::createAggregate(
     return aggregate;
 }
 
+Aggregate*
+WeakInterface::createAggregateCount(
+    Var aggrId,
+    const vector< Literal >& literals )
+{
+    Aggregate* aggregate = new Aggregate();
+    aggregate->addLiteral( Literal( aggrId, NEGATIVE ), 0 );
+
+    for( unsigned int i = 0; i < literals.size(); i++ )
+        aggregate->addLiteral( literals[ i ], 1 );
+
+    return aggregate;
+}
+
 bool
 WeakInterface::processAndAddAggregate(
     Aggregate* aggregate,

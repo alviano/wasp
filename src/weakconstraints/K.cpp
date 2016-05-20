@@ -231,6 +231,29 @@ K::addCardinalityConstraintK(
 }
 
 bool
+K::addAggregateK(
+    vector< Literal >& literals,
+    uint64_t bound )
+{
+    if( literals.size() == 1 )
+    {
+        trace_msg( weakconstraints, 2, "Literal " << literals[ 0 ] << " is removed from assumptions. Nothing more to do" );
+        return true;
+    }
+    
+    Var aggrId = addAuxVariable();
+    Aggregate* aggregate = createAggregateCount( aggrId, literals );     
+    trace_msg( weakconstraints, 2, "Adding aggregate from unsat core " << *aggregate );
+    if( !processAndAddAggregate( aggregate, bound ) )
+        return false;
+    
+    assert( !solver.isFalse( aggrId ) );
+    solver.addClauseRuntime( Literal( aggrId, POSITIVE ) );
+    assert( solver.isTrue( aggrId ) );
+    return true;
+}
+
+bool
 K::foundUnsat()
 {
     ++numberOfCalls;
@@ -264,6 +287,7 @@ K::addImplication(
     Literal l1,
     Literal l2 )
 {
+    trace_msg( weakconstraints, 3, "Adding " << l1 << "->" << l2 );
     Clause* c = new Clause();
     c->addLiteral( l1.getOppositeLiteral() );
     c->addLiteral( l2 );

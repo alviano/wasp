@@ -33,7 +33,7 @@ class K : public WeakInterface
     protected:
         bool processCoreK( uint64_t minWeight );
         bool addCardinalityConstraintK( vector< Literal >& literals, uint64_t bound );
-        
+        bool addAggregateK( vector< Literal >& literals, uint64_t bound );
         bool foundUnsat();
     
     private:

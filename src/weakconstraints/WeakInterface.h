@@ -44,6 +44,7 @@ class WeakInterface
         bool createFalseAggregate( const vector< Literal >& literals, const vector< uint64_t >& weights, uint64_t bound );
         Aggregate* createAndReturnFalseAggregate( const vector< Literal >& literals, const vector< uint64_t >& weights, uint64_t bound );
         Aggregate* createAggregate( Var aggrId, const vector< Literal >& literals, const vector< uint64_t >& weights );
+        Aggregate* createAggregateCount( Var aggrId, const vector< Literal >& literals );
         bool createAggregateFromOptimizationLiterals();
         bool processAndAddAggregate( Aggregate* aggregate, uint64_t bound );        
         inline void computeAssumptions();
