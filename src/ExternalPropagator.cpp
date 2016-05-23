@@ -70,12 +70,11 @@ ExternalPropagator::onLiteralFalse(
 {
     vector< int > output;
     
+    interpreter->callListMethod( method_plugins_onLiteralTrue, literal.getOppositeLiteral().getId(), pos, output );    
     //True literals are stored in the trail
     if( solver.getCurrentDecisionLevel() > 0 )
-    {
-        interpreter->callListMethod( method_plugins_onLiteralTrue, literal.getOppositeLiteral().getId(), pos, output );    
         trail.push_back( literal.getOppositeLiteral() );
-    }
+    
     if( output.empty() || ( output.size() == 1 && output[ 0 ] == 0 ) )
         return true;
     
