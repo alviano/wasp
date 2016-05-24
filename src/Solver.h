@@ -387,12 +387,8 @@ class Solver
         void printLearnedClauses();
         
         bool cleanAndAddLearnedClause( Clause* c );
-        inline void setExchangeClauses( bool ex ) { exchangeClauses_ = ex; }
-        inline bool exchangeClauses() const { return exchangeClauses_; }
-        inline void setGenerator( bool gen ) { generator = gen; statistics( this, setGenerator( gen ) ); }        
-        inline void setAfterConflictPropagator( PostPropagator* p ) { assert( afterConflictPropagator == NULL ); afterConflictPropagator = p; }
-        
-        static void addClauseInLearnedFromAllSolvers( Clause* c ) { learnedFromAllSolvers.push_back( c ); }
+        inline void setGenerator( bool );
+        inline void setAfterConflictPropagator( PostPropagator* p ) { assert( afterConflictPropagator == NULL ); afterConflictPropagator = p; }        
         
         inline void disableStatistics() { statistics( this, disable() ); }
         inline void enableStatistics() { statistics( this, enable() ); }
@@ -453,9 +449,6 @@ class Solver
     private:
         HCComponent* hcComponentForChecker;
         PostPropagator* afterConflictPropagator;
-        bool exchangeClauses_;
-        bool generator;
-        static vector< Clause* > learnedFromAllSolvers;
         vector< Literal > choices;
 
         unsigned int solveWithoutPropagators( vector< Literal >& assumptions );
@@ -652,8 +645,6 @@ Solver::Solver()
 :    
     hcComponentForChecker( NULL ),
     afterConflictPropagator( NULL ),
-    exchangeClauses_( false ),
-    generator( true ),
     currentDecisionLevel( 0 ),
     conflictLiteral( Literal::null ),
     conflictClause( NULL ),
@@ -1102,6 +1093,18 @@ Solver::incrementCurrentDecisionLevel()
 }
 
 void
+Solver::setGenerator(
+    bool
+    #ifdef STATS_ON
+    gen 
+    #endif
+)
+{
+    statistics( this, setGenerator( gen ) );
+}
+        
+
+void
 Solver::unrollLastVariable()
 {    
     minisatHeuristic->onUnrollingVariable( variables.unrollLastVariable() );
@@ -1126,18 +1129,6 @@ Solver::doRestart()
         unroll( numberOfAssumptions );
     else
         unroll( 0 );
-        
-
-    if( generator && exchangeClauses_ )
-    {
-        while( !learnedFromAllSolvers.empty() )
-        {
-            Clause* c = learnedFromAllSolvers.back();
-            learnedFromAllSolvers.pop_back();            
-            if( !cleanAndAddLearnedClause( c ) )
-                return false;
-        }
-    }
     return true;
 }
 

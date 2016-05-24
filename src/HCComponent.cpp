@@ -8,6 +8,7 @@
 
 #include <vector>
 #include "util/Options.h"
+#include "input/Rule.h"
 
 ostream& operator<<( ostream& out, const HCComponent& component )
 {
@@ -20,21 +21,18 @@ ostream& operator<<( ostream& out, const HCComponent& component )
 HCComponent::HCComponent(
     vector< GUSData* >& gusData_,
     Solver& s,
-    unsigned numberOfInputAtoms ) : PostPropagator(), gusData( gusData_ ), solver( s ), numberOfCalls( 0 ), 
-        hasToTestModel( false ), numberOfAtoms( numberOfInputAtoms ), 
-        id( 0 ), assumptionLiteral( Literal::null ), isConflictual( false ),
-        numberOfExternalLiterals( 0 ), numberOfInternalVariables( 0 ), numberOfZeroLevel( 0 ), removedHCVars( 0 ), literalToAdd( Literal::null ),
-        low( 0 ), high( solver.numberOfVariables() )
+    unsigned numberOfInputAtoms ) : PostPropagator(), gusData( gusData_ ), solver( s )
 {   
-    inUnfoundedSet.push_back( 0 );
-    generatorToCheckerId.push_back( UINT_MAX );
-    checkerToGeneratorId.push_back( 0 );
+    numberOfCalls = 0; hasToTestModel = false; numberOfAtoms = numberOfInputAtoms;
+    id = 0; assumptionLiteral = Literal::null; isConflictual = false;
+    numberOfExternalLiterals = 0; numberOfInternalVariables = 0; numberOfZeroLevel = 0;
+    removedHCVars = 0; literalToAdd = Literal::null; low = 0; high = solver.numberOfVariables();
+    inUnfoundedSet.push_back( 0 ); generatorToCheckerId.push_back( UINT_MAX );
     while( checker.numberOfVariables() < numberOfInputAtoms )
     {
         inUnfoundedSet.push_back( 0 );
         checker.addVariable();
         generatorToCheckerId.push_back( UINT_MAX );
-        checkerToGeneratorId.push_back( 0 );
     }
         
     assert_msg( checker.numberOfVariables() == numberOfInputAtoms, checker.numberOfVariables() << " != " << numberOfInputAtoms );
@@ -51,7 +49,10 @@ HCComponent::HCComponent(
 HCComponent::~HCComponent()
 {
     checker.enableStatistics();
-    statistics( &checker, onDeletingChecker( id ) );    
+    statistics( &checker, onDeletingChecker( id ) ); 
+    for( unsigned int i = 0; i < toDelete.size(); i++ )
+        delete toDelete[ i ];
+    toDelete.clear();
 }
 
 bool
@@ -72,7 +73,7 @@ HCComponent::addExternalLiteral(
         inUnfoundedSet[ lit.getVariable() ] |= 2;
         checker.addVariable();
         generatorToCheckerId[ lit.getVariable() ] = checker.numberOfVariables();
-        checkerToGeneratorId.push_back( lit.getVariable() );    
+//        checkerToGeneratorId.push_back( lit.getVariable() );    
     }    
     externalLiterals.push_back( lit );    
     numberOfExternalLiterals++;
@@ -89,7 +90,7 @@ HCComponent::addExternalLiteralForInternalVariable(
     inUnfoundedSet[ lit.getVariable() ] |= 2;
     checker.addVariable();
     generatorToCheckerId[ lit.getVariable() ] = checker.numberOfVariables();
-    checkerToGeneratorId.push_back( lit.getVariable() );
+//    checkerToGeneratorId.push_back( lit.getVariable() );
     externalLiterals.push_back( lit );
     numberOfExternalLiterals++;
     return true;
@@ -148,22 +149,18 @@ HCComponent::testModel()
     //The checker will return always unsat
     if( isConflictual )
         return;
-    
+
     if( unfoundedSetCandidates.empty() )
         return;
-    
-    checkModel( assumptions );    
-    
-    clearUnfoundedSetCandidates();        
+
+    checkModel( assumptions );
+    clearUnfoundedSetCandidates();
 
     assert( !checker.conflictDetected() );
     if( assumptionLiteral != Literal::null )
         checker.addClause( assumptionLiteral.getOppositeLiteral() );
     assert( !checker.conflictDetected() );
     statistics( &checker, endCheckerInvocation( time( 0 ) ) );
-
-    if( solver.exchangeClauses() )
-        sendLearnedClausesToSolver();
 }
 
 void
@@ -248,16 +245,13 @@ HCComponent::iterationExternalLiterals(
 
 void
 HCComponent::addClauseToChecker(
-    Clause* c,
-    Var headAtom )
+    Clause* c )
 {
     assert( c != NULL );
     trace_msg( modelchecker, 2, "Adding clause " << *c );
     Clause& orig = *c;
-    Clause* clause = new Clause( c->size() );    
     for( unsigned int i = 0; i < orig.size(); i++ )
     {        
-        clause->addLiteral( orig[ i ] );        
         Var v = orig[ i ].getVariable();
         if( !sameComponent( v ) )
         {
@@ -280,9 +274,8 @@ HCComponent::addClauseToChecker(
                 }
             }
         }
-    }    
-    getGUSData( headAtom ).definingRulesForNonHCFAtom.push_back( clause );    
-    checker.addClause( c );    
+    }            
+    checker.addClause( c );
 }
 
 Clause*
@@ -383,29 +376,6 @@ HCComponent::computeReasonForUnfoundedAtom(
 }
 
 void
-HCComponent::addLearnedClausesFromChecker(
-    Clause* learnedClause )
-{
-    assert( solver.exchangeClauses() );
-    if( learnedClause->size() > 8 )
-        return;        
-    Clause* c = new Clause( learnedClause->size() );
-    for( unsigned int i = 0; i < learnedClause->size(); i++ )
-    {
-        Literal current = getGeneratorLiteralFromCheckerLiteral( learnedClause->getAt( i ) );
-        c->addLiteral( current );
-    }
-    learnedClausesFromChecker.push_back( c );
-}
-
-bool
-HCComponent::sameComponent(
-    Var v ) const
-{
-    return solver.getHCComponent( v ) == this;
-}
-
-void
 HCComponent::createInitialClauseAndSimplifyHCVars()
 {
     trace_msg( modelchecker, 1, "Simplifying Head Cycle variables" );
@@ -453,19 +423,6 @@ HCComponent::createInitialClauseAndSimplifyHCVars()
 }
 
 void
-HCComponent::clearUnfoundedSetCandidates()
-{
-    unfoundedSetCandidates.shrink( removedHCVars );
-}
-
-Var
-HCComponent::addFreshVariable()
-{
-    checker.addVariableRuntime();
-    return checker.numberOfVariables();
-}
-
-void
 HCComponent::initDataStructures()
 {
     trace_msg( modelchecker, 2, "First call. Removing unused variables" );
@@ -483,12 +440,7 @@ HCComponent::initDataStructures()
     assert( result );
 
     checker.turnOffSimplifications();
-    createInitialClauseAndSimplifyHCVars();
-    if( wasp::Options::bumpActivityAfterPartialCheck )
-    {
-        checker.setComputeUnsatCores( true );
-        checker.setMinimizeUnsatCore( false );
-    }        
+    createInitialClauseAndSimplifyHCVars();            
 }
 
 void HCComponent::checkModel(
@@ -506,11 +458,7 @@ void HCComponent::checkModel(
         trace_msg( modelchecker, 1, "SATISFIABLE: the model is not stable." );
         for( unsigned int i = 0; i < unfoundedSetCandidates.size(); i++ )
             if( checker.isTrue( unfoundedSetCandidates[ i ] ) )
-            {
-                Var curr = unfoundedSetCandidates[ i ].getVariable();
-                unfoundedSet.push_back( curr );
-                setInUnfoundedSet( curr );
-            }
+                setInUnfoundedSet( unfoundedSetCandidates[ i ].getVariable() );            
         trace_action( modelchecker, 2, { printVector( unfoundedSet, "Unfounded set" ); } );
         statistics( &checker, foundUS( trail.size() != ( hcVariables.size() + externalLiterals.size() ), unfoundedSet.size() ) );
         assert( !unfoundedSet.empty() );
@@ -519,25 +467,7 @@ void HCComponent::checkModel(
     else
     {
         trace_msg( modelchecker, 1, "UNSATISFIABLE: the model is stable." );
-        low = solver.getCurrentDecisionLevel();    
-        
-        if( wasp::Options::bumpActivityAfterPartialCheck )
-        {
-            assert( checker.getUnsatCore() != NULL );
-            const Clause& unsatCore = *( checker.getUnsatCore() );        
-            if( unsatCore.size() == 0 )
-                isConflictual = true;
-            
-            for( unsigned int i = 0; i < unsatCore.size(); i++ )
-            {
-                Literal l = unsatCore[ i ];
-                if( l.getVariable() >= checkerToGeneratorId.size() )
-                    continue;
-
-                Literal origLit = getGeneratorLiteralFromCheckerLiteral( l );
-                solver.bumpActivity( origLit.getVariable() );
-            }
-        }
+        low = solver.getCurrentDecisionLevel();        
         checker.clearConflictStatus();        
     }
     
@@ -546,14 +476,65 @@ void HCComponent::checkModel(
 }
 
 void
-HCComponent::sendLearnedClausesToSolver()
+HCComponent::processRule(
+    Rule* rule )
 {
-    assert( solver.exchangeClauses() );
-    while( !learnedClausesFromChecker.empty() )
-    {            
-        Clause* c = learnedClausesFromChecker.back();
-        learnedClausesFromChecker.pop_back();
-        assert( c->size() <= 8 );            
-        solver.addClauseInLearnedFromAllSolvers( c );
+    Clause* clause = new Clause();
+    Clause* c = new Clause();
+    for( unsigned int k = 0; k < rule->size(); k++ )
+    {
+        Literal lit = rule->literals[ k ];
+        clause->addLiteral( lit );
+        c->addLiteral( lit );
+        Var hcVar = lit.getVariable();
+        if( solver.getHCComponent( hcVar ) != this )
+        {
+            if( !addExternalLiteral( lit ) )
+                continue;
+            attachLiterals( lit );
+        }
+        else if( lit.isNegativeBodyLiteral() )
+        {            
+            if( !addExternalLiteralForInternalVariable( lit ) )
+                continue;
+            attachLiterals( lit );
+        }
+    }
+    
+    clause->removeDuplicates();
+    c->removeDuplicates();
+    addClauseToChecker( c );
+    
+    for( unsigned int k = 0; k < rule->size(); k++ )
+    {
+        Literal lit = rule->literals[ k ];
+        if( !sameComponent( lit.getVariable() ) )
+            continue;
+        
+        if( lit.isHeadAtom() )
+            getGUSData( lit.getVariable() ).definingRulesForNonHCFAtom.push_back( clause );   
+    }
+    toDelete.push_back( clause );    
+}
+
+void
+HCComponent::processBeforeStarting()
+{
+    for( unsigned int j = 0; j < hcVariables.size(); j++ )
+    {
+        Var v = hcVariables[ j ];
+        if( solver.isTrue( v ) )
+            onLiteralFalse( Literal( v, NEGATIVE ) );
+        else if( solver.isFalse( v ) )
+            onLiteralFalse( Literal( v, POSITIVE ) );
+    }
+
+    for( unsigned int j = 0; j < externalLiterals.size(); j++ )
+    {
+        Literal lit = externalLiterals[ j ];
+        if( solver.isTrue( lit ) )
+            onLiteralFalse( lit.getOppositeLiteral() );
+        else if( solver.isFalse( lit ) )
+            onLiteralFalse( lit );
     }
 }

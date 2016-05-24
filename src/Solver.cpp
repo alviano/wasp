@@ -25,8 +25,6 @@
 #include <vector>
 using namespace std;
 
-vector< Clause* > Solver::learnedFromAllSolvers;
-
 Solver::~Solver()
 {
     while( !clauses.empty() )
@@ -123,7 +121,6 @@ Solver::initFrom(
     assert( solver.restart != NULL );
     assert( this->restart == NULL );    
     this->restart = solver.restart->clone();
-    this->exchangeClauses_ = solver.exchangeClauses_;
     this->glucoseHeuristic_ = solver.glucoseHeuristic_;
 }
 
@@ -1219,9 +1216,6 @@ Solver::printLearnedClauses()
         learnedClauses[ i ]->printOrderedById();
         cout << " " << this << endl;
     }
-
-    for( unsigned int i = 0; i < hcComponents.size(); i++ )
-        hcComponents[ i ]->printLearnedClausesOfChecker();
 }
 
 bool
@@ -1292,11 +1286,6 @@ Solver::addLearnedClause(
     else
     {
         attachClause( *learnedClause );
-        if( hcComponentForChecker != NULL && exchangeClauses_ )
-        {
-            assert( !generator );
-            hcComponentForChecker->addLearnedClausesFromChecker( learnedClause );
-        }
         learnedClauses.push_back( learnedClause );        
     }    
 }

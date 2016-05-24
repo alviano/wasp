@@ -21,9 +21,9 @@
 
 GUSData::~GUSData()
 {
-    while( !definingRulesForNonHCFAtom.empty() )
-    {
-        delete definingRulesForNonHCFAtom.back();
-        definingRulesForNonHCFAtom.pop_back();
-    }
+//    while( !definingRulesForNonHCFAtom.empty() )
+//    {
+//        delete definingRulesForNonHCFAtom.back();
+//        definingRulesForNonHCFAtom.pop_back();
+//    }
 }

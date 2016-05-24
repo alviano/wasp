@@ -45,7 +45,6 @@ namespace wasp
             static unsigned int maxCost;        
             static bool forwardPartialChecks;
             static bool backwardPartialChecks;
-            static bool bumpActivityAfterPartialCheck;
             
             static unsigned int queryAlgorithm;
             static unsigned int queryVerbosity;
@@ -93,9 +92,7 @@ namespace wasp
             
             static unsigned int restartsThreshold;            
 
-            static unsigned int timeLimit;
-            
-            static bool exchangeClauses;                                                
+            static unsigned int timeLimit;                                                     
             
             static bool disjCoresPreprocessing;
             

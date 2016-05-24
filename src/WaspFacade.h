@@ -56,7 +56,6 @@ class WaspFacade
         inline void setMaxModels( unsigned int max ) { maxModels = max; }
         inline void setPrintProgram( bool printProgram ) { this->printProgram = printProgram; }
         inline void setPrintDimacs( bool printDimacs ) { this->printDimacs = printDimacs; }
-        void setExchangeClauses( bool exchangeClauses ) { solver.setExchangeClauses( exchangeClauses ); }                
         
         inline void setWeakConstraintsAlgorithm( WEAK_CONSTRAINTS_ALG alg ) { weakConstraintsAlg = alg; }
         inline void setDisjCoresPreprocessing( bool value ) { disjCoresPreprocessing = value; }
