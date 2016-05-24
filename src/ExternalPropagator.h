@@ -24,6 +24,9 @@
 class Clause;
 class Interpreter;
 
+#include <string>
+using namespace std;
+
 #define method_plugins_addedVarName "addedVarName"
 #define method_plugins_onAtomElimination "onAtomElimination" 
 #define method_plugins_getLiterals "getLiterals"
