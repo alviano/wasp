@@ -84,9 +84,12 @@ ExternalPropagator::onLiteralFalse(
     {
         checkIdOfLiteral( solver, output[ i ] );
         Literal lit = Literal::createLiteralFromInt( output[ i ] );
+        if( solver.isTrue( lit ) )
+            continue;
+        
         //Literals inferred from the propagators are stored
         trail.push_back( lit );
-        solver.assignLiteral( lit, reason );
+        solver.assignLiteral( lit, reason );        
     }
     clausesToDelete.push_back( reason );
     return true;
@@ -185,7 +188,7 @@ ExternalPropagator::getReason(
     
     if( countUndefined != 0 )
         ErrorMessage::errorGeneric( "Reason is not well-formed" );
-    reset( solver );    
+    reset( solver );
     return clause;
 }
 
