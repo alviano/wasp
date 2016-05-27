@@ -6,6 +6,7 @@
 #include "../Aggregate.h"
 #include "../util/Istream.h"
 #include "../HCComponent.h"
+#include "../UnfoundedFreeHC.h"
 
 #include <cassert>
 #include <iostream>
@@ -1216,7 +1217,7 @@ GringoNumericFormat::computeGusStructures()
         {
             nbOfCallsHCC++;
             trace_msg( parser, 4, "The component is non HCF" );            
-            HCComponent* hcComponent = solver.createHCComponent( atomData.size() - 1 ); //new HCComponent( solver );
+            UnfoundedFreeHC* hcComponent = solver.createHCComponent( atomData.size() - 1 ); //new HCComponent( solver );            
             hcComponent->setId( solver.numberOfHCComponents() );
             for( unsigned int j = 0; j < component->size(); j++ )
             {

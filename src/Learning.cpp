@@ -21,7 +21,7 @@
 #include "Literal.h"
 #include "Solver.h"
 #include "HCComponent.h"
-
+#include "UnfoundedFreeHC.h"
 #include <cassert>
 
 #ifndef NDEBUG
@@ -422,7 +422,7 @@ Learning::learnClausesFromDisjunctiveUnfoundedSet(
         Var tmp = unfoundedSet[ i ];
         assert( solver.isTrue( tmp ) || solver.isUndefined( tmp ) );
         
-        HCComponent* component = solver.getHCComponent( tmp );
+        UnfoundedFreeHC* component = solver.getHCComponent( tmp );
         component->computeReasonForUnfoundedAtom( tmp, *this );
         
         unsigned int dl = solver.getDecisionLevel( tmp );

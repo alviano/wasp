@@ -45,6 +45,7 @@ using namespace std;
 #include "stl/BoundedQueue.h"
 #include "Component.h"
 #include "CardinalityConstraint.h"
+class UnfoundedFreeHC;
 class HCComponent;
 class WeakInterface;
 
@@ -239,7 +240,7 @@ class Solver
         inline void computeStrongConnectedComponents();                        
         
         void createCyclicComponents();
-        inline void addHCComponent( HCComponent* c ) { hcComponents.push_back( c ); }
+        inline void addHCComponent( UnfoundedFreeHC* c ) { hcComponents.push_back( c ); }
 
         inline bool tight() const { return cyclicComponents.empty() && hcComponents.empty(); }
         inline unsigned int getNumberOfCyclicComponents() const { return cyclicComponents.size(); }
@@ -321,8 +322,8 @@ class Solver
         
         inline bool inTheSameHCComponent( Var v1, Var v2 ) const { return variables.inTheSameHCComponent( v1, v2 ); } 
         inline bool isInCyclicHCComponent( Var v ) const { return variables.isInCyclicHCComponent( v ); }
-        inline void setHCComponent( Var v, HCComponent* c ){ variables.setHCComponent( v, c ); }
-        inline HCComponent* getHCComponent( Var v ) { return variables.getHCComponent( v ); }
+        inline void setHCComponent( Var v, UnfoundedFreeHC* c ){ variables.setHCComponent( v, c ); }
+        inline UnfoundedFreeHC* getHCComponent( Var v ) { return variables.getHCComponent( v ); }
         
         inline void addPropagator( Literal lit, Propagator* p, int position ) { getDataStructure( lit ).variablePropagators.push_back( pair< Propagator*, int >( p, position ) ); }
         inline void addPostPropagator( Literal lit, PostPropagator* p ) { getDataStructure( lit ).variablePostPropagators.push_back( p ); }
@@ -382,7 +383,7 @@ class Solver
         
         void initFrom( Solver& solver );
         
-        HCComponent* createHCComponent( unsigned numberOfInputAtoms );
+        UnfoundedFreeHC* createHCComponent( unsigned numberOfInputAtoms );
         
         void printLearnedClauses();
         
@@ -396,7 +397,7 @@ class Solver
         inline unsigned int numberOfHCComponents() const { return hcComponents.size(); }
         
         inline void printInterpretation() const { variables.printInterpretation(); }
-        inline void setHCComponentForChecker( HCComponent* hc ) { assert( hcComponentForChecker == NULL ); hcComponentForChecker = hc; }
+        inline void setHCComponentForChecker( UnfoundedFreeHC* hc ) { assert( hcComponentForChecker == NULL ); hcComponentForChecker = hc; }
         
         inline void onLearningALoopFormulaFromModelChecker() { learnedFromPropagators++; }
         inline void onLearningALoopFormulaFromGus() { learnedFromConflicts++; }
@@ -447,7 +448,7 @@ class Solver
         inline unsigned int getMaxLevelOfClause( const Clause* clause ) const;
         
     private:
-        HCComponent* hcComponentForChecker;
+        UnfoundedFreeHC* hcComponentForChecker;
         PostPropagator* afterConflictPropagator;
         vector< Literal > choices;
 
@@ -610,7 +611,7 @@ class Solver
         Vector< DataStructures* > variableDataStructures;
         
         vector< Component* > cyclicComponents;
-        vector< HCComponent* > hcComponents;
+        vector< UnfoundedFreeHC* > hcComponents;
         
         unsigned int numberOfAssumptions;
         unsigned int learnedFromPropagators;
@@ -665,7 +666,7 @@ Solver::Solver()
     numberOfAssumptions( 0 ),
     learnedFromPropagators( 0 ),
     learnedFromConflicts( 0 ),
-    partialChecks( true ),
+    partialChecks( false ),
     computeUnsatCores_( false ),
     minimizeUnsatCore_( true ),
     unsatCore( NULL ),
@@ -2267,7 +2268,8 @@ Solver::computeLBD(
     {
         if( isAssumption( clause[ i ].getVariable() ) )
             continue;
-        unsigned int level = getDecisionLevel( clause[ i ] );        
+        unsigned int level = getDecisionLevel( clause[ i ] ); 
+        assert_msg( level < glucoseData.permDiff.size(), "level " << level << ">=" << glucoseData.permDiff.size() );
         if( glucoseData.permDiff[ level ] != glucoseData.MYFLAG )
         {
             glucoseData.permDiff[ level ] = glucoseData.MYFLAG;

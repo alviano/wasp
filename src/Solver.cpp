@@ -20,6 +20,7 @@
 #include "input/Dimacs.h"
 #include "HCComponent.h"
 #include "weakconstraints/WeakInterface.h"
+#include "UnfoundedFreeHC.h"
 #include <algorithm>
 #include <stdint.h>
 #include <vector>
@@ -361,7 +362,7 @@ Solver::solvePropagators(
             if( partialChecks )
             {
                 postPropagators.push_back( afterConflictPropagator );
-                HCComponent* comp = dynamic_cast< HCComponent* >( afterConflictPropagator );
+                UnfoundedFreeHC* comp = dynamic_cast< UnfoundedFreeHC* >( afterConflictPropagator );
                 comp->setHasToTestModel( true );
             }
             afterConflictPropagator = NULL;
@@ -388,10 +389,10 @@ Solver::solvePropagators(
             {
                 if( !wasp::Options::backwardPartialChecks )
                 {
-                    if( learnedFromPropagators > ( learnedFromConflicts * 0.5 ) )
-                        partialChecks = false;
-                    else
-                        partialChecks = true;
+//                    if( learnedFromPropagators > ( learnedFromConflicts * 0.5 ) )
+//                        partialChecks = false;
+//                    else
+//                        partialChecks = true;
                 }
                 unsigned int size = clauseToPropagate->size();
                 statistics( this, onLearningFromPropagators( size ) );
@@ -438,7 +439,7 @@ Solver::solvePropagators(
                     }
                     else if( afterConflictPropagator != NULL )
                     {
-                        HCComponent* comp = dynamic_cast< HCComponent* >( afterConflictPropagator );
+                        UnfoundedFreeHC* comp = dynamic_cast< UnfoundedFreeHC* >( afterConflictPropagator );
                         comp->setHasToTestModel( false );
                         afterConflictPropagator = NULL;
                     }
@@ -1200,11 +1201,12 @@ Solver::createCyclicComponents()
     }
 }
 
-HCComponent*
+UnfoundedFreeHC*
 Solver::createHCComponent(
     unsigned numberOfInputAtoms )
 {
-    return new HCComponent( gusDataVector, *this, numberOfInputAtoms );
+    return new UnfoundedFreeHC( gusDataVector, *this, numberOfInputAtoms );
+//    return new HCComponent( gusDataVector, *this, numberOfInputAtoms );
 }
 
 void

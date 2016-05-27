@@ -96,7 +96,7 @@ class HCComponent : public PostPropagator
         inline Var addFreshVariable() { checker.addVariableRuntime(); return checker.numberOfVariables(); }        
         inline bool isInUnfoundedSet( Var v ) { assert_msg( v < inUnfoundedSet.size(), "v = " << v << "; inUnfoundedSet.size() = " << inUnfoundedSet.size() ); return inUnfoundedSet[ v ] == numberOfCalls; }
         inline void setInUnfoundedSet( Var v ) { assert_msg( v < inUnfoundedSet.size(), "v = " << v << "; inUnfoundedSet.size() = " << inUnfoundedSet.size() ); unfoundedSet.push_back( v ); inUnfoundedSet[ v ] = numberOfCalls; }
-        inline bool sameComponent( Var v ) const { return solver.getHCComponent( v ) == this; }
+        inline bool sameComponent( Var /*v*/ ) const { assert( 0 && "Decomment the code!" ); return true; /*solver.getHCComponent( v ) == this;*/ }
         inline Var getCheckerVarFromExternalLiteral( Literal l ) const { return ( l.isNegative() || sameComponent( l.getVariable() ) ) ? generatorToCheckerId[ l.getVariable() ] : l.getVariable(); }
         
         void createInitialClauseAndSimplifyHCVars();
@@ -182,7 +182,8 @@ HCComponent::addHCVariable(
     numberOfInternalVariables++; 
     attachLiterals( Literal( v, POSITIVE ) );
     solver.setComponent( v, NULL );
-    solver.setHCComponent( v, this );
+    assert( 0 && "Decomment the code!" );
+//    solver.setHCComponent( v, this );
 }
 
 void

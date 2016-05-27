@@ -27,7 +27,7 @@ HCComponent::HCComponent(
     id = 0; assumptionLiteral = Literal::null; isConflictual = false;
     numberOfExternalLiterals = 0; numberOfInternalVariables = 0; numberOfZeroLevel = 0;
     removedHCVars = 0; literalToAdd = Literal::null; low = 0; high = solver.numberOfVariables();
-    inUnfoundedSet.push_back( 0 ); generatorToCheckerId.push_back( UINT_MAX );
+    inUnfoundedSet.push_back( 0 ); generatorToCheckerId.push_back( UINT_MAX );    
     while( checker.numberOfVariables() < numberOfInputAtoms )
     {
         inUnfoundedSet.push_back( 0 );
@@ -42,7 +42,8 @@ HCComponent::HCComponent(
     checker.initFrom( solver );
     checker.setGenerator( false ); 
     checker.disableStatistics();
-    checker.setHCComponentForChecker( this );
+    assert( 0 && "Decomment me!");
+//    checker.setHCComponentForChecker( this );
     checker.disableVariableElimination();        
 }
 
@@ -339,7 +340,7 @@ HCComponent::computeReasonForUnfoundedAtom(
             //This should be not true anymore.
 //            assert( !isInUnfoundedSet( lit.getVariable() ) );
             //If the variable is in the HCC component and it is undefined can be a reason during partial checks
-            if( solver.isUndefined( lit ) && solver.getHCComponent( lit.getVariable() ) == this && ( lit.isNegativeBodyLiteral() || lit.isHeadAtom() ) )
+            if( solver.isUndefined( lit ) && sameComponent( lit.getVariable() ) && ( lit.isNegativeBodyLiteral() || lit.isHeadAtom() ) )
             {
                 if( pos == UINT_MAX )
                     pos = j;
@@ -487,7 +488,7 @@ HCComponent::processRule(
         clause->addLiteral( lit );
         c->addLiteral( lit );
         Var hcVar = lit.getVariable();
-        if( solver.getHCComponent( hcVar ) != this )
+        if( sameComponent( hcVar ) )
         {
             if( !addExternalLiteral( lit ) )
                 continue;
