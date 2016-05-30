@@ -36,12 +36,13 @@ def getAtomsToFreeze():
     """
     return atoms
 
-def onLiteralTrue(lit, pos):
+def onLiteralTrue(lit, pos, dl):
     """
     Required.
     When a literal is derived as true either by propagation and by choice.
     :param lit: the true literal
     :param pos: each literal is associated to a position for fast access
+    :param dl: the current decision level of the solver
     :return: A list of literals to infer as true. Afterward, the method getReasons is invoked.
     """
     global interpretation, TRUE, FALSE
@@ -61,6 +62,7 @@ def onLiteralsUndefined(*lits):
     """
     Required.
     When a set of literals is set as undefined (by an unroll).
+    First element of the set "lits" is the current decision level of the solver.
     :param lits: the undefined literals
     """
     global interpretation, UNKNOWN

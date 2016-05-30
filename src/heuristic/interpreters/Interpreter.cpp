@@ -78,3 +78,12 @@ void Interpreter::callListMethod( const string& method_name, int param1, int par
     params.push_back( param2 );
     callListMethod( method_name, params, output );
 }
+
+void Interpreter::callListMethod( const string& method_name, int param1, int param2, int param3, vector< int >& output )
+{
+    vector< int > params;
+    params.push_back( param1 );
+    params.push_back( param2 );
+    params.push_back( param3 );
+    callListMethod( method_name, params, output );
+}

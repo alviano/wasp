@@ -70,7 +70,7 @@ ExternalPropagator::onLiteralFalse(
 {
     vector< int > output;
     
-    interpreter->callListMethod( method_plugins_onLiteralTrue, literal.getOppositeLiteral().getId(), pos, output );    
+    interpreter->callListMethod( method_plugins_onLiteralTrue, literal.getOppositeLiteral().getId(), pos, solver.getCurrentDecisionLevel(), output );    
     //True literals are stored in the trail
     if( solver.getCurrentDecisionLevel() > 0 )
         trail.push_back( literal.getOppositeLiteral() );
@@ -101,7 +101,8 @@ ExternalPropagator::reset(
 {
     if( solver.getCurrentDecisionLevel() == 0 )
         clearClausesToDelete();
-    vector< int > parameters;    
+    vector< int > parameters;
+    parameters.push_back( solver.getCurrentDecisionLevel() );
     while( !trail.empty() )
     {
         Literal lit = trail.back();
@@ -110,9 +111,9 @@ ExternalPropagator::reset(
         parameters.push_back( lit.getId() );
         trail.pop_back();
     }
-
+    
     if( !parameters.empty() )
-        interpreter->callVoidMethod( method_plugins_onLiteralsUndefined, parameters );
+       interpreter->callVoidMethod( method_plugins_onLiteralsUndefined, parameters );    
 }
 
 void
