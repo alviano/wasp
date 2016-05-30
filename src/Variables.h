@@ -27,6 +27,7 @@
 #include "util/VariableNames.h"
 #include "stl/Vector.h"
 #include "ReasonForBinaryClauses.h"
+#include "util/Options.h"
 
 using namespace std;
 class Component;
@@ -254,6 +255,12 @@ void
 Variables::printAnswerSet(
     OutputBuilder* outputBuilder ) const
 {
+    if( !wasp::Options::printModels )
+    {
+        outputBuilder->printNumberOfModels();
+        return;
+    }
+    
     outputBuilder->startModel();
     for( unsigned int i = 0; i < assignedVariablesSize; ++i )
     {

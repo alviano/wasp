@@ -70,6 +70,8 @@ namespace wasp
             
             static unsigned int kthreshold;
             
+            static bool printModels;
+            
         private:
 
             static DELETION_POLICY deletionPolicy;

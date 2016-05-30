@@ -304,7 +304,8 @@ WaspFacade::enumerationBacktracking()
         return;
     solver.setComputeUnsatCores( true );
     begin:;
-    solver.unrollToZero();
+    if( solver.getDecisionLevel( assums.back() ) - 1 < solver.getCurrentDecisionLevel() )
+        solver.unroll( solver.getDecisionLevel( assums.back() ) - 1 );
     solver.clearConflictStatus();
     result = solver.solve( assums );
     if( result == INCOHERENT )
@@ -314,7 +315,7 @@ WaspFacade::enumerationBacktracking()
         if( core->size() == 0 )
             assums.clear();
         
-        unsigned int bl = solver.getMaxLevelOfClause( core );
+        unsigned int bl = solver.getMaxLevelOfClause( core );        
         if( bl == 0 )
         {
             unsigned int k = 0;

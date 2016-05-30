@@ -95,6 +95,7 @@ namespace wasp
 #define OPTIONID_shift_onedef ( 'z' + 108 )
 #define OPTIONID_simplifications ( 'z' + 109 )
 #define OPTIONID_enumeration ( 'z' + 110 )
+#define OPTIONID_disableprint ( 'z' + 111 )
     
 /* WEAK CONSTRAINTS OPTIONS */
 #define OPTIONID_weakconstraintsalgorithm ( 'z' + 200 )
@@ -181,6 +182,8 @@ map< string, unsigned int > Options::stringToMinimization;
 
 bool Options::simplifications = true;
 
+bool Options::printModels = true;
+
 unsigned int Options::minimizationStrategy = MINIMIZATION_OFF;
 
 unsigned int Options::minimizationBudget = UINT_MAX;
@@ -261,7 +264,8 @@ Options::parse(
                 { "max-cost", required_argument, NULL, OPTIONID_max_cost },
                 { "disable-simplifications", no_argument, NULL, OPTIONID_simplifications },
                 
-                { "enumeration-strategy", required_argument, NULL, OPTIONID_enumeration },                
+                { "enumeration-strategy", required_argument, NULL, OPTIONID_enumeration },
+                { "disable-print", no_argument, NULL, OPTIONID_disableprint }, 
                 
                 { "exchange-clauses", no_argument, NULL, OPTIONID_exchange_clauses },
                 { "forward-partialchecks", no_argument, NULL, OPTIONID_forward_partialchecks },  
@@ -478,6 +482,10 @@ Options::parse(
                     if( deletionThreshold < 2 )
                         deletionThreshold = 2;
                 }
+                break;
+                
+            case OPTIONID_disableprint:
+                printModels = false;
                 break;
 
             case OPTIONID_dimacs:

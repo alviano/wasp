@@ -62,3 +62,9 @@ void
 OutputBuilder::onKill()
 {
 }
+
+void
+OutputBuilder::printNumberOfModels()
+{
+    cout << "Model number: " << ++nbOfModels << endl;
+}
