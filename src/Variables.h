@@ -255,12 +255,12 @@ void
 Variables::printAnswerSet(
     OutputBuilder* outputBuilder ) const
 {
-    if( !wasp::Options::printModels )
-    {
-        outputBuilder->printNumberOfModels();
+    if( wasp::Options::silent >= 1 )
+    {        
+        outputBuilder->foundModel();
         return;
     }
-    
+        
     outputBuilder->startModel();
     for( unsigned int i = 0; i < assignedVariablesSize; ++i )
     {

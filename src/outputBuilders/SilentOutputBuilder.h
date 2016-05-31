@@ -26,10 +26,20 @@ class SilentOutputBuilder : public WaspOutputBuilder
     public:
         inline SilentOutputBuilder();
 //        virtual void onProgramIncoherent();        
-        virtual void greetings();        
+        virtual void greetings();
+        virtual void startModel();
+        virtual void printVariable( Var, bool isTrue );
+        virtual void endModel();
+        virtual void onProgramIncoherent();
+        virtual void onFinish();
+        virtual void foundModel();
+        virtual void onKill();        
+
+    private:
+        unsigned int nbOfModels;
 };
 
-SilentOutputBuilder::SilentOutputBuilder()
+SilentOutputBuilder::SilentOutputBuilder() : WaspOutputBuilder(), nbOfModels( 0 )
 {
 }
 

@@ -67,7 +67,10 @@ class Help
             cout << "Output options                         " << endl << endl;
             cout << "--printprogram                         - Print the input program and exit" << endl;
             cout << "--printdimacs                          - Print the input program in the dimacs format and exit" << endl;
-            cout << "--silent                               - Print models with no spaces and lines" << endl;
+            cout << "--silent                               - Set verbosity of output" << endl;
+            cout << "       <1                              - Print models with no spaces and lines" << endl;
+            cout << "       =1                              - Print only the number of each model" << endl;
+            cout << "       >1                              - Print only the number of models" << endl;
             cout << "--third-competition-output             - Print models according to the third competition output" << endl;
             cout << "--competition-output                   - Print models according to the fourth competition output" << endl;   
             cout << "--id-output                            - Print models using the internal id of atoms" << endl;
@@ -140,7 +143,6 @@ class Help
             cout << "--enumeration-strategy                 - Select different strategy for enumeration of answer sets" << endl;
             cout << "       =bt                             - Use backtracking for enumeration" << endl;
             cout << "       =bc                             - Use blocking clause" << endl;
-            cout << "--disable-print                        - Do not print models" << endl;
 //            cout << "--stdin                                - Write a description." << endl;
 //            cout << "--time-limit                           - Write a description." << endl;
         }

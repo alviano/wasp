@@ -70,7 +70,7 @@ namespace wasp
             
             static unsigned int kthreshold;
             
-            static bool printModels;
+            static unsigned int silent;
             
         private:
 

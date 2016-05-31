@@ -28,7 +28,7 @@ using namespace std;
 class OutputBuilder
 {
     public:
-        OutputBuilder() : nbOfModels( 0 ) {}
+        OutputBuilder() {}
         virtual ~OutputBuilder() {}
         virtual void startModel() = 0;
         virtual void printVariable( Var v, bool isTrue ) = 0;
@@ -41,10 +41,7 @@ class OutputBuilder
         virtual void foundUpperBound( uint64_t );
         virtual void onFinish();
         virtual void onKill();
-        void printNumberOfModels();
-        
-    private:
-        unsigned int nbOfModels;
+        virtual void foundModel(){}
     
 };
 

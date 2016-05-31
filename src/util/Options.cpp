@@ -95,7 +95,6 @@ namespace wasp
 #define OPTIONID_shift_onedef ( 'z' + 108 )
 #define OPTIONID_simplifications ( 'z' + 109 )
 #define OPTIONID_enumeration ( 'z' + 110 )
-#define OPTIONID_disableprint ( 'z' + 111 )
     
 /* WEAK CONSTRAINTS OPTIONS */
 #define OPTIONID_weakconstraintsalgorithm ( 'z' + 200 )
@@ -182,7 +181,7 @@ map< string, unsigned int > Options::stringToMinimization;
 
 bool Options::simplifications = true;
 
-bool Options::printModels = true;
+unsigned Options::silent = 0;
 
 unsigned int Options::minimizationStrategy = MINIMIZATION_OFF;
 
@@ -226,7 +225,7 @@ Options::parse(
 
                 /* OUTPUT OPTIONS */
                 { "competition-output", no_argument, NULL, OPTIONID_competition_output },
-                { "silent", no_argument, NULL, OPTIONID_silent },                
+                { "silent", optional_argument, NULL, OPTIONID_silent },                
                 { "third-competition-output", no_argument, NULL, OPTIONID_third_competition_output },
                 { "printprogram", no_argument, NULL, OPTIONID_printprogram },
                 { "printdimacs", no_argument, NULL, OPTIONID_printdimacs },
@@ -265,7 +264,6 @@ Options::parse(
                 { "disable-simplifications", no_argument, NULL, OPTIONID_simplifications },
                 
                 { "enumeration-strategy", required_argument, NULL, OPTIONID_enumeration },
-                { "disable-print", no_argument, NULL, OPTIONID_disableprint }, 
                 
                 { "exchange-clauses", no_argument, NULL, OPTIONID_exchange_clauses },
                 { "forward-partialchecks", no_argument, NULL, OPTIONID_forward_partialchecks },  
@@ -364,6 +362,14 @@ Options::parse(
                 break;
 
             case OPTIONID_silent:
+                if( optarg )
+                {
+                    silent = atoi( optarg );
+                    if( silent < 1 )
+                        silent = 0;
+                    else if( silent > 1 )
+                        silent = 2;                    
+                }
                 outputPolicy = SILENT_OUTPUT;
                 break;
 
@@ -482,11 +488,7 @@ Options::parse(
                     if( deletionThreshold < 2 )
                         deletionThreshold = 2;
                 }
-                break;
-                
-            case OPTIONID_disableprint:
-                printModels = false;
-                break;
+                break;                        
 
             case OPTIONID_dimacs:
                 outputPolicy = DIMACS_OUTPUT;
