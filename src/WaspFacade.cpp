@@ -302,7 +302,6 @@ WaspFacade::enumerationBacktracking()
     flipLatestChoice( assums, checked );
     if( assums.empty() )
         return;
-    solver.setComputeUnsatCores( true );
     begin:;
     if( solver.getDecisionLevel( assums.back() ) - 1 < solver.getCurrentDecisionLevel() )
         solver.unroll( solver.getDecisionLevel( assums.back() ) - 1 );
@@ -310,12 +309,7 @@ WaspFacade::enumerationBacktracking()
     result = solver.solve( assums );
     if( result == INCOHERENT )
     {
-        const Clause* core = solver.getUnsatCore();
-        assert( core != NULL );
-        if( core->size() == 0 )
-            assums.clear();
-        
-        unsigned int bl = solver.getMaxLevelOfClause( core );        
+        unsigned int bl = solver.getCurrentDecisionLevel();
         if( bl == 0 )
         {
             unsigned int k = 0;
