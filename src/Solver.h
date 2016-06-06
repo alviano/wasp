@@ -1159,7 +1159,7 @@ Solver::unrollVariable(
     if( getDecisionLevel( v ) == 0 || getDecisionLevel( v ) <= numberOfAssumptions )
         return false;
     
-    while( currentDecisionLevel > 0 && currentDecisionLevel > numberOfAssumptions && isUndefined( v ) )
+    while( currentDecisionLevel > 0 && currentDecisionLevel > numberOfAssumptions && !isUndefined( v ) )
         unrollOne();
     
     return isUndefined( v );
