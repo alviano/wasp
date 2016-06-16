@@ -16,16 +16,15 @@
  *
  */
 
-#include "OllBB.h"
+#include "OneBB.h"
 
 unsigned int
-OllBB::run()
+OneBB::run()
 {   
-    trace_msg( weakconstraints, 1, "Starting algorithm OLLBB" );        
+    trace_msg( weakconstraints, 1, "Starting algorithm OneBB" );        
 
     solver.turnOffSimplifications();
     initInUnsatCore();
-    originalNumberOfVariables = solver.numberOfVariables();
     solver.sortOptimizationLiterals( level() );
     initHeuristicValues();
     
@@ -36,7 +35,7 @@ OllBB::run()
         unsigned int res;
         trace_msg( weakconstraints, 2, "Iteration " << i );
         if( i++ % 2 == 0 )
-            res = oll();
+            res = one();
         else
             res = bb();
         
@@ -62,7 +61,7 @@ OllBB::run()
 }
 
 unsigned int
-OllBB::bb()
+OneBB::bb()
 {
     trace_msg( weakconstraints, 3, "Starting BB" );
     solver.unrollToZero();
@@ -97,9 +96,9 @@ OllBB::bb()
 }
 
 unsigned int
-OllBB::oll()
+OneBB::one()
 {
-    trace_msg( weakconstraints, 3, "Starting OLL" );
+    trace_msg( weakconstraints, 3, "Starting ONE" );
     solver.unrollToZero();        
     assumptions.clear();
     solver.setComputeUnsatCores( true );    

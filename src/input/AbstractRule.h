@@ -16,31 +16,22 @@
  *
  */
 
-#ifndef SILENTOUTPUTBUILDER_H
-#define SILENTOUTPUTBUILDER_H
+#ifndef ABSTRACTRULE_H
+#define ABSTRACTRULE_H
 
-#include "WaspOutputBuilder.h"
-
-class SilentOutputBuilder : public WaspOutputBuilder
+class AbstractRule
 {
     public:
-        inline SilentOutputBuilder();
-//        virtual void onProgramIncoherent();        
-        virtual void greetings();
-        virtual void startModel();
-        virtual void printVariable( Var, bool isTrue );
-        virtual void endModel();
-        virtual void onProgramIncoherent();
-        virtual void onFinish();
-        virtual void foundModel();
-        virtual void onKill();        
-
+        AbstractRule() : id_( 0 ), choice_( false ) {}
+        AbstractRule( unsigned int id, bool choice ) : id_( id ), choice_( choice ) {}
+        inline unsigned int getId() const { return id_; }
+        inline void setId( unsigned int id ) { id_ = id; }
+        inline bool isChoice() const { return choice_; }
+        inline void setChoice( bool choice ) { choice_ = choice; } 
+    
     private:
-        unsigned int nbOfModels;
+        unsigned int id_ : 31;
+        unsigned int choice_ : 1;
 };
-
-SilentOutputBuilder::SilentOutputBuilder() : WaspOutputBuilder(), nbOfModels( 0 )
-{
-}
 
 #endif

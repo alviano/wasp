@@ -29,12 +29,18 @@ class Opt : public WeakInterface
         bool updateOptimizationAggregate( uint64_t modelCost );
         bool completedLevel();
         Literal getAssumptionToAdd() { return varId == 0 ? Literal::null : Literal( varId, NEGATIVE ); }
-    
+        
     private:
         bool disableprefchoices_;
         Aggregate* aggregate;
         Var varId;
-        void createOptimizationAggregate( uint64_t modelCost );        
+        unsigned int numberOfModels;
+        void createOptimizationAggregate( uint64_t modelCost );
+        bool foundModel();
+        void flipLatestChoice( vector< bool >& checked );
+        void backjump();
+        void basic();
+        void basicBT();
 };
 
 #endif

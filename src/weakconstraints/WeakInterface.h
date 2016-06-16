@@ -44,6 +44,7 @@ class WeakInterface
         bool createFalseAggregate( const vector< Literal >& literals, const vector< uint64_t >& weights, uint64_t bound );
         Aggregate* createAndReturnFalseAggregate( const vector< Literal >& literals, const vector< uint64_t >& weights, uint64_t bound );
         Aggregate* createAggregate( Var aggrId, const vector< Literal >& literals, const vector< uint64_t >& weights );
+        Aggregate* createAggregateCount( Var aggrId, const vector< Literal >& literals );
         bool createAggregateFromOptimizationLiterals();
         bool processAndAddAggregate( Aggregate* aggregate, uint64_t bound );        
         inline void computeAssumptions();
@@ -58,6 +59,7 @@ class WeakInterface
         inline void computeAssumptionsStratified();
         inline bool changeWeight();
         bool hardening();
+        const Clause* minimizeUnsatCore();
         
         virtual void foundAnswerSet( uint64_t cost );        
         virtual bool foundUnsat() { return true; }
@@ -86,6 +88,8 @@ class WeakInterface
         
         inline void clearAssumptions() { assumptions.clear(); }
         inline void computeAssumptionsOnlyOriginal( unsigned int originalNumberOfOptLiterals );
+        const Clause* minimizeUnsatCoreWithProgression( const Clause* );        
+        const Clause* minimizeUnsatCoreWithLinearSearch( const Clause* );
 };
 
 void

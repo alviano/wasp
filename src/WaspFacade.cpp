@@ -30,6 +30,7 @@
 
 #include "outputBuilders/MultiOutputBuilder.h"
 #include "QueryInterface.h"
+#include "outputBuilders/IdOutputBuilder.h"
 
 void
 WaspFacade::readInput()
@@ -74,7 +75,7 @@ WaspFacade::solve()
     {
         solver.printProgram();
         return;
-    }   
+    }
     
     if( solver.preprocessing() )
     {
@@ -88,26 +89,14 @@ WaspFacade::solve()
         {
             QueryInterface queryInterface( solver );
             queryInterface.computeCautiousConsequences( queryAlgorithm );
+            statistics( &solver, endSolving() );
             return;
         }
         solver.onStartingSolver( solver.numberOfVariables(), solver.numberOfClauses() );
+
         if( !solver.isOptimizationProblem() )
         {            
-            while( solver.solve() == COHERENT )
-            {
-                solver.printAnswerSet();
-                trace_msg( enumeration, 1, "Model number: " << numberOfModels + 1 );
-                if( ++numberOfModels >= maxModels )
-                {
-                    trace_msg( enumeration, 1, "Enumerated " << maxModels << "." );
-                    break;
-                }
-                else if( !solver.addClauseFromModelAndRestart() )
-                {
-                    trace_msg( enumeration, 1, "All models have been found." );
-                    break;
-                }
-            }
+            enumerateModels();
         }
         else
         {
@@ -125,8 +114,15 @@ WaspFacade::solve()
                 case OPTIMUM_FOUND:
                 default:
                     solver.optimumFound();
+                    if( maxModels > 1 )
+                    {
+                        solver.unrollToZero();
+                        solver.clearConflictStatus();
+                        enumerateModels();
+                    }
                     break;
             }
+            statistics( &solver, endSolving() );
             return;
         }
     }
@@ -136,6 +132,7 @@ WaspFacade::solve()
         trace_msg( enumeration, 1, "No model found." );
         solver.foundIncoherence();
     }
+    statistics( &solver, endSolving() );
     
 //    solver.printLearnedClauses();
 }
@@ -172,6 +169,10 @@ WaspFacade::setOutputPolicy(
             solver.setOutputBuilder( new MultiOutputBuilder() );
             break;
             
+        case ID_OUTPUT:
+            solver.setOutputBuilder( new IdOutputBuilder() );
+            break;
+            
         case WASP_OUTPUT:
         default:
             solver.setOutputBuilder( new WaspOutputBuilder() );
@@ -199,4 +200,123 @@ WaspFacade::setRestartsPolicy(
             solver.setRestart( restart );
             break;
     }
+}
+
+void
+WaspFacade::enumerateModels()
+{
+    assert( wasp::Options::enumerationStrategy == ENUMERATION_BC || wasp::Options::enumerationStrategy == ENUMERATION_BT );
+    if( wasp::Options::enumerationStrategy == ENUMERATION_BC )
+        enumerationBlockingClause();
+    else
+        enumerationBacktracking();    
+}
+
+void
+WaspFacade::enumerationBlockingClause()
+{
+    while( solver.solve() == COHERENT )
+    {
+        solver.printAnswerSet();
+        trace_msg( enumeration, 1, "Model number: " << numberOfModels + 1 );
+        if( ++numberOfModels >= maxModels )
+        {
+            trace_msg( enumeration, 1, "Enumerated " << maxModels << "." );
+            break;
+        }
+        else if( !solver.addClauseFromModelAndRestart() )
+        {
+            trace_msg( enumeration, 1, "All models have been found." );
+            break;
+        }
+    }
+}
+
+void
+WaspFacade::enumerationBacktracking()
+{
+    vector< bool > checked;
+    while( checked.size() <= solver.numberOfVariables() )
+        checked.push_back( false );
+    unsigned int result = solver.solve();
+    if( result == INCOHERENT )
+        return;
+        
+    vector< Literal > assums;
+    if( !foundModel( assums ) )
+        return;
+    
+    flipLatestChoice( assums, checked );
+    if( assums.empty() )
+        return;
+    begin:;
+    if( solver.getDecisionLevel( assums.back() ) - 1 < solver.getCurrentDecisionLevel() )
+        solver.unroll( solver.getDecisionLevel( assums.back() ) - 1 );
+    solver.clearConflictStatus();
+    result = solver.solve( assums );
+    if( result == INCOHERENT )
+    {
+        unsigned int bl = solver.getCurrentDecisionLevel();
+        if( bl == 0 )
+        {
+            unsigned int k = 0;
+            for( unsigned int i = 0; i < assums.size(); i++ )
+            {
+                assums[ k ] = assums[ i ];
+                if( solver.getDecisionLevel( assums[ i ] ) != 0 )
+                    k++;
+            }
+            assums.resize( k );
+        }
+        else
+        {
+            while( !assums.empty() && solver.getDecisionLevel( assums.back() ) > bl )
+                assums.pop_back();
+        }
+    }
+    else if( !foundModel( assums ) )
+        return;
+    
+    flipLatestChoice( assums, checked );
+    if( assums.empty() )
+        return;        
+    goto begin;
+}
+
+void
+WaspFacade::flipLatestChoice(
+    vector< Literal >& choices,
+    vector< bool >& checked )
+{
+    unsigned int size;
+    while( true )
+    {
+        size = choices.size();
+        if( size == 0 )
+            return;
+        if( checked[ size ] )
+            choices.pop_back();
+        else
+            break;
+    }
+    
+    choices[ size - 1 ] = choices[ size - 1 ].getOppositeLiteral();    
+    checked[ size ] = true;
+    for( unsigned int i = size + 1; i < checked.size(); i++ )
+        checked[ i ] = false;
+}
+
+bool
+WaspFacade::foundModel(
+    vector< Literal >& assums )
+{
+    solver.printAnswerSet();
+    trace_msg( enumeration, 1, "Model number: " << numberOfModels + 1 );
+    if( ++numberOfModels >= maxModels )
+    {
+        trace_msg( enumeration, 1, "Enumerated " << maxModels << "." );
+        return false;
+    }    
+    solver.getChoicesWithoutAssumptions( assums );
+    return true;
 }

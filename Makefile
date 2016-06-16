@@ -37,6 +37,10 @@ cxxflags.trace0x = \
  -Wall -Wextra -std=c++0x -DTRACE_ON
 linkflags.trace = \
  -lm
+cxxflags.tracerelease0x = \
+ -Wall -Wextra -std=c++0x -DTRACE_ON -DNDEBUG -O3
+linkflags.tracerelease0x = \
+ -lm
 cxxflags.release0x = \
  -Wall -Wextra -std=c++0x -DNDEBUG -O3
 linkflags.release0x = \
@@ -70,6 +74,9 @@ cxxscripts.no =
 
 SOURCE_DIR = src
 BUILD_DIR = build/$(BUILD)
+LIB_DIR = $(BUILD_DIR)/wasplib
+LIB_SRC_DIR = $(BUILD_DIR)/wasplib/src
+LIB_SRC_WASP_DIR = $(BUILD_DIR)/wasplib/wasp
 
 BINARY = $(BUILD_DIR)/wasp
 GCC = g++
@@ -83,9 +90,14 @@ SCRIPT_LDFLAGS = $(scriptsld.$(SCRIPT))
 CXX_SCRIPTS = $(cxxscripts.$(SCRIPT))
 
 SRCS = $(shell find $(SOURCE_DIR) -name '*.cpp')
+SRCSCC = $(shell find $(SOURCE_DIR) -name '*.cc')
 
+LIBCPP = $(patsubst $(SOURCE_DIR)%.cpp,$(LIB_SRC_DIR)%.cpp, $(SRCS))
+LIBCC = $(patsubst $(SOURCE_DIR)%.cc,$(LIB_SRC_DIR)%.cc, $(SRCSCC))
 OBJS = $(patsubst $(SOURCE_DIR)%.cpp,$(BUILD_DIR)%.o, $(SRCS))
 DEPS = $(patsubst $(SOURCE_DIR)%.cpp,$(BUILD_DIR)%.d, $(SRCS))
+OBJSCC = $(patsubst $(SOURCE_DIR)%.cc,$(BUILD_DIR)%.o, $(SRCSCC))
+DEPSCC = $(patsubst $(SOURCE_DIR)%.cc,$(BUILD_DIR)%.d, $(SRCSCC))
 
 all: $(BINARY)
 
@@ -95,28 +107,45 @@ $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp
 $(BUILD_DIR)/%.d: $(SOURCE_DIR)/%.cpp
 	mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) $(SCRIPT_CFLAGS) $(SCRIPT_LDFLAGS) $(CXX_SCRIPTS) -MM -MT '$(@:.d=.o)' $< -MF $@
+
+$(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cc
+	$(CXX) $(CXXFLAGS) $(SCRIPT_CFLAGS) $(SCRIPT_LDFLAGS) $(CXX_SCRIPTS) -c $< -o $@
+
+$(BUILD_DIR)/%.d: $(SOURCE_DIR)/%.cc
+	mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) $(SCRIPT_CFLAGS) $(SCRIPT_LDFLAGS) $(CXX_SCRIPTS) -MM -MT '$(@:.d=.o)' $< -MF $@
 	
-$(BINARY): $(OBJS) $(DEPS)
-	$(LINK) $(LINKFLAGS) $(SCRIPT_CFLAGS) $(CXX_SCRIPTS) $(LIBS) $(OBJS) $(SCRIPT_LDFLAGS) -o $(BINARY)
+$(BINARY): $(OBJS) $(OBJSCC) $(DEPS) $(DEPSCC)
+	$(LINK) $(LINKFLAGS) $(SCRIPT_CFLAGS) $(CXX_SCRIPTS) $(LIBS) $(OBJS) $(OBJSCC) $(SCRIPT_LDFLAGS) -o $(BINARY)
 
-static: $(OBJS) $(DEPS)
-	$(LINK) $(LINKFLAGS) $(SCRIPT_CFLAGS) $(CXX_SCRIPTS) $(LIBS) $(OBJS) $(SCRIPT_LDFLAGS) -static -o $(BINARY)
+static: $(OBJS) $(OBJSCC) $(DEPS) $(DEPSCC)
+	$(LINK) $(LINKFLAGS) $(SCRIPT_CFLAGS) $(CXX_SCRIPTS) $(LIBS) $(OBJS) $(OBJSCC) $(SCRIPT_LDFLAGS) -static -o $(BINARY)
 
+$(BUILD_DIR)/wasp.a:
+	ar rcs $@ $(OBJS)
+	
 run: $(BINARY)
 	./$(BINARY)
 
+lib: $(BUILD_DIR)/wasp.a
+	rm -rf $(LIB_DIR)
+	mkdir -p $(LIB_DIR)
+	mv $(BUILD_DIR)/wasp.a $(LIB_DIR)
+	cp -r $(SOURCE_DIR) $(LIB_SRC_DIR)
+	rm -rf $(LIBCPP) $(LIBCC)
+	mv $(LIB_SRC_DIR) $(LIB_SRC_WASP_DIR)
 ########## Tests
 
 TESTS_DIR = tests
 
 TESTS_TESTER = $(TESTS_DIR)/pyregtest.py
 
-COMMAND = $(BINARY) -n 0 --silent
-
-TESTS_COMMAND_AllAnswerSets = $(COMMAND)
-TESTS_COMMAND_gringo = gringo3 | $(COMMAND)
+TESTS_COMMAND_wasp = $(BINARY) -n 0 --silent
+TESTS_COMMAND_waspweak = $(BINARY) --silent
+TESTS_COMMAND_AllAnswerSets = $(TESTS_COMMAND_wasp)
+TESTS_COMMAND_gringo = gringo3 | $(TESTS_COMMAND_wasp)
 TESTS_COMMAND_SatModel = $(BINARY)
-TESTS_COMMAND_WeakConstraints = $(COMMAND)
+TESTS_COMMAND_WeakConstraints = $(TESTS_COMMAND_waspweak)
 
 TESTS_CHECKER_AllAnswerSets = $(TESTS_DIR)/allAnswerSets.checker.py
 TESTS_CHECKER_SatModels = $(TESTS_DIR)/satModels.checker.py

@@ -29,10 +29,11 @@ using namespace std;
 #include "input/Dimacs.h"
 #include "weakconstraints/WeakInterface.h"
 #include "weakconstraints/Mgd.h"
-#include "weakconstraints/Oll.h"
+#include "weakconstraints/One.h"
 #include "weakconstraints/Opt.h"
 #include "weakconstraints/PMRes.h"
-#include "weakconstraints/OllBB.h"
+#include "weakconstraints/OneBB.h"
+#include "weakconstraints/K.h"
 #include "heuristic/ExternalHeuristic.h"
 
 class WaspFacade
@@ -63,7 +64,7 @@ class WaspFacade
         
         inline void setQueryAlgorithm( unsigned int value ) { queryAlgorithm = value; }
         
-        inline unsigned int solveWithWeakConstraints();        
+        inline unsigned int solveWithWeakConstraints();               
 
     private:
         Solver solver;
@@ -77,6 +78,13 @@ class WaspFacade
         bool disjCoresPreprocessing;        
         
         unsigned int queryAlgorithm;
+        
+        void enumerateModels();
+        void enumerationBlockingClause();
+        void enumerationBacktracking();
+        void flipLatestChoice( vector< Literal >& choices, vector< bool >& checked );
+        bool foundModel( vector< Literal >& assums );
+        unsigned int getMaxLevelUnsatCore( const Clause* unsatCore );
 };
 
 WaspFacade::WaspFacade() : numberOfModels( 0 ), maxModels( 1 ), printProgram( false ), printDimacs( false ), weakConstraintsAlg( OPT ), disjCoresPreprocessing( false )
@@ -107,17 +115,25 @@ WaspFacade::solveWithWeakConstraints()
             w = new PMRes( solver );
             break;
 
-        case OLLBB:
-            w = new OllBB( solver );
+        case ONEBB:
+            w = new OneBB( solver );
             break;
 
-        case OLLBBREST:
-            w = new OllBB( solver, true );
-            break;        
-
-        case OLL:
+        case ONEBBREST:
+            w = new OneBB( solver, true );
+            break;
+            
+        case BBBT:
+            w = new Opt( solver, true );            
+            break;
+            
+        case KALG:
+            w = new K( solver );
+            break;
+            
+        case ONE:
         default:            
-            w = new Oll( solver );
+            w = new One( solver );
             break;
     }
     

@@ -22,37 +22,20 @@
 unsigned int
 Opt::run()
 {
+    assumptions.clear();
+    varId = addAuxVariable();
+    assumptions.push_back( Literal( varId, NEGATIVE ) );
     trace_msg( weakconstraints, 1, "Starting algorithm " << ( disableprefchoices_ ? "BASIC" : "OPT" ) );
     solver.sortOptimizationLiterals( level() );
 //    createOptimizationAggregate();
-    
+
     if( !disableprefchoices_ )
         solver.addPreferredChoicesFromOptimizationLiterals( level() );
-    unsigned int numberOfModels = 0;
-    while( solver.solve( assumptions ) == COHERENT )
-    {
-        numberOfModels++;
-        uint64_t modelCost = solver.computeCostOfModel( level() );
-        foundAnswerSet( modelCost );        
-//        solver.printOptimizationValue( modelCost );
-        trace_msg( weakconstraints, 2, "Decision level of solver: " << solver.getCurrentDecisionLevel() );
-        if( modelCost == 0 || solver.getCurrentDecisionLevel() == 0 )
-            break;
-        
-//        /*Implement a better policy of unroll*/
-//        solver.doRestart();
-//        solver.simplifyOnRestart();
-//        solver.clearConflictStatus();
-        
-//        solver.removePrefChoices();        
-        if( !updateOptimizationAggregate( modelCost ) )
-        {
-            trace_msg( weakconstraints, 3, "Failed updating of optimization aggregate: return" );
-            break;        
-        }
-        
-        trace_msg( weakconstraints, 2, "Calling solver..." );
-    }        
+    numberOfModels = 0;
+    if( wasp::Options::weakConstraintsAlg != BBBT )
+        basic();             
+    else
+        basicBT();
     
     if( numberOfModels > 0 )
         return completedLevel() ? OPTIMUM_FOUND : OPTIMUM_FOUND_STOP;
@@ -74,8 +57,7 @@ Opt::createOptimizationAggregate(
         literals.push_back( optData.lit );
         weights.push_back( optData.weight );        
     }
-
-    varId = addAuxVariable();
+    
     Var aggrId = addAuxVariable();
     Clause* c = new Clause( 2 );
     c->addLiteral( Literal( varId, POSITIVE ) );
@@ -84,9 +66,7 @@ Opt::createOptimizationAggregate(
     
     aggregate = createAggregate( aggrId, literals, weights );
     processAndAddAggregate( aggregate, modelCost );
-    trace_msg( weakconstraints, 5, "...done! Aggregate: " << *aggregate );
-    
-    assumptions.push_back( Literal( varId, NEGATIVE ) );
+    trace_msg( weakconstraints, 5, "...done! Aggregate: " << *aggregate );    
 }
 
 bool
@@ -121,4 +101,136 @@ Opt::completedLevel()
     if( !createAggregateFromOptimizationLiterals() )
         return false;
     return true;
+}
+
+void
+Opt::flipLatestChoice(
+    vector< bool >& checked )
+{
+    unsigned int size;
+    while( true )
+    {
+        size = assumptions.size();
+        if( size == 1 )
+            return;
+        if( checked[ size ] )
+            assumptions.pop_back();
+        else
+            break;
+    }
+    
+    assumptions[ size - 1 ] = assumptions[ size - 1 ].getOppositeLiteral();    
+    checked[ size ] = true;
+    for( unsigned int i = size + 1; i < checked.size(); i++ )
+        checked[ i ] = false;
+}
+
+bool
+Opt::foundModel()
+{
+    numberOfModels++;
+    uint64_t modelCost = solver.computeCostOfModel( level() );
+    assert( modelCost < ub() );    
+    foundAnswerSet( modelCost );
+    
+    trace_msg( weakconstraints, 2, "Decision level of solver: " << solver.getCurrentDecisionLevel() );
+    if( modelCost == 0 )
+        return false;
+    
+    solver.getChoicesWithoutAssumptions( assumptions );
+    if( !updateOptimizationAggregate( modelCost ) )
+    {
+        trace_msg( weakconstraints, 3, "Failed updating of optimization aggregate: return" );
+        return false;
+    }
+    return true;
+}
+
+void
+Opt::backjump()
+{
+    const Clause* core = solver.getUnsatCore();
+    assert( core != NULL );
+    if( core->size() == 0 )
+        assumptions.resize( 1 );
+
+    unsigned int bl = solver.getMaxLevelOfClause( core );
+    if( bl == 0 )
+    {
+        unsigned int k = 1;
+        for( unsigned int i = 1; i < assumptions.size(); i++ )
+        {
+            assumptions[ k ] = assumptions[ i ];
+            if( solver.getDecisionLevel( assumptions[ i ] ) != 0 )
+                k++;
+        }
+        assumptions.resize( k );
+    }
+    else
+    {
+        while( assumptions.size() > 1 && solver.getDecisionLevel( assumptions.back() ) > bl )
+            assumptions.pop_back();
+    }
+}
+
+void
+Opt::basic()
+{
+    while( solver.solve( assumptions ) == COHERENT )
+    {
+        numberOfModels++;
+        uint64_t modelCost = solver.computeCostOfModel( level() );
+        foundAnswerSet( modelCost );        
+//        solver.printOptimizationValue( modelCost );
+        trace_msg( weakconstraints, 2, "Decision level of solver: " << solver.getCurrentDecisionLevel() );
+        if( modelCost == 0 || solver.getCurrentDecisionLevel() == 0 )
+            break;
+
+//        /*Implement a better policy of unroll*/
+//        solver.doRestart();
+//        solver.simplifyOnRestart();
+//        solver.clearConflictStatus();
+
+//        solver.removePrefChoices();        
+        if( !updateOptimizationAggregate( modelCost ) )
+        {
+            trace_msg( weakconstraints, 3, "Failed updating of optimization aggregate: return" );
+            break;        
+        }
+
+        trace_msg( weakconstraints, 2, "Calling solver..." );
+    }   
+}
+
+void
+Opt::basicBT()
+{
+    vector< bool > checked;
+    while( checked.size() <= solver.numberOfVariables() )
+        checked.push_back( false );
+    unsigned int result = solver.solve( assumptions );
+    if( result == INCOHERENT )
+        return;
+
+    if( !foundModel() )
+        return;
+
+    flipLatestChoice( checked );
+    if( assumptions.size() == 1 )
+        return;
+
+    solver.setComputeUnsatCores( true );
+    begin:;
+    solver.unrollToZero();
+    solver.clearConflictStatus();
+    result = solver.solve( assumptions );
+    if( result == INCOHERENT )
+        backjump();
+    else if( !foundModel() )
+        return;    
+
+    flipLatestChoice( checked );
+    if( assumptions.size() == 1 )
+        return;
+    goto begin;
 }

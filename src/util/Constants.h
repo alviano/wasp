@@ -44,6 +44,7 @@
 #define SILENT_OUTPUT 3
 #define THIRD_COMPETITION_OUTPUT 4
 #define MULTI 5
+#define ID_OUTPUT 6
 
 #define SEQUENCE_BASED_RESTARTS_POLICY 0
 #define GEOMETRIC_RESTARTS_POLICY 1
@@ -54,13 +55,22 @@
 #define OVERESTIMATE_REDUCTION 1
 #define ITERATIVE_COHERENCE_TESTING 2
 
+/*
+ * Weak constraints
+ */
 #define OPT 0
 #define MGD 1
-#define OLL 2
+#define ONE 2
 #define BB 3
 #define PMRES 4
-#define OLLBB 5
-#define OLLBBREST 6
+#define ONEBB 5
+#define ONEBBREST 6
+#define BBBT 7
+#define KALG 8
+
+#define MINIMIZATION_OFF 0
+#define MINIMIZATION_PROGRESSION 1
+#define MINIMIZATION_LINEARSEARCH 2
 
 #define INCOHERENT 0
 #define COHERENT 1
@@ -81,6 +91,17 @@
         #endif
     #endif
 #endif
+
+#define SHIFT_PROPAGATOR 0
+#define SHIFT_LEFT_RIGHT 1
+#define SHIFT_NORMALIZE 2
+#define SHIFT_QUADRATIC 3
+#define SHIFT_QUADRATIC_AGGREGATE 4
+#define SHIFT_NAIVE 5
+
+#define ENUMERATION_BC 0
+#define ENUMERATION_BT 1
+
 #define VERSION "2.0"
 
 /*
@@ -149,6 +170,7 @@ typedef unsigned int DECISION_POLICY;
 typedef unsigned int OUTPUT_POLICY;
 typedef unsigned int RESTARTS_POLICY;
 typedef unsigned int WEAK_CONSTRAINTS_ALG;
+typedef unsigned int SHIFT_STRATEGY;
 
 #endif
 

@@ -48,6 +48,7 @@ namespace wasp
 #define OPTIONID_trace_satelite ( 'z' + 8 )
 #define OPTIONID_trace_aggregates ( 'z' + 9 )
 #define OPTIONID_trace_weakconstraints ( 'z' + 10 )
+#define OPTIONID_trace_disjunction ( 'z' + 11 )
 
 /* OUTPUT OPTIONS */
 #define OPTIONID_silent ( 'z' + 20 )
@@ -57,6 +58,9 @@ namespace wasp
 #define OPTIONID_printdimacs ( 'z' + 24 )
 #define OPTIONID_multi ( 'z' + 25 )
 #define OPTIONID_lastModel ( 'z' + 26 )
+#define OPTIONID_printbounds ( 'z' + 27 )
+#define OPTIONID_printatomtable ( 'z' + 28 )
+#define OPTIONID_idOutput ( 'z' + 29 )
 
 /* HEURISTIC OPTIONS */
 #define OPTIONID_heuristic_interpreter ( 'z' + 30 )
@@ -83,14 +87,21 @@ namespace wasp
 #define OPTIONID_forward_partialchecks ( 'z' + 104 )
 #define OPTIONID_bumpactivityafterpartialchecks ( 'z' + 105 )
 #define OPTIONID_backward_partialchecks ( 'z' + 106 )
+#define OPTIONID_shift_strategy ( 'z' + 107 )
+#define OPTIONID_shift_onedef ( 'z' + 108 )
+#define OPTIONID_simplifications ( 'z' + 109 )
+#define OPTIONID_enumeration ( 'z' + 110 )
     
 /* WEAK CONSTRAINTS OPTIONS */
 #define OPTIONID_weakconstraintsalgorithm ( 'z' + 200 )
+#define OPTIONID_kthreshold ( 'z' + 201 )
 
 #define OPTIONID_disjcores ( 'z' + 215 )
 #define OPTIONID_minimize ( 'z' + 216 )
 #define OPTIONID_stratification ( 'z' + 217 )
 #define OPTIONID_firstmodel ( 'z' + 218 )
+#define OPTIONID_minimizationstrategy ( 'z' + 219 )
+#define OPTIONID_minimizationbudget ( 'z' + 220 )
     
 /* QUERY OPTIONS */
 #define OPTIONID_queryalgorithm ( 'z' + 300 )
@@ -107,6 +118,8 @@ OUTPUT_POLICY Options::outputPolicy = WASP_OUTPUT;
 bool Options::printProgram = false;
 bool Options::printDimacs = false;
 bool Options::printLastModelOnly = false;
+bool Options::printBounds = false;
+bool Options::printAtomTable = false;
 
 bool Options::minisatPolicy = false;
 
@@ -132,7 +145,9 @@ bool Options::backwardPartialChecks = false;
 
 bool Options::bumpActivityAfterPartialCheck = false;
 
-WEAK_CONSTRAINTS_ALG Options::weakConstraintsAlg = OLL;
+WEAK_CONSTRAINTS_ALG Options::weakConstraintsAlg = ONE;
+
+unsigned int Options::kthreshold = 0;
 
 bool Options::disjCoresPreprocessing = false;
 bool Options::minimizeUnsatCore = false;
@@ -154,6 +169,23 @@ void split( const string &s, char delim, vector< string >& output )
     while( getline( ss, item, delim ) )
         output.push_back( item );    
 }
+SHIFT_STRATEGY Options::shiftStrategy = SHIFT_NAIVE;
+
+bool Options::oneDefShift = false;
+
+map< string, SHIFT_STRATEGY > Options::stringToShift;
+
+map< string, unsigned int > Options::stringToMinimization;
+
+bool Options::simplifications = true;
+
+unsigned Options::silent = 0;
+
+unsigned int Options::minimizationStrategy = MINIMIZATION_OFF;
+
+unsigned int Options::minimizationBudget = UINT_MAX;
+
+unsigned int Options::enumerationStrategy = ENUMERATION_BT;
 
 void
 Options::parse(
@@ -178,7 +210,7 @@ Options::parse(
             {
                 /* TRACE OPTIONS */
                 { "trace-parser", required_argument, NULL, OPTIONID_trace_parser },
-                { "trace-solving", required_argument, NULL, OPTIONID_trace_solving },
+                { "trace-solver", required_argument, NULL, OPTIONID_trace_solving },
                 { "trace-modelchecker", required_argument, NULL, OPTIONID_trace_checker },
                 { "trace-unfoundedset", required_argument, NULL, OPTIONID_trace_us },
                 { "trace-heuristic", required_argument, NULL, OPTIONID_trace_heuristic },
@@ -187,15 +219,19 @@ Options::parse(
                 { "trace-satelite", required_argument, NULL, OPTIONID_trace_satelite },
                 { "trace-aggregates", required_argument, NULL, OPTIONID_trace_aggregates },
                 { "trace-weakconstraints", required_argument, NULL, OPTIONID_trace_weakconstraints },
+                { "trace-disjunction", required_argument, NULL, OPTIONID_trace_disjunction },
 
                 /* OUTPUT OPTIONS */
                 { "competition-output", no_argument, NULL, OPTIONID_competition_output },
-                { "silent", no_argument, NULL, OPTIONID_silent },                
+                { "silent", optional_argument, NULL, OPTIONID_silent },                
                 { "third-competition-output", no_argument, NULL, OPTIONID_third_competition_output },
                 { "printprogram", no_argument, NULL, OPTIONID_printprogram },
                 { "printdimacs", no_argument, NULL, OPTIONID_printdimacs },
                 { "multi", no_argument, NULL, OPTIONID_multi },
                 { "printlatestmodel", no_argument, NULL, OPTIONID_lastModel },
+                { "printbounds", no_argument, NULL, OPTIONID_printbounds },
+                { "printatomstable", no_argument, NULL, OPTIONID_printatomtable },
+                { "id-output", no_argument, NULL, OPTIONID_idOutput },                
 
                 /* MINISAT POLICY */
                 { "minisat-policy", no_argument, NULL, OPTIONID_minisatheuristic },                
@@ -221,6 +257,9 @@ Options::parse(
                 { "stdin", no_argument, NULL, OPTIONID_stdin },
                 { "time-limit", required_argument, NULL, OPTIONID_time_limit },
                 { "max-cost", required_argument, NULL, OPTIONID_max_cost },
+                { "disable-simplifications", no_argument, NULL, OPTIONID_simplifications },
+                
+                { "enumeration-strategy", required_argument, NULL, OPTIONID_enumeration },
                 
                 { "exchange-clauses", no_argument, NULL, OPTIONID_exchange_clauses },
                 { "forward-partialchecks", no_argument, NULL, OPTIONID_forward_partialchecks },  
@@ -229,10 +268,17 @@ Options::parse(
                 
                 /* WEAK CONSTRAINTS */
                 { "weakconstraints-algorithm", required_argument, NULL, OPTIONID_weakconstraintsalgorithm },
+                { "k-threshold", required_argument, NULL, OPTIONID_kthreshold },
                 { "enable-disjcores", no_argument, NULL, OPTIONID_disjcores },
-                { "minimize-unsatcore", no_argument, NULL, OPTIONID_minimize },
+                { "trim-core", no_argument, NULL, OPTIONID_minimize },
                 { "disable-stratification", no_argument, NULL, OPTIONID_stratification },
                 { "compute-firstmodel", optional_argument, NULL, OPTIONID_firstmodel },
+                { "shrinking-strategy", required_argument, NULL, OPTIONID_minimizationstrategy },
+                { "shrinking-budget", required_argument, NULL, OPTIONID_minimizationbudget },
+                
+                /* SHIFT STRATEGY */
+                { "disjunction", required_argument, NULL, OPTIONID_shift_strategy },
+                { "enable-shift-onedef", no_argument, NULL, OPTIONID_shift_onedef },
 
                 /* QUERY */
                 { "query-algorithm", optional_argument, NULL, OPTIONID_queryalgorithm },
@@ -302,12 +348,24 @@ Options::parse(
             case OPTIONID_trace_weakconstraints:
                 setTraceLevel( weakconstraints, atoi( optarg ) );
                 break;
+                
+            case OPTIONID_trace_disjunction:
+                setTraceLevel( disjunction, atoi( optarg ) );
+                break;
 
             case OPTIONID_competition_output:
                 outputPolicy = COMPETITION_OUTPUT;
                 break;
 
             case OPTIONID_silent:
+                if( optarg )
+                {
+                    silent = atoi( optarg );
+                    if( silent < 1 )
+                        silent = 0;
+                    else if( silent > 1 )
+                        silent = 2;                    
+                }
                 outputPolicy = SILENT_OUTPUT;
                 break;
 
@@ -352,7 +410,19 @@ Options::parse(
                         ErrorMessage::errorGeneric( "Unkwown interpreter." );
                 }
                 break;
+
+            case OPTIONID_printbounds:
+                printBounds = true;
+                break;
                 
+            case OPTIONID_printatomtable:
+                printAtomTable = true;
+                break;
+                
+            case OPTIONID_idOutput:
+                outputPolicy = ID_OUTPUT;
+                break;                
+                                
             case OPTIONID_heuristic_scriptname:
                 if( optarg )
                     heuristic_scriptname = optarg;
@@ -413,10 +483,14 @@ Options::parse(
             case OPTIONID_disable_restarts:
                 restartsPolicy = NO_RESTARTS_POLICY;
                 break;                            
-
+                            
             case OPTIONID_dimacs:
                 outputPolicy = DIMACS_OUTPUT;
                 break; 
+                
+            case OPTIONID_simplifications:
+                simplifications = false;
+                break;
                 
             case OPTIONID_help:
                 Help::printHelp();
@@ -458,7 +532,35 @@ Options::parse(
                     weakConstraintsAlg = getAlgorithm( string( optarg ) );
                 else
                     ErrorMessage::errorGeneric( "Inserted invalid algorithm for weak constraints." );
-                break;            
+                break;
+                
+            case OPTIONID_kthreshold:
+                if( optarg )
+                {
+                    int kthreshold_ = atoi( optarg );
+                    if( kthreshold_ < 0 )
+                        ErrorMessage::errorGeneric( "Threshold for k must be >= 0." );
+                    kthreshold = kthreshold_;
+                }
+                break;
+                
+            case OPTIONID_shift_strategy:
+                if( optarg )
+                    shiftStrategy = getShiftStrategy( string( optarg ) );
+                else
+                    ErrorMessage::errorGeneric( "Inserted invalid strategy for shift." );
+                break;
+                
+            case OPTIONID_enumeration:
+                if( optarg )
+                    enumerationStrategy = getEnumerationStrategy( string( optarg ) );
+                else 
+                    ErrorMessage::errorGeneric( "Inserted invalid strategy for enumeration." );
+                break;
+
+            case OPTIONID_shift_onedef:
+                oneDefShift = true;
+                break;
                 
             case OPTIONID_disjcores:
                 disjCoresPreprocessing = true;
@@ -476,6 +578,18 @@ Options::parse(
                 computeFirstModel = true;
                 if( optarg )
                     budget = atoi( optarg );                    
+                break;
+                
+            case OPTIONID_minimizationstrategy:
+                if( optarg )
+                    minimizationStrategy = getMinimizationStrategy( string( optarg ) );
+                else
+                    ErrorMessage::errorGeneric( "Inserted invalid strategy for minimization." );                
+                break;
+                
+            case OPTIONID_minimizationbudget:
+                if( optarg )
+                    minimizationBudget = atoi( optarg );                    
                 break;
                 
             case OPTIONID_queryalgorithm:
@@ -546,16 +660,62 @@ Options::getAlgorithm(
     return it->second;    
 }
 
+SHIFT_STRATEGY
+Options::getShiftStrategy(
+    const string& s )
+{   
+    map< string, SHIFT_STRATEGY >::iterator it = stringToShift.find( s );
+    if( it == stringToShift.end() )
+        ErrorMessage::errorGeneric( "Inserted invalid strategy for shift." );
+    
+    return it->second;    
+}
+
+SHIFT_STRATEGY
+Options::getMinimizationStrategy(
+    const string& s )
+{   
+    map< string, unsigned int >::iterator it = stringToMinimization.find( s );
+    if( it == stringToMinimization.end() )
+        ErrorMessage::errorGeneric( "Inserted invalid strategy for minimization." );
+    
+    return it->second;    
+}
+
+unsigned int
+Options::getEnumerationStrategy(
+    const string& s )
+{
+    if( s == "bt" )
+        return ENUMERATION_BT;
+    else if( s == "bc" )
+        return ENUMERATION_BC;
+    ErrorMessage::errorGeneric( "Inserted invalid strategy for enumeration." );
+    return ENUMERATION_BT;
+}
+
 void
 Options::initMap()
 {
-    stringToWeak[ "oll" ] = OLL;
+    stringToWeak[ "one" ] = ONE;
     stringToWeak[ "opt" ] = OPT;
     stringToWeak[ "mgd" ] = MGD;
     stringToWeak[ "pmres" ] = PMRES;
     stringToWeak[ "basic" ] = BB;
-    stringToWeak[ "interleaving-restarts" ] = OLLBBREST;
-    stringToWeak[ "interleaving-choices" ] = OLLBB;    
+    stringToWeak[ "interleaving-restarts" ] = ONEBBREST;
+    stringToWeak[ "interleaving-choices" ] = ONEBB;
+    stringToWeak[ "basic-bt" ] = BBBT;
+    stringToWeak[ "k" ] = KALG;
+
+    stringToShift[ "shift" ] = SHIFT_NAIVE;
+    stringToShift[ "propagator" ] = SHIFT_PROPAGATOR;
+//    stringToShift[ "lr" ] = SHIFT_LEFT_RIGHT;
+    stringToShift[ "completion" ] = SHIFT_NORMALIZE;
+//    stringToShift[ "quadratic" ] = SHIFT_QUADRATIC;
+//    stringToShift[ "quadratic-aggregate" ] = SHIFT_QUADRATIC_AGGREGATE;
+    
+    stringToMinimization[ "progression" ] = MINIMIZATION_PROGRESSION;
+    stringToMinimization[ "linearsearch" ] = MINIMIZATION_LINEARSEARCH;
 }
 
 };

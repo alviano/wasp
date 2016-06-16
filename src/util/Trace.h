@@ -93,6 +93,7 @@ class TraceLevels
         unsigned satelite() { return 7; }
         unsigned aggregates() { return 8; }
         unsigned weakconstraints() { return 9; }
+        unsigned disjunction() { return 10; }
 
     private:
         inline TraceLevels();
@@ -110,6 +111,7 @@ TraceLevels::TraceLevels()
     types.push_back( pair< string, unsigned >( "satelite", 0 ) );
     types.push_back( pair< string, unsigned >( "aggregates", 0 ) );
     types.push_back( pair< string, unsigned >( "weakconstraints", 0 ) );
+    types.push_back( pair< string, unsigned >( "disjunction", 0 ) );
 }
 
 };

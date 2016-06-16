@@ -110,6 +110,20 @@ WeakInterface::createAggregate(
     return aggregate;
 }
 
+Aggregate*
+WeakInterface::createAggregateCount(
+    Var aggrId,
+    const vector< Literal >& literals )
+{
+    Aggregate* aggregate = new Aggregate();
+    aggregate->addLiteral( Literal( aggrId, NEGATIVE ), 0 );
+
+    for( unsigned int i = 0; i < literals.size(); i++ )
+        aggregate->addLiteral( literals[ i ], 1 );
+
+    return aggregate;
+}
+
 bool
 WeakInterface::processAndAddAggregate(
     Aggregate* aggregate,
@@ -203,11 +217,17 @@ WeakInterface::disjointCorePreprocessing()
     unsigned int originalNumberOfOptLiterals = solver.numberOfOptimizationLiterals( level() );
     while( true )
     {
-        if( solver.solve( assumptions ) != INCOHERENT )
-        {            
+        unsigned int result = solver.solve( assumptions );
+        if( result != INCOHERENT )
+        {
+            if( result == COHERENT )
+            {
+                uint64_t cost = solver.computeCostOfModel( level() );
+                foundAnswerSet( cost );
+            }
             solver.clearConflictStatus();
             solver.unrollToZero();
-            assumptions.clear();
+            assumptions.clear();            
             break;
         }
 
@@ -297,6 +317,7 @@ WeakInterface::foundAnswerSet(
 
     ub_ = cost;
     solver.printAnswerSet();
+    solver.foundUpperBound( ub_ );
     Vector< uint64_t > costs;
     solver.computeCostOfModel( costs );
     solver.printOptimizationValue( costs );
@@ -307,4 +328,113 @@ WeakInterface::resetSolver()
 {
     solver.unrollToZero();
     solver.clearConflictStatus();
+}
+
+const Clause*
+WeakInterface::minimizeUnsatCore()
+{
+    const Clause* unsatCore = solver.getUnsatCore();
+    assert( unsatCore != NULL );
+    if( unsatCore->size() <= 1 )
+        return unsatCore;
+    
+    switch( wasp::Options::minimizationStrategy )
+    {
+        case MINIMIZATION_PROGRESSION:
+            return minimizeUnsatCoreWithProgression( unsatCore );            
+            
+        case MINIMIZATION_LINEARSEARCH:
+            return minimizeUnsatCoreWithLinearSearch( unsatCore );
+            
+        default:
+            return unsatCore;
+    }
+}
+
+const Clause*
+WeakInterface::minimizeUnsatCoreWithProgression(
+    const Clause* unsatCore )
+{
+    Clause* originalCore = new Clause();
+    originalCore->copyLiterals( *unsatCore );    
+    
+    unsigned int max = 1;    
+    unsigned int otherMax = 1;
+    begin:;
+    vector< Literal > assumptions;    
+    resetSolver();
+    for( unsigned int i = 0; i < max && i < originalCore->size(); i++ )
+    {
+        Literal lit = originalCore->getAt( i );
+        if( !solver.getDataStructure( lit ).isOptLit() )
+            continue;
+
+        Literal toAdd = lit.getOppositeLiteral();
+        assumptions.push_back( toAdd );
+    }
+
+    solver.setMaxNumberOfSeconds( wasp::Options::minimizationBudget );
+    unsigned int result = solver.solve( assumptions );
+    solver.setMaxNumberOfSeconds( UINT_MAX );
+    if( result == INCOHERENT )
+    {
+        resetSolver();
+        cout << "COST (oldCore,newCore)=(" << originalCore->size() << "," << solver.getUnsatCore()->size() << ")" << endl;
+        delete originalCore;
+        return solver.getUnsatCore();
+    }
+    else if( result == COHERENT )
+    {
+        uint64_t cost = solver.computeCostOfModel( level() );
+        foundAnswerSet( cost );        
+    }
+    if( max + otherMax > originalCore->size() )
+        otherMax = 1;        
+    max += otherMax;
+    otherMax = otherMax * 2;
+    if( max >= originalCore->size() )
+        return originalCore;
+    goto begin;
+}
+
+const Clause*
+WeakInterface::minimizeUnsatCoreWithLinearSearch(
+    const Clause* unsatCore )
+{
+    Clause* originalCore = new Clause();
+    originalCore->copyLiterals( *unsatCore );    
+    
+    unsigned int max = 1;    
+    begin:;
+    vector< Literal > assumptions;    
+    resetSolver();
+    for( unsigned int i = 0; i < max && i < originalCore->size(); i++ )
+    {
+        Literal lit = originalCore->getAt( i );
+        if( !solver.getDataStructure( lit ).isOptLit() )
+            continue;
+
+        Literal toAdd = lit.getOppositeLiteral();
+        assumptions.push_back( toAdd );
+    }
+
+    solver.setMaxNumberOfSeconds( wasp::Options::minimizationBudget );
+    unsigned int result = solver.solve( assumptions );
+    solver.setMaxNumberOfSeconds( UINT_MAX );
+    if( result == INCOHERENT )
+    {
+        resetSolver();
+        cout << "COST (oldCore,newCore)=(" << originalCore->size() << "," << solver.getUnsatCore()->size() << ")" << endl;
+        delete originalCore;
+        return solver.getUnsatCore();
+    }
+    else if( result == COHERENT )
+    {
+        uint64_t cost = solver.computeCostOfModel( level() );
+        foundAnswerSet( cost );        
+    }
+    max++;
+    if( max >= originalCore->size() )
+        return originalCore;
+    goto begin;
 }

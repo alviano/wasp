@@ -16,31 +16,29 @@
  *
  */
 
-#ifndef SILENTOUTPUTBUILDER_H
-#define SILENTOUTPUTBUILDER_H
+#ifndef IDOUTPUTBUILDER_H
+#define IDOUTPUTBUILDER_H
 
-#include "WaspOutputBuilder.h"
+#include "OutputBuilder.h"
 
-class SilentOutputBuilder : public WaspOutputBuilder
+class IdOutputBuilder : public OutputBuilder
 {
     public:
-        inline SilentOutputBuilder();
-//        virtual void onProgramIncoherent();        
-        virtual void greetings();
+        inline IdOutputBuilder();
         virtual void startModel();
-        virtual void printVariable( Var, bool isTrue );
+        virtual void printVariable( Var, bool );
         virtual void endModel();
         virtual void onProgramIncoherent();
-        virtual void onFinish();
-        virtual void foundModel();
-        virtual void onKill();        
+        virtual void greetings();
+        virtual void optimumFound();
 
     private:
-        unsigned int nbOfModels;
+        unsigned int numberOfModels;
 };
 
-SilentOutputBuilder::SilentOutputBuilder() : WaspOutputBuilder(), nbOfModels( 0 )
+IdOutputBuilder::IdOutputBuilder() : OutputBuilder(), numberOfModels( 0 )
 {
 }
 
 #endif
+

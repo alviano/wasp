@@ -52,12 +52,34 @@ namespace wasp
             static bool computeFirstModel;
             static unsigned int budget;
             static bool printLastModelOnly;
+            static bool printBounds;
+            static bool printAtomTable;
             static bool stratification;
             
             static unsigned int interpreter;
             static unsigned int plugins_interpreter;
             static char* heuristic_scriptname;
             static vector< string > pluginsFilenames;
+            static SHIFT_STRATEGY shiftStrategy;
+            
+            static bool oneDefShift;
+            
+            static bool simplifications;            
+            
+            static unsigned int minimizationStrategy;
+            static unsigned int minimizationBudget;
+            
+            static unsigned int enumerationStrategy;            
+            static WEAK_CONSTRAINTS_ALG weakConstraintsAlg;
+            
+            static unsigned int kthreshold;
+            
+            static unsigned int silent;
+            
+        private:
+
+            static DELETION_POLICY deletionPolicy;
+            static unsigned int deletionThreshold;
             
         private:
 
@@ -78,17 +100,25 @@ namespace wasp
 
             static unsigned int timeLimit;
             
-            static bool exchangeClauses;                                    
-            
-            static WEAK_CONSTRAINTS_ALG weakConstraintsAlg;
+            static bool exchangeClauses;                                                
             
             static bool disjCoresPreprocessing;
             
-            static bool minimizeUnsatCore;                                          
+            static bool minimizeUnsatCore;                                                                  
             
             static map< string, WEAK_CONSTRAINTS_ALG > stringToWeak;
             
+            static map< string, SHIFT_STRATEGY > stringToShift;
+            
+            static map< string, unsigned int > stringToMinimization;            
+            
             static WEAK_CONSTRAINTS_ALG getAlgorithm( const string& s );
+            
+            static SHIFT_STRATEGY getShiftStrategy( const string& s );
+            
+            static unsigned int getMinimizationStrategy( const string& s );
+            
+            static unsigned int getEnumerationStrategy( const string& s );
             
             static void initMap();
     };

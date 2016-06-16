@@ -108,4 +108,6 @@ MultiOutputBuilder::foundLowerBound(
 {
     if( !wasp::Options::printLastModelOnly )        
         cout << "l " << lb << endl;
+    else
+        OutputBuilder::foundLowerBound( lb );
 }

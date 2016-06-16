@@ -36,15 +36,19 @@ class Solver;
     
     class Statistics {    
         
-        public:
+        public:            
             inline Statistics() :
             separator( "\n---------------------------\n" ),
+            numberOfAtoms( 0 ), numberOfConstraints( 0 ), numberOfDisjunctiveRules( 0 ),
+            numberOfNormalRules( 0 ), numberOfChoiceRules( 0 ),
+            numberOfCounts( 0 ), numberOfSums( 0 ), numberOfWeakConstraints( 0 ),
+            clausesAfterSatelite( 0 ), binaryAfterSatelite( 0 ), ternaryAfterSatelite( 0 ),
             numberOfRestarts( 0 ), numberOfChoices( 0 ),
             numberOfLearnedClauses( 0 ), numberOfLearnedUnaryClauses( 0 ),
             numberOfLearnedBinaryClauses( 0 ), numberOfLearnedTernaryClauses( 0 ),
             sumOfSizeLearnedClauses( 0 ), minLearnedSize( MAXUNSIGNEDINT ), maxLearnedSize( 0 ),
             numberOfBinaryClauses( 0 ), numberOfTernaryClauses( 0 ), numberOfClauses( 0 ),          
-            numberOfDeletion( 0 ), numberOfDeletionInvokation( 0 ),
+            numberOfDeletion( 0 ), numberOfDeletionInvocation( 0 ),
             minDeletion( MAXUNSIGNEDINT ), maxDeletion( 0 ), shrink( 0 ),
             shrinkedClauses( 0 ), shrinkedLiterals( 0 ),
             max_literals( 0 ), tot_literals( 0 ), numberOfLearnedClausesFromPropagators( 0 ),
@@ -136,7 +140,7 @@ class Solver;
 
             inline void onDeletion( unsigned int /*numberOfLearnedClauses*/, unsigned int del )
             {
-                numberOfDeletionInvokation++;
+                numberOfDeletionInvocation++;
                 numberOfDeletion += del;
                 
                 if( del < minDeletion )
@@ -152,18 +156,30 @@ class Solver;
                     numberOfBinaryClauses++;
                 else if( size == 3 )
                     numberOfTernaryClauses++;
-                
                 numberOfClauses++;
             }
 
+            inline void onAddingClauseAfterSatelite( unsigned int size )
+            {
+                if( size == 2 )
+                    binaryAfterSatelite++;
+                else if( size == 3 )
+                    ternaryAfterSatelite++;
+                clausesAfterSatelite++;
+            }
+            
             inline void afterPreprocessing( unsigned int vars, unsigned int clauses )
             {
                 clausesAfterSimplifications = clauses;
                 variablesAfterSimplifications = vars;                
                 if( disabled )
                     return;
-                cerr << "Clauses after satelite         : " << clauses << " (original number was: " << ( numberOfClauses - numberOfBinaryClauses ) << ")" << endl;
-                cerr << "Assigned vars after satelite   : " << vars << endl;
+                
+                cerr << "Impact of satelite" << endl << endl;
+                cerr << "Number of Clauses              : " << clausesAfterSatelite << endl;
+                cerr << "   Binary                      : " << binaryAfterSatelite << " (" << ( ( double ) binaryAfterSatelite * 100 / ( double ) clausesAfterSatelite ) << "%)" << endl;
+                cerr << "   Ternary                     : " << ternaryAfterSatelite << " (" << ( double )( ternaryAfterSatelite * 100 / ( double ) clausesAfterSatelite ) << "%)" << endl;
+                cerr << "Assigned vars                  : " << vars << " (" << ( ( double ) vars * 100 / ( double ) numberOfVars ) << "%)" << endl;
                 
                 cerr << separator << endl;
                 cerr << "Tight                          : " << ( ( cyclicHCComponents.size() + cyclicComponents.size() ) > removedComponents ? "no" : "yes" ) << endl;
@@ -194,12 +210,23 @@ class Solver;
                 numberOfVars = vars;
                 if( disabled )
                     return;
-                cerr << "Clauses after first propagation: " << clauses << endl;
-                cerr << "Original Number of Clauses     : " << numberOfClauses << endl;
+                cerr << "Parser" << endl << endl;
+                cerr << "Number of atoms                : " << numberOfAtoms << endl;
+                cerr << "Number of constraints          : " << numberOfConstraints << endl;
+                cerr << "Number of normal rules         : " << numberOfNormalRules << endl;
+                cerr << "Number of disjunctive rules    : " << numberOfDisjunctiveRules << endl;
+                cerr << "Number of choice rules         : " << numberOfChoiceRules << endl;
+                cerr << "Number of counts               : " << numberOfCounts << endl;
+                cerr << "Number of sums                 : " << numberOfSums << endl;
+                cerr << "Number of weak constraints     : " << numberOfWeakConstraints << endl;
+                cerr << separator << endl;
+                
+                cerr << "Number of Clauses              : " << numberOfClauses << endl;
                 cerr << "   Binary                      : " << numberOfBinaryClauses << " (" << ( ( double ) numberOfBinaryClauses * 100 / ( double )numberOfClauses ) << "%)" << endl;
                 cerr << "   Ternary                     : " << numberOfTernaryClauses << " (" << ( double )( numberOfTernaryClauses * 100 / ( double ) numberOfClauses ) << "%)" << endl;
+                cerr << "   Left after propagation      : " << clauses << endl;
                 cerr << "Variables                      : " << vars << endl;
-                cerr << "   Assigned                    : " << assignedVars << endl;
+                cerr << "   Assigned                    : " << assignedVars << " (" << ( ( double ) assignedVars * 100 / ( double ) numberOfVars ) << "%)" << endl;
                 
                 cerr << separator << endl;
             }
@@ -253,7 +280,7 @@ class Solver;
             
             inline void setGenerator( bool gen ) { generator = gen; }                        
 
-            inline void startCheckerInvokation( bool isPartial, time_t curr )
+            inline void startCheckerInvocation( bool isPartial, time_t curr )
             {
                 if( isPartial )
                     numberOfPartialChecks++;
@@ -262,7 +289,7 @@ class Solver;
                 currentTime = curr;
             }
             
-            inline void endCheckerInvokation( time_t curr )
+            inline void endCheckerInvocation( time_t curr )
             {
                 time_t c = curr - currentTime;
                 avgTime += c;
@@ -309,15 +336,18 @@ class Solver;
                     maxSizeAND = size;
             }
             
-            inline void onDeletingChecker( unsigned int i )
-            {
-                printCheckerStats( i );
-            } 
+            inline void onDeletingChecker( unsigned int i ) { printCheckerStats( i ); } 
             
-            inline void setTrueAtLevelZero( unsigned int nb )
-            {
-                trueAtLevelZero = nb;
-            }      
+            inline void setTrueAtLevelZero( unsigned int nb ) { trueAtLevelZero = nb; }      
+            
+            inline void addedAtom() { numberOfAtoms++; }
+            inline void readConstraint() { numberOfConstraints++; }
+            inline void readNormalRule() { numberOfNormalRules++; }
+            inline void readDisjunctiveRule() { numberOfDisjunctiveRules++; }
+            inline void readChoiceRule() { numberOfChoiceRules++; }
+            inline void readCount() { numberOfCounts++; }
+            inline void readSum() { numberOfSums++; }
+            inline void readWeakConstraints( unsigned int numb ) { numberOfWeakConstraints += numb; }
             
         private:
             static vector< Statistics* > instances;
@@ -326,6 +356,19 @@ class Solver;
             
             string separator;
 
+            unsigned int numberOfAtoms;
+            unsigned int numberOfConstraints;
+            unsigned int numberOfDisjunctiveRules;
+            unsigned int numberOfNormalRules;
+            unsigned int numberOfChoiceRules;
+            unsigned int numberOfCounts;
+            unsigned int numberOfSums;
+            unsigned int numberOfWeakConstraints;
+            
+            unsigned int clausesAfterSatelite;
+            unsigned int binaryAfterSatelite;
+            unsigned int ternaryAfterSatelite;
+            
             unsigned int numberOfRestarts;
             unsigned int numberOfChoices;
             
@@ -342,7 +385,7 @@ class Solver;
             unsigned int numberOfClauses;
             
             unsigned int numberOfDeletion;
-            unsigned int numberOfDeletionInvokation;
+            unsigned int numberOfDeletionInvocation;
             unsigned int minDeletion;
             unsigned int maxDeletion;
             
@@ -400,7 +443,7 @@ class Solver;
             void printStatistics()
             {
                 if( disabled )
-                    return;
+                    return;                
                 cerr << separator << endl;
                 cerr << "Learning" << endl << endl;
                 cerr << "Learned clauses                : " << numberOfLearnedClauses << endl;
@@ -427,8 +470,8 @@ class Solver;
                                 
                 cerr << separator << endl;
                 cerr << "Deletion" << endl << endl;
-                cerr << "Deletion Invokation            : " << numberOfDeletionInvokation << endl;
-                if( numberOfDeletionInvokation > 0 )
+                cerr << "Deletion calls                 : " << numberOfDeletionInvocation << endl;
+                if( numberOfDeletionInvocation > 0 )
                 {
                 cerr << "Number of Deletion             : " << numberOfDeletion << endl;
                 cerr << "Min Number of Deletion         : " << minDeletion << endl;

@@ -39,12 +39,15 @@ using namespace std;
 #include "PostPropagator.h"
 #include "DependencyGraph.h"
 #include "Aggregate.h"
+#include "DisjunctionPropagator.h"
 #include "util/Constants.h"
 #include "WatchedList.h"
 #include "stl/BoundedQueue.h"
 #include "Component.h"
 #include "heuristic/MinisatHeuristic.h"
 #include "ExternalPropagator.h"
+#include "CardinalityConstraint.h"
+
 class HCComponent;
 class WeakInterface;
 
@@ -141,6 +144,7 @@ class Solver
         inline void assignLiteral( Clause* implicant );
         inline void assignLiteral( Literal literal, Reason* implicant );
         
+        inline bool propagateAtLevelZero();
         inline bool propagateLiteralAsDeterministicConsequence( Literal literal );
         inline bool propagateLiteralAsDeterministicConsequenceSatelite( Literal literal );
         
@@ -253,10 +257,12 @@ class Solver
         
         inline Satelite* getSatelite() { return satelite; }
         
-        inline void addAggregate( Aggregate* aggr ) { assert( aggr != NULL ); aggregates.push_back( aggr ); }
         inline void addExternalPropagator( ExternalPropagator* prop ) { assert( prop != NULL ); externalPropagators.push_back( prop ); }
         inline void endPreprocessing();
-        inline bool hasPropagators() const { return ( !tight() || !aggregates.empty() || !externalPropagators.empty() ); }                
+        inline bool hasPropagators() const { return ( !tight() || !propagators.empty() || !disjunctionPropagators.empty() || !externalPropagators.empty() ); }                
+        inline void addDisjunctionPropagator( DisjunctionPropagator* disj ) { assert( disj != NULL ); disjunctionPropagators.push_back( disj ); }
+        inline void addAggregate( Aggregate* aggr ) { assert( aggr != NULL ); propagators.push_back( aggr ); }
+        inline void addCardinalityConstraint ( CardinalityConstraint* cc ) { assert( cc != NULL ); propagators.push_back( cc ); }
         
         inline void turnOffSimplifications() { callSimplifications_ = false; }
         inline bool callSimplifications() const { return callSimplifications_; }
@@ -351,6 +357,7 @@ class Solver
         inline void detachClauseFromAllLiterals( Clause&, Literal literal );
         
         inline void attachAggregate( Aggregate& );
+        inline void attachCardinalityConstraint( CardinalityConstraint& );
         
         inline bool isSatisfied( const Clause& clause ) const;
         inline bool allUndefined( const Clause& clause ) const;
@@ -438,6 +445,7 @@ class Solver
 //        inline uint64_t getPrecomputedCost() const { return precomputedCost; }                
         
         inline void foundLowerBound( uint64_t lb ) { outputBuilder->foundLowerBound( lb ); }
+        inline void foundUpperBound( uint64_t ub ) { outputBuilder->foundUpperBound( ub ); }
         inline bool incremental() const { return incremental_; }
         
         inline bool isOptimizationProblem() const { return !optimizationLiterals.empty(); }
@@ -457,12 +465,18 @@ class Solver
         inline void onUnfoundedSet( const Vector< Var >& unfoundedSet ) { choiceHeuristic->onUnfoundedSet( unfoundedSet ); }
         inline void onLoopFormula( const Clause* clause ) { choiceHeuristic->onLoopFormula( clause ); }
                
+//        inline void simplifyOptimizationLiterals();               
+
+        void getChoicesWithoutAssumptions( vector< Literal >& choices );
+        inline unsigned int getMaxLevelOfClause( const Clause* clause ) const;
+        
     private:
         HCComponent* hcComponentForChecker;
         PostPropagator* afterConflictPropagator;
         bool exchangeClauses_;
         bool generator;
         static vector< Clause* > learnedFromAllSolvers;
+        vector< Literal > choices;
 
         unsigned int solveWithoutPropagators( vector< Literal >& assumptions );
         unsigned int solvePropagators( vector< Literal >& assumptions );
@@ -519,8 +533,9 @@ class Solver
         inline void addInPropagatorsForUnroll( Propagator* prop );
         
         vector< GUSData* > gusDataVector;
-        vector< Aggregate* > aggregates;
         vector< ExternalPropagator* > externalPropagators;
+        vector< Propagator* > propagators;
+        vector< DisjunctionPropagator* > disjunctionPropagators;
         
 //        Aggregate* optimizationAggregate;
 //        unsigned int numberOfOptimizationLevels;
@@ -701,6 +716,7 @@ Solver::Solver()
     variableDataStructures.push_back( NULL );
     variableDataStructures.push_back( NULL );
     fromLevelToPropagators.push_back( 0 );
+    choices.push_back( Literal::null );
 }
 
 void
@@ -915,7 +931,7 @@ Solver::cleanAndAddClause(
     
     trace_msg( solving, 10, "Clause after simplification: " << *clause );
     
-    assert( allUndefined( *clause ) );
+    assert( allUndefined( *clause ) );    
     return addClause( clause );
 }
 
@@ -1469,6 +1485,10 @@ Solver::setAChoice(
     incrementCurrentDecisionLevel();
     assert( isUndefined( choice ) );
     assignLiteral( choice );
+    if( choices.size() <= currentDecisionLevel )
+        choices.push_back( choice );
+    else
+        choices[ currentDecisionLevel ] = choice;
 }
 
 Literal
@@ -1487,6 +1507,22 @@ void
 Solver::startIterationOnAssignedVariable()
 {
     variables.startIterationOnAssignedVariable();
+}
+
+bool
+Solver::propagateAtLevelZero()
+{
+    while( hasNextVariableToPropagate() )
+    {
+        Var variableToPropagate = getNextVariableToPropagate();
+        propagateAtLevelZero( variableToPropagate );
+
+        if( conflictDetected() )
+            return false;
+    }    
+    assert( !conflictDetected() );
+
+    return true;
 }
 
 bool
@@ -1594,6 +1630,7 @@ Solver::attachWatches()
         else
         {
             choiceHeuristic->onNewClause( currentPointer );
+            statistics( this, onAddingClauseAfterSatelite( current.size() ) );            
             if( current.size() == 2 )
             {     
                 addBinaryClause( current[ 0 ], current[ 1 ] );        
@@ -2077,6 +2114,14 @@ Solver::attachAggregate(
         if( !isFalse( aggregateLiteral ) )
             addPropagator( lit, &aggregate, j );
     }
+}
+
+void
+Solver::attachCardinalityConstraint(
+    CardinalityConstraint& constraint )
+{    
+    for( unsigned int i = 0; i < constraint.size(); i++ )
+        addPropagator( constraint[ i ], &constraint, i );    
 }
 
 bool
@@ -2619,6 +2664,23 @@ Solver::simplifyOptimizationLiterals(
     }
     optLiterals.resize( j );
     return precomputedCosts[ level ];
+}
+
+unsigned int
+Solver::getMaxLevelOfClause(
+    const Clause* clause ) const
+{
+    assert( clause != NULL );
+    unsigned int max = 0;
+    for( unsigned int i = 0; i < clause->size(); i++ )
+    {
+        if( isUndefined( clause->getAt( i ) ) )
+            continue;
+        unsigned int dl = getDecisionLevel( clause->getAt( i ) );
+        if( dl > max )
+            max = dl;
+    }
+    return max;
 }
 
 //void
