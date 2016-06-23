@@ -75,8 +75,9 @@ class Help
             cout << "--competition-output                   - Print models according to the fourth competition output" << endl;   
             cout << "--id-output                            - Print models using the internal id of atoms" << endl;
             cout << "--printlatestmodel                     - Print the latest computed model" << endl;   
+            cout << "--printonlyoptimum                     - Print only optimum answer sets" << endl;
             cout << "--printbounds                          - Print lower and upper bound during optimization of answer sets" << endl;
-            cout << "--printatomstable                      - Print internal dictionary for atoms used in wasp" << endl;
+            cout << "--printatomstable                      - Print internal dictionary for atoms used in wasp" << endl;            
 
             cout << separator << endl;
             
@@ -137,6 +138,9 @@ class Help
             
             cout << separator << endl;
             cout << "General options                        " << endl << endl;
+            cout << "-n                                     - Specify the answers to compute " << endl;
+            cout << "       <=0                             - To compute all answers" << endl;
+            cout << "       =k                              - To compute at most k answers" << endl;
             cout << "--dimacs                               - Enable dimacs format as input and outputs" << endl;
             cout << "--help                                 - Print this guide and exit" << endl;
             cout << "--disable-simplifications              - Disable the simplifications of satelite" << endl;

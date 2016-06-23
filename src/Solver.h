@@ -748,8 +748,6 @@ Solver::setOutputBuilder(
     OutputBuilder* value )
 {
     assert( value != NULL );
-    if( outputBuilder != NULL )
-        delete outputBuilder;
     outputBuilder = value;
 }
 
