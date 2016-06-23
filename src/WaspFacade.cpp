@@ -116,6 +116,8 @@ WaspFacade::solve()
                     break;
                 
                 case INCOHERENT:
+                    if( wasp::Options::printOnlyOptimum && maxModels > 1 )
+                        solver.setOutputBuilder( outputBuilder );
                     solver.foundIncoherence();
                     break;
                     
