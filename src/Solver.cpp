@@ -89,7 +89,6 @@ Solver::~Solver()
         hcComponents.pop_back();
     }
     
-    delete outputBuilder;
     delete satelite;
     delete restart;
 //    delete optimizationAggregate;

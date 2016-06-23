@@ -60,7 +60,7 @@ void
 SilentOutputBuilder::onFinish()
 {
     if( wasp::Options::silent > 1 )
-        cout << "Number of models: " << nbOfModels << endl;
+        cout << "Number of printed answers: " << nbOfModels << endl;
 }
 
 void
