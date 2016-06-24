@@ -32,10 +32,7 @@ Opt::run()
     if( !disableprefchoices_ )
         solver.addPreferredChoicesFromOptimizationLiterals( level() );
     numberOfModels = 0;
-    if( wasp::Options::weakConstraintsAlg != BBBT )
-        basic();             
-    else
-        basicBT();
+    ( wasp::Options::weakConstraintsAlg != BBBT ) ? basic() : basicBT();
     
     if( numberOfModels > 0 )
         return completedLevel() ? OPTIMUM_FOUND : OPTIMUM_FOUND_STOP;
@@ -54,12 +51,15 @@ Opt::createOptimizationAggregate(
     for( unsigned int i = 0; i < solver.numberOfOptimizationLiterals( level() ); i++ )
     {
         OptimizationLiteralData& optData = solver.getOptimizationLiteral( level(), i );
+        if( optData.isAux() )
+            break;
         literals.push_back( optData.lit );
         weights.push_back( optData.weight );        
     }
     
     Var aggrId = addAuxVariable();
     Clause* c = new Clause( 2 );
+    assert( varId != 0 );
     c->addLiteral( Literal( varId, POSITIVE ) );
     c->addLiteral( Literal( aggrId, NEGATIVE ) );
     solver.addClauseRuntime( c );
