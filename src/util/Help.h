@@ -101,11 +101,11 @@ class Help
             cout << "       =basic-bt                       - Model-guided algorithm basic with classical backtracking after first model" << endl;
             cout << "       =mgd                            - Model-guided algorithm mgd" << endl;
             cout << "       =opt                            - Model-guided algorithm opt" << endl;
-            cout << "       =one                            - Core-guided algorithm one" << endl;
+            cout << "       =one                            - Core-guided algorithm one (default)" << endl;
             cout << "       =pmres                          - Core-guided algorithm pmres" << endl;
             cout << "       =k                              - Core-guided algorithm k" << endl;
-            cout << "       =interleaving-restarts          - Mixed approach between oll and basic - restarts based" << endl;
-            cout << "       =interleaving-choices           - Mixed approach between oll and basic - choices based" << endl;
+            cout << "       =interleaving-restarts          - Mixed approach between one and basic - restarts based" << endl;
+            cout << "       =interleaving-choices           - Mixed approach between one and basic - choices based" << endl;
             cout << "--k-threshold                          - Initialization for algorithm k. Must be >= 0" << endl;
             cout << "       =0                              - Special case for a dynamic choice of k threshold" << endl;            
             cout << "       =1                              - Special case for algorithm one with cardinality constraints" << endl;            
