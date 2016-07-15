@@ -444,8 +444,18 @@ class Solver
         inline uint64_t getPrecomputedCost( unsigned int level ) const { assert( level < precomputedCosts.size() ); return precomputedCosts[ level ]; }
 //        inline uint64_t getPrecomputedCost() const { return precomputedCost; }                
         
-        inline void foundLowerBound( uint64_t lb ) { outputBuilder->foundLowerBound( lb ); }
-        inline void foundUpperBound( uint64_t ub ) { outputBuilder->foundUpperBound( ub ); }
+        inline void foundLowerBound( uint64_t lb )
+        {
+            outputBuilder->foundLowerBound( lb );
+            for( unsigned int i = 0; i < propagatorsAttachedToBounds.size(); i++ )
+                propagatorsAttachedToBounds[ i ]->foundLowerBound( lb );
+        }
+        inline void foundUpperBound( uint64_t ub )
+        {
+            outputBuilder->foundUpperBound( ub );
+            for( unsigned int i = 0; i < propagatorsAttachedToBounds.size(); i++ )
+                propagatorsAttachedToBounds[ i ]->foundUpperBound( ub );
+        }
         inline bool incremental() const { return incremental_; }
         
         inline bool isOptimizationProblem() const { return !optimizationLiterals.empty(); }
@@ -457,7 +467,12 @@ class Solver
         
         inline void onFinishedParsing(){ choiceHeuristic->onFinishedParsing(); }
         inline void addedVarName( Var var );
-        inline void onStartingSolver( unsigned int nVars, unsigned int nClauses ) { choiceHeuristic->onStartingSolver( nVars, nClauses ); }
+        inline void onStartingSolver( unsigned int nVars, unsigned int nClauses )
+        {
+            choiceHeuristic->onStartingSolver( nVars, nClauses );
+            for( unsigned int i = 0; i < externalPropagators.size(); i++ )
+                externalPropagators[ i ]->onStartingSolver();
+        }
         inline void assignedLiteral( Literal lit );
 //        inline void addedLiteralInLearnedClause( Literal lit ) { choiceHeuristic->onLitInLearntClause( lit ); }
         inline void onStartingParsing() { choiceHeuristic->onStartingParsing(); }
@@ -469,6 +484,10 @@ class Solver
 
         void getChoicesWithoutAssumptions( vector< Literal >& choices );
         inline unsigned int getMaxLevelOfClause( const Clause* clause ) const;
+        
+        inline void addPropagatorAttachedToBounds( ExternalPropagator* externalPropagator ) { assert( externalPropagator ); propagatorsAttachedToBounds.push_back( externalPropagator ); }
+        inline void addPropagatorAfterUnit( ExternalPropagator* externalPropagator ) { assert( externalPropagator ); propagatorsAfterUnit.push_back( externalPropagator ); }
+        inline void addPropagatorAttachedToCheckAnswerSet( ExternalPropagator* externalPropagator ) { assert( externalPropagator ); propagatorsAttachedToCheckAnswerSet.push_back( externalPropagator ); }
         
     private:
         HCComponent* hcComponentForChecker;
@@ -632,6 +651,11 @@ class Solver
         } glucoseData;
         
         vector< vector< OptimizationLiteralData* > > optimizationLiterals;
+        vector< ExternalPropagator* > propagatorsAttachedToBounds;
+        vector< ExternalPropagator* > propagatorsAttachedToCheckAnswerSet;
+        vector< ExternalPropagator* > propagatorsAfterUnit;
+        bool handlePropagatorFailure( ExternalPropagator* propagator );
+
         vector< bool > weighted_;
 //        vector< uint64_t > maxCostOfLevelOfOptimizationRules;        
         
@@ -665,6 +689,15 @@ class Solver
             assert( FALSE == 1 && TRUE == 2 );
             
             return true;
+        }
+        
+        string getTruthValue( Literal lit )
+        {
+            if( isTrue( lit ) )
+                return "true";
+            if( isFalse( lit ) )
+                return "false";
+            return "undefined";            
         }
         #endif
 };
@@ -736,11 +769,7 @@ Solver::assignedLiteral(
 {
     #if defined(ENABLE_PYTHON) || defined(ENABLE_PERL)
     if ( getCurrentDecisionLevel() == 0 )
-    {
-        choiceHeuristic->onLitAtLevelZero( lit );
-        for( unsigned int i = 0; i < externalPropagators.size(); i++ )
-            externalPropagators[ i ]->onLitAtLevelZero( lit );
-    }
+        choiceHeuristic->onLitAtLevelZero( lit );        
     choiceHeuristic->onLitTrue( lit );
     #endif
 }
@@ -888,8 +917,6 @@ Solver::assignLiteral(
     Literal lit,
     Reason* implicant )
 {
-    assert( implicant != NULL );
-    
     assert( !conflictDetected() );
     assignedLiteral( lit );
     if( !variables.assign( currentDecisionLevel, lit, implicant ) )
@@ -1437,7 +1464,7 @@ Solver::analyzeConflict()
         if( size != 2 )
         {
             assignLiteral( learnedClause );
-            onLearning( learnedClause );  // FIXME: this should be moved outside
+            onLearning( learnedClause );
         }
         else
         {
@@ -1707,12 +1734,6 @@ Solver::preprocessing()
     callSimplifications_ = false;
     statistics( this, afterPreprocessing( numberOfAssignedLiterals(), numberOfClauses() ) );
 
-    for( unsigned int i = 0; i < externalPropagators.size(); i++ )
-        if( externalPropagators[ i ]->isProgramIncoherent() )
-        {
-            trace( solving, 1, "Incoherence detected by external propagators.\n" );
-            return false;
-        }
     return true;
 }
 

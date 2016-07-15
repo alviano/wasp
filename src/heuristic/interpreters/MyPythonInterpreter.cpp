@@ -23,11 +23,16 @@ using namespace std;
 
 #ifdef ENABLE_PYTHON
 
-MyPythonInterpreter::MyPythonInterpreter( char* filename ) : Interpreter()
+MyPythonInterpreter::MyPythonInterpreter( char* filename, string scriptDirectory ) : Interpreter()
 {
     setenv( "PYTHONPATH", ".", 1 );
     Py_Initialize();
     PyObject* pName = PyString_FromString( filename );
+    if( scriptDirectory != "" )
+    {
+        string s( "import sys; sys.path.append('" + scriptDirectory + "')");
+        PyRun_SimpleString( s.c_str() );
+    }
     pModule = PyImport_Import( pName );
     Py_DECREF( pName );
     if( pModule == NULL )

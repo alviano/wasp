@@ -31,7 +31,7 @@ using namespace std;
 class MyPerlInterpreter : public Interpreter
 {
     public:
-        MyPerlInterpreter( char* filename );
+        MyPerlInterpreter( char* filename, string );
         ~MyPerlInterpreter();
 
         void callListMethod( const string& method_name, const vector< int >& parameters, vector< int >& output );
@@ -47,7 +47,7 @@ class MyPerlInterpreter : public Interpreter
 class MyPerlInterpreter : public Interpreter
 {
     public:
-        MyPerlInterpreter( char* ) {}
+        MyPerlInterpreter( char*, string ) {}
         ~MyPerlInterpreter() {}
 
         void callListMethod( const string&, const vector< int >&, vector< int >& ) {}

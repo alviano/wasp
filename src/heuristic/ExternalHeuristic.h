@@ -71,7 +71,7 @@
 class ExternalHeuristic : public HeuristicStrategy
 {
     public:        
-        ExternalHeuristic( Solver& solver, char* filename, unsigned int interpr );
+        ExternalHeuristic( Solver& solver, char* filename, unsigned int interpr, string scriptDirectory );
         ~ExternalHeuristic();
 
         void addedVarName( Var var, const string& name );

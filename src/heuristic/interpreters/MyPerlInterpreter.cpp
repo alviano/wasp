@@ -20,7 +20,7 @@
 
 #ifdef ENABLE_PERL
 
-MyPerlInterpreter::MyPerlInterpreter( char* filename ) : Interpreter()
+MyPerlInterpreter::MyPerlInterpreter( char* filename, string ) : Interpreter()
 {
     parameters = new char*[ 2 ];
     parameters[ 0 ] = filename;

@@ -52,6 +52,8 @@ class Learning
         void setVisited( Var v, unsigned int value ) { assert( v < visited.size() ); visited[ v ] = value; }        
         Clause* analyzeFinal( Literal lit );
         
+        static void sortClause( Clause* clause, const Solver& solver );
+        
     private:
     
         Solver& solver;
@@ -95,9 +97,7 @@ class Learning
         void simplifyLearnedClause( Clause* lc );
         bool allMarked( Reason* clause, Literal literal );
         
-        void computeMaxDecisionLevel( const Clause& lc );
-        
-        void sortClause( Clause* clause );
+        void computeMaxDecisionLevel( const Clause& lc );                
         
         #ifndef NDEBUG
         /**

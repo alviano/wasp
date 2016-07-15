@@ -90,7 +90,7 @@ class WaspFacade
 WaspFacade::WaspFacade() : numberOfModels( 0 ), maxModels( 1 ), printProgram( false ), printDimacs( false ), weakConstraintsAlg( OPT ), disjCoresPreprocessing( false )
 {
     if( wasp::Options::interpreter != NO_INTERPRETER )
-        solver.setChoiceHeuristic( new ExternalHeuristic( solver, wasp::Options::heuristic_scriptname, wasp::Options::interpreter ) );
+        solver.setChoiceHeuristic( new ExternalHeuristic( solver, wasp::Options::heuristic_scriptname, wasp::Options::interpreter, wasp::Options::scriptDirectory ) );
 }
 
 unsigned int

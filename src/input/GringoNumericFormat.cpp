@@ -3144,7 +3144,7 @@ GringoNumericFormat::addExternalPropagators()
     for( unsigned int i = 0; i < wasp::Options::pluginsFilenames.size(); i++ )
     {
         string filename = wasp::Options::pluginsFilenames[ i ];        
-        ExternalPropagator* prop = new ExternalPropagator( filename.c_str(), wasp::Options::plugins_interpreter );
+        ExternalPropagator* prop = new ExternalPropagator( filename.c_str(), wasp::Options::plugins_interpreter, solver, wasp::Options::scriptDirectory );
         solver.addExternalPropagator( prop );
     }
 }

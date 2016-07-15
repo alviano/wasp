@@ -100,6 +100,7 @@ class Help
             cout << "       =python                         - Use python as interpreter" << endl;            
             #endif
             cout << "--plugins-files=file1,file2,...,filen  - Specify a list of plugins" << endl;
+            cout << "--script-directory=absolutepath        - Specify a different folder for retrieving the python modules (default is .)" << endl;
             #endif
             cout << separator << endl;
 

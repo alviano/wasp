@@ -67,6 +67,7 @@ namespace wasp
 #define OPTIONID_heuristic_scriptname ( 'z' + 31 )
 #define OPTIONID_heuristic_pluginsinterpreter ( 'z' + 32 )
 #define OPTIONID_heuristic_plugins ( 'z' + 33 )
+#define OPTIONID_heuristic_setscriptdirectory ( 'z' + 34 )
 
 #define OPTIONID_minisatheuristic ( 'z' + 40 )
 
@@ -162,6 +163,8 @@ map< string, WEAK_CONSTRAINTS_ALG > Options::stringToWeak;
 
 vector< string > Options::pluginsFilenames;
 
+string Options::scriptDirectory = "";
+
 void split( const string &s, char delim, vector< string >& output )
 {
     stringstream ss( s );
@@ -242,6 +245,7 @@ Options::parse(
                 { "heuristic-scriptname", required_argument, NULL, OPTIONID_heuristic_scriptname },
                 { "plugins-interpreter", required_argument, NULL, OPTIONID_heuristic_pluginsinterpreter },
                 { "plugins-files", required_argument, NULL, OPTIONID_heuristic_plugins },
+                { "script-directory", required_argument, NULL, OPTIONID_heuristic_setscriptdirectory },
                 #endif
                 /* RESTART OPTIONS */                
 //                { "geometric-restarts", optional_argument, NULL, OPTIONID_geometric_restarts },
@@ -448,6 +452,11 @@ Options::parse(
             case OPTIONID_heuristic_plugins:
                 if( optarg )
                     split( string( optarg ), ',', pluginsFilenames );
+                break;
+                
+            case OPTIONID_heuristic_setscriptdirectory:
+                if( optarg )
+                    scriptDirectory = string( optarg );
                 break;
                 
             case OPTIONID_sequence_based_restarts:

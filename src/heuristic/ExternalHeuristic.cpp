@@ -23,15 +23,15 @@
 #include "interpreters/MyPerlInterpreter.h"
 #include "interpreters/MyPythonInterpreter.h"
 
-ExternalHeuristic::ExternalHeuristic( Solver& s, char* filename, unsigned int interpr ) : HeuristicStrategy( s )
+ExternalHeuristic::ExternalHeuristic( Solver& s, char* filename, unsigned int interpr, string scriptDirectory ) : HeuristicStrategy( s )
 {
     if( filename == NULL )
         ErrorMessage::errorGeneric( "Please specify the script file" );
 
     if( interpr == PYTHON_INTERPRETER )
-        interpreter = new MyPythonInterpreter( filename );
+        interpreter = new MyPythonInterpreter( filename, scriptDirectory );
     else if( interpr == PERL_INTERPRETER )
-        interpreter = new MyPerlInterpreter( filename );
+        interpreter = new MyPerlInterpreter( filename, scriptDirectory );
     else
         ErrorMessage::errorGeneric( "Unsupported interpreter" );    
     bool check_choiceVars = interpreter->checkMethod( method_choiceVars );

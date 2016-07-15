@@ -441,7 +441,7 @@ Learning::learnClausesFromDisjunctiveUnfoundedSet(
         simplifyLearnedClause( learnedClause );
 
     if( learnedClause->size() >= 2 )
-        sortClause( learnedClause );
+        Learning::sortClause( learnedClause, solver );
     
     if( solver.glucoseHeuristic() )
         learnedClause->setLbd( solver.computeLBD( *learnedClause ) );
@@ -477,7 +477,8 @@ Learning::computeMaxDecisionLevel(
 
 void
 Learning::sortClause(
-    Clause* clause )
+    Clause* clause,
+    const Solver& solver )
 {
     assert( clause->size() > 1 );
     unsigned int max1 = ( solver.isUndefined( clause->getAt( 0 ) ) ) ? UINT_MAX : solver.getDecisionLevel( clause->getAt( 0 ) );

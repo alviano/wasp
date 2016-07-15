@@ -312,6 +312,57 @@ Solver::solveWithoutPropagators(
     return modelIsValidUnderAssumptions( assumptions ) ? COHERENT : INCOHERENT;
 }
 
+bool
+Solver::handlePropagatorFailure(
+    ExternalPropagator* propagator )
+{
+    Clause* clause = propagator->getReasonForCheckFailure( *this );
+    if( clause == NULL )
+        return false;
+
+    unsigned int size = clause->size();
+    statistics( this, onLearningFromPropagators( size ) );
+    if( size == 0 )
+    {
+        clearConflictStatus();
+        delete clause;
+        return false;
+    }
+    else if( size == 1 )
+    {
+        if( getCurrentDecisionLevel() != 0 )
+        {
+            clearConflictStatus();
+            if( !doRestart() )
+                return false;
+        }
+        assignLiteral( clause->getAt( 0 ) );
+        delete clause;
+    }
+    else
+    {
+        if( !isUndefined( clause->getAt( 1 ) ) && getDecisionLevel( clause->getAt( 1 ) ) < getCurrentDecisionLevel() )
+        {
+            clearConflictStatus();
+            trace( solving, 2, "Learned clause from propagator and backjumping to level %d.\n", getDecisionLevel( clause->getAt( 1 ) ) );
+            unroll( getDecisionLevel( clause->getAt( 1 ) ) );
+        }          
+
+        if( propagator->hasToAddClauseFromCheckFailure() )
+        {
+            addLearnedClause( clause, false );
+            onLearning( clause );
+        }
+        if( !isUndefined( clause->getAt( 1 ) ) )
+        {
+            assert( !isTrue( clause->getAt( 0 ) ) || getDecisionLevel( clause->getAt( 0 ) ) == 0 );
+            if( !isTrue( clause->getAt( 0 ) ) )
+                assignLiteral( clause );
+        }        
+    }
+    return true;
+}
+
 unsigned int 
 Solver::solvePropagators(
     vector< Literal >& assumptions )
@@ -364,6 +415,17 @@ Solver::solvePropagators(
                 assert_msg( hasNextVariableToPropagate() || getCurrentDecisionLevel() == numberOfAssumptions || getCurrentDecisionLevel() == 0, getCurrentDecisionLevel() << " != " << numberOfAssumptions );
             }
         }
+        
+        #if defined(ENABLE_PYTHON) || defined(ENABLE_PERL)
+        for( unsigned int i = 0; i < propagatorsAfterUnit.size(); i++ )
+        {
+            propagatorsAfterUnit[ i ]->endUnitPropagation( *this );
+            if( conflictDetected() )
+                goto conflict;
+            else if( hasNextVariableToPropagate() )
+                goto propagationLabel;
+        }
+        #endif    
         
         postPropagationLabel:;
         if( afterConflictPropagator != NULL )
@@ -465,6 +527,18 @@ Solver::solvePropagators(
             return INCOHERENT;
     }
     
+    #if defined(ENABLE_PYTHON) || defined(ENABLE_PERL)
+    for( unsigned int i = 0; i < propagatorsAttachedToCheckAnswerSet.size(); i++ )
+        if( !propagatorsAttachedToCheckAnswerSet[ i ]->checkAnswerSet( *this ) )
+        {
+            if( !handlePropagatorFailure( propagatorsAttachedToCheckAnswerSet[ i ] ) )
+                return INCOHERENT;
+            if( conflictDetected() )
+                goto conflict;
+            else if( hasNextVariableToPropagate() )
+                goto propagationLabel;
+        }
+    #endif
     completeModel();
     assert_msg( getNumberOfUndefined() == 0, "Found a model with " << getNumberOfUndefined() << " undefined variables." );
     assert_msg( allClausesSatisfied(), "The model found is not correct." );

@@ -61,6 +61,7 @@ namespace wasp
             static char* heuristic_scriptname;
             static vector< string > pluginsFilenames;
             static SHIFT_STRATEGY shiftStrategy;
+            static string scriptDirectory;
             
             static bool oneDefShift;
             

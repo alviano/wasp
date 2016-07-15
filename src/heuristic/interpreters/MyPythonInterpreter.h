@@ -31,7 +31,7 @@ using namespace std;
 class MyPythonInterpreter : public Interpreter
 {
     public:
-        MyPythonInterpreter( char* filename );
+        MyPythonInterpreter( char* filename, string );
         ~MyPythonInterpreter();
         
         void callListMethod( const string& method_name, const vector< int >& parameters, vector< int >& output );
@@ -47,7 +47,7 @@ class MyPythonInterpreter : public Interpreter
 class MyPythonInterpreter : public Interpreter
 {
     public:
-        MyPythonInterpreter( char* ){}
+        MyPythonInterpreter( char*, string ){}
         ~MyPythonInterpreter() {}
         
         void callListMethod( const string&, const vector< int >&, vector< int >& ) {}
