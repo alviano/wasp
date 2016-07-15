@@ -63,20 +63,20 @@ namespace wasp
 #define OPTIONID_idOutput ( 'z' + 29 )
 #define OPTIONID_onlyOptimum ( 'z' + 30 )
 
-/* HEURISTIC OPTIONS */
-#define OPTIONID_heuristic_interpreter ( 'z' + 40 )
-#define OPTIONID_heuristic_scriptname ( 'z' + 41 )
-#define OPTIONID_heuristic_pluginsinterpreter ( 'z' + 42 )
-#define OPTIONID_heuristic_plugins ( 'z' + 43 )
-#define OPTIONID_heuristic_setscriptdirectory ( 'z' + 44 )
-
-#define OPTIONID_minisatheuristic ( 'z' + 45 )
+#define OPTIONID_minisatheuristic ( 'z' + 40 )
 
 /* RESTART OPTIONS */
 #define OPTIONID_geometric_restarts ( 'z' + 50 )
 #define OPTIONID_sequence_based_restarts ( 'z' + 51 )
 #define OPTIONID_minisat_restarts ( 'z' + 52 )
 #define OPTIONID_disable_restarts ( 'z' + 53 )
+
+/* HEURISTIC OPTIONS */
+#define OPTIONID_heuristic_interpreter ( 'z' + 60 )
+#define OPTIONID_heuristic_scriptname ( 'z' + 61 )
+#define OPTIONID_heuristic_pluginsinterpreter ( 'z' + 62 )
+#define OPTIONID_heuristic_plugins ( 'z' + 63 )
+#define OPTIONID_heuristic_setscriptdirectory ( 'z' + 64 )
 
 /* INPUT OPTIONS */
 #define OPTIONID_dimacs ( 'z' + 90 )
