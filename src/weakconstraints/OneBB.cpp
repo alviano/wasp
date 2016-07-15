@@ -27,7 +27,8 @@ OneBB::run()
     initInUnsatCore();
     solver.sortOptimizationLiterals( level() );
     initHeuristicValues();
-    
+    strategyModelGuided->resetVarId();    
+    strategyModelGuided->createVarId();
     unsigned int i = 0;
     while( true )
     {
@@ -65,11 +66,11 @@ OneBB::bb()
 {
     trace_msg( weakconstraints, 3, "Starting BB" );
     solver.unrollToZero();
+    solver.clearConflictStatus();
     assumptions.clear();
     addOptimizationLiteralInAssumptions();
-
     solver.setComputeUnsatCores( false );    
-    unsigned int res = solver.solve();
+    unsigned int res = solver.solve( assumptions );
     while( res == COHERENT )
     {
         numberOfModels++;
@@ -87,11 +88,10 @@ OneBB::bb()
         }                
         
         trace_msg( weakconstraints, 4, "Calling solver..." );
-        res = solver.solve();
+        res = solver.solve( assumptions );
     }
-
     if( res == INTERRUPTED )
-        return res;    
+        return res;
     return OPTIMUM_FOUND;    
 }
 
@@ -99,28 +99,30 @@ unsigned int
 OneBB::one()
 {
     trace_msg( weakconstraints, 3, "Starting ONE" );
-    solver.unrollToZero();        
+    solver.unrollToZero();
+    solver.clearConflictStatus();
     assumptions.clear();
-    solver.setComputeUnsatCores( true );    
-    computeAssumptions();    
-    unsigned int res = solver.solve( assumptions );    
+    solver.setComputeUnsatCores( true );
+    computeAssumptions();
+    
+    initInUnsatCore();    
+
+    solver.setComputeUnsatCores( true );
+    solver.turnOffSimplifications();
+    unsigned int res = solver.solve( assumptions );        
     while( res == INCOHERENT )
     {        
         if( !foundUnsat() )
             return INCOHERENT;
-        
         assumptions.clear();
         computeAssumptions();
-        
-        res = solver.solve( assumptions );        
+        res = solver.solve( assumptions ); 
     }
-    
+        
     if( res == INTERRUPTED )
         return res;
-
     foundAnswerSet( solver.computeCostOfModel( level() ) );
     assert_msg( lb() == ub(), lb() << " != " << ub() );
     numberOfModels++;
-    
     return OPTIMUM_FOUND;    
-}            
+}

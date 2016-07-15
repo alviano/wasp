@@ -61,15 +61,16 @@ namespace wasp
 #define OPTIONID_printbounds ( 'z' + 27 )
 #define OPTIONID_printatomtable ( 'z' + 28 )
 #define OPTIONID_idOutput ( 'z' + 29 )
+#define OPTIONID_onlyOptimum ( 'z' + 30 )
 
 /* HEURISTIC OPTIONS */
-#define OPTIONID_heuristic_interpreter ( 'z' + 30 )
-#define OPTIONID_heuristic_scriptname ( 'z' + 31 )
-#define OPTIONID_heuristic_pluginsinterpreter ( 'z' + 32 )
-#define OPTIONID_heuristic_plugins ( 'z' + 33 )
-#define OPTIONID_heuristic_setscriptdirectory ( 'z' + 34 )
+#define OPTIONID_heuristic_interpreter ( 'z' + 40 )
+#define OPTIONID_heuristic_scriptname ( 'z' + 41 )
+#define OPTIONID_heuristic_pluginsinterpreter ( 'z' + 42 )
+#define OPTIONID_heuristic_plugins ( 'z' + 43 )
+#define OPTIONID_heuristic_setscriptdirectory ( 'z' + 44 )
 
-#define OPTIONID_minisatheuristic ( 'z' + 40 )
+#define OPTIONID_minisatheuristic ( 'z' + 45 )
 
 /* RESTART OPTIONS */
 #define OPTIONID_geometric_restarts ( 'z' + 50 )
@@ -121,6 +122,7 @@ bool Options::printDimacs = false;
 bool Options::printLastModelOnly = false;
 bool Options::printBounds = false;
 bool Options::printAtomTable = false;
+bool Options::printOnlyOptimum = false;
 
 bool Options::minisatPolicy = false;
 
@@ -232,6 +234,7 @@ Options::parse(
                 { "printdimacs", no_argument, NULL, OPTIONID_printdimacs },
                 { "multi", no_argument, NULL, OPTIONID_multi },
                 { "printlatestmodel", no_argument, NULL, OPTIONID_lastModel },
+                { "printonlyoptimum", no_argument, NULL, OPTIONID_onlyOptimum },
                 { "printbounds", no_argument, NULL, OPTIONID_printbounds },
                 { "printatomstable", no_argument, NULL, OPTIONID_printatomtable },
                 { "id-output", no_argument, NULL, OPTIONID_idOutput },                
@@ -383,6 +386,10 @@ Options::parse(
 
             case OPTIONID_printdimacs:
                 printDimacs = true;
+                break;
+                
+            case OPTIONID_onlyOptimum:
+                printOnlyOptimum = true;
                 break;
                 
             case OPTIONID_multi:

@@ -76,6 +76,7 @@ namespace wasp
             static unsigned int kthreshold;
             
             static unsigned int silent;
+            static bool printOnlyOptimum;
             
         private:
 

@@ -29,6 +29,8 @@ class Opt : public WeakInterface
         bool updateOptimizationAggregate( uint64_t modelCost );
         bool completedLevel();
         Literal getAssumptionToAdd() { return varId == 0 ? Literal::null : Literal( varId, NEGATIVE ); }
+        inline void resetVarId() { varId = 0; }
+        inline void createVarId() { assert( varId == 0 ); varId = addAuxVariable(); }
         
     private:
         bool disableprefchoices_;
