@@ -1,0 +1,323 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage{color}
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+\usepackage{url}
+\usepackage{listings}
+\usepackage{tikz}
+\usepackage[ruled,linesnumbered,vlined]{algorithm2e}
+\usepackage{amssymb}
+
+\lstset{
+	language=Python,
+	showstringspaces=false,
+	formfeed=\newpage,
+	tabsize=4,
+	commentstyle=\color{darkgreen},
+	basicstyle=\ttfamily,
+	keywordstyle=\color{blue},
+	numbers=none
+}
+
+\definecolor{darkgreen}{RGB}{68,180,46}
+\definecolor{darkgray}{RGB}{80,80,80}
+
+\newcommand{\wasp}{\textsc{wasp}\xspace}
+\newcommand{\gringo}{\textsc{gringo}\xspace}
+\newcommand{\cpp}{\textsc{c++}\xspace}
+\newcommand{\pyth}{\textsc{python}\xspace}
+\newcommand{\perl}{\textsc{perl}\xspace}
+\newcommand{\coherent}{\textsc{coherent}\xspace}
+\newcommand{\inco}{\textsc{incoherent}\xspace}
+
+\def\naf{\ensuremath{\raise.17ex\hbox{\ensuremath{\scriptstyle\mathtt{\sim}}}}\xspace}
+\def\A{\ensuremath{\mathcal{A}}\xspace}
+\newcommand{\TODO}[1]{{\large\bf TODO: }#1\ensuremath{\Box}}
+\newtheorem{example}{Example}
+
+\title{External plugins in \wasp}
+\author{
+	\date{2016-07-15}
+}
+
+\begin{document}
+	\maketitle
+
+	\section{Answer Set Computation in \wasp}\label{sec:modelgenerator}
+	\begin{figure}[t]	
+		\scriptsize
+		\centering
+		\tikzstyle{execute} = [text width=2cm, rectangle, draw, rounded corners, text centered]
+		\tikzstyle{line} = [draw, ->]
+		\tikzstyle{linel} = [draw]
+		\tikzstyle{begin} = [draw, circle, fill]
+		\tikzstyle{end} = [draw, circle, double, double distance=2pt, fill]
+		\tikzstyle{branch} = [draw, rectangle, rotate=45, anchor=center]
+		
+		\begin{tikzpicture}
+		\node at (0,2) [begin](begin) {};
+		\node at (0,1) [execute](parsing) {parsing};
+		\node at (0,0) [execute](pre) {preprocessing};
+		\node at (0,-1) [execute](up) {propagation};
+		\node at (0,-2) [branch](ap) {};
+		\node at (6,-4) [execute](restart) {restart if needed};
+		\node at (6,-2) [execute](delete) {delete if needed};
+		\node at (4,-6) [execute](check) {check};
+		\node at (4,-7) [branch](b12) {};
+		\node at (4,-4) [branch](b11) {};
+		\node at (4,0) [execute](ch) {choose undefined literal};
+		\node at (0,-3) [execute](l) {analyze conflict};
+		\node at (0,-5) [execute](r) {restore consistency};
+		\node at (0,-7) [branch](b2) {};
+		\node at (0,-8) [end](inco) {}; \node at (0,-8.35) {\inco};
+		\node at (4,-8) [end](endi) {}; \node at (4,-8.35) {\coherent};
+		
+		\path [line] (begin) -- (parsing);
+		\path [line] (parsing) -- (pre);
+		\path [line] (pre) -- (up);
+		\path [line] (up) -- (ap);
+		\path [line] (ap) -- node [midway, left] {[inconsistent]} (l);
+		\path [line] (l) -- node [midway, right] {\textcolor{blue}{learning}} (r);
+		\path [line] (r) -- node [midway, right] {\textcolor{blue}{backjumping}} (b2);
+		\path [line] (ap) -- node [midway, above] {[consistent]} (4,-2) -- (b11);
+		\path [line] (b11) -- node [midway, right] {[no undefined literals]} (check);
+		\path [line] (check) -- (b12);
+		\path [line] (b12) -- node [midway, right] {[ok]} (endi);
+		\path [line] (b12) --(2.5,-7) -- (2.5,-3) -- node [midway, above] {[fail]} (l);
+		\path [line] (b11) -- (restart);
+		\path [line] (restart) -- (delete);
+		\path [line] (delete) -- (6,0) -- (ch);
+		\path [line] (ch) -- (2,0) -- (up);
+		\path [line] (b2) -- node [midway, left] {[fail]} (inco);
+		\path [line] (b2) -- (-2.5,-7) node [midway, above] {[succeed]} -- (-2.5,-1) -- (up);
+		\end{tikzpicture}
+		\caption{Computation of an answer set in \wasp.}	
+		\label{fig:wasp}
+	\end{figure}
+
+	\wasp computes an answer set by applying the algorithm depicted in Figure~\ref{fig:wasp}.
+	In a nutshell, \wasp accepts as input a propositional program $\Pi$ specified in the numerical format of \gringo and returns  as output \coherent if $\Pi$ is coherent, \inco otherwise.
+	
+	An important feature of the \gringo format is that each atom of $\Pi$ is associated to a unique natural number, called the \emph{id} of the atom.
+	\begin{example}\label{ex:ex1}
+	Consider the program $\Pi$ containing only the following rule:
+	\begin{verbatim}
+	{a;b;c;d}.
+	\end{verbatim}
+	The output of \gringo is the following:
+	\begin{verbatim}
+		3 4 2 3 4 5 0 0
+		0
+		2 a
+		3 b
+		4 c
+		5 d
+		.
+		.
+		.
+	\end{verbatim}
+	where the first line represents the rule \verb|{a;b;c;d}|, whereas the remaining lines represent the atoms table, that is an association between the name of the atom and its id. \hfill $\lhd$
+	\end{example}
+	The first step of the algorithm implemented by \wasp is the parsing of the numerical format of \gringo.
+	During the parsing, an interpretation $I$ is created and initialized to $\emptyset$ and some basic simplifications of the input program, such as removing duplicated rules or simplifying facts, are performed.
+	At the end of the parsing, \wasp invokes the method \texttt{addedVarName} whose role is to notify to the external propagators the correspondence between the name of an atom and its id.
+	Afterwards, \wasp invokes the method \texttt{getLiterals} which takes as input a set of literals that have been inferred as true during the parsing step (e.g. facts and unary constraints). The output of the method is a list of literals whose notification is required by the propagator.
+	Then, \wasp invokes the method \texttt{getVariablesToFreeze} that returns as output a list of variables that must be not removed during the subsequent simplification step.
+	In particular, \wasp applies polynomial simplifications to strengthen and/or remove redundant rules; or to eliminate atoms by means of clause rewriting.
+	In the latter case \wasp invokes the method \texttt{onVariableElimination}.
+	During the simplification step, the interpretation $I$ is possibly extended with literals inferred as deterministic consequences.
+	In this case, the corresponding notification is possibly sent to the external propagator (methods \texttt{onLiteralTrue} and \texttt{onLiteralsTrue}).
+	When all simplifications have been done, \wasp invokes the method \texttt{simplifyAtLevelZero} whose role is to determine whether some of the literals can be inferred as true by applying specific inferences of the propagator.
+	Afterwards, the backtracking search starts and the method \texttt{onStartingSolver} is invoked.
+
+	First, $I$ is extended with all the literals that can be deterministically inferred by applying some propagation rules (detailed in Section~\ref{sec:propagation}).
+	Whenever a literal is inferred as true the corresponding notification is possibly sent to the external propagator (methods \texttt{onLiteralTrue} and \texttt{onLiteralsTrue}).
+	Three cases are possible after a propagation step is completed:
+	$(i)$ $I$ is consistent but not total. In that case, the \wasp uses a heuristic strategy to determine whether a restart or a deletion of learned constraints is needed. Then, an undefined literal $\ell$ (called branching literal) is chosen according to some heuristic criterion, and is added to $I$. Subsequently, a propagation step is performed that infers the consequences of this choice.
+	$(ii)$ $I$ is inconsistent, thus there is a conflict, and $I$ is analyzed. 
+	The reason of the conflict is modeled by a fresh constraint $r$ that is added to $\Pi$ (learning).
+	Moreover, the algorithm backtracks (i.e. choices and their consequences are undone) until the consistency of $I$ is restored (method \texttt{onLiteralsUndefined} is invoked).
+	The algorithm then propagates inferences starting from the fresh constraint $r$. 
+	Otherwise, if the consistency of $I$ cannot be restored, the algorithm terminates returning \inco.
+	Finally, in case $(iii)$ $I$ is consistent and total, $I$ is checked (method \texttt{checkAnswerSet}). If the check does not retrieve any conflict the algorithm terminates returning \coherent. Otherwise, the conflict is analyzed and a fresh constraint is possibly added to $\Pi$.
+	
+	\subsection{Propagation}\label{sec:propagation}
+	The function Propagate extends the interpretation with the literals that can be deterministically inferred.
+	The role of propagation is similar to the unit propagation procedure in the CDCL algorithm, but it is more complex than unit propagation because it 	implements a set of inference rules for taking in account the properties of ASP programs.
+	In particular, \wasp implements three deterministic inference rules for pruning the search space during answer set computation. These propagation rules are named \emph{unit}, \emph{aggregates} and \emph{unfounded}.
+	Unit propagation infers literals appearing in unsatisfied rules containing only one undefined literal.
+	Aggregates propagation concerns the propagation of the truth of aggregate atoms that can be deterministically inferred. Unfounded propagation infers the falsity of atoms appearing in an unfounded set.
+	Moreover, custom propagators can be specified using a \pyth/\perl interface as detailed in Section~\ref{sec:interface}.
+	
+	For each literal $\ell$ in the interpretation unit propagation, aggregates propagation and external propagation are applied to extend the deterministic consequences of $\ell$ (lines 2, 3 and 4 of function Propagate).
+	In particular, the external propagation is done by invoking the method  \verb|onLiteralTrue|.
+	When all literals of the interpretation have been propagated the method \verb|onLiteralsTrue| of the external propagators is invoked.
+	If new literals are inferred then unit, aggregates and external propagations are performed again for such literals (line~6).
+	Otherwise, unfounded propagation is applied (line~2).
+	Function Propagate terminates when no new literals can be deterministically inferred.
+	 
+	\begin{function}[t]
+		\For{$\ell \in I$}
+		{
+			$I :=$ UnitPropagation($\ell$)\;
+			$I :=$ AggregatesPropagation($\ell$)\;
+			$I :=$ ExternalPropagation($\ell$)\tcp*{method onLiteralTrue}
+		}
+		$I' :=$ ExternalPropagation($I$)\tcp*{method onLiteralsTrue}
+		\lIf{$I' \neq \emptyset$}{$I:=I \cup I'$; \textbf{goto} 1}
+		$I' :=$ UnfoundedPropagation($I$)\;
+		\lIf{$I' \neq \emptyset$}{$I:=I \cup I'$; \textbf{goto} 1}
+		\caption{Propagate($I$)}\label{fn:propagate}
+	\end{function}
+	
+	\section{Description of the interface}~\label{sec:interface}
+	In the following, we describe the interface for defining custom propagators.
+	\begin{itemize}
+		\item \texttt{def addedVarName(var, name):}
+		\begin{itemize}
+			\item \textbf{Name:} addedVarName
+			\item \textbf{Description:} this method is invoked while reading the name associated to a variable.
+			\item \textbf{Param var:} the id of the variable.
+			\item \textbf{Param name:} the name associated to var.
+			\item Optional.
+		\end{itemize}
+
+		\item \texttt{def getLiterals(*lits):}
+		\begin{itemize}
+			\item \textbf{Name:} getLiterals
+			\item \textbf{Description:} this method returns a list of literals whose truth will be notified.
+			\item \textbf{Param lits:} a list of literals whose that have been derived true during the parsing. The first element of the list is the number of variables used in \wasp. Literal $1$ is used to represent $\bot$ thus it is always false.
+			\item \textbf{Return:} a list of literals attached to the propagator, i.e. when a literal in the list is derived as true a notification is sent to the propagator using either method \texttt{onLiteralTrue} or method \texttt{onLiteralsTrue}.
+			\item Required only if one between onLiteralTrue and onLiteralsTrue is used.
+		\end{itemize}				
+
+		\item \texttt{def getVariablesToFreeze():}
+		\begin{itemize}
+			\item \textbf{Name:} getVariablesToFreeze
+			\item \textbf{Description:} this method returns a set of variables that must be not removed.
+			\item Optional.
+		\end{itemize}
+		
+		\item \texttt{def onVariableElimination(var):}
+		\begin{itemize}
+			\item \textbf{Name:} onVariableElimination
+			\item \textbf{Description:} this method is invoked when a variable is removed by clause rewriting.
+			\item \textbf{Param var:} the id of the variable that has been removed.
+			\item Optional.
+		\end{itemize}
+		
+		\item \texttt{def simplifyAtLevelZero():}
+		\begin{itemize}
+			\item \textbf{Name:} simplifyAtLevelZero
+			\item \textbf{Description:} this method is invoked before starting the search and returns a list of literals to be inferred at level as deterministic consequence. In order to trigger an incoherence add ``1'' to the list.
+			\item \textbf{Return:} the literals to infer as deterministic consequences.
+			\item Optional.
+		\end{itemize}
+			
+		\item \texttt{def onStartingSolver():}
+		\begin{itemize}
+			\item \textbf{Name:} onStartingSolver
+			\item \textbf{Description:} this method is invoked 	when the computation starts (after reading the input and performing the simplifications).
+			\item Optional.
+		\end{itemize}			
+		
+		\item \texttt{def onLiteralTrue(lit, dl):}
+		\begin{itemize}
+			\item \textbf{Name:} onLiteralTrue
+			\item \textbf{Description:} this method is invoked whenever a literal becomes true (either by propagation and by choice).
+			\item \textbf{Param lit:} the true literal
+			\item \textbf{Param dl:} the current decision level of the solver
+			\item \textbf{Return:} A list of literals to infer as true. Afterward, the method \texttt{getReason} is invoked.
+			\item Required if checkAnswerSet is not used. Exactly one between \texttt{onLiteralTrue} and \texttt{onLiteralsTrue} is required.
+		\end{itemize}
+
+		\item \texttt{def onLiteralsTrue(*lits):}
+		\begin{itemize}
+			\item \textbf{Name:} onLiteralsTrue
+			\item \textbf{Description:} this method is invoked after unit propagation and notifies all literals that becomes true (either by propagation and by choice).
+			\item \textbf{Param lits:} the true literals, where the first element is the current decision level of the solver.
+			\item \textbf{Return:} A list of literals to infer as true. Afterward, the method \texttt{getReason} is invoked.
+			\item Required if checkAnswerSet is not used. Exactly one between \texttt{onLiteralTrue} and \texttt{onLiteralsTrue} is required.
+		\end{itemize}
+
+		\item \texttt{def getReason():}
+		\begin{itemize}
+			\item \textbf{Name:} getReason
+			\item \textbf{Description:} returns a clause modeling the reason for the assignments made by \texttt{onLiteralTrue}. That is, let $P=\{p_1, \ldots, p_m\}$ be the literals returned by \texttt{onLiteralTrue}, the reason is of the form $\ell_1 \land \ldots \land \ell_n \rightarrow p$ (for each $p \in P$). The output of this method is a set of literals $S$ of the form $-\ell_1, \ldots, -\ell_n$.
+			\item \textbf{Return:} The set of literals $S$.					
+			\item Required only if one between onLiteralTrue and onLiteralsTrue is used.
+		\end{itemize}
+									
+		\item \texttt{def onLiteralsUndefined(*lits):}
+		\begin{itemize}
+			\item \textbf{Name:} onLiteralsUndefined
+			\item \textbf{Description:} this method is invoked when some of the literals notified as true are again undefined (e.g. after an unroll or a restart).
+			\item \textbf{Param lits:} the undefined literals, where the first element is the current decision level of the solver.
+			\item Required only if one between onLiteralTrue and onLiteralsTrue is used.
+		\end{itemize}
+
+		\item \texttt{def checkAnswerSet(*answerSet):}
+		\begin{itemize}
+			\item \textbf{Name:} checkAnswerSet
+			\item \textbf{Description:} this method is invoked after an answer set is found. The role of the method is to check whether the answer set is consistent with the propagator.
+			\item \textbf{Param answerSet:} the answer set as list of literals. $\ell$ if the literal is true in the answer set, $-\ell$ if the literal is false.						
+			\item \textbf{Return:} 0 if the answer set is consistent, !=0 otherwise.
+			\item Required only if onLiteralTrue and onLiteralsTrue are not used.
+		\end{itemize}
+		
+		\item \texttt{def getReasonForCheckFailure():}
+		\begin{itemize}
+			\item \textbf{Name:} getReasonForCheckFailure
+			\item \textbf{Description:} returns a clause modeling the reason for the failure triggered by \texttt{checkAnswerSet}. The output of this method is a set of literals $S$ of the form $\ell_1, \ldots, \ell_n$ interpreted as $\ell_1 \vee \ldots \vee \ell_n$.
+			\item \textbf{Return:} The set of literals $S$.					
+			\item Required only if checkAnswerSet is used.
+		\end{itemize}
+		
+		\item \texttt{def storeClauseFromCheckFailure():}
+		\begin{itemize}
+			\item \textbf{Name:} storeClauseFromCheckFailure
+			\item \textbf{Description:} if this method is used then the clause returned by \texttt{getReasonForCheckFailure} is also stored.
+			\item Required only if checkAnswerSet is used.
+		\end{itemize}
+		
+		\item \texttt{def onAnswerSet(*answerSet):}
+		\begin{itemize}
+			\item \textbf{Name:} onAnswerSet
+			\item \textbf{Description:} this method is invoked when a new answer set is found.
+			\item \textbf{Param answerSet:} the answer set as list of literals. $\ell$ if the literal is true in the answer set, $-\ell$ if the literal is false.
+			\item Optional.
+		\end{itemize}
+		
+		\item \texttt{def onNewLowerBound(bound):}
+		\begin{itemize}
+			\item \textbf{Name:} onNewLowerBound
+			\item \textbf{Description:} this method is invoked only on optimization problems whenever a new lower bound of the optimum solution is found.
+			\item \textbf{Param bound:} the computed lower bound.
+			\item Optional.
+		\end{itemize}
+		
+		\item \texttt{def onNewUpperBound(bound):}
+		\begin{itemize}
+			\item \textbf{Name:} onNewUpperBound
+			\item \textbf{Description:} this method is invoked only on optimization problems whenever a new upper bound of the optimum solution is found.
+			\item \textbf{Param bound:} the computed upper bound.
+			\item Optional.
+		\end{itemize}
+		
+	\end{itemize}
+	
+	\section{Usage}
+	In the following we show an example of usage of the interface described in Section~\ref{sec:interface}.
+	In our example we consider again the program of Example~\ref{ex:ex1}, i.e. the program containing only the choice rule \verb|{a;b;c;d}.|
+	Here, we want to create a propagator modeling a rule of the type \verb|:- #count{a;b;c;d} != 2|, i.e. exactly two atoms among \verb|a|, \verb|b|, \verb|c|, and \verb|d| must be true.
+	In the following we present two different implementations of the propagator.
+	
+	The first implementation, listed below, simply counts the number of true (resp. false) literals and infers the remaining ones as false (resp. true) when the number is equal to 2.
+	\lstinputlisting[language=Python]{solution1.py}
+	
+	The second implementation, listed below, does not infer any literal during the computation.
+	Instead, it checks that the computed answer set contains exactly two true atoms.
+	If the check fails a reason is computed and added to the solver.
+	\lstinputlisting[language=Python]{solution2.py}
+	
+\end{document}
