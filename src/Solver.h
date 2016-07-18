@@ -450,7 +450,13 @@ class Solver
         void getChoicesWithoutAssumptions( vector< Literal >& choices );
         inline unsigned int getMaxLevelOfClause( const Clause* clause ) const;
         
+        inline void addAtomToMinimize( Var v ) { setFrozen( v ); atomsToMinimize.push_back( v ); }
+        inline void copyAtomToMinimize( vector < Var >& v ) { v.swap( atomsToMinimize ); }
+        
+        inline OutputBuilder* getOutputBuilder() { return outputBuilder; }
+        
     private:
+        vector< Var > atomsToMinimize;
         HCComponent* hcComponentForChecker;
         PostPropagator* afterConflictPropagator;
         bool exchangeClauses_;

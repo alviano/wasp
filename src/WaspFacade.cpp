@@ -33,6 +33,7 @@
 #include "QueryInterface.h"
 #include "outputBuilders/IdOutputBuilder.h"
 #include "outputBuilders/NoopOutputBuilder.h"
+#include "PredicateMinimization.h"
 
 void
 WaspFacade::readInput()
@@ -88,6 +89,14 @@ WaspFacade::solve()
         if( printDimacs )
         {
             solver.printDimacs();
+            return;
+        }
+        
+        if( wasp::Options::predMinimizationAlgorithm != NO_PREDMINIMIZATION )
+        {
+            PredicateMinimization predMin( solver );
+            predMin.minimize();
+            statistics( &solver, endSolving() );
             return;
         }
         

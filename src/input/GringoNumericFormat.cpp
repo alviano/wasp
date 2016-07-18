@@ -980,6 +980,19 @@ GringoNumericFormat::addFalseVariable(
     solver.addClause( Literal( id, NEGATIVE ) );
 }
 
+bool
+startsWith( const string& orig, const string& str )
+{
+    if( str.length() > orig.length() )
+        return false;
+    
+    for( unsigned int i = 0; i < str.size(); i++ )
+        if( orig[ i ] != str[ i ] )
+            return false;
+    
+    return true;
+}
+
 void
 GringoNumericFormat::readAtomsTable(
     Istream& input )
@@ -1002,7 +1015,20 @@ GringoNumericFormat::readAtomsTable(
         
         if( wasp::Options::queryAlgorithm != NO_QUERY )
             solver.setFrozen( nextAtom );
-        input.read( nextAtom );        
+        
+        //TODO: Change here
+        if( wasp::Options::predMinimizationAlgorithm != NO_PREDMINIMIZATION )
+        {
+            for( unsigned int i = 0; i < wasp::Options::predicatesToMinimize.size(); i++ )
+            {
+                if( startsWith( VariableNames::getName( nextAtom ), wasp::Options::predicatesToMinimize[ i ] ) )
+                {
+                    solver.addAtomToMinimize( nextAtom );
+                    break;
+                }
+            }            
+        }
+        input.read( nextAtom );
     }
     
     if( wasp::Options::printAtomTable )

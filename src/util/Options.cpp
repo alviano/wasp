@@ -25,6 +25,7 @@
 #include <getopt.h>
 #include <cstdlib>
 #include <map>
+#include <set>
 
 namespace wasp
 {
@@ -112,9 +113,22 @@ namespace wasp
 #define OPTIONID_queryalgorithm ( 'z' + 300 )
 #define OPTIONID_queryverbosity ( 'z' + 301 )
     
+    
+/* PREDMIN OPTIONS */
+#define OPTIONID_predminimizationalgorithm ( 'z' + 350 )
+#define OPTIONID_predminimizationpredicate ( 'z' + 351 )
+    
 #ifdef TRACE_ON
 TraceLevels Options::traceLevels;
 #endif
+
+void split( const string &s, char delim, vector< string >& output )
+{
+    stringstream ss( s );
+    string item;
+    while( getline( ss, item, delim ) )
+        output.push_back( item );
+}
 
 //DELETION_POLICY Options::deletionPolicy = AGGRESSIVE_DELETION_POLICY;
 DELETION_POLICY Options::deletionPolicy = RESTARTS_BASED_DELETION_POLICY;
@@ -171,7 +185,12 @@ unsigned Options::budget = UINT_MAX;
 unsigned int Options::queryAlgorithm = NO_QUERY;
 unsigned int Options::queryVerbosity = 0;
 
+unsigned int Options::predMinimizationAlgorithm = NO_PREDMINIMIZATION;
+vector< string > Options::predicatesToMinimize;
+
 map< string, WEAK_CONSTRAINTS_ALG > Options::stringToWeak;
+
+map< string, unsigned int > Options::stringToPredMinimization;
 
 SHIFT_STRATEGY Options::shiftStrategy = SHIFT_NAIVE;
 
@@ -289,7 +308,11 @@ Options::parse(
 
                 /* QUERY */
                 { "query-algorithm", optional_argument, NULL, OPTIONID_queryalgorithm },
-                { "query-verbosity", required_argument, NULL, OPTIONID_queryverbosity },
+                { "query-verbosity", required_argument, NULL, OPTIONID_queryverbosity },               
+                
+                /* PREDMIN */
+                { "minimize-predicates", required_argument, NULL, OPTIONID_predminimizationpredicate },
+                { "minimization-algorithm", required_argument, NULL, OPTIONID_predminimizationalgorithm },               
                 
                 // The NULL-option indicates the end of the array.
                 { NULL, 0, NULL, 0 }
@@ -630,6 +653,25 @@ Options::parse(
                 }
                 break;
                 
+            case OPTIONID_predminimizationalgorithm:
+                if( optarg )
+                {
+                    map< string, unsigned int >::iterator it = stringToPredMinimization.find( optarg );
+                    if( it == stringToPredMinimization.end() )
+                        ErrorMessage::errorGeneric( "Inserted invalid algorithm for pred minimization." );
+
+                    predMinimizationAlgorithm = it->second;    
+                }
+                break;
+            
+            case OPTIONID_predminimizationpredicate:
+                if( optarg )
+                {
+                    string s( optarg );                    
+                    split( s, ',', predicatesToMinimize );                    
+                }
+                break;
+
             default:
                 ErrorMessage::errorGeneric( "This option is not supported." );
                 break;
@@ -729,6 +771,11 @@ Options::initMap()
     
     stringToMinimization[ "progression" ] = MINIMIZATION_PROGRESSION;
     stringToMinimization[ "linearsearch" ] = MINIMIZATION_LINEARSEARCH;
+    
+    stringToPredMinimization[ "enumeration" ] = PREDMIN_ENUMERATION;
+    stringToPredMinimization[ "guess-check" ] = PREDMIN_GUESS_AND_CHECK;
+    stringToPredMinimization[ "guess-check-minimize" ] = PREDMIN_GUESS_AND_CHECK_AND_MINIMIZE;
+    stringToPredMinimization[ "guess-check-split" ] = PREDMIN_GUESS_AND_CHECK_AND_MINIMIZE;
 }
 
 };

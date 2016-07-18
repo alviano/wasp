@@ -137,6 +137,14 @@ class Help
             cout << "--enable-shift-onedef                  - Enable shift also for atoms with one defition" << endl;
             
             cout << separator << endl;
+            cout << "Predicates minimization                " << endl << endl;
+            cout << "--minimize-predicates=pred1,...,predn  - Find the answer set subset-minimal w.r.t. atoms over specified predicates" << endl;
+            cout << "--minimization-algorithm               - Specify the algorithm to use for the minimization" << endl; 
+            cout << "       =enumeration                    - Enumerate all answer sets and select the cardinality minimum" << endl;
+            cout << "       =guess-check                    - Guess an answer set and check the minimality" << endl;
+            cout << "       =guess-check-minimize           - Guess an answer set and check the minimality. In case of failure reiterate the check" << endl;            
+            
+            cout << separator << endl;
             cout << "General options                        " << endl << endl;
             cout << "-n                                     - Specify the answers to compute " << endl;
             cout << "       <=0                             - To compute all answers" << endl;

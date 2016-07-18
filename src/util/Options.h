@@ -21,6 +21,7 @@
 
 #include <vector>
 #include <map>
+#include <set>
 #include "Constants.h"
 #include "Trace.h"
 using namespace std;
@@ -49,6 +50,10 @@ namespace wasp
             
             static unsigned int queryAlgorithm;
             static unsigned int queryVerbosity;
+            
+            static unsigned int predMinimizationAlgorithm;
+            static vector< string > predicatesToMinimize;            
+            
             static bool computeFirstModel;
             static unsigned int budget;
             static bool printLastModelOnly;
@@ -108,8 +113,10 @@ namespace wasp
             
             static map< string, SHIFT_STRATEGY > stringToShift;
             
-            static map< string, unsigned int > stringToMinimization;            
+            static map< string, unsigned int > stringToMinimization;
             
+            static map< string, unsigned int > stringToPredMinimization;
+                        
             static WEAK_CONSTRAINTS_ALG getAlgorithm( const string& s );
             
             static SHIFT_STRATEGY getShiftStrategy( const string& s );
