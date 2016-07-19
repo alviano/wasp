@@ -18,7 +18,10 @@
 #ifndef PREDICATEMINIMIZATION_H
 #define	PREDICATEMINIMIZATION_H
 
-#include "stl/Vector.h"
+#include "util/VariableNames.h"
+#include "Literal.h"
+#include <vector>
+using namespace std;
 class Clause;
 class Solver;
 
@@ -49,6 +52,25 @@ class PredicateMinimization
         vector< Var > atomsToMinimize;
         vector< Var > trueVars;
         Solver& solver;
+        
+        #ifdef TRACE_ON
+        inline void printVectorOfVars( const vector< Var >& v, const string& description )
+        {
+            cout << description;
+            for( unsigned int i = 0; i < v.size(); i++ )
+                if( !VariableNames::isHidden( v[ i ] ) )
+                    cout << " " << VariableNames::getName( v[ i ] );
+            cout << endl;
+        }
+        
+        inline void printVectorOfLiterals( const vector< Literal >& v, const string& description )
+        {
+            cout << description;
+            for( unsigned int i = 0; i < v.size(); i++ )
+                cout << " " << v[ i ];
+            cout << endl;
+        }
+        #endif
 };
 
 #endif

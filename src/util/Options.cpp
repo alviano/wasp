@@ -50,6 +50,7 @@ namespace wasp
 #define OPTIONID_trace_aggregates ( 'z' + 9 )
 #define OPTIONID_trace_weakconstraints ( 'z' + 10 )
 #define OPTIONID_trace_disjunction ( 'z' + 11 )
+#define OPTIONID_trace_predmin ( 'z' + 12 )
 
 /* OUTPUT OPTIONS */
 #define OPTIONID_silent ( 'z' + 20 )
@@ -243,6 +244,7 @@ Options::parse(
                 { "trace-aggregates", required_argument, NULL, OPTIONID_trace_aggregates },
                 { "trace-weakconstraints", required_argument, NULL, OPTIONID_trace_weakconstraints },
                 { "trace-disjunction", required_argument, NULL, OPTIONID_trace_disjunction },
+                { "trace-predmin", required_argument, NULL, OPTIONID_trace_predmin },
 
                 /* OUTPUT OPTIONS */
                 { "competition-output", no_argument, NULL, OPTIONID_competition_output },
@@ -381,6 +383,10 @@ Options::parse(
                 
             case OPTIONID_trace_disjunction:
                 setTraceLevel( disjunction, atoi( optarg ) );
+                break;
+                
+            case OPTIONID_trace_predmin:
+                setTraceLevel( predmin, atoi( optarg ) );
                 break;
 
             case OPTIONID_competition_output:
@@ -668,7 +674,7 @@ Options::parse(
                 if( optarg )
                 {
                     string s( optarg );                    
-                    split( s, ',', predicatesToMinimize );                    
+                    split( s, ';', predicatesToMinimize );                    
                 }
                 break;
 
@@ -775,7 +781,7 @@ Options::initMap()
     stringToPredMinimization[ "enumeration" ] = PREDMIN_ENUMERATION;
     stringToPredMinimization[ "guess-check" ] = PREDMIN_GUESS_AND_CHECK;
     stringToPredMinimization[ "guess-check-minimize" ] = PREDMIN_GUESS_AND_CHECK_AND_MINIMIZE;
-    stringToPredMinimization[ "guess-check-split" ] = PREDMIN_GUESS_AND_CHECK_AND_MINIMIZE;
+    stringToPredMinimization[ "guess-check-split" ] = PREDMIN_GUESS_AND_CHECK_AND_SPLIT;
 }
 
 };

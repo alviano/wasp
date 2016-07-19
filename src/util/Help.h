@@ -47,6 +47,8 @@ class Help
             cout << "--trace-solver=<verbosity>             - Trace solver." << endl;
             cout << "--trace-unfoundedset=<verbosity>       - Trace computation of unfounded sets." << endl;
             cout << "--trace-weakconstraints=<verbosity>    - Trace weak constraints algorithms." << endl;
+            cout << "--trace-disjunction=<verbosity>        - Trace rewriting algorithms for disjunction." << endl;
+            cout << "--trace-predmin=<verbosity>            - Trace algorithms for minimizing predicates." << endl;
             cout << separator << endl;
             #endif                
 
@@ -138,11 +140,12 @@ class Help
             
             cout << separator << endl;
             cout << "Predicates minimization                " << endl << endl;
-            cout << "--minimize-predicates=pred1,...,predn  - Find the answer set subset-minimal w.r.t. atoms over specified predicates" << endl;
+            cout << "--minimize-predicates=pred1;...;predn  - Find the answer set subset-minimal w.r.t. atoms over specified predicates" << endl;
             cout << "--minimization-algorithm               - Specify the algorithm to use for the minimization" << endl; 
             cout << "       =enumeration                    - Enumerate all answer sets and select the cardinality minimum" << endl;
             cout << "       =guess-check                    - Guess an answer set and check the minimality" << endl;
-            cout << "       =guess-check-minimize           - Guess an answer set and check the minimality. In case of failure reiterate the check" << endl;            
+            cout << "       =guess-check-minimize           - Guess an answer set and check the minimality. In case of failure reiterate the check" << endl;
+            cout << "       =guess-check-split              - Guess an answer set and check the minimality of each atom" << endl;
             
             cout << separator << endl;
             cout << "General options                        " << endl << endl;

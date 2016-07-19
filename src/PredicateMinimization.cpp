@@ -23,92 +23,6 @@
 #include <set>
 using namespace std;
 
-bool
-PredicateMinimization::computeFirstModel()
-{
-    unsigned int result = solver.solve();
-    if( result == INCOHERENT )
-        return false;
-    
-    assert( result == COHERENT );
-    return true;
-}
-
-unsigned int
-PredicateMinimization::enumerationBC()
-{
-    solver.turnOffSimplifications();
-    assert( solver.getCurrentDecisionLevel() == 0 );
-    assert( !solver.conflictDetected() );
-    
-    if( !computeFirstModel() )
-        return INCOHERENT;
-    
-    unsigned int min = countTrue();
-    computeTrueVars();    
-    if( min == 0 || !solver.addClauseFromModelAndRestart() )
-    {
-        printTrueVars();
-        return COHERENT;
-    }
-    
-    while( solver.solve() == COHERENT )
-    {
-        unsigned int count = countTrue();
-        if( count < min )
-        {
-            computeTrueVars();
-            min = count;
-        }
-        if( min == 0 || !solver.addClauseFromModelAndRestart() )
-            break;
-        
-        assert( solver.getCurrentDecisionLevel() == 0 );
-        assert( !solver.conflictDetected() );        
-    }
-    printTrueVars();
-    return COHERENT;
-}
-
-unsigned int
-PredicateMinimization::guessAndCheck()
-{
-    solver.turnOffSimplifications();
-    assert( solver.getCurrentDecisionLevel() == 0 );
-    assert( !solver.conflictDetected() );
-    
-    if( !computeFirstModel() )
-        return INCOHERENT;
-
-    if( checkAnswerSet() )
-        return COHERENT;
-
-    solver.unrollToZero();
-    solver.clearConflictStatus();
-    
-    while( solver.solve() == COHERENT )
-    {
-        if( checkAnswerSet() )
-            return COHERENT;
-        
-        solver.unrollToZero();
-        solver.clearConflictStatus();
-        assert( solver.getCurrentDecisionLevel() == 0 );
-        assert( !solver.conflictDetected() );        
-    }
-    return COHERENT;
-}
-
-unsigned int
-PredicateMinimization::countTrue()
-{
-    unsigned int count = 0;
-    for( unsigned int i = 0; i < atomsToMinimize.size(); i++ )
-        if( solver.isTrue( atomsToMinimize[ i ] ) )
-            count++;
-    return count;
-}
-
 unsigned int
 PredicateMinimization::minimize()
 {
@@ -135,12 +49,121 @@ PredicateMinimization::minimize()
 }
 
 bool
+PredicateMinimization::computeFirstModel()
+{
+    unsigned int result = solver.solve();
+    assert( result == COHERENT || result == INCOHERENT );
+    return result != INCOHERENT;    
+}
+
+unsigned int
+PredicateMinimization::countTrue()
+{
+    unsigned int count = 0;
+    for( unsigned int i = 0; i < atomsToMinimize.size(); i++ )
+        if( solver.isTrue( atomsToMinimize[ i ] ) )
+            count++;
+    return count;
+}
+
+void
+PredicateMinimization::computeTrueVars()
+{
+    trueVars.clear();
+    for( unsigned int i = 1; i <= solver.numberOfVariables(); i++ )
+        if( solver.isTrue( i ) )
+            trueVars.push_back( i );    
+    trace_action( predmin, 2, { trace_tag( cerr, predmin, 2 ); printVectorOfVars( trueVars, "Found answer set" ); } );
+}
+
+void
+PredicateMinimization::printTrueVars()
+{    
+    OutputBuilder* output = solver.getOutputBuilder();
+    output->startModel();
+    for( unsigned int i = 0; i < trueVars.size(); i++ )
+        output->printVariable( trueVars[ i ], true );
+    output->endModel();
+}
+
+unsigned int
+PredicateMinimization::enumerationBC()
+{
+    trace_msg( predmin, 1, "Starting enumeration algorithm" );
+    solver.turnOffSimplifications();
+    assert( solver.getCurrentDecisionLevel() == 0 );
+    assert( !solver.conflictDetected() );
+    
+    if( !computeFirstModel() )
+        return INCOHERENT;
+    
+    unsigned int min = countTrue();
+    trace_msg( predmin, 2, "First answer set contains " << min << " true atoms" );
+    computeTrueVars();    
+    if( min == 0 || !solver.addClauseFromModelAndRestart() )
+    {
+        printTrueVars();
+        return COHERENT;
+    }
+    
+    while( solver.solve() == COHERENT )
+    {
+        trace_msg( predmin, 2, "Coherent" );
+        unsigned int count = countTrue();
+        trace_msg( predmin, 3, "New answer set contains " << count << " true atoms" );
+        if( count < min )
+        {
+            computeTrueVars();
+            min = count;
+            trace_msg( predmin, 4, "Updated min to " << min );
+        }
+        if( min == 0 || !solver.addClauseFromModelAndRestart() )
+            break;
+        
+        assert( solver.getCurrentDecisionLevel() == 0 );
+        assert( !solver.conflictDetected() );        
+    }
+    printTrueVars();
+    return COHERENT;
+}
+
+unsigned int
+PredicateMinimization::guessAndCheck()
+{
+    trace_msg( predmin, 1, "Starting algorithm guess and check" );
+    solver.turnOffSimplifications();
+    assert( solver.getCurrentDecisionLevel() == 0 );
+    assert( !solver.conflictDetected() );
+    
+    if( !computeFirstModel() )
+        return INCOHERENT;
+
+    if( checkAnswerSet() )
+        return COHERENT;
+
+    solver.unrollToZero();
+    solver.clearConflictStatus();
+    
+    while( solver.solve() == COHERENT )
+    {
+        if( checkAnswerSet() )
+            return COHERENT;
+        
+        solver.unrollToZero();
+        solver.clearConflictStatus();
+        assert( solver.getCurrentDecisionLevel() == 0 );
+        assert( !solver.conflictDetected() );        
+    }
+    return COHERENT;
+}
+
+bool
 PredicateMinimization::checkAnswerSet()
 {
     vector< Literal > assumptions;
     Clause* clause = new Clause();
     computeTrueVars();
-
+    trace_msg( predmin, 2, "Checking answer set" );
     for( unsigned int i = 0; i < atomsToMinimize.size(); i++ )
     {
         Var v = atomsToMinimize[ i ];
@@ -160,22 +183,22 @@ PredicateMinimization::checkAnswerSet()
     solver.unrollToZero();
     solver.clearConflictStatus();
     clause->setCanBeDeleted( false );
+    trace_action( predmin, 3, { trace_tag( cerr, predmin, 3 ); printVectorOfLiterals( assumptions, "Assumptions" ); } );
+    if( solver.addClauseRuntime( clause ) && solver.solve( assumptions ) != INCOHERENT )
+    {
+        trace_msg( predmin, 4, "The answer set is not minimal" );
+        return false;
+    }
     
-    bool retValue = false;
-    if( !solver.addClauseRuntime( clause ) )
-        retValue = true;
-    else if( solver.solve( assumptions ) == INCOHERENT )
-        retValue = true;
-        
-    if( retValue )
-        printTrueVars();
-    
-    return retValue;  
+    trace_msg( predmin, 4, "The answer set is minimal: stop." );
+    printTrueVars();
+    return true;    
 }
 
 unsigned int
 PredicateMinimization::guessAndCheckAndMinimize()
 {
+    trace_msg( predmin, 1, "Starting algorithm guess and check with minimization of answer set" );
     solver.turnOffSimplifications();
     assert( solver.getCurrentDecisionLevel() == 0 );
     assert( !solver.conflictDetected() );
@@ -216,17 +239,15 @@ PredicateMinimization::minimizeAnswerSet()
         assert( solver.isTrue( v ) && solver.getDecisionLevel( v ) > 0 );
         clause->addLiteral( Literal( v, NEGATIVE ) );        
     }
-    
+    trace_action( predmin, 3, { trace_tag( cerr, predmin, 3 ); printVectorOfVars( candidates, "Candidates" ); } );
+    trace_action( predmin, 3, { trace_tag( cerr, predmin, 3 ); printVectorOfLiterals( assumptions, "Assumptions" ); } );    
     solver.unrollToZero();
     solver.clearConflictStatus();
     clause->setCanBeDeleted( false );
     
-    if( !solver.addClauseRuntime( clause ) || solver.solve( assumptions ) == INCOHERENT )
+    if( solver.addClauseRuntime( clause ) && solver.solve( assumptions ) != INCOHERENT )
     {
-        printTrueVars();
-    }
-    else
-    {
+        trace_msg( predmin, 4, "The answer set is not minimal. Try to minimize the new answer set." );    
         clause->setCanBeDeleted( true );
         unsigned int j = 0;
         for( unsigned int i = 0; i < candidates.size(); i++ )
@@ -242,31 +263,15 @@ PredicateMinimization::minimizeAnswerSet()
         }
         candidates.resize( j );
         goto begin;
-    }    
-}
-
-void
-PredicateMinimization::computeTrueVars()
-{
-    trueVars.clear();
-    for( unsigned int i = 1; i <= solver.numberOfVariables(); i++ )
-        if( solver.isTrue( i ) )
-            trueVars.push_back( i );    
-}
-
-void
-PredicateMinimization::printTrueVars()
-{
-    OutputBuilder* output = solver.getOutputBuilder();
-    output->startModel();
-    for( unsigned int i = 0; i < trueVars.size(); i++ )
-        output->printVariable( trueVars[ i ], true );
-    output->endModel();
+    }   
+    trace_msg( predmin, 4, "The answer set is minimal: stop." );
+    printTrueVars();
 }
 
 unsigned int
 PredicateMinimization::guessAndCheckAndSplit()
 {
+    trace_msg( predmin, 1, "Starting algorithm guess and check and split" );
     solver.turnOffSimplifications();
     assert( solver.getCurrentDecisionLevel() == 0 );
     assert( !solver.conflictDetected() );
@@ -298,6 +303,8 @@ PredicateMinimization::minimizeAnswerSetSplit()
     }
     
     begin:;
+    trace_action( predmin, 3, { trace_tag( cerr, predmin, 3 ); printVectorOfVars( candidates, "Candidates" ); } );
+    trace_action( predmin, 3, { trace_tag( cerr, predmin, 3 ); printVectorOfLiterals( assumptions, "Assumptions" ); } );
     if( candidates.empty() )
     {
         solver.unrollToZero();
@@ -305,23 +312,27 @@ PredicateMinimization::minimizeAnswerSetSplit()
         if( solver.solve( assumptions ) == INCOHERENT )
             ErrorMessage::errorGeneric( "Cannot be incoherent" );
         
+        trace_msg( predmin, 4, "No more candidates: stop." );
         solver.printAnswerSet();
         return;
     }
     
     Var lastCandidate = candidates.back();
     candidates.pop_back();
+    trace_msg( predmin, 4, "Considering variable " << Literal( lastCandidate, POSITIVE ) << " as candidate");
     assumptions.push_back( Literal( lastCandidate, NEGATIVE ) );
     
     solver.unrollToZero();
     solver.clearConflictStatus();
     if( solver.solve( assumptions ) == INCOHERENT )
     {
+        trace_msg( predmin, 5, "No answer set found: the variable must be true");
         assumptions.pop_back();
         assumptions.push_back( Literal( lastCandidate, POSITIVE ) );
     }
     else
     {
+        trace_msg( predmin, 5, "Found answer set: the variable is not needed");        
         unsigned int j = 0;
         for( unsigned int i = 0; i < candidates.size(); i++ )
         {
