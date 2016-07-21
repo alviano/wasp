@@ -1399,7 +1399,10 @@ Solver::analyzeConflict()
         if( conflictsRestarts > 10000 && glucoseData.lbdQueue.isValid() && numberOfAssignedLiterals() /*trail.size()*/ > glucoseData.R * glucoseData.trailQueue.getAvg() )
             glucoseData.lbdQueue.fastClear();
     }    
-
+    
+    if( conflictClause == NULL )
+        return false;
+    
     Clause* learnedClause = learning.onConflict( conflictLiteral, conflictClause );
     assert( "Learned clause has not been calculated." && learnedClause != NULL );
     statistics( this, onLearning( learnedClause->size() ) );
