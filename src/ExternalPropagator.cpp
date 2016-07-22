@@ -383,6 +383,8 @@ void ExternalPropagator::endUnitPropagation(
     assert( !check_onLitTrue );
     vector< int > input;
     vector< int > output;
+    if( trueLiterals.empty() )
+        return;
     input.push_back( solver.getCurrentDecisionLevel() );
     for( unsigned int i = 0; i < trueLiterals.size(); i++ )
     {
@@ -391,18 +393,67 @@ void ExternalPropagator::endUnitPropagation(
         if( solver.getCurrentDecisionLevel() > 0 )
             trail.push_back( trueLiterals[ i ] );
         input.push_back( trueLiterals[ i ].getId() );
-    }
+    }    
     interpreter->callListMethod( method_plugins_onLitsTrue, input, output );
     trueLiterals.clear();
     computeReason( solver, output );    
 }
 
+void ExternalPropagator::handleConflict(
+    Solver& solver,
+    Literal conflictLiteral )
+{
+    assert( solver.isFalse( conflictLiteral ) );
+    Clause* clause = getReason( solver );
+    clause->setLearned();
+
+    clause->setAt( 0, conflictLiteral );
+    unsigned int size = clause->size();
+    if( size > 1 )
+    {
+        Learning::sortClause( clause, solver );
+        if( solver.glucoseHeuristic() )
+            clause->setLbd( solver.computeLBD( *clause ) );
+        assert( !solver.isUndefined( clause->getAt( 1 ) ) );
+        if( solver.getDecisionLevel( clause->getAt( 1 ) ) < solver.getCurrentDecisionLevel() )
+            solver.unroll( solver.getDecisionLevel( clause->getAt( 1 ) ) );        
+    }
+    else
+    {
+        delete clause;
+        solver.assignLiteral( Literal::createLiteralFromInt( 1 ) );
+        return;
+    }
+    solver.addLearnedClause( clause, false );
+    solver.assignLiteral( clause );
+    assert( solver.conflictDetected() );
+}
+
 void ExternalPropagator::computeReason(
     Solver& solver,
-    vector< int > output )
+    const vector< int >& output )
 {
     if( output.empty() || ( output.size() == 1 && output[ 0 ] == 0 ) )
         return;
+    
+    bool conflictDetected = false;
+    Literal conflictLiteral = Literal::null;
+    for( unsigned int i = 0; i < output.size(); i++ )
+    {
+        checkIdOfLiteral( solver, output[ i ] );
+        conflictLiteral = Literal::createLiteralFromInt( output[ i ] );
+        if( solver.isFalse( conflictLiteral ) )
+        {
+            conflictDetected = true;
+            break;
+        }        
+    }
+    
+    if( conflictDetected )
+    {
+        handleConflict( solver, conflictLiteral );
+        return;
+    }
     
     Clause* reason = getReason( solver );
     //TODO: check for backjumping

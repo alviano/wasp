@@ -25,6 +25,7 @@ class Clause;
 class Interpreter;
 
 #include <string>
+#include <vector>
 using namespace std;
 
 #define method_plugins_addedVarName "addedVarName"
@@ -70,9 +71,10 @@ class ExternalPropagator : public Propagator
         inline ExternalPropagator( const ExternalPropagator& orig );
         void checkWellFormed();
         void checkWellFormed( const string& );
-        void computeReason( Solver& solver, vector< int > output );
+        void computeReason( Solver& solver, const vector< int >& output );
         Clause* getReason( Solver& );
         Clause* getReasonForCheckerFailureInternal( Solver& );
+        void handleConflict( Solver&, Literal );
         void clearClausesToDelete();
         void attachWatches( Solver& solver );
         void checkIdOfLiteral( const Solver& solver, int id ) const;
