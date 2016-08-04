@@ -242,6 +242,10 @@ ExternalPropagator::getReasonForCheckerFailureInternal(
     {
         checkIdOfLiteral( solver, output[ i ] );
         Literal l = Literal::createLiteralFromInt( output[ i ] );
+        if( solver.isUndefined( l ) )
+            ErrorMessage::errorGeneric( "Reason is not well-formed: there are undefined literals!" );
+        if( solver.isTrue( l ) )
+            ErrorMessage::errorGeneric( "Reason is not well-formed: there are true literals!" );
         clause->addLiteral( l );
     }
     if( clause->size() >= 2 )
@@ -320,6 +324,8 @@ void ExternalPropagator::checkIdOfLiteral(
     Var var = id > 0 ? id : -id;
     if( var == 0 || var > solver.numberOfVariables() )
         ErrorMessage::errorGeneric( "Variable " + to_string( var ) + " does not exist." );
+    if( solver.hasBeenEliminated( var ) )
+        ErrorMessage::errorGeneric( "Variable " + to_string( var ) + " has been removed from initial simplifications. Use " + method_plugins_getVariablesToFreeze + " to prevent the elimination of the variables." );
 }
 
 void ExternalPropagator::foundLowerBound(

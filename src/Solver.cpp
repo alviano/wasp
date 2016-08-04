@@ -354,7 +354,7 @@ Solver::handlePropagatorFailure(
         }
         if( !isUndefined( clause->getAt( 1 ) ) )
         {
-            assert( !isTrue( clause->getAt( 0 ) ) || getDecisionLevel( clause->getAt( 0 ) ) == 0 );
+//            assert( !isTrue( clause->getAt( 0 ) ) || getDecisionLevel( clause->getAt( 0 ) ) == 0 );
             if( !isTrue( clause->getAt( 0 ) ) )
                 assignLiteral( clause );
         }        
@@ -527,17 +527,22 @@ Solver::solvePropagators(
     }
     
     #if defined(ENABLE_PYTHON) || defined(ENABLE_PERL)
+    bool checkFail = false;
     for( unsigned int i = 0; i < propagatorsAttachedToCheckAnswerSet.size(); i++ )
         if( !propagatorsAttachedToCheckAnswerSet[ i ]->checkAnswerSet( *this ) )
         {
             if( !handlePropagatorFailure( propagatorsAttachedToCheckAnswerSet[ i ] ) )
                 return INCOHERENT;
+            cout << "CONFLICT " << conflictDetected() << " - HAS VAR " << hasNextVariableToPropagate() << endl; 
             if( conflictDetected() )
                 goto conflict;
             else if( hasNextVariableToPropagate() )
-                goto propagationLabel;
+                goto propagationLabel;            
+            checkFail = true;
         }
-    #endif
+    if( checkFail )
+        goto propagationLabel;
+    #endif    
     completeModel();
     assert_msg( getNumberOfUndefined() == 0, "Found a model with " << getNumberOfUndefined() << " undefined variables." );
     assert_msg( allClausesSatisfied(), "The model found is not correct." );
