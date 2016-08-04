@@ -118,6 +118,7 @@ namespace wasp
 /* PREDMIN OPTIONS */
 #define OPTIONID_predminimizationalgorithm ( 'z' + 350 )
 #define OPTIONID_predminimizationpredicate ( 'z' + 351 )
+#define OPTIONID_predmin_checktrivialsolution ( 'z' + 352 )
     
 #ifdef TRACE_ON
 TraceLevels Options::traceLevels;
@@ -210,6 +211,8 @@ unsigned int Options::minimizationStrategy = MINIMIZATION_OFF;
 unsigned int Options::minimizationBudget = UINT_MAX;
 
 unsigned int Options::enumerationStrategy = ENUMERATION_BT;
+
+bool Options::checkTrivialSolutionPredMin = false;
 
 void
 Options::parse(
@@ -315,6 +318,7 @@ Options::parse(
                 /* PREDMIN */
                 { "minimize-predicates", required_argument, NULL, OPTIONID_predminimizationpredicate },
                 { "minimization-algorithm", required_argument, NULL, OPTIONID_predminimizationalgorithm },               
+                { "minimization-checktrivialsolution", no_argument, NULL, OPTIONID_predmin_checktrivialsolution },
                 
                 // The NULL-option indicates the end of the array.
                 { NULL, 0, NULL, 0 }
@@ -676,6 +680,10 @@ Options::parse(
                     string s( optarg );                    
                     split( s, ';', predicatesToMinimize );                    
                 }
+                break;
+                
+            case OPTIONID_predmin_checktrivialsolution:
+                checkTrivialSolutionPredMin = true;
                 break;
 
             default:

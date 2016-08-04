@@ -43,6 +43,7 @@ class PredicateMinimization
         void minimizeAnswerSetSplit();
         bool computeFirstModel();        
         bool checkAnswerSet();
+        bool checkTrivialSolution();
         
         unsigned int countTrue();
         

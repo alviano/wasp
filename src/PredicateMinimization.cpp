@@ -26,7 +26,14 @@ using namespace std;
 unsigned int
 PredicateMinimization::minimize()
 {
+    assert( !solver.conflictDetected() );
     solver.copyAtomToMinimize( atomsToMinimize );
+    if( wasp::Options::checkTrivialSolutionPredMin )
+    {
+        if( checkTrivialSolution() )
+            return COHERENT;
+    }
+    
     switch( wasp::Options::predMinimizationAlgorithm )
     {
         case PREDMIN_ENUMERATION:
@@ -348,4 +355,27 @@ PredicateMinimization::minimizeAnswerSetSplit()
         candidates.resize( j );        
     }
     goto begin;
+}
+
+bool
+PredicateMinimization::checkTrivialSolution()
+{    
+    vector< Literal > assumptions;
+    for( unsigned int i = 0; i < atomsToMinimize.size(); i++ )
+    {
+        Var v = atomsToMinimize[ i ];
+        assert( solver.getCurrentDecisionLevel() == 0 );
+        assert( !solver.hasBeenEliminated( v ) );
+        if( !solver.isUndefined( v ) )
+            continue;        
+        assumptions.push_back( Literal( v, NEGATIVE ) );
+    }
+    if( solver.solve( assumptions ) == INCOHERENT )
+    {
+        solver.unrollToZero();
+        solver.clearConflictStatus();
+        return false;
+    }
+    solver.printAnswerSet();
+    return true;
 }
