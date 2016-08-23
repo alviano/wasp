@@ -195,9 +195,15 @@ ExternalPropagator::getReason(
 {
     vector< int > output;
     if( currentLiteral == Literal::null )
+    {
+        assert( !check_getReasonForLiteral );
         interpreter->callListMethod( method_plugins_getReason, output );
+    }
     else
+    {
+        assert( check_getReasonForLiteral );
         interpreter->callListMethod( method_plugins_getReasonForLiteral, currentLiteral.getId(), output );
+    }
    
     if( output.empty() )
     {
@@ -213,6 +219,10 @@ ExternalPropagator::getReason(
         Literal l = Literal::createLiteralFromInt( output[ i ] );
         if( solver.isUndefined( l ) )
             ErrorMessage::errorGeneric( "Reason is not well-formed: Literal with id " + to_string( l.getId() ) + " is undefined." );
+        if( solver.isTrue( l ) )
+            ErrorMessage::errorGeneric( "Reason is not well-formed: Literal with id " + to_string( l.getId() ) + " is true." );
+        if( solver.getDecisionLevel( l ) == 0 )
+            continue;
         clause->addLiteral( l );
         unsigned int dl = solver.getDecisionLevel( l );
         if( dl > max )
@@ -409,7 +419,7 @@ void ExternalPropagator::handleConflict(
     Literal conflictLiteral )
 {
     assert( solver.isFalse( conflictLiteral ) );
-    Clause* clause = getReason( solver, conflictLiteral );
+    Clause* clause = getReason( solver, Literal::null );
     if( clause == NULL )
     {
         clause = new Clause();
@@ -426,7 +436,8 @@ void ExternalPropagator::handleConflict(
             clause->setLbd( solver.computeLBD( *clause ) );
         assert( !solver.isUndefined( clause->getAt( 1 ) ) );
         if( solver.getDecisionLevel( clause->getAt( 1 ) ) < solver.getCurrentDecisionLevel() )
-            solver.unroll( solver.getDecisionLevel( clause->getAt( 1 ) ) );        
+            solver.unroll( solver.getDecisionLevel( clause->getAt( 1 ) ) );
+        assert( !solver.isUndefined( clause->getAt( 1 ) ) );
     }
     else
     {
@@ -437,7 +448,6 @@ void ExternalPropagator::handleConflict(
     }
     solver.addLearnedClause( clause, false );
     solver.assignLiteral( clause );
-    assert( solver.conflictDetected() );
 }
 
 void ExternalPropagator::computeReason(
