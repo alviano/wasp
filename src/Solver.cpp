@@ -448,6 +448,7 @@ Solver::solvePropagators(
             }
             else
             {
+                assert( !conflictDetected() );
                 if( !wasp::Options::backwardPartialChecks )
                 {
                     if( learnedFromPropagators > ( learnedFromConflicts * 0.5 ) )
@@ -457,20 +458,15 @@ Solver::solvePropagators(
                 }
                 unsigned int size = clauseToPropagate->size();
                 statistics( this, onLearningFromPropagators( size ) );
+                assert( !conflictDetected() );
                 if( size == 0 )
                 {
-                    clearConflictStatus();
                     delete clauseToPropagate;
                     return INCOHERENT;
                 }
                 else if( size == 1 )
                 {
-                    if( getCurrentDecisionLevel() != 0 )
-                    {
-                        clearConflictStatus();
-                        if( !doRestart() )
-                            return INCOHERENT;
-                    }
+                    unrollToZero();
                     assignLiteral( clauseToPropagate->getAt( 0 ) );
                     delete clauseToPropagate;
                 }
@@ -478,7 +474,6 @@ Solver::solvePropagators(
                 {
                     if( !isUndefined( clauseToPropagate->getAt( 1 ) ) && getDecisionLevel( clauseToPropagate->getAt( 1 ) ) < getCurrentDecisionLevel() )
                     {
-                        clearConflictStatus();
                         trace( solving, 2, "Learned clause from propagator and backjumping to level %d.\n", getDecisionLevel( clauseToPropagate->getAt( 1 ) ) );
                         unroll( getDecisionLevel( clauseToPropagate->getAt( 1 ) ) );
                     }

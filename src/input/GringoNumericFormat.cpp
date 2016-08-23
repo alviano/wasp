@@ -239,9 +239,14 @@ GringoNumericFormat::readDisjunctiveRule(
             return;
         }
         else
-        {            
-            atomData[ head[ i ] ].readNormalRule_headAtoms = readNormalRule_numberOfCalls;
-            ++i;
+        {   
+            if( atomData[ head[ i ] ].readNormalRule_headAtoms == readNormalRule_numberOfCalls )
+                --headSize;
+            else
+            {
+                atomData[ head[ i ] ].readNormalRule_headAtoms = readNormalRule_numberOfCalls;
+                ++i;
+            }
         }
     }
     if( headSize == 0 )
