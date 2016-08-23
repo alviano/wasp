@@ -37,6 +37,7 @@ using namespace std;
 #define method_plugins_onLitsTrue "onLiteralsTrue"
 #define method_plugins_onLiteralsUndefined "onLiteralsUndefined"
 #define method_plugins_getReason "getReason"
+#define method_plugins_getReasonForLiteral "getReasonForLiteral"
 #define method_plugins_simplifyAtLevelZero "simplifyAtLevelZero"
 #define method_plugins_onAnswerSet "onAnswerSet"
 #define method_plugins_checkAnswerSet "checkAnswerSet"
@@ -63,7 +64,7 @@ class ExternalPropagator : public Propagator
         void foundUpperBound( uint64_t ub );
         bool checkAnswerSet( Solver& solver );
         Clause* getReasonForCheckFailure( Solver& solver );
-        bool hasToAddClauseFromCheckFailure();
+        inline bool hasToAddClauseFromCheckFailure() const { return check_addClauseFromCheckFailure; }
         void endUnitPropagation( Solver& solver );
         void onStartingSolver();
         
@@ -72,7 +73,7 @@ class ExternalPropagator : public Propagator
         void checkWellFormed();
         void checkWellFormed( const string& );
         void computeReason( Solver& solver, const vector< int >& output );
-        Clause* getReason( Solver& );
+        Clause* getReason( Solver&, Literal lit );
         Clause* getReasonForCheckerFailureInternal( Solver& );
         void handleConflict( Solver&, Literal );
         void clearClausesToDelete();
@@ -89,6 +90,7 @@ class ExternalPropagator : public Propagator
         bool check_simplifyAtLevelZero;
         bool check_onAnswerSet;
         bool check_checkAnswerSet;
+        bool check_getReasonForLiteral;
         bool check_getReasonForCheckFailure;
         bool check_onNewLowerBound;
         bool check_onNewUpperBound;

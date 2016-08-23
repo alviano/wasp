@@ -329,12 +329,8 @@ Solver::handlePropagatorFailure(
     }
     else if( size == 1 )
     {
-        if( getCurrentDecisionLevel() != 0 )
-        {
-            clearConflictStatus();
-            if( !doRestart() )
-                return false;
-        }
+        unrollToZero();
+        clearConflictStatus();
         assignLiteral( clause->getAt( 0 ) );
         delete clause;
     }
@@ -446,12 +442,7 @@ Solver::solvePropagators(
             {
                 
                 assert( !conflictDetected() );
-                assert( !hasNextVariableToPropagate() );
-//                if( conflictDetected() )
-//                    goto conflict;
-//                else if( hasNextVariableToPropagate() )
-//                    goto propagationLabel;
-                
+                assert( !hasNextVariableToPropagate() );                
                 postPropagators.pop_back();
                 postPropagator->onRemoving();
             }
@@ -491,11 +482,6 @@ Solver::solvePropagators(
                         trace( solving, 2, "Learned clause from propagator and backjumping to level %d.\n", getDecisionLevel( clauseToPropagate->getAt( 1 ) ) );
                         unroll( getDecisionLevel( clauseToPropagate->getAt( 1 ) ) );
                     }
-//                    if( glucoseHeuristic_ )
-//                    {
-//                        glucoseData.sumLBD += clauseToPropagate->lbd();
-//                        glucoseData.lbdQueue.push( clauseToPropagate->lbd() );
-//                    }
                     
                     if( postPropagator->hasToAddClause() )
                     {
@@ -533,7 +519,6 @@ Solver::solvePropagators(
         {
             if( !handlePropagatorFailure( propagatorsAttachedToCheckAnswerSet[ i ] ) )
                 return INCOHERENT;
-            cout << "CONFLICT " << conflictDetected() << " - HAS VAR " << hasNextVariableToPropagate() << endl; 
             if( conflictDetected() )
                 goto conflict;
             else if( hasNextVariableToPropagate() )

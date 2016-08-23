@@ -60,6 +60,7 @@ ExternalPropagator::ExternalPropagator(
     check_onLitsTrue = interpreter->checkMethod( method_plugins_onLitsTrue );
     check_onLitTrue = interpreter->checkMethod( method_plugins_onLitTrue );
     check_addClauseFromCheckFailure = interpreter->checkMethod( method_plugins_addClauseFromCheckFailure );
+    check_getReasonForLiteral = interpreter->checkMethod( method_plugins_getReasonForLiteral );
     checkWellFormed();
     
     if( check_onLitsTrue )
@@ -115,7 +116,7 @@ ExternalPropagator::reset(
         trail.pop_back();
     }
     
-    if( !parameters.empty() )
+    if( parameters.size() > 1 )
        interpreter->callVoidMethod( method_plugins_onLiteralsUndefined, parameters );    
 }
 
@@ -176,11 +177,14 @@ ExternalPropagator::checkWellFormed()
         ErrorMessage::errorGeneric( "If " + string( method_plugins_checkAnswerSet ) + " is not used then exactly one method between " + string( method_plugins_onLitTrue ) + " and " +  string( method_plugins_onLitsTrue ) + " is required." );
     
     if( ( check_onLitTrue || check_onLitsTrue ) && 
-        ( !interpreter->checkMethod( method_plugins_getReason ) || !interpreter->checkMethod( method_plugins_getLiterals ) || !interpreter->checkMethod( method_plugins_onLiteralsUndefined ) ) )
+        ( ( !interpreter->checkMethod( method_plugins_getReason ) && !interpreter->checkMethod( method_plugins_getReasonForLiteral ) ) || !interpreter->checkMethod( method_plugins_getLiterals ) || !interpreter->checkMethod( method_plugins_onLiteralsUndefined ) ) )
         ErrorMessage::errorGeneric( "If " + string( method_plugins_onLitTrue ) + " or " + string( method_plugins_onLitsTrue ) + " are used then " + 
-                                    string( method_plugins_getReason ) + ", " + 
+                                    string( method_plugins_getReason ) + " (or, alternatively, " + string( method_plugins_getReasonForLiteral ) + ") , " + 
                                     string( method_plugins_getLiterals ) + ", and " + 
                                     string( method_plugins_onLiteralsUndefined ) + " are required." );
+    if( interpreter->checkMethod( method_plugins_getReason ) && interpreter->checkMethod( method_plugins_getReasonForLiteral ) )
+        ErrorMessage::errorGeneric( "Exactly one method between " + string( method_plugins_getReason ) + " and " + string( method_plugins_getReasonForLiteral ) + " can be used." );
+        
     if( ( check_checkAnswerSet && !check_getReasonForCheckFailure ) || ( !check_checkAnswerSet && check_getReasonForCheckFailure ) )
         ErrorMessage::errorGeneric( "Method " + string( method_plugins_getReasonForCheckFailure ) + " is required when " +  string( method_plugins_checkAnswerSet ) + " is used." );
     
@@ -190,23 +194,30 @@ ExternalPropagator::checkWellFormed()
 
 Clause*
 ExternalPropagator::getReason(
-    Solver& solver )
+    Solver& solver,
+    Literal currentLiteral )
 {
     vector< int > output;
-    interpreter->callListMethod( method_plugins_getReason, output );
+    if( currentLiteral == Literal::null )
+        interpreter->callListMethod( method_plugins_getReason, output );
+    else
+        interpreter->callListMethod( method_plugins_getReasonForLiteral, currentLiteral.getId(), output );
+   
     if( output.empty() )
     {
         solver.unrollToZero();
         return NULL;
     }
     Clause* clause = new Clause();
-    clause->addLiteral( Literal::null );
+    clause->addLiteral( currentLiteral );
     unsigned int max = 0;    
     for( unsigned int i = 0; i < output.size(); i++ )
     {
         checkIdOfLiteral( solver, output[ i ] );
         Literal l = Literal::createLiteralFromInt( output[ i ] );
-        clause->addLiteral( l );        
+        if( solver.isUndefined( l ) )
+            ErrorMessage::errorGeneric( "Reason is not well-formed: Literal with id " + to_string( l.getId() ) + " is undefined." );
+        clause->addLiteral( l );
         unsigned int dl = solver.getDecisionLevel( l );
         if( dl > max )
             max = dl;
@@ -215,13 +226,6 @@ ExternalPropagator::getReason(
     if( max < solver.getCurrentDecisionLevel() )
         solver.unroll( max );
     
-    unsigned int countUndefined = 0;
-    for( unsigned int i = 1; i < clause->size(); i++ )
-        if( solver.isUndefined( clause->getAt( i ) ) )
-            countUndefined++;
-
-    if( countUndefined != 0 )
-        ErrorMessage::errorGeneric( "Reason is not well-formed" );
     reset( solver );
     return clause;
 }
@@ -369,17 +373,12 @@ Clause* ExternalPropagator::getReasonForCheckFailure(
     Clause* reason = getReasonForCheckerFailureInternal( solver );
     if( reason && !hasToAddClauseFromCheckFailure() && reason->size() >= 2 )
         clausesToDelete.push_back( reason );
-    if( reason && hasToAddClauseFromCheckFailure() && reason->size() >= 2 )
+    if( solver.glucoseHeuristic() && reason && hasToAddClauseFromCheckFailure() && reason->size() >= 2 )
     {
         reason->setLbd( solver.computeLBD( *reason ) );
         reason->setLearned();
     }
     return reason;
-}
-
-bool ExternalPropagator::hasToAddClauseFromCheckFailure()
-{
-    return check_addClauseFromCheckFailure;
 }
 
 void ExternalPropagator::endUnitPropagation(
@@ -410,9 +409,14 @@ void ExternalPropagator::handleConflict(
     Literal conflictLiteral )
 {
     assert( solver.isFalse( conflictLiteral ) );
-    Clause* clause = getReason( solver );
+    Clause* clause = getReason( solver, conflictLiteral );
+    if( clause == NULL )
+    {
+        clause = new Clause();
+        clause->addLiteral( Literal::null );
+    }
+    
     clause->setLearned();
-
     clause->setAt( 0, conflictLiteral );
     unsigned int size = clause->size();
     if( size > 1 )
@@ -426,6 +430,7 @@ void ExternalPropagator::handleConflict(
     }
     else
     {
+        assert( solver.getCurrentDecisionLevel() == 0 );
         delete clause;
         solver.assignLiteral( Literal::createLiteralFromInt( 1 ) );
         return;
@@ -461,8 +466,12 @@ void ExternalPropagator::computeReason(
         return;
     }
     
-    Clause* reason = getReason( solver );
-    //TODO: check for backjumping
+    Clause* reason = NULL;
+    if( !check_getReasonForLiteral )
+    {
+        reason = getReason( solver, Literal::null );
+        clausesToDelete.push_back( reason );
+    }
     for( unsigned int i = 0; i < output.size(); i++ )
     {
         checkIdOfLiteral( solver, output[ i ] );
@@ -470,11 +479,15 @@ void ExternalPropagator::computeReason(
         if( solver.isTrue( lit ) )
             continue;
         
-//        //Literals inferred from the propagators are stored
-//        trail.push_back( lit );
-        solver.assignLiteral( lit, reason );
+        if( check_getReasonForLiteral )
+        {
+            Clause* r = getReason( solver, lit );
+            solver.assignLiteral( r );
+            clausesToDelete.push_back( r );
+        }
+        else
+            solver.assignLiteral( lit, reason );
     }
-    clausesToDelete.push_back( reason );
     return;
 }
 
