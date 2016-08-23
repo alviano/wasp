@@ -321,16 +321,15 @@ Solver::handlePropagatorFailure(
 
     unsigned int size = clause->size();
     statistics( this, onLearningFromPropagators( size ) );
+    assert( !conflictDetected() );
     if( size == 0 )
     {
-        clearConflictStatus();
         delete clause;
         return false;
     }
     else if( size == 1 )
     {
         unrollToZero();
-        clearConflictStatus();
         assignLiteral( clause->getAt( 0 ) );
         delete clause;
     }
@@ -338,7 +337,6 @@ Solver::handlePropagatorFailure(
     {
         if( !isUndefined( clause->getAt( 1 ) ) && getDecisionLevel( clause->getAt( 1 ) ) < getCurrentDecisionLevel() )
         {
-            clearConflictStatus();
             trace( solving, 2, "Learned clause from propagator and backjumping to level %d.\n", getDecisionLevel( clause->getAt( 1 ) ) );
             unroll( getDecisionLevel( clause->getAt( 1 ) ) );
         }          
