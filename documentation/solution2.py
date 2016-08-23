@@ -13,17 +13,15 @@ def checkAnswerSet(*answer_set):
         return 0
     return 1
 
-def getReasonForCheckFailure():
+def getReasonsForCheckFailure():
     #In case of failure compute the clause
     global answer
     output = []
+    output.append(0);
     for i in range(2,6):
         if answer[i] > 0:
             output.append(-i)
         else:
             output.append(i)
+    output.append(0);
     return output
-
-def storeClauseFromCheckFailure():
-    #Store the clauses produced
-    pass

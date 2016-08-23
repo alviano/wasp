@@ -315,43 +315,44 @@ bool
 Solver::handlePropagatorFailure(
     ExternalPropagator* propagator )
 {
-    Clause* clause = propagator->getReasonForCheckFailure( *this );
-    if( clause == NULL )
-        return false;
+    Clause* clausePointer = propagator->getReasonForCheckFailure( *this );
+    Clause& clause = *clausePointer;
+    if( clausePointer == NULL )
+    {
+        assert( getCurrentDecisionLevel() == 0 );
+        return true;
+    }
 
-    unsigned int size = clause->size();
+    unsigned int size = clause.size();
     statistics( this, onLearningFromPropagators( size ) );
     assert( !conflictDetected() );
     if( size == 0 )
     {
-        delete clause;
+        delete clausePointer;
         return false;
     }
     else if( size == 1 )
     {
         unrollToZero();
-        assignLiteral( clause->getAt( 0 ) );
-        delete clause;
+        assignLiteral( clause[ 0 ] );
+        delete clausePointer;
     }
     else
     {
-        if( !isUndefined( clause->getAt( 1 ) ) && getDecisionLevel( clause->getAt( 1 ) ) < getCurrentDecisionLevel() )
+        assert( !isUndefined( clause[ 1 ] ) );
+        unsigned int dl = getDecisionLevel( clause[ 1 ] );
+        if( dl < getCurrentDecisionLevel() )
         {
-            trace( solving, 2, "Learned clause from propagator and backjumping to level %d.\n", getDecisionLevel( clause->getAt( 1 ) ) );
-            unroll( getDecisionLevel( clause->getAt( 1 ) ) );
+            trace( solving, 2, "Learned clause from check failure and backjumping to level %d.\n", dl );
+            unroll( dl );
         }          
 
-        if( propagator->hasToAddClauseFromCheckFailure() )
-        {
-            addLearnedClause( clause, false );
-            onLearning( clause );
-        }
-        if( !isUndefined( clause->getAt( 1 ) ) )
-        {
-//            assert( !isTrue( clause->getAt( 0 ) ) || getDecisionLevel( clause->getAt( 0 ) ) == 0 );
-            if( !isTrue( clause->getAt( 0 ) ) )
-                assignLiteral( clause );
-        }        
+        addLearnedClause( clausePointer, false );
+        onLearning( clausePointer );
+        
+        assert( !isUndefined( clause[ 1 ] ) );
+        assert( !isTrue( clause[ 0 ] ) );
+        assignLiteral( clausePointer );        
     }
     return true;
 }
@@ -506,7 +507,6 @@ Solver::solvePropagators(
     }
     
     #if defined(ENABLE_PYTHON) || defined(ENABLE_PERL)
-    bool checkFail = false;
     for( unsigned int i = 0; i < propagatorsAttachedToCheckAnswerSet.size(); i++ )
         if( !propagatorsAttachedToCheckAnswerSet[ i ]->checkAnswerSet( *this ) )
         {
@@ -514,12 +514,9 @@ Solver::solvePropagators(
                 return INCOHERENT;
             if( conflictDetected() )
                 goto conflict;
-            else if( hasNextVariableToPropagate() )
-                goto propagationLabel;            
-            checkFail = true;
+            else
+                goto propagationLabel;
         }
-    if( checkFail )
-        goto propagationLabel;
     #endif    
     completeModel();
     assert_msg( getNumberOfUndefined() == 0, "Found a model with " << getNumberOfUndefined() << " undefined variables." );

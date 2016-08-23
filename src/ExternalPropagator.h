@@ -41,8 +41,7 @@ using namespace std;
 #define method_plugins_simplifyAtLevelZero "simplifyAtLevelZero"
 #define method_plugins_onAnswerSet "onAnswerSet"
 #define method_plugins_checkAnswerSet "checkAnswerSet"
-#define method_plugins_getReasonForCheckFailure "getReasonForCheckFailure"
-#define method_plugins_addClauseFromCheckFailure "storeClauseFromCheckFailure"
+#define method_plugins_getReasonsForCheckFailure "getReasonsForCheckFailure"
 #define method_plugins_foundLB "onNewLowerBound" 
 #define method_plugins_foundUB "onNewUpperBound" 
 
@@ -63,8 +62,7 @@ class ExternalPropagator : public Propagator
         void foundLowerBound( uint64_t lb );
         void foundUpperBound( uint64_t ub );
         bool checkAnswerSet( Solver& solver );
-        Clause* getReasonForCheckFailure( Solver& solver );
-        inline bool hasToAddClauseFromCheckFailure() const { return check_addClauseFromCheckFailure; }
+        Clause* getReasonForCheckFailure( Solver& solver );        
         void endUnitPropagation( Solver& solver );
         void onStartingSolver();
         
@@ -74,7 +72,6 @@ class ExternalPropagator : public Propagator
         void checkWellFormed( const string& );
         void computeReason( Solver& solver, const vector< int >& output );
         Clause* getReason( Solver&, Literal lit );
-        Clause* getReasonForCheckerFailureInternal( Solver& );
         void handleConflict( Solver&, Literal );
         void clearClausesToDelete();
         void attachWatches( Solver& solver );
@@ -96,7 +93,6 @@ class ExternalPropagator : public Propagator
         bool check_onNewUpperBound;
         bool check_onLitsTrue;
         bool check_onLitTrue;
-        bool check_addClauseFromCheckFailure;
 };
 
 #endif

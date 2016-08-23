@@ -54,12 +54,11 @@ ExternalPropagator::ExternalPropagator(
     check_onAnswerSet = interpreter->checkMethod( method_plugins_onAnswerSet );
     
     check_checkAnswerSet = interpreter->checkMethod( method_plugins_checkAnswerSet );
-    check_getReasonForCheckFailure = interpreter->checkMethod( method_plugins_getReasonForCheckFailure );
+    check_getReasonForCheckFailure = interpreter->checkMethod( method_plugins_getReasonsForCheckFailure );
     check_onNewLowerBound = interpreter->checkMethod( method_plugins_foundLB );
     check_onNewUpperBound = interpreter->checkMethod( method_plugins_foundUB );
     check_onLitsTrue = interpreter->checkMethod( method_plugins_onLitsTrue );
     check_onLitTrue = interpreter->checkMethod( method_plugins_onLitTrue );
-    check_addClauseFromCheckFailure = interpreter->checkMethod( method_plugins_addClauseFromCheckFailure );
     check_getReasonForLiteral = interpreter->checkMethod( method_plugins_getReasonForLiteral );
     checkWellFormed();
     
@@ -186,10 +185,7 @@ ExternalPropagator::checkWellFormed()
         ErrorMessage::errorGeneric( "Exactly one method between " + string( method_plugins_getReason ) + " and " + string( method_plugins_getReasonForLiteral ) + " can be used." );
         
     if( ( check_checkAnswerSet && !check_getReasonForCheckFailure ) || ( !check_checkAnswerSet && check_getReasonForCheckFailure ) )
-        ErrorMessage::errorGeneric( "Method " + string( method_plugins_getReasonForCheckFailure ) + " is required when " +  string( method_plugins_checkAnswerSet ) + " is used." );
-    
-    if( !check_checkAnswerSet && check_addClauseFromCheckFailure )
-        ErrorMessage::errorGeneric( "Method " + string( method_plugins_addClauseFromCheckFailure ) + " can be defined only if " +  string( method_plugins_checkAnswerSet ) + " is used." );
+        ErrorMessage::errorGeneric( "Method " + string( method_plugins_getReasonsForCheckFailure ) + " is required when " +  string( method_plugins_checkAnswerSet ) + " is used." );    
 }
 
 Clause*
@@ -231,33 +227,52 @@ ExternalPropagator::getReason(
 }
 
 Clause*
-ExternalPropagator::getReasonForCheckerFailureInternal(
+ExternalPropagator::getReasonForCheckFailure(
     Solver& solver )
 {
+    assert( check_getReasonForCheckFailure );
     vector< int > output;
-    interpreter->callListMethod( method_plugins_getReasonForCheckFailure, output );
-    if( output.empty() )
-    {
-        solver.unrollToZero();
-        return NULL;
-    }
+    interpreter->callListMethod( method_plugins_getReasonsForCheckFailure, output );
+    if( output.size() <= 2 || output[ 0 ] != 0 || output.back() != 0 )
+        ErrorMessage::errorGeneric( "Reasons must start and terminate with 0." );
+    
+    vector< Clause* > clauses;
     Clause* clause = new Clause();
-    for( unsigned int i = 0; i < output.size(); i++ )
+    for( unsigned int i = 1; i < output.size(); i++ )
     {
+        if( output[ i ] == 0 )
+        {
+            clause->setLearned();
+            if( solver.glucoseHeuristic() && clause->size() > 2 )
+                clause->setLbd( solver.computeLBD( *clause ) );
+            clauses.push_back( clause );
+            clause = new Clause();
+            continue;
+        }
         checkIdOfLiteral( solver, output[ i ] );
         Literal l = Literal::createLiteralFromInt( output[ i ] );
         if( solver.isUndefined( l ) )
-            ErrorMessage::errorGeneric( "Reason is not well-formed: there are undefined literals!" );
+            ErrorMessage::errorGeneric( "Reason is not well-formed: Literal with id " + to_string( l.getId() ) + " is undefined." );
         if( solver.isTrue( l ) )
-            ErrorMessage::errorGeneric( "Reason is not well-formed: there are true literals!" );
-        clause->addLiteral( l );
+            ErrorMessage::errorGeneric( "Reason is not well-formed: Literal with id " + to_string( l.getId() ) + " is true." );
+        if( solver.getDecisionLevel( l ) > 0 )
+            clause->addLiteral( l );
     }
-    if( clause->size() >= 2 )
-        Learning::sortClause( clause, solver );
+    assert( clause->size() == 0 );
+    delete clause;
     
-    return clause;
-}
+    if( clauses.size() == 1 )
+    {
+        if( clauses[ 0 ]->size() >= 2 )
+            Learning::sortClause( clauses[ 0 ], solver );
+        return clauses[ 0 ];
+    }
 
+    solver.unrollToZero();
+    for( unsigned int i = 0; i < clauses.size(); i++ )
+        solver.addLearnedClause( clauses[ i ], true );
+    return NULL;
+}
 
 void
 ExternalPropagator::clearClausesToDelete()
@@ -364,21 +379,6 @@ bool ExternalPropagator::checkAnswerSet( Solver& solver )
         retValue = interpreter->callIntMethod( method_plugins_checkAnswerSet, answerset ) != 0;
     }
     return retValue;
-}
-
-Clause* ExternalPropagator::getReasonForCheckFailure(
-    Solver& solver )
-{
-    assert( check_getReasonForCheckFailure );
-    Clause* reason = getReasonForCheckerFailureInternal( solver );
-    if( reason && !hasToAddClauseFromCheckFailure() && reason->size() >= 2 )
-        clausesToDelete.push_back( reason );
-    if( solver.glucoseHeuristic() && reason && hasToAddClauseFromCheckFailure() && reason->size() >= 2 )
-    {
-        reason->setLbd( solver.computeLBD( *reason ) );
-        reason->setLearned();
-    }
-    return reason;
 }
 
 void ExternalPropagator::endUnitPropagation(
