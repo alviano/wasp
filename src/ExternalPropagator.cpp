@@ -419,7 +419,7 @@ void ExternalPropagator::handleConflict(
     Literal conflictLiteral )
 {
     assert( solver.isFalse( conflictLiteral ) );
-    Clause* clause = getReason( solver, Literal::null );
+    Clause* clause = getReason( solver, check_getReasonForLiteral ? conflictLiteral : Literal::null );
     if( clause == NULL )
     {
         clause = new Clause();
