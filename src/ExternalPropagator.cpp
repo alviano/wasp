@@ -78,6 +78,8 @@ ExternalPropagator::onLiteralFalse(
     Literal literal,
     int )
 {
+    assert( solver.isFalse( literal ) );
+    assert( !solver.conflictDetected() );
     vector< int > output;
     if( check_onLitsTrue )
     {
@@ -208,6 +210,7 @@ ExternalPropagator::getReason(
     if( output.empty() )
     {
         solver.unrollToZero();
+        reset( solver );        
         return NULL;
     }
     Clause* clause = new Clause();
@@ -279,6 +282,7 @@ ExternalPropagator::getReasonForCheckFailure(
     }
 
     solver.unrollToZero();
+    reset( solver );
     for( unsigned int i = 0; i < clauses.size(); i++ )
         solver.addLearnedClause( clauses[ i ], true );
     return NULL;
@@ -436,7 +440,10 @@ void ExternalPropagator::handleConflict(
             clause->setLbd( solver.computeLBD( *clause ) );
         assert( !solver.isUndefined( clause->getAt( 1 ) ) );
         if( solver.getDecisionLevel( clause->getAt( 1 ) ) < solver.getCurrentDecisionLevel() )
+        {
             solver.unroll( solver.getDecisionLevel( clause->getAt( 1 ) ) );
+            reset( solver );            
+        }
         assert( !solver.isUndefined( clause->getAt( 1 ) ) );
     }
     else
