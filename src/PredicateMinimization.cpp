@@ -252,7 +252,12 @@ PredicateMinimization::minimizeAnswerSet()
     solver.clearConflictStatus();
     clause->setCanBeDeleted( false );
     
-    if( solver.addClauseRuntime( clause ) && solver.solve( assumptions ) != INCOHERENT )
+    for(unsigned int i = 0; i < assumptions.size(); i++)
+        if(!solver.addClauseRuntime(assumptions[i]))
+            goto end;
+    assumptions.clear();
+    
+    if( solver.addClauseRuntime( clause ) && solver.solve() != INCOHERENT )
     {
         trace_msg( predmin, 4, "The answer set is not minimal. Try to minimize the new answer set." );    
         clause->setCanBeDeleted( true );
@@ -272,6 +277,7 @@ PredicateMinimization::minimizeAnswerSet()
         goto begin;
     }   
     trace_msg( predmin, 4, "The answer set is minimal: stop." );
+    end:;
     printTrueVars();
 }
 
@@ -309,37 +315,47 @@ PredicateMinimization::minimizeAnswerSetSplit()
             assumptions.push_back( Literal( v, NEGATIVE ) );
     }
     
+    computeTrueVars();
+    
     begin:;
     trace_action( predmin, 3, { trace_tag( cerr, predmin, 3 ); printVectorOfVars( candidates, "Candidates" ); } );
     trace_action( predmin, 3, { trace_tag( cerr, predmin, 3 ); printVectorOfLiterals( assumptions, "Assumptions" ); } );
+    solver.unrollToZero();
+    solver.clearConflictStatus();
+    for( unsigned int i = 0; i < assumptions.size(); i++ )
+        if( !solver.addClauseRuntime( assumptions[ i ] ) )
+        {
+            candidates.clear();
+            break;
+        }
+    assumptions.clear();
+    
     if( candidates.empty() )
     {
-        solver.unrollToZero();
-        solver.clearConflictStatus();
-        if( solver.solve( assumptions ) == INCOHERENT )
-            ErrorMessage::errorGeneric( "Cannot be incoherent" );
-        
         trace_msg( predmin, 4, "No more candidates: stop." );
-        solver.printAnswerSet();
+        printTrueVars();
         return;
     }
     
     Var lastCandidate = candidates.back();
-    candidates.pop_back();
+    candidates.pop_back();    
     trace_msg( predmin, 4, "Considering variable " << Literal( lastCandidate, POSITIVE ) << " as candidate");
     assumptions.push_back( Literal( lastCandidate, NEGATIVE ) );
     
-    solver.unrollToZero();
-    solver.clearConflictStatus();
     if( solver.solve( assumptions ) == INCOHERENT )
     {
         trace_msg( predmin, 5, "No answer set found: the variable must be true");
         assumptions.pop_back();
-        assumptions.push_back( Literal( lastCandidate, POSITIVE ) );
+        solver.unrollToZero();
+        solver.clearConflictStatus();
+        
+        if( !solver.addClauseRuntime( Literal( lastCandidate, POSITIVE ) ) )
+            candidates.clear();
     }
     else
     {
-        trace_msg( predmin, 5, "Found answer set: the variable is not needed");        
+        trace_msg( predmin, 5, "Found answer set: the variable is not needed");
+        computeTrueVars();
         unsigned int j = 0;
         for( unsigned int i = 0; i < candidates.size(); i++ )
         {
@@ -350,7 +366,7 @@ PredicateMinimization::minimizeAnswerSetSplit()
             if( solver.isTrue( v ) )
                 j++;
             else
-                assumptions.push_back( Literal( v, NEGATIVE ) );
+                assumptions.push_back( Literal( v, NEGATIVE ) );            
         }
         candidates.resize( j );        
     }
