@@ -320,6 +320,13 @@ PredicateMinimization::minimizeAnswerSetSplit()
     begin:;
     trace_action( predmin, 3, { trace_tag( cerr, predmin, 3 ); printVectorOfVars( candidates, "Candidates" ); } );
     trace_action( predmin, 3, { trace_tag( cerr, predmin, 3 ); printVectorOfLiterals( assumptions, "Assumptions" ); } );
+    if( candidates.empty() )
+    {
+        trace_msg( predmin, 4, "No more candidates: stop." );
+        printTrueVars();
+        return;
+    }
+    
     solver.unrollToZero();
     solver.clearConflictStatus();
     for( unsigned int i = 0; i < assumptions.size(); i++ )
@@ -328,14 +335,7 @@ PredicateMinimization::minimizeAnswerSetSplit()
             candidates.clear();
             break;
         }
-    assumptions.clear();
-    
-    if( candidates.empty() )
-    {
-        trace_msg( predmin, 4, "No more candidates: stop." );
-        printTrueVars();
-        return;
-    }
+    assumptions.clear();    
     
     Var lastCandidate = candidates.back();
     candidates.pop_back();    
