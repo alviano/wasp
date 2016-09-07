@@ -236,48 +236,66 @@ PredicateMinimization::minimizeAnswerSet()
             assumptions.push_back( Literal( v, NEGATIVE ) );
     }
     
-    begin:;
-    computeTrueVars();
-    
-    Clause* clause = new Clause();
-    for( unsigned int i = 0; i < candidates.size(); i++ )
+    while( true )
     {
-        Var v = candidates[ i ];
-        assert( solver.isTrue( v ) && solver.getDecisionLevel( v ) > 0 );
-        clause->addLiteral( Literal( v, NEGATIVE ) );        
-    }
-    trace_action( predmin, 3, { trace_tag( cerr, predmin, 3 ); printVectorOfVars( candidates, "Candidates" ); } );
-    trace_action( predmin, 3, { trace_tag( cerr, predmin, 3 ); printVectorOfLiterals( assumptions, "Assumptions" ); } );    
-    solver.unrollToZero();
-    solver.clearConflictStatus();
-    clause->setCanBeDeleted( false );
-    
-    for(unsigned int i = 0; i < assumptions.size(); i++)
-        if(!solver.addClauseRuntime(assumptions[i]))
-            goto end;
-    assumptions.clear();
-    
-    if( solver.addClauseRuntime( clause ) && solver.solve() != INCOHERENT )
-    {
-        trace_msg( predmin, 4, "The answer set is not minimal. Try to minimize the new answer set." );    
-        clause->setCanBeDeleted( true );
-        unsigned int j = 0;
-        for( unsigned int i = 0; i < candidates.size(); i++ )
+        computeTrueVars();
+
+        trace_action( predmin, 3, { trace_tag( cerr, predmin, 3 ); printVectorOfVars( candidates, "Candidates" ); } );
+        trace_action( predmin, 3, { trace_tag( cerr, predmin, 3 ); printVectorOfLiterals( assumptions, "Assumptions" ); } );    
+        solver.unrollToZero();
+        solver.clearConflictStatus();
+
+        bool ok = true;
+        for(unsigned int i = 0; i < assumptions.size(); i++)
+            if( !solver.addClauseRuntime( assumptions[ i ] ) )
+            {
+                ok = false;
+                break;
+            }
+        assumptions.clear();
+
+        if( ok )
         {
-            Var v = candidates[ j ] = candidates[ i ];
-            if( solver.getDecisionLevel( v ) == 0 )
+            Clause* clause = new Clause();
+            unsigned int k = 0;
+            assert( solver.getCurrentDecisionLevel() == 0 );
+            for( unsigned int i = 0; i < candidates.size(); i++ )
+            {
+                Var v = candidates[ k ] = candidates[ i ];
+                if( !solver.isUndefined( v ) )
+                    continue;
+                assert( solver.isUndefined( v ) );
+                clause->addLiteral( Literal( v, NEGATIVE ) );
+                k++;        
+            }
+            candidates.resize( k );
+            clause->setCanBeDeleted( false );
+
+            bool isDeleted = clause->size() <= 2;
+            if( solver.addClauseRuntime( clause ) && solver.solve() != INCOHERENT )
+            {
+                trace_msg( predmin, 4, "The answer set is not minimal. Try to minimize the new answer set." );    
+                if( !isDeleted )
+                    clause->setCanBeDeleted( true );
+                unsigned int j = 0;
+                for( unsigned int i = 0; i < candidates.size(); i++ )
+                {
+                    Var v = candidates[ j ] = candidates[ i ];
+                    if( solver.getDecisionLevel( v ) == 0 )
+                        continue;
+
+                    if( solver.isTrue( v ) )
+                        j++;
+                    else
+                        assumptions.push_back( Literal( v, NEGATIVE ) );
+                }
+                candidates.resize( j );
                 continue;
-            
-            if( solver.isTrue( v ) )
-                j++;
-            else
-                assumptions.push_back( Literal( v, NEGATIVE ) );
+            }  
         }
-        candidates.resize( j );
-        goto begin;
-    }   
+        break;
+    }
     trace_msg( predmin, 4, "The answer set is minimal: stop." );
-    end:;
     printTrueVars();
 }
 
