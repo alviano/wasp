@@ -271,6 +271,7 @@ class Solver
 //        inline void setMaxCostOfLevelOfOptimizationRules( vector< uint64_t >& m ) { maxCostOfLevelOfOptimizationRules.swap( m ); }
 //        inline void setNumberOfOptimizationLevels( unsigned int n ) { numberOfOptimizationLevels = n; }        
         inline void addPreferredChoicesFromOptimizationLiterals( unsigned int level );
+        inline void addPrefChoice( Literal lit ) { if( isUndefined( lit ) ) minisatHeuristic->addPreferredChoice( lit ); }
         inline void removePrefChoices() { minisatHeuristic->removePrefChoices(); }
         
         inline bool isTrue( Var v ) const { return variables.isTrue( v ); }

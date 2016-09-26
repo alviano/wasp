@@ -146,6 +146,7 @@ class Help
             cout << "       =guess-check                    - Guess an answer set and check the minimality" << endl;
             cout << "       =guess-check-minimize           - Guess an answer set and check the minimality. In case of failure reiterate the check" << endl;
             cout << "       =guess-check-split              - Guess an answer set and check the minimality of each atom" << endl;
+            cout << "       =preferences                    - Use the always-false heuristic" << endl;
             cout << "--minimization-checktrivialsolution    - Check if all atoms to minimize can be false" << endl;
             
             cout << separator << endl;

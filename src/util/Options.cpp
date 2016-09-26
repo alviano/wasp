@@ -790,6 +790,7 @@ Options::initMap()
     stringToPredMinimization[ "guess-check" ] = PREDMIN_GUESS_AND_CHECK;
     stringToPredMinimization[ "guess-check-minimize" ] = PREDMIN_GUESS_AND_CHECK_AND_MINIMIZE;
     stringToPredMinimization[ "guess-check-split" ] = PREDMIN_GUESS_AND_CHECK_AND_SPLIT;
+    stringToPredMinimization[ "preferences" ] = PREDMIN_PREFERENCES;
 }
 
 };

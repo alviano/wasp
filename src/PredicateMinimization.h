@@ -39,6 +39,8 @@ class PredicateMinimization
         unsigned int guessAndCheck();
         unsigned int guessAndCheckAndMinimize();
         unsigned int guessAndCheckAndSplit();
+        unsigned int usePreferences();
+
         void minimizeAnswerSet();
         void minimizeAnswerSetSplit();
         bool computeFirstModel();        

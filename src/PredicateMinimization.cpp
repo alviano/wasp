@@ -48,6 +48,9 @@ PredicateMinimization::minimize()
         case PREDMIN_GUESS_AND_CHECK_AND_SPLIT:
             return guessAndCheckAndSplit();
             
+        case PREDMIN_PREFERENCES:
+            return usePreferences();
+            
         case NO_PREDMINIMIZATION:
         default:
             ErrorMessage::errorGeneric( "Invalid option for predicate minimization" );            
@@ -412,4 +415,22 @@ PredicateMinimization::checkTrivialSolution()
     }
     solver.printAnswerSet();
     return true;
+}
+
+unsigned int
+PredicateMinimization::usePreferences()
+{
+    trace_msg( predmin, 1, "Starting algorithm guess and check and split" );
+    solver.turnOffSimplifications();
+    assert( solver.getCurrentDecisionLevel() == 0 );
+    assert( !solver.conflictDetected() );
+    
+    for( unsigned int i = 0; i < atomsToMinimize.size(); i++ )
+        solver.addPrefChoice( Literal( atomsToMinimize[ i ], NEGATIVE ) );
+
+    if( solver.solve() != COHERENT )
+        return INCOHERENT;
+    
+    solver.printAnswerSet();
+    return COHERENT;
 }
