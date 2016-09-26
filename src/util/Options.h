@@ -73,6 +73,9 @@ namespace wasp
             static unsigned int silent;
             static bool printOnlyOptimum;
             
+            static unsigned int chunkPercentage;
+            static unsigned int chunkSize;
+            
         private:
 
             static DELETION_POLICY deletionPolicy;

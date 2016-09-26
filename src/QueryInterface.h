@@ -35,13 +35,16 @@ class QueryInterface
         
         bool computeFirstModel();
         
-        void enumerationOfModels();
         void iterativeCoherenceTesting();
         void overestimateReduction();
+        void chunkAlgorithm( unsigned int chunkSize );
+        
         void computeCandidates();
         void reduceCandidates();
+        void reduceCandidatesForChunk( unsigned int chunkSize );
         
         Clause* computeClauseFromCandidates();
+        Clause* computeClauseForChunk( unsigned int chunkSize, Var& auxVar );        
         
         void addAnswer( Var v );
         
@@ -50,7 +53,7 @@ class QueryInterface
         Vector< Var > candidates;
         Vector< Var > answers;
         
-        Solver& solver;
+        Solver& solver;        
 };
 
 #endif

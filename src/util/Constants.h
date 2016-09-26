@@ -59,6 +59,7 @@
 #define NO_QUERY 0
 #define OVERESTIMATE_REDUCTION 1
 #define ITERATIVE_COHERENCE_TESTING 2
+#define CHUNK_BASED 3
 
 /*
  * Weak constraints

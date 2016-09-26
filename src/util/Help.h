@@ -123,7 +123,10 @@ class Help
             cout << "--query-algorithm                      - Compute cautious consequences according to the specified algorithm" << endl;
             cout << "       =ict                            - Enable iterative coherence testing" << endl;
             cout << "       =or                             - Enable overestimate reduction" << endl;
-            cout << "--query-verbosity=(0,1,2)              - Enable verbosity of queries algorithms" << endl;
+            cout << "       =chunk                          - Enable algorithm based on chunks. (Default size=2)" << endl;
+            cout << "--query-verbosity=(0,...,3)            - Enable verbosity of queries algorithms" << endl;
+            cout << "--chunk-size=n                         - Specify the size of each chunk" << endl;
+            cout << "--chunk-percentage=(1,...,100)         - The size of each chunk is a percentage of the number of candidates" << endl;
 
             cout << separator << endl;
             cout << "Disjunction options                    " << endl << endl;

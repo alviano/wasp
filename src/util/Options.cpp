@@ -111,6 +111,8 @@ namespace wasp
 /* QUERY OPTIONS */
 #define OPTIONID_queryalgorithm ( 'z' + 300 )
 #define OPTIONID_queryverbosity ( 'z' + 301 )
+#define OPTIONID_querychunksize ( 'z' + 302 )
+#define OPTIONID_querychunkpercentage ( 'z' + 303 )
     
 #ifdef TRACE_ON
 TraceLevels Options::traceLevels;
@@ -190,6 +192,10 @@ unsigned int Options::minimizationStrategy = MINIMIZATION_OFF;
 unsigned int Options::minimizationBudget = UINT_MAX;
 
 unsigned int Options::enumerationStrategy = ENUMERATION_BT;
+
+unsigned int Options::chunkSize = UINT_MAX;
+
+unsigned int Options::chunkPercentage = UINT_MAX;
 
 void
 Options::parse(
@@ -290,6 +296,8 @@ Options::parse(
                 /* QUERY */
                 { "query-algorithm", optional_argument, NULL, OPTIONID_queryalgorithm },
                 { "query-verbosity", required_argument, NULL, OPTIONID_queryverbosity },
+                { "query-chunk-size", required_argument, NULL, OPTIONID_querychunksize },
+                { "query-chunk-percentage", required_argument, NULL, OPTIONID_querychunkpercentage },
                 
                 // The NULL-option indicates the end of the array.
                 { NULL, 0, NULL, 0 }
@@ -613,6 +621,8 @@ Options::parse(
                         queryAlgorithm = OVERESTIMATE_REDUCTION;
                     else if( !strcmp( optarg, "ict" ) )
                         queryAlgorithm = ITERATIVE_COHERENCE_TESTING;
+                    else if( !strcmp( optarg, "chunk" ) )
+                        queryAlgorithm = CHUNK_BASED;
                     else
                         ErrorMessage::errorGeneric( "Inserted invalid algorithm for query answering." );
                 }
@@ -623,10 +633,30 @@ Options::parse(
                 if( optarg )
                 {
                     unsigned int value = atoi( optarg );
-                    if( value <= 2 )
+                    if( value <= 3 )
                         queryVerbosity = value;
                     else
                         ErrorMessage::errorGeneric( "Inserted invalid value for query verbosity." );
+                }
+                break;
+            
+            case OPTIONID_querychunksize:
+                if( optarg )
+                {
+                    chunkSize = atoi( optarg );
+                    if( chunkPercentage != UINT_MAX )
+                        ErrorMessage::errorGeneric( "Only one option between chunk percentage and chunk size can be specified." );
+                }
+                break;
+                
+            case OPTIONID_querychunkpercentage:
+                if( optarg )
+                {
+                    chunkPercentage = atoi( optarg );
+                    if( chunkPercentage == 0 || chunkPercentage > 100 )
+                        ErrorMessage::errorGeneric( "Inserted invalid value for chunk percentage." );
+                    if( chunkSize != UINT_MAX )
+                        ErrorMessage::errorGeneric( "Only one option between chunk percentage and chunk size can be specified." );
                 }
                 break;
                 
