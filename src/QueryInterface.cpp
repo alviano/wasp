@@ -234,9 +234,7 @@ QueryInterface::computeClauseForChunk(
     Clause* clause = new Clause();
     unsigned int limit = chunkSize > candidates.size() ? candidates.size() : chunkSize;
     for( unsigned int i = 0; i < limit; i++ )
-        clause->addLiteral( Literal( candidates[ i ], NEGATIVE ) );
-    solver.unrollToZero();
-    solver.clearConflictStatus();
+        clause->addLiteral( Literal( candidates[ i ], NEGATIVE ) );    
     solver.addVariableRuntime();
     auxVar = solver.numberOfVariables();
     clause->addLiteral( Literal( auxVar, POSITIVE ) );
@@ -289,7 +287,9 @@ void
 QueryInterface::chunkAlgorithm(
     unsigned int chunkSize )
 {
-    assert( chunkSize < candidates.size() );
+    assert( chunkSize < candidates.size() );    
+    solver.unrollToZero();
+    solver.clearConflictStatus();
     solver.turnOffSimplifications();
     Var auxVar = 0;
     Clause* clausePointer = computeClauseForChunk( chunkSize, auxVar );
@@ -318,11 +318,13 @@ QueryInterface::chunkAlgorithm(
         if( candidates.empty() )
             return;
         
+        solver.unrollToZero();
+        solver.clearConflictStatus();        
         if( size > 2 )
         {
             assert( clausePointer->size() > 2 );
             solver.detachClause( *clausePointer );
-        }
+        }        
         #ifndef NDEBUG
         bool res = 
         #endif
