@@ -234,7 +234,10 @@ QueryInterface::computeClauseForChunk(
     Clause* clause = new Clause();
     unsigned int limit = chunkSize > candidates.size() ? candidates.size() : chunkSize;
     for( unsigned int i = 0; i < limit; i++ )
+    {
+        assert( solver.isUndefined( candidates[ i ] ) );
         clause->addLiteral( Literal( candidates[ i ], NEGATIVE ) );    
+    }
     solver.addVariableRuntime();
     auxVar = solver.numberOfVariables();
     clause->addLiteral( Literal( auxVar, POSITIVE ) );
@@ -271,13 +274,19 @@ void
 QueryInterface::reduceCandidatesForChunk(
     unsigned int chunkSize )
 {
+    assert( solver.getCurrentDecisionLevel() == 0 );
     unsigned int limit = chunkSize > candidates.size() ? candidates.size() : chunkSize;
     unsigned int j = 0;
     for( unsigned int i = 0; i < candidates.size(); i++ )
     {
         candidates[ j ] = candidates[ i ];
         if( i >= limit )
-            j++;
+        {
+            if( solver.isUndefined( candidates[ i ] ) )
+                j++;
+            else if( solver.isTrue( candidates[ i ] ) )
+                addAnswer( candidates[ i ] );
+        }
     }
     candidates.shrink( j );
     printCandidates();
@@ -307,24 +316,28 @@ QueryInterface::chunkAlgorithm(
         assumptions.clear();
         assumptions.push_back( Literal( auxVar, NEGATIVE ) );
         if( solver.solve( assumptions ) == COHERENT )
+        {
             reduceCandidates();
+            solver.unrollToZero();
+            solver.clearConflictStatus();
+        }
         else
         {
             unsigned int limit = chunkSize > candidates.size() ? candidates.size() : chunkSize;
             for( unsigned int i = 0; i < limit; i++ )
-                addAnswer( candidates[ i ] );            
+                addAnswer( candidates[ i ] );
+            solver.unrollToZero();
+            solver.clearConflictStatus();                
             reduceCandidatesForChunk( chunkSize );            
         }
         if( candidates.empty() )
             return;
         
-        solver.unrollToZero();
-        solver.clearConflictStatus();        
         if( size > 2 )
         {
             assert( clausePointer->size() > 2 );
             solver.detachClause( *clausePointer );
-        }        
+        }
         #ifndef NDEBUG
         bool res = 
         #endif
