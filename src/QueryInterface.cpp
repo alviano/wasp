@@ -59,7 +59,7 @@ QueryInterface::computeCautiousConsequences(
             else if( param >= candidates.size() )
                 overestimateReduction();
             else
-                chunkAlgorithm(param);         
+                chunkAlgorithm2( param );         
             }   
             break;
         default:
@@ -357,4 +357,140 @@ QueryInterface::chunkAlgorithm(
         solver.addClauseRuntime( clausePointer );
         assert( res );
     }        
+}
+
+void
+QueryInterface::computeCandidatesForChunk(
+    Vector< Var >& candidatesForChunk,
+    unsigned int chunkSize )
+{
+    while( !candidates.empty() )
+    {
+        Var c = candidates.back();
+        candidates.pop_back();
+        if( solver.isUndefined( c ) )
+        {
+            candidatesForChunk.push_back( c );
+            if( candidatesForChunk.size() == chunkSize )
+                return;
+        }
+    }    
+}
+
+Clause*
+QueryInterface::computeClauseFromChunkCandidates(
+    Vector< Var >& candidatesForChunk,
+    Var& auxVar )
+{
+    assert( !candidatesForChunk.empty() );
+    Clause* clause = new Clause();
+    for( unsigned int i = 0; i < candidatesForChunk.size(); i++ )
+    {
+        assert( solver.isUndefined( candidatesForChunk[ i ] ) );
+        clause->addLiteral( Literal( candidatesForChunk[ i ], NEGATIVE ) );
+    }
+    
+    if( auxVar == 0 )
+    {
+        solver.addVariableRuntime();
+        auxVar = solver.numberOfVariables();
+    }
+    clause->addLiteral( Literal( auxVar, POSITIVE ) );
+    clause->setCanBeDeleted( false );    
+    return clause;
+}
+
+void
+QueryInterface::chunkAlgorithm2(
+    unsigned int chunkSize )
+{
+    assert( chunkSize < candidates.size() );    
+    solver.unrollToZero();
+    solver.clearConflictStatus();
+    solver.turnOffSimplifications();
+    
+    Vector< Var > candidatesForChunk;
+    computeCandidatesForChunk( candidatesForChunk, chunkSize );
+    
+    Var auxVar = 0;
+    Clause* clausePointer = computeClauseFromChunkCandidates( candidatesForChunk, auxVar );
+    unsigned int size = clausePointer->size();
+    assert( auxVar != 0 );
+    
+    assert( solver.getCurrentDecisionLevel() == 0 );
+    assert( !solver.conflictDetected() );    
+    if( !solver.addClauseRuntime( clausePointer ) )
+        return;
+
+    vector< Literal > assumptions;
+    while( true )
+    {
+        assumptions.clear();
+        assumptions.push_back( Literal( auxVar, NEGATIVE ) );
+        if( solver.solve( assumptions ) == COHERENT )
+        {
+            reduceCandidates();
+            unsigned int j = 0;
+            for( unsigned int i = 0; i < candidatesForChunk.size(); i++ )
+            {
+                candidatesForChunk[ j ] = candidatesForChunk[ i ];
+                if( solver.isTrue( candidatesForChunk[ i ] ) )
+                {
+                    if( solver.getDecisionLevel( candidatesForChunk[ i ] ) == 0 )
+                        addAnswer( candidatesForChunk[ i ] );
+                    else
+                        j++;
+                }
+            }
+            candidatesForChunk.shrink( j );
+            solver.unrollToZero();
+            solver.clearConflictStatus();
+        }
+        else
+        {
+            solver.unrollToZero();
+            solver.clearConflictStatus();
+            for( unsigned int i = 0; i < candidatesForChunk.size(); i++ )
+            {
+                addAnswer( candidatesForChunk[ i ] );
+                #ifndef NDEBUG
+                bool res = 
+                #endif
+                solver.addClauseRuntime( Literal( candidatesForChunk[ i ],  POSITIVE ) );
+                assert( res );
+            }
+            candidatesForChunk.clear();            
+        }
+        
+        if( candidates.empty() && candidatesForChunk.empty() )
+            return;
+        
+        if( candidatesForChunk.empty() )
+        {
+            computeCandidatesForChunk( candidatesForChunk, chunkSize );
+            #ifndef NDEBUG
+            bool res = 
+            #endif
+            solver.addClauseRuntime( Literal( auxVar, POSITIVE ) );
+            assert( res );
+            auxVar = 0;
+        }
+        
+        if( size > 2 )
+        {
+            assert( clausePointer->size() > 2 );
+            solver.detachClause( *clausePointer );
+        }
+        clausePointer = computeClauseFromChunkCandidates( candidatesForChunk, auxVar );
+        assert( auxVar != 0 );
+        size = clausePointer->size();
+        assert( solver.getCurrentDecisionLevel() == 0 );
+        assert( !solver.conflictDetected() );
+
+        #ifndef NDEBUG
+        bool res = 
+        #endif
+        solver.addClauseRuntime( clausePointer );
+        assert( res );
+    }
 }

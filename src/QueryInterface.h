@@ -38,6 +38,7 @@ class QueryInterface
         void iterativeCoherenceTesting();
         void overestimateReduction();
         void chunkAlgorithm( unsigned int chunkSize );
+        void chunkAlgorithm2( unsigned int chunkSize );
         
         void computeCandidates();
         void reduceCandidates();
@@ -50,6 +51,10 @@ class QueryInterface
         
         void printCandidates();
         
+        
+        void computeCandidatesForChunk( Vector< Var >& candidatesForChunk, unsigned int chunkSize );
+        Clause* computeClauseFromChunkCandidates( Vector< Var >& candidatesForChunk, Var& auxVar );
+
         Vector< Var > candidates;
         Vector< Var > answers;
         
