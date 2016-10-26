@@ -21,6 +21,7 @@
 #include "Literal.h"
 #include "Solver.h"
 #include "HCComponent.h"
+#include "util/ExtendedStatistics.h"
 
 #include <cassert>
 
@@ -55,7 +56,7 @@ Learning::onConflict(
 
     trace_msg( learning, 2, "Starting First UIP Learning Strategy. Current Level: " << decisionLevel );
     trace_msg( learning, 2, "Conflict literal: " << conflictLiteral << " - Conflict implicant: " << *conflictClause << ( conflictClause->isLearned() ? " (learned)" : " (original)" ) );    
-    
+    estatistics( &solver, onNewConflictLiteral( conflictLiteral ) );
     //Increment heuristic activity
     if( conflictClause->isLearned() ) 
         solver.learnedClauseUsedForConflict( ( Clause* ) conflictClause );
@@ -190,6 +191,7 @@ Learning::addLiteralInLearnedClause(
             maxPosition = learnedClause->size();
         }
         learnedClause->addLiteralInLearnedClause( literal );
+        estatistics( &solver, onLiteralAddInLearnedClause( literal ) );
     }
 }
 
@@ -200,6 +202,7 @@ Learning::addLiteralToNavigate(
     Var v = literal.getVariable();
     if( !isVisited( v, numberOfCalls ) )
     {
+        estatistics( &solver, onLiteralUsedInConflictResolution( literal ) );
         setVisited( v, numberOfCalls );
         ++pendingVisitedVariables;
     }

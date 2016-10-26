@@ -36,6 +36,7 @@ using namespace std;
 #include "Restart.h"
 #include "heuristic/HeuristicStrategy.h"
 #include "util/Statistics.h"
+#include "util/ExtendedStatistics.h"
 #include "PostPropagator.h"
 #include "DependencyGraph.h"
 #include "Aggregate.h"
@@ -756,7 +757,7 @@ void
 Solver::onKill()
 {
     if( outputBuilder )
-        outputBuilder->onKill();    
+        outputBuilder->onKill();
 }
 
 void
@@ -841,7 +842,7 @@ Solver::addVariableInternal()
     
     variableDataStructures.push_back( new DataStructures() );
     variableDataStructures.push_back( new DataStructures() );
-
+    estatistics( this, onNewVar( variables.numberOfVariables() ) );
 //    return variables.numberOfVariables();
 }
 
@@ -1384,6 +1385,7 @@ Solver::chooseLiteral(
     trace_msg( solving, 1, "Choice: " << choice );
     setAChoice( choice );    
     statistics( this, onChoice() );    
+    estatistics( this, onLiteralUsedAsChoice( choice ) );    
     return true;
 }
 

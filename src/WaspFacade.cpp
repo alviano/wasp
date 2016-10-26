@@ -94,6 +94,7 @@ WaspFacade::solve()
             QueryInterface queryInterface( solver );
             queryInterface.computeCautiousConsequences( queryAlgorithm );
             statistics( &solver, endSolving() );
+            estatistics( &solver, endSolving() );
             return;
         }
         solver.onStartingSolver( solver.numberOfVariables(), solver.numberOfClauses() );
@@ -139,6 +140,7 @@ WaspFacade::solve()
             }
             delete tmp;
             statistics( &solver, endSolving() );
+            estatistics( &solver, endSolving() );
             return;
         }
     }
@@ -149,6 +151,7 @@ WaspFacade::solve()
         solver.foundIncoherence();
     }
     statistics( &solver, endSolving() );
+    estatistics( &solver, endSolving() );
     
 //    solver.printLearnedClauses();
 }
