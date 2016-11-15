@@ -37,8 +37,8 @@ class QueryInterface
         
         void iterativeCoherenceTesting();
         void overestimateReduction();
-        void chunkAlgorithm( unsigned int chunkSize );
-        void chunkAlgorithm2( unsigned int chunkSize );
+        void chunkDynamicAlgorithm( unsigned int chunkSize );
+        void chunkStaticAlgorithm( unsigned int chunkSize );
         
         void computeCandidates();
         void reduceCandidates();

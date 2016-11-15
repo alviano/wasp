@@ -46,7 +46,8 @@ QueryInterface::computeCautiousConsequences(
             overestimateReduction();
             break;
             
-        case CHUNK_BASED:
+        case CHUNK_DYNAMIC:
+        case CHUNK_STATIC:
             {
             unsigned int param = 2;
             if( wasp::Options::chunkSize != UINT_MAX )
@@ -58,8 +59,10 @@ QueryInterface::computeCautiousConsequences(
                 iterativeCoherenceTesting();
             else if( param >= candidates.size() )
                 overestimateReduction();
-            else
-                chunkAlgorithm2( param );         
+            else if( ALGORITHM == CHUNK_STATIC )                    
+                chunkStaticAlgorithm( param );
+            else if( ALGORITHM == CHUNK_DYNAMIC )
+                chunkDynamicAlgorithm( param );
             }   
             break;
         default:
@@ -293,7 +296,7 @@ QueryInterface::reduceCandidatesForChunk(
 }
 
 void
-QueryInterface::chunkAlgorithm(
+QueryInterface::chunkDynamicAlgorithm(
     unsigned int chunkSize )
 {
     assert( chunkSize < candidates.size() );    
@@ -401,7 +404,7 @@ QueryInterface::computeClauseFromChunkCandidates(
 }
 
 void
-QueryInterface::chunkAlgorithm2(
+QueryInterface::chunkStaticAlgorithm(
     unsigned int chunkSize )
 {
     assert( chunkSize < candidates.size() );    

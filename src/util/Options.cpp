@@ -621,8 +621,10 @@ Options::parse(
                         queryAlgorithm = OVERESTIMATE_REDUCTION;
                     else if( !strcmp( optarg, "ict" ) )
                         queryAlgorithm = ITERATIVE_COHERENCE_TESTING;
-                    else if( !strcmp( optarg, "chunk" ) )
-                        queryAlgorithm = CHUNK_BASED;
+                    else if( !strcmp( optarg, "chunk-static" ) )
+                        queryAlgorithm = CHUNK_STATIC;
+                    else if( !strcmp( optarg, "chunk-dynamic" ) )
+                        queryAlgorithm = CHUNK_DYNAMIC;
                     else
                         ErrorMessage::errorGeneric( "Inserted invalid algorithm for query answering." );
                 }
