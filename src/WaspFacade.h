@@ -39,7 +39,7 @@ class WaspFacade
 {
     public:
         inline WaspFacade();
-        inline ~WaspFacade(){}
+        inline ~WaspFacade(){ delete outputBuilder; }
         
         void readInput();
         void solve();
@@ -77,6 +77,7 @@ class WaspFacade
         bool disjCoresPreprocessing;        
         
         unsigned int queryAlgorithm;
+        OutputBuilder* outputBuilder;
         
         void enumerateModels();
         void enumerationBlockingClause();
@@ -86,7 +87,7 @@ class WaspFacade
         unsigned int getMaxLevelUnsatCore( const Clause* unsatCore );
 };
 
-WaspFacade::WaspFacade() : numberOfModels( 0 ), maxModels( 1 ), printProgram( false ), printDimacs( false ), weakConstraintsAlg( OPT ), disjCoresPreprocessing( false )
+WaspFacade::WaspFacade() : numberOfModels( 0 ), maxModels( 1 ), printProgram( false ), printDimacs( false ), weakConstraintsAlg( OPT ), disjCoresPreprocessing( false ), outputBuilder( NULL )
 {   
 }
 

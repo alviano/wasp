@@ -32,6 +32,7 @@
 #include "outputBuilders/MultiOutputBuilder.h"
 #include "QueryInterface.h"
 #include "outputBuilders/IdOutputBuilder.h"
+#include "outputBuilders/NoopOutputBuilder.h"
 
 void
 WaspFacade::readInput()
@@ -50,12 +51,14 @@ WaspFacade::readInput()
         case COMMENT_DIMACS:
         case FORMULA_INFO_DIMACS:
         {
-            DimacsOutputBuilder* d = new DimacsOutputBuilder();
+            DimacsOutputBuilder* d = new DimacsOutputBuilder();            
             solver.setOutputBuilder( d );
             Dimacs dimacs( solver );
             dimacs.parse();
             if( dimacs.isMaxsat() )
                 d->setMaxsat();
+            delete outputBuilder;
+            outputBuilder = d;
             greetings();
             break;
         }
@@ -102,6 +105,9 @@ WaspFacade::solve()
         }
         else
         {
+            NoopOutputBuilder* tmp = new NoopOutputBuilder();
+            if( wasp::Options::printOnlyOptimum && maxModels > 1 )
+                solver.setOutputBuilder( tmp );            
             unsigned int result = solveWithWeakConstraints();
             switch( result )
             {
@@ -110,20 +116,29 @@ WaspFacade::solve()
                     break;
                 
                 case INCOHERENT:
+                    if( wasp::Options::printOnlyOptimum && maxModels > 1 )
+                        solver.setOutputBuilder( outputBuilder );
                     solver.foundIncoherence();
                     break;
                     
                 case OPTIMUM_FOUND:
                 default:
-                    solver.optimumFound();
                     if( maxModels > 1 )
                     {
                         solver.unrollToZero();
                         solver.clearConflictStatus();
+                        if( wasp::Options::printOnlyOptimum )
+                            solver.setOutputBuilder( outputBuilder );
                         enumerateModels();
+                        if( wasp::Options::printOnlyOptimum )
+                            tmp->print();
+                        solver.optimumFound();                        
                     }
+                    else
+                        solver.optimumFound();
                     break;
             }
+            delete tmp;
             statistics( &solver, endSolving() );
             return;
         }
@@ -203,34 +218,35 @@ WaspFacade::setOutputPolicy(
     switch( outputPolicy )
     {
         case COMPETITION_OUTPUT:
-            solver.setOutputBuilder( new CompetitionOutputBuilder() );
+            outputBuilder = new CompetitionOutputBuilder();
             break;
             
         case DIMACS_OUTPUT:
-            solver.setOutputBuilder( new DimacsOutputBuilder() );
+            outputBuilder = new DimacsOutputBuilder();
             break;
             
         case SILENT_OUTPUT:
-            solver.setOutputBuilder( new SilentOutputBuilder() );
+            outputBuilder = new SilentOutputBuilder();
             break;
             
         case THIRD_COMPETITION_OUTPUT:
-            solver.setOutputBuilder( new ThirdCompetitionOutputBuilder() );
+            outputBuilder = new ThirdCompetitionOutputBuilder();
             break;
             
         case MULTI:
-            solver.setOutputBuilder( new MultiOutputBuilder() );
+            outputBuilder = new MultiOutputBuilder();
             break;
             
         case ID_OUTPUT:
-            solver.setOutputBuilder( new IdOutputBuilder() );
+            outputBuilder = new IdOutputBuilder();
             break;
             
         case WASP_OUTPUT:
         default:
-            solver.setOutputBuilder( new WaspOutputBuilder() );
+            outputBuilder = new WaspOutputBuilder();
             break;
     }
+    solver.setOutputBuilder( outputBuilder );
 }
 
 void
@@ -302,19 +318,14 @@ WaspFacade::enumerationBacktracking()
     flipLatestChoice( assums, checked );
     if( assums.empty() )
         return;
-    solver.setComputeUnsatCores( true );
     begin:;
-    solver.unrollToZero();
+    if( solver.getDecisionLevel( assums.back() ) - 1 < solver.getCurrentDecisionLevel() )
+        solver.unroll( solver.getDecisionLevel( assums.back() ) - 1 );
     solver.clearConflictStatus();
     result = solver.solve( assums );
     if( result == INCOHERENT )
     {
-        const Clause* core = solver.getUnsatCore();
-        assert( core != NULL );
-        if( core->size() == 0 )
-            assums.clear();
-        
-        unsigned int bl = solver.getMaxLevelOfClause( core );
+        unsigned int bl = solver.getCurrentDecisionLevel();
         if( bl == 0 )
         {
             unsigned int k = 0;

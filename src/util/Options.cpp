@@ -61,12 +61,13 @@ namespace wasp
 #define OPTIONID_printbounds ( 'z' + 27 )
 #define OPTIONID_printatomtable ( 'z' + 28 )
 #define OPTIONID_idOutput ( 'z' + 29 )
+#define OPTIONID_onlyOptimum ( 'z' + 30 )
 
 /* HEURISTIC OPTIONS */
-#define OPTIONID_fuheuristic ( 'z' + 30 )
-#define OPTIONID_berkminheuristic ( 'z' + 31 )
-#define OPTIONID_minisatheuristic ( 'z' + 32 )
-#define OPTIONID_berkminheuristiccache ( 'z' + 33 )
+#define OPTIONID_fuheuristic ( 'z' + 40 )
+#define OPTIONID_berkminheuristic ( 'z' + 41 )
+#define OPTIONID_minisatheuristic ( 'z' + 42 )
+#define OPTIONID_berkminheuristiccache ( 'z' + 43 )
 
 /* RESTART OPTIONS */
 #define OPTIONID_geometric_restarts ( 'z' + 50 )
@@ -108,6 +109,8 @@ namespace wasp
 /* QUERY OPTIONS */
 #define OPTIONID_queryalgorithm ( 'z' + 300 )
 #define OPTIONID_queryverbosity ( 'z' + 301 )
+#define OPTIONID_querychunksize ( 'z' + 302 )
+#define OPTIONID_querychunkpercentage ( 'z' + 303 )
     
 #ifdef TRACE_ON
 TraceLevels Options::traceLevels;
@@ -131,6 +134,7 @@ bool Options::printDimacs = false;
 bool Options::printLastModelOnly = false;
 bool Options::printBounds = false;
 bool Options::printAtomTable = false;
+bool Options::printOnlyOptimum = false;
 
 RESTARTS_POLICY Options::restartsPolicy = SEQUENCE_BASED_RESTARTS_POLICY;
 
@@ -175,11 +179,17 @@ map< string, unsigned int > Options::stringToMinimization;
 
 bool Options::simplifications = true;
 
+unsigned Options::silent = 0;
+
 unsigned int Options::minimizationStrategy = MINIMIZATION_OFF;
 
 unsigned int Options::minimizationBudget = UINT_MAX;
 
 unsigned int Options::enumerationStrategy = ENUMERATION_BT;
+
+unsigned int Options::chunkSize = UINT_MAX;
+
+unsigned int Options::chunkPercentage = UINT_MAX;
 
 void
 Options::parse(
@@ -217,12 +227,13 @@ Options::parse(
 
                 /* OUTPUT OPTIONS */
                 { "competition-output", no_argument, NULL, OPTIONID_competition_output },
-                { "silent", no_argument, NULL, OPTIONID_silent },                
+                { "silent", optional_argument, NULL, OPTIONID_silent },                
                 { "third-competition-output", no_argument, NULL, OPTIONID_third_competition_output },
                 { "printprogram", no_argument, NULL, OPTIONID_printprogram },
                 { "printdimacs", no_argument, NULL, OPTIONID_printdimacs },
                 { "multi", no_argument, NULL, OPTIONID_multi },
                 { "printlatestmodel", no_argument, NULL, OPTIONID_lastModel },
+                { "printonlyoptimum", no_argument, NULL, OPTIONID_onlyOptimum },
                 { "printbounds", no_argument, NULL, OPTIONID_printbounds },
                 { "printatomstable", no_argument, NULL, OPTIONID_printatomtable },
                 { "id-output", no_argument, NULL, OPTIONID_idOutput },                
@@ -255,7 +266,7 @@ Options::parse(
                 { "max-cost", required_argument, NULL, OPTIONID_max_cost },
                 { "disable-simplifications", no_argument, NULL, OPTIONID_simplifications },
                 
-                { "enumeration-strategy", required_argument, NULL, OPTIONID_enumeration },                
+                { "enumeration-strategy", required_argument, NULL, OPTIONID_enumeration },
                 
                 { "forward-partialchecks", no_argument, NULL, OPTIONID_forward_partialchecks },
                 { "backward-partialchecks", no_argument, NULL, OPTIONID_backward_partialchecks },  
@@ -277,6 +288,8 @@ Options::parse(
                 /* QUERY */
                 { "query-algorithm", optional_argument, NULL, OPTIONID_queryalgorithm },
                 { "query-verbosity", required_argument, NULL, OPTIONID_queryverbosity },
+                { "query-chunk-size", required_argument, NULL, OPTIONID_querychunksize },
+                { "query-chunk-percentage", required_argument, NULL, OPTIONID_querychunkpercentage },
                 
                 // The NULL-option indicates the end of the array.
                 { NULL, 0, NULL, 0 }
@@ -352,6 +365,14 @@ Options::parse(
                 break;
 
             case OPTIONID_silent:
+                if( optarg )
+                {
+                    silent = atoi( optarg );
+                    if( silent < 1 )
+                        silent = 0;
+                    else if( silent > 1 )
+                        silent = 2;                    
+                }
                 outputPolicy = SILENT_OUTPUT;
                 break;
 
@@ -365,6 +386,10 @@ Options::parse(
 
             case OPTIONID_printdimacs:
                 printDimacs = true;
+                break;
+                
+            case OPTIONID_onlyOptimum:
+                printOnlyOptimum = true;
                 break;
                 
             case OPTIONID_multi:
@@ -470,7 +495,7 @@ Options::parse(
                     if( deletionThreshold < 2 )
                         deletionThreshold = 2;
                 }
-                break;
+                break;                        
 
             case OPTIONID_dimacs:
                 outputPolicy = DIMACS_OUTPUT;
@@ -580,6 +605,10 @@ Options::parse(
                         queryAlgorithm = OVERESTIMATE_REDUCTION;
                     else if( !strcmp( optarg, "ict" ) )
                         queryAlgorithm = ITERATIVE_COHERENCE_TESTING;
+                    else if( !strcmp( optarg, "chunk-static" ) )
+                        queryAlgorithm = CHUNK_STATIC;
+                    else if( !strcmp( optarg, "chunk-dynamic" ) )
+                        queryAlgorithm = CHUNK_DYNAMIC;
                     else
                         ErrorMessage::errorGeneric( "Inserted invalid algorithm for query answering." );
                 }
@@ -590,10 +619,30 @@ Options::parse(
                 if( optarg )
                 {
                     unsigned int value = atoi( optarg );
-                    if( value <= 2 )
+                    if( value <= 3 )
                         queryVerbosity = value;
                     else
                         ErrorMessage::errorGeneric( "Inserted invalid value for query verbosity." );
+                }
+                break;
+            
+            case OPTIONID_querychunksize:
+                if( optarg )
+                {
+                    chunkSize = atoi( optarg );
+                    if( chunkPercentage != UINT_MAX )
+                        ErrorMessage::errorGeneric( "Only one option between chunk percentage and chunk size can be specified." );
+                }
+                break;
+                
+            case OPTIONID_querychunkpercentage:
+                if( optarg )
+                {
+                    chunkPercentage = atoi( optarg );
+                    if( chunkPercentage == 0 || chunkPercentage > 100 )
+                        ErrorMessage::errorGeneric( "Inserted invalid value for chunk percentage." );
+                    if( chunkSize != UINT_MAX )
+                        ErrorMessage::errorGeneric( "Only one option between chunk percentage and chunk size can be specified." );
                 }
                 break;
                 

@@ -28,6 +28,7 @@ using namespace std;
 class OutputBuilder
 {
     public:
+        OutputBuilder() {}
         virtual ~OutputBuilder() {}
         virtual void startModel() = 0;
         virtual void printVariable( Var v, bool isTrue ) = 0;
@@ -40,6 +41,8 @@ class OutputBuilder
         virtual void foundUpperBound( uint64_t );
         virtual void onFinish();
         virtual void onKill();
+        virtual void foundModel(){}
+    
 };
 
 #endif

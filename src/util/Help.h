@@ -67,13 +67,17 @@ class Help
             cout << "Output options                         " << endl << endl;
             cout << "--printprogram                         - Print the input program and exit" << endl;
             cout << "--printdimacs                          - Print the input program in the dimacs format and exit" << endl;
-            cout << "--silent                               - Print models with no spaces and lines" << endl;
+            cout << "--silent                               - Set verbosity of output" << endl;
+            cout << "       <1                              - Print models with no spaces and lines" << endl;
+            cout << "       =1                              - Print only the number of each model" << endl;
+            cout << "       >1                              - Print only the number of models" << endl;
             cout << "--third-competition-output             - Print models according to the third competition output" << endl;
             cout << "--competition-output                   - Print models according to the fourth competition output" << endl;   
             cout << "--id-output                            - Print models using the internal id of atoms" << endl;
             cout << "--printlatestmodel                     - Print the latest computed model" << endl;   
+            cout << "--printonlyoptimum                     - Print only optimum answer sets" << endl;
             cout << "--printbounds                          - Print lower and upper bound during optimization of answer sets" << endl;
-            cout << "--printatomstable                      - Print internal dictionary for atoms used in wasp" << endl;
+            cout << "--printatomstable                      - Print internal dictionary for atoms used in wasp" << endl;            
 
             cout << separator << endl;
             
@@ -95,11 +99,11 @@ class Help
             cout << "       =basic-bt                       - Model-guided algorithm basic with classical backtracking after first model" << endl;
             cout << "       =mgd                            - Model-guided algorithm mgd" << endl;
             cout << "       =opt                            - Model-guided algorithm opt" << endl;
-            cout << "       =one                            - Core-guided algorithm one" << endl;
+            cout << "       =one                            - Core-guided algorithm one (default)" << endl;
             cout << "       =pmres                          - Core-guided algorithm pmres" << endl;
             cout << "       =k                              - Core-guided algorithm k" << endl;
-            cout << "       =interleaving-restarts          - Mixed approach between oll and basic - restarts based" << endl;
-            cout << "       =interleaving-choices           - Mixed approach between oll and basic - choices based" << endl;
+            cout << "       =interleaving-restarts          - Mixed approach between one and basic - restarts based" << endl;
+            cout << "       =interleaving-choices           - Mixed approach between one and basic - choices based" << endl;
             cout << "--k-threshold                          - Initialization for algorithm k. Must be >= 0" << endl;
             cout << "       =0                              - Special case for a dynamic choice of k threshold" << endl;            
             cout << "       =1                              - Special case for algorithm one with cardinality constraints" << endl;            
@@ -117,7 +121,11 @@ class Help
             cout << "--query-algorithm                      - Compute cautious consequences according to the specified algorithm" << endl;
             cout << "       =ict                            - Enable iterative coherence testing" << endl;
             cout << "       =or                             - Enable overestimate reduction" << endl;
-            cout << "--query-verbosity=(0,1,2)              - Enable verbosity of queries algorithms" << endl;
+            cout << "       =chunk-static                   - Enable algorithm based on static chunks. (Default size=2)" << endl;
+            cout << "       =chunk-dynamic                  - Enable algorithm based on dynamic chunks. (Default size=2)" << endl;
+            cout << "--query-verbosity=(0,...,3)            - Enable verbosity of queries algorithms" << endl;
+            cout << "--query-chunk-size=n                   - Specify the size of each chunk" << endl;
+            cout << "--query-chunk-percentage=(1,...,100)   - The size of each chunk is a percentage of the number of candidates" << endl;
 
             cout << separator << endl;
             cout << "Disjunction options                    " << endl << endl;
@@ -132,6 +140,9 @@ class Help
             
             cout << separator << endl;
             cout << "General options                        " << endl << endl;
+            cout << "-n                                     - Specify the answers to compute " << endl;
+            cout << "       <=0                             - To compute all answers" << endl;
+            cout << "       =k                              - To compute at most k answers" << endl;
             cout << "--dimacs                               - Enable dimacs format as input and outputs" << endl;
             cout << "--help                                 - Print this guide and exit" << endl;
             cout << "--disable-simplifications              - Disable the simplifications of satelite" << endl;

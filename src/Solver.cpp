@@ -81,7 +81,6 @@ Solver::~Solver()
         hcComponents.pop_back();
     }
     
-    delete outputBuilder;
     delete satelite;
     delete restart;
 //    delete optimizationAggregate;
@@ -387,6 +386,7 @@ Solver::solvePropagators(
             }
             else
             {
+                assert( !conflictDetected() );
                 if( !wasp::Options::backwardPartialChecks )
                 {
 //                    if( learnedFromPropagators > ( learnedFromConflicts * 0.5 ) )
@@ -421,11 +421,6 @@ Solver::solvePropagators(
                         trace( solving, 2, "Learned clause from propagator and backjumping to level %d.\n", getDecisionLevel( clauseToPropagate->getAt( 1 ) ) );
                         unroll( getDecisionLevel( clauseToPropagate->getAt( 1 ) ) );
                     }
-//                    if( glucoseHeuristic_ )
-//                    {
-//                        glucoseData.sumLBD += clauseToPropagate->lbd();
-//                        glucoseData.lbdQueue.push( clauseToPropagate->lbd() );
-//                    }
                     
                     if( postPropagator->hasToAddClause() )
                     {

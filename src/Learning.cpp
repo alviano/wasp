@@ -45,6 +45,7 @@ Learning::onConflict(
     assert( "No conflict literal is set." && conflictLiteral != Literal::null );
     assert( "Learned clause has to be NULL in the beginning." && learnedClause == NULL );
     assert( "The counter must be equal to 0." && pendingVisitedVariables == 0 );
+    assert( "Conflict clause is not null" && conflictClause != NULL );
     assert( isVisitedVariablesEmpty() );
     
     assert( lastDecisionLevel.empty() );

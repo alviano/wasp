@@ -17,7 +17,7 @@
  */
 
 #include "SilentOutputBuilder.h"
-
+#include "../util/Options.h"
 //void
 //SilentOutputBuilder::onProgramIncoherent()
 //{
@@ -25,5 +25,54 @@
 
 void
 SilentOutputBuilder::greetings()
+{    
+}
+
+void
+SilentOutputBuilder::startModel()
 {
+    assert( wasp::Options::silent == 0 );
+    WaspOutputBuilder::startModel();    
+}
+
+void
+SilentOutputBuilder::printVariable( Var v, bool isTrue )
+{
+    assert( wasp::Options::silent == 0 );
+    WaspOutputBuilder::printVariable( v, isTrue );
+}
+
+void
+SilentOutputBuilder::endModel()
+{
+    assert( wasp::Options::silent == 0 );
+    WaspOutputBuilder::endModel();
+}
+
+void
+SilentOutputBuilder::onProgramIncoherent()
+{
+    if( wasp::Options::silent == 0 )        
+        WaspOutputBuilder::onProgramIncoherent();
+}
+
+void
+SilentOutputBuilder::onFinish()
+{
+    if( wasp::Options::silent > 1 )
+        cout << "Number of printed answers: " << nbOfModels << endl;
+}
+
+void
+SilentOutputBuilder::foundModel()
+{
+    nbOfModels++;
+    if( wasp::Options::silent == 1 )
+        cout << "Model: " << nbOfModels << endl;
+}
+
+void
+SilentOutputBuilder::onKill()
+{
+    onFinish();
 }

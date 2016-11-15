@@ -20,16 +20,29 @@
 #define SILENTOUTPUTBUILDER_H
 
 #include "WaspOutputBuilder.h"
+#include "../util/Options.h"
 
 class SilentOutputBuilder : public WaspOutputBuilder
 {
     public:
         inline SilentOutputBuilder();
 //        virtual void onProgramIncoherent();        
-        virtual void greetings();        
+        virtual void greetings();
+        virtual void startModel();
+        virtual void printVariable( Var, bool isTrue );
+        virtual void endModel();
+        virtual void onProgramIncoherent();
+        virtual void onFinish();
+        virtual void foundModel();
+        virtual void onKill();
+        virtual void optimumFound() { if( wasp::Options::silent == 0 ) WaspOutputBuilder::optimumFound(); }        
+        virtual void foundModelOptimization( const Vector<uint64_t>& costs ) { if( wasp::Options::silent == 0 ) WaspOutputBuilder::foundModelOptimization( costs ); }
+        
+    private:
+        unsigned int nbOfModels;
 };
 
-SilentOutputBuilder::SilentOutputBuilder()
+SilentOutputBuilder::SilentOutputBuilder() : WaspOutputBuilder(), nbOfModels( 0 )
 {
 }
 
