@@ -10,12 +10,11 @@ class Rule
 {
     friend ostream& operator<<( ostream& out, const Rule& rule );
     public:
-        Vector< Literal > literals;
-        bool handled;
+        Vector< Literal > literals;        
 
-        inline Rule() { handled = false; }
-        inline Rule( unsigned head_ ) { handled = false; addHeadAtom( head_ ); }
-        Rule( const Rule& init ) { handled = init.handled; literals.initFrom( init.literals ); }        
+        inline Rule() { initData(); }
+        inline Rule( unsigned head_ ) { initData(); addHeadAtom( head_ ); }
+        Rule( const Rule& init ) { handled = init.handled; handledForModelChecker = init.handledForModelChecker; literals.initFrom( init.literals ); }        
 
         inline bool isRemoved() const { return literals.empty(); }
         inline void remove() { literals.clearAndDelete(); }
@@ -27,7 +26,19 @@ class Rule
         inline void addNegativeLiteral( unsigned id ) { literals.push_back( Literal::newNegativeBodyLiteral( id ) ); }
         inline void addPositiveLiteral( unsigned id ) { literals.push_back( Literal::newUndefinedPositiveBodyLiteral( id ) ); }
         inline void addPositiveTrueLiteral( unsigned id ) { literals.push_back( Literal::newTruePositiveBodyLiteral( id ) ); }
-        inline void addDoubleNegLiteral( unsigned id ) { literals.push_back( Literal::newDoubleNegatedBodyLiteral( id ) ); }        
+        inline void addDoubleNegLiteral( unsigned id ) { literals.push_back( Literal::newDoubleNegatedBodyLiteral( id ) ); }  
+        
+        inline bool isHandled() const { return handled; }
+        inline void setHandled() { handled = 1; }
+        
+        inline bool isHandledForModelChecker( unsigned int nb ) const { return handledForModelChecker == nb; }
+        inline void setHandledForModelChecker( unsigned int nb ) { handledForModelChecker = nb; }
+                
+    private:
+        unsigned int handled : 1;
+        unsigned int handledForModelChecker : 31;
+        
+        inline void initData() { handled = 0; handledForModelChecker = 0; }
 };
 
 #endif

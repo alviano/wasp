@@ -23,8 +23,7 @@ ReductBasedCheck::ReductBasedCheck(
     unsigned numberOfInputAtoms ) : HCComponent( gusData_, s ),
         numberOfAtoms( numberOfInputAtoms ), 
         assumptionLiteral( Literal::null ), isConflictual( false ),
-        numberOfExternalLiterals( 0 ), numberOfInternalVariables( 0 ), numberOfZeroLevel( 0 ), removedHCVars( 0 ), literalToAdd( Literal::null ),
-        low( 0 ), high( solver.numberOfVariables() )
+        numberOfExternalLiterals( 0 ), numberOfInternalVariables( 0 ), numberOfZeroLevel( 0 ), removedHCVars( 0 ), literalToAdd( Literal::null )        
 {   
     inUnfoundedSet.push_back( 0 );
     generatorToCheckerId.push_back( UINT_MAX );
@@ -110,7 +109,7 @@ ReductBasedCheck::onLiteralFalse(
     else
         numberOfZeroLevel++;
     
-    if( wasp::Options::forwardPartialChecks && ( low + high ) / 2 <= solver.getCurrentDecisionLevel() )
+    if( wasp::Options::forwardPartialChecks )
     {
         hasToTestModel = true;
         return true;
@@ -238,16 +237,13 @@ ReductBasedCheck::iterationExternalLiterals(
 
 void
 ReductBasedCheck::addClauseToChecker(
-    Clause* c,
-    Var headAtom )
+    Clause* c )
 {
     assert( c != NULL );
     trace_msg( modelchecker, 2, "Adding clause " << *c );
     Clause& orig = *c;
-    Clause* clause = new Clause( c->size() );    
     for( unsigned int i = 0; i < orig.size(); i++ )
     {        
-        clause->addLiteral( orig[ i ] );        
         Var v = orig[ i ].getVariable();
         if( !sameComponent( v ) )
         {
@@ -271,7 +267,6 @@ ReductBasedCheck::addClauseToChecker(
             }
         }
     }    
-    getGUSData( headAtom ).definingRulesForNonHCFAtom.push_back( clause );    
     checker.addClause( c );    
 }
 
@@ -400,12 +395,10 @@ void ReductBasedCheck::checkModel(
         trace_action( modelchecker, 2, { printVector( unfoundedSet, "Unfounded set" ); } );
         statistics( &checker, foundUS( trail.size() != ( hcVariables.size() + externalLiterals.size() ), unfoundedSet.size() ) );
         assert( !unfoundedSet.empty() );
-        high = solver.getCurrentDecisionLevel();        
     }
     else
     {
         trace_msg( modelchecker, 1, "UNSATISFIABLE: the model is stable." );
-        low = solver.getCurrentDecisionLevel();        
         checker.clearConflictStatus();        
     }
     
@@ -424,19 +417,23 @@ void ReductBasedCheck::addHCVariableProtected(
 }
 
 void ReductBasedCheck::processRule(
-    Rule* rule,
-    Var headAtom )
+    Rule* rule )
 {
+    Clause* clause = new Clause();
     Clause* c = new Clause();
     for( unsigned int k = 0; k < rule->size(); k++ )
     {
         Literal lit = rule->literals[ k ];
+        clause->addLiteral( lit );
         c->addLiteral( lit );
         if( ( !sameComponent( lit.getVariable() ) && addExternalLiteral( lit ) ) || ( lit.isNegativeBodyLiteral() && addExternalLiteralForInternalVariable( lit ) ) )
             attachLiterals( lit );        
     }
+    clause->removeDuplicates();
     c->removeDuplicates();
-    addClauseToChecker( c, headAtom );  
+    addClauseToChecker( c );
+    
+    createDefiningRules( rule, clause );    
 }
 
 void ReductBasedCheck::processComponentBeforeStarting()

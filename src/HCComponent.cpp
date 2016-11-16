@@ -20,6 +20,7 @@
 
 #include "Learning.h"
 #include "Clause.h"
+#include "input/Rule.h"
 
 void
 HCComponent::computeReasonForUnfoundedAtom(
@@ -93,4 +94,31 @@ HCComponent::computeReasonForUnfoundedAtom(
             learning.onNavigatingLiteralForUnfoundedSetLearning( rule->getAt( pos ).getOppositeLiteral() );
         }
     }
+}
+
+HCComponent::~HCComponent()
+{
+    delete outputBuilder;
+    while( !toDelete.empty() )
+    {
+        delete toDelete.back();
+        toDelete.pop_back();
+    }
+}
+
+void
+HCComponent::createDefiningRules(
+    Rule* rule,
+    Clause* clause )
+{
+    for( unsigned int k = 0; k < rule->size(); k++ )
+    {
+        Literal lit = rule->literals[ k ];
+        if( !sameComponent( lit.getVariable() ) )
+            continue;
+        
+        if( lit.isHeadAtom() )
+            getGUSData( lit.getVariable() ).definingRulesForNonHCFAtom.push_back( clause );         
+    }
+    toDelete.push_back( clause );
 }

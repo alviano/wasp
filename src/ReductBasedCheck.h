@@ -42,17 +42,16 @@ class ReductBasedCheck : public HCComponent
         virtual Clause* getClauseToPropagate( Learning& learning );
         virtual bool onLiteralFalse( Literal literal );
 
-        void addClauseToChecker( Clause* c, Var headAtom );                
-                      
-        void setHasToTestModel( bool b ) { hasToTestModel = b; }
-        void processRule( Rule* rule, Var headAtom );
+        void addClauseToChecker( Clause* c );                
+                              
+        void processRule( Rule* rule );
         void processComponentBeforeStarting();
 
     private:                
         inline ReductBasedCheck( const ReductBasedCheck& orig );        
         
         void createInitialClauseAndSimplifyHCVars();
-        
+                
         void clearUnfoundedSetCandidates();
         Clause* computeClause();
         
@@ -84,9 +83,6 @@ class ReductBasedCheck : public HCComponent
         unsigned int removedHCVars;
         
         Literal literalToAdd;
-        
-        unsigned int low;
-        unsigned int high;
         
         void testModel();
         void computeAssumptions( vector< Literal >& assumptions );

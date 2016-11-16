@@ -90,7 +90,7 @@ namespace wasp
 #define OPTIONID_max_cost ( 'z' + 102 )
 
 #define OPTIONID_forward_partialchecks ( 'z' + 105 )
-#define OPTIONID_backward_partialchecks ( 'z' + 106 )
+#define OPTIONID_heuristic_partialchecks ( 'z' + 106 )
 #define OPTIONID_shift_strategy ( 'z' + 107 )
 #define OPTIONID_shift_onedef ( 'z' + 108 )
 #define OPTIONID_simplifications ( 'z' + 109 )
@@ -153,7 +153,7 @@ unsigned int Options::maxCost = MAXUNSIGNEDINT;
 
 bool Options::forwardPartialChecks = false;
 
-bool Options::backwardPartialChecks = false;
+bool Options::heuristicPartialChecks = false;
 
 WEAK_CONSTRAINTS_ALG Options::weakConstraintsAlg = ONE;
 
@@ -270,7 +270,7 @@ Options::parse(
                 { "enumeration-strategy", required_argument, NULL, OPTIONID_enumeration },
                 
                 { "forward-partialchecks", no_argument, NULL, OPTIONID_forward_partialchecks },  
-                { "backward-partialchecks", no_argument, NULL, OPTIONID_backward_partialchecks },
+                { "heuristic-partialchecks", no_argument, NULL, OPTIONID_heuristic_partialchecks },
                 
                 /* WEAK CONSTRAINTS */
                 { "weakconstraints-algorithm", required_argument, NULL, OPTIONID_weakconstraintsalgorithm },
@@ -529,8 +529,8 @@ Options::parse(
                 forwardPartialChecks = true;
                 break;
                 
-            case OPTIONID_backward_partialchecks:
-                backwardPartialChecks = true;
+            case OPTIONID_heuristic_partialchecks:
+                heuristicPartialChecks = true;
                 break;                         
 
             case OPTIONID_weakconstraintsalgorithm:

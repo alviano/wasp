@@ -610,8 +610,7 @@ class Solver
         
         unsigned int numberOfAssumptions;
         unsigned int learnedFromPropagators;
-        unsigned int learnedFromConflicts;                
-        bool partialChecks;
+        unsigned int learnedFromConflicts;                        
         bool computeUnsatCores_;
         bool minimizeUnsatCore_;
         Clause* unsatCore;        
@@ -658,8 +657,7 @@ Solver::Solver()
     conflictsRestarts( 0 ),
     numberOfAssumptions( 0 ),
     learnedFromPropagators( 0 ),
-    learnedFromConflicts( 0 ),
-    partialChecks( true ),
+    learnedFromConflicts( 0 ),    
     computeUnsatCores_( false ),
     minimizeUnsatCore_( true ),
     unsatCore( NULL ),
@@ -679,7 +677,9 @@ Solver::Solver()
     variableDataStructures.push_back( NULL );
     variableDataStructures.push_back( NULL );
     fromLevelToPropagators.push_back( 0 );
-    choices.push_back( Literal::null );
+    choices.push_back( Literal::null );    
+    if( wasp::Options::heuristicPartialChecks )
+        wasp::Options::forwardPartialChecks = true;
 }
 
 void

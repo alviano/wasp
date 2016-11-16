@@ -376,12 +376,12 @@ Solver::solvePropagators(
             else
             {
                 assert( !conflictDetected() );
-                if( !wasp::Options::backwardPartialChecks )
+                if( wasp::Options::heuristicPartialChecks )
                 {
                     if( learnedFromPropagators > ( learnedFromConflicts * 0.5 ) )
-                        partialChecks = false;
+                        wasp::Options::forwardPartialChecks = false;
                     else
-                        partialChecks = true;
+                        wasp::Options::forwardPartialChecks = true;
                 }
                 unsigned int size = clauseToPropagate->size();
                 statistics( this, onLearningFromPropagators( size ) );

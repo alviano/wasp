@@ -90,7 +90,7 @@ class Help
 
             cout << "Model Checker options                  " << endl << endl;
             cout << "--forward-partialchecks                - Enable forward partial checks" << endl;
-            cout << "--backward-partialchecks               - Enable backward partial checks" << endl;            
+            cout << "--heuristic-partialchecks              - Enable heuristic to activate or disactivate partial checks during the search" << endl;            
                 
             cout << separator << endl;
             cout << "Weak Constraints options               " << endl << endl;

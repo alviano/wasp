@@ -38,7 +38,7 @@ class HCComponent : public PostPropagator
             outputBuilder = new NoopOutputBuilder();
             checker.setOutputBuilder( outputBuilder );
         }
-        virtual ~HCComponent(){ delete outputBuilder; }
+        virtual ~HCComponent();
 
         virtual bool onLiteralFalse( Literal ) = 0;
         virtual Clause* getClauseToPropagate( Learning& ) = 0;
@@ -50,7 +50,7 @@ class HCComponent : public PostPropagator
         inline Var getVariable( unsigned int pos ) const { assert( pos < hcVariables.size() ); return hcVariables[ pos ]; }        
         inline unsigned int size() const { return hcVariables.size(); }
                 
-        virtual void processRule( Rule* rule, Var headAtom ) = 0;
+        virtual void processRule( Rule* rule ) = 0;
         virtual void processComponentBeforeStarting() = 0;
         
         void setId( unsigned int i ) { id = i; }
@@ -58,12 +58,15 @@ class HCComponent : public PostPropagator
         
     protected:
         virtual void addHCVariableProtected( Var v ) = 0;
+        void createDefiningRules( Rule* rule, Clause* clause );
         
         GUSData& getGUSData( Var v ) { assert( v < gusData.size() ); return *( gusData[ v ] ); }  
         inline bool sameComponent( Var v ) const { return solver.getHCComponent( v ) == this; }
         inline bool isInUnfoundedSet( Var v ) { assert_msg( v < inUnfoundedSet.size(), "v = " << v << "; inUnfoundedSet.size() = " << inUnfoundedSet.size() ); return inUnfoundedSet[ v ] == numberOfCalls; }
         inline void setInUnfoundedSet( Var v ) { assert_msg( v < inUnfoundedSet.size(), "v = " << v << "; inUnfoundedSet.size() = " << inUnfoundedSet.size() ); inUnfoundedSet[ v ] = numberOfCalls; }
         inline void attachLiterals( Literal lit );
+        inline void setHasToTestModel( bool b ) { hasToTestModel = b; }
+    
         unsigned int id;
         vector< GUSData* >& gusData;
         vector< Var > hcVariables;
@@ -75,6 +78,9 @@ class HCComponent : public PostPropagator
         Vector< Literal > unfoundedSetCandidates;        
         bool hasToTestModel;
         OutputBuilder* outputBuilder;
+        
+    private:
+        vector< Clause* > toDelete;
 };
 
 void

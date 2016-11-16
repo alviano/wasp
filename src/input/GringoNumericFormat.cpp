@@ -1195,6 +1195,7 @@ GringoNumericFormat::computeGusStructures()
         solver.addGUSData( gd );
     }
 
+    unsigned int nbOfCallsHCC = 0;
     trace_msg( parser, 2, "Program is not tight. Number of cyclic components " << solver.getNumberOfCyclicComponents() );
     for( unsigned int i = 0; i < solver.getNumberOfCyclicComponents(); i++ )
     {
@@ -1218,6 +1219,7 @@ GringoNumericFormat::computeGusStructures()
         }
         else
         {
+            nbOfCallsHCC++;
             trace_msg( parser, 4, "The component is non HCF" );            
             HCComponent* hcComponent = solver.createHCComponent( atomData.size() - 1 ); //new HCComponent( solver );
 
@@ -1248,7 +1250,11 @@ GringoNumericFormat::computeGusStructures()
                     if( rule->isRemoved() )
                         continue;
                     
-                    hcComponent->processRule( rule, v );                  
+                    if( rule->isHandledForModelChecker( nbOfCallsHCC ) )
+                        continue;
+                    
+                    rule->setHandledForModelChecker( nbOfCallsHCC );                    
+                    hcComponent->processRule( rule );
                 }
             }
             
@@ -1449,9 +1455,9 @@ GringoNumericFormat::computeSCCsDisjunctive()
                     continue;
                 if( isSupporting( rule, var ) )
                 {
-                    if( rule->handled )
+                    if( rule->isHandled() )
                         continue;
-                    rule->handled = true;
+                    rule->setHandled();
                     Vector< Var > headAtoms;
                     Literal addedLit = createAuxForBody( rule, headAtoms );
                     Var addedVar = addedLit.getVariable();
