@@ -1,4 +1,4 @@
-#include "HCComponent.h"
+#include "ReductBasedCheck.h"
 #include "Solver.h"
 #include "input/Dimacs.h"
 #include "outputBuilders/DimacsOutputBuilder.h"
@@ -20,7 +20,7 @@ ostream& operator<<( ostream& out, const ReductBasedCheck& component )
 ReductBasedCheck::ReductBasedCheck(
     vector< GUSData* >& gusData_,
     Solver& s,
-    unsigned numberOfInputAtoms ) : PostPropagator(), gusData( gusData_ ), solver( s ), numberOfCalls( 0 ), 
+    unsigned numberOfInputAtoms ) : HCComponent(), gusData( gusData_ ), solver( s ), numberOfCalls( 0 ), 
         hasToTestModel( false ), numberOfAtoms( numberOfInputAtoms ), 
         id( 0 ), assumptionLiteral( Literal::null ), isConflictual( false ),
         numberOfExternalLiterals( 0 ), numberOfInternalVariables( 0 ), numberOfZeroLevel( 0 ), removedHCVars( 0 ), literalToAdd( Literal::null ),

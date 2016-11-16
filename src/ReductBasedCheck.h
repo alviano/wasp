@@ -22,7 +22,7 @@
 #include <vector>
 #include "util/Assert.h"
 #include "stl/Vector.h"
-#include "PostPropagator.h"
+#include "HCComponent.h"
 #include "Literal.h"
 #include "Solver.h"
 using namespace std;
@@ -30,7 +30,7 @@ using namespace std;
 class Clause;
 class Learning;
 
-class ReductBasedCheck : public PostPropagator
+class ReductBasedCheck : public HCComponent
 {
     friend ostream& operator<<( ostream& out, const ReductBasedCheck& component );
     public:
@@ -92,7 +92,6 @@ class ReductBasedCheck : public PostPropagator
         Vector< Literal > unfoundedSetCandidates;        
         
         vector< Var > generatorToCheckerId;
-//        vector< bool > usedAuxVars;        
         
         Vector< unsigned int > inUnfoundedSet;
         unsigned int numberOfCalls;

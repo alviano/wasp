@@ -20,7 +20,7 @@
 #include "Clause.h"
 #include "Literal.h"
 #include "Solver.h"
-#include "HCComponent.h"
+#include "ReductBasedCheck.h"
 
 #include <cassert>
 

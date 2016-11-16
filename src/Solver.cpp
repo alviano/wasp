@@ -18,7 +18,7 @@
 
 #include "Solver.h"
 #include "input/Dimacs.h"
-#include "HCComponent.h"
+#include "ReductBasedCheck.h"
 #include "weakconstraints/WeakInterface.h"
 #include <algorithm>
 #include <stdint.h>

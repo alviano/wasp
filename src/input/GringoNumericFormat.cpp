@@ -5,7 +5,7 @@
 #include "../Clause.h"
 #include "../Aggregate.h"
 #include "../util/Istream.h"
-#include "../HCComponent.h"
+#include "../ReductBasedCheck.h"
 
 #include <cassert>
 #include <iostream>
