@@ -62,7 +62,6 @@ bool
 UnfoundedFreeHC::onLiteralFalse(
     Literal literal )
 {    
-    cout << "ON LITERAL FALSE " << literal << " " << solver.getCurrentDecisionLevel() << endl;
     if( solver.getCurrentDecisionLevel() > 0 )
         trail.push_back( literal );
     else
@@ -74,7 +73,6 @@ UnfoundedFreeHC::onLiteralFalse(
         return true;
     }
     
-    cout << "TRAIL SIZE " << trail.size() << " " << varsAtLevelZero << " " << numberOfAttachedVars << endl;
     if( trail.size() + varsAtLevelZero == ( numberOfAttachedVars ) )
     {
         hasToTestModel = true;
