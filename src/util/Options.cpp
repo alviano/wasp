@@ -88,9 +88,8 @@ namespace wasp
 #define OPTIONID_stdin ( 'z' + 100 )
 #define OPTIONID_time_limit ( 'z' + 101 )
 #define OPTIONID_max_cost ( 'z' + 102 )
-#define OPTIONID_exchange_clauses ( 'z' + 103 )
-#define OPTIONID_forward_partialchecks ( 'z' + 104 )
-#define OPTIONID_bumpactivityafterpartialchecks ( 'z' + 105 )
+
+#define OPTIONID_forward_partialchecks ( 'z' + 105 )
 #define OPTIONID_backward_partialchecks ( 'z' + 106 )
 #define OPTIONID_shift_strategy ( 'z' + 107 )
 #define OPTIONID_shift_onedef ( 'z' + 108 )
@@ -152,13 +151,9 @@ unsigned int Options::deletionThreshold = 8;
 
 unsigned int Options::maxCost = MAXUNSIGNEDINT;
 
-bool Options::exchangeClauses = false;
-
 bool Options::forwardPartialChecks = false;
 
 bool Options::backwardPartialChecks = false;
-
-bool Options::bumpActivityAfterPartialCheck = false;
 
 WEAK_CONSTRAINTS_ALG Options::weakConstraintsAlg = ONE;
 
@@ -274,10 +269,8 @@ Options::parse(
                 
                 { "enumeration-strategy", required_argument, NULL, OPTIONID_enumeration },
                 
-                { "exchange-clauses", no_argument, NULL, OPTIONID_exchange_clauses },
                 { "forward-partialchecks", no_argument, NULL, OPTIONID_forward_partialchecks },  
-                { "backward-partialchecks", no_argument, NULL, OPTIONID_backward_partialchecks },  
-                { "bump-activity-partialchecks", no_argument, NULL, OPTIONID_bumpactivityafterpartialchecks },  
+                { "backward-partialchecks", no_argument, NULL, OPTIONID_backward_partialchecks },
                 
                 /* WEAK CONSTRAINTS */
                 { "weakconstraints-algorithm", required_argument, NULL, OPTIONID_weakconstraintsalgorithm },
@@ -530,11 +523,7 @@ Options::parse(
             case OPTIONID_max_cost:
                 if( optarg )
                     maxCost = atoi( optarg );
-                break;
-                
-            case OPTIONID_exchange_clauses:
-                exchangeClauses = true;
-                break;
+                break;                
                 
             case OPTIONID_forward_partialchecks:
                 forwardPartialChecks = true;
@@ -542,11 +531,7 @@ Options::parse(
                 
             case OPTIONID_backward_partialchecks:
                 backwardPartialChecks = true;
-                break;            
-                
-            case OPTIONID_bumpactivityafterpartialchecks:
-                bumpActivityAfterPartialCheck = true;
-                break;
+                break;                         
 
             case OPTIONID_weakconstraintsalgorithm:
                 if( optarg )
@@ -687,7 +672,6 @@ Options::setOptions(
     waspFacade.setMaxModels( maxModels );
     waspFacade.setPrintProgram( printProgram );
     waspFacade.setPrintDimacs( printDimacs);
-    waspFacade.setExchangeClauses( exchangeClauses );
     waspFacade.setWeakConstraintsAlgorithm( weakConstraintsAlg );
     waspFacade.setDisjCoresPreprocessing( disjCoresPreprocessing );
     waspFacade.setMinimizeUnsatCore( minimizeUnsatCore );

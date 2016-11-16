@@ -89,10 +89,8 @@ class Help
             cout << separator << endl;
 
             cout << "Model Checker options                  " << endl << endl;
-            cout << "--exchange-clauses                     - Exchange clauses from checker to generator" << endl;
             cout << "--forward-partialchecks                - Enable forward partial checks" << endl;
-            cout << "--backward-partialchecks               - Enable backward partial checks" << endl;
-            cout << "--bump-activity-partialchecks          - Bump activity after partial checks" << endl;
+            cout << "--backward-partialchecks               - Enable backward partial checks" << endl;            
                 
             cout << separator << endl;
             cout << "Weak Constraints options               " << endl << endl;

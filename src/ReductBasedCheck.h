@@ -16,8 +16,8 @@
 *
 */
 
-#ifndef HCCOMPONENT_H
-#define	HCCOMPONENT_H
+#ifndef REDUCTBASEDCHECK_H
+#define	REDUCTBASEDCHECK_H
 
 #include <vector>
 #include "util/Assert.h"
@@ -30,12 +30,12 @@ using namespace std;
 class Clause;
 class Learning;
 
-class HCComponent : public PostPropagator
+class ReductBasedCheck : public PostPropagator
 {
-    friend ostream& operator<<( ostream& out, const HCComponent& component );
+    friend ostream& operator<<( ostream& out, const ReductBasedCheck& component );
     public:
-        HCComponent( vector< GUSData* >& gusData_, Solver& s, unsigned numberOfInputAtoms );
-        ~HCComponent();
+        ReductBasedCheck( vector< GUSData* >& gusData_, Solver& s, unsigned numberOfInputAtoms );
+        ~ReductBasedCheck();
 
         virtual void reset();
 
@@ -45,7 +45,6 @@ class HCComponent : public PostPropagator
         void addClauseToChecker( Clause* c, Var headAtom );
         
         inline void addHCVariable( Var v ) { inUnfoundedSet[ v ] |= 4; hcVariables.push_back( v ); numberOfInternalVariables++; }
-//        inline bool isExternal( Var v ) const { assert( numberOfCalls == 0 ); assert( v < inUnfoundedSet.size() ); return inUnfoundedSet[ v ] & 3; }
         bool addExternalLiteral( Literal lit );
         bool addExternalLiteralForInternalVariable( Literal lit );
         
@@ -62,12 +61,10 @@ class HCComponent : public PostPropagator
         void setHasToTestModel( bool b ) { hasToTestModel = b; }
         
         void setId( unsigned int i ) { id = i; }
-        unsigned int getId() const { return id; }
-        
-        void addLearnedClausesFromChecker( Clause* c );
+        unsigned int getId() const { return id; }                
         
     private:                
-        inline HCComponent( const HCComponent& orig );
+        inline ReductBasedCheck( const ReductBasedCheck& orig );
 
         bool isInUnfoundedSet( Var v ) { assert_msg( v < inUnfoundedSet.size(), "v = " << v << "; inUnfoundedSet.size() = " << inUnfoundedSet.size() ); return inUnfoundedSet[ v ] == numberOfCalls; }
         void setInUnfoundedSet( Var v ) { assert_msg( v < inUnfoundedSet.size(), "v = " << v << "; inUnfoundedSet.size() = " << inUnfoundedSet.size() ); inUnfoundedSet[ v ] = numberOfCalls; }
@@ -82,9 +79,7 @@ class HCComponent : public PostPropagator
         Var addFreshVariable();
         
         void initDataStructures();
-        void checkModel( vector< Literal >& assumptions );
-        
-        void sendLearnedClausesToSolver();
+        void checkModel( vector< Literal >& assumptions );        
 
         vector< GUSData* >& gusData;
         Vector< Literal > trail;
@@ -94,12 +89,9 @@ class HCComponent : public PostPropagator
         vector< Var > hcVariables;
         vector< Literal > externalLiterals;
         Vector< Var > unfoundedSet;
-        Vector< Literal > unfoundedSetCandidates;
-        
-        Vector< Clause* > learnedClausesFromChecker;
+        Vector< Literal > unfoundedSetCandidates;        
         
         vector< Var > generatorToCheckerId;
-        vector< Var > checkerToGeneratorId;
 //        vector< bool > usedAuxVars;        
         
         Vector< unsigned int > inUnfoundedSet;
@@ -144,19 +136,7 @@ class HCComponent : public PostPropagator
             
             //Can be UINT_MAX;
             return generatorToCheckerId[ v ];
-        }
-
-        inline Literal getGeneratorLiteralFromCheckerLiteral( Literal l )
-        {
-            Var checkerVar = l.getVariable();
-            if( checkerVar <= numberOfAtoms )
-                return l;
-
-            assert( checkerVar < checkerToGeneratorId.size() );
-            Var v = checkerToGeneratorId[ checkerVar ];
-            assert( v > 0 && v <= solver.numberOfVariables() );
-            return ( solver.getHCComponent( v ) != this ) ? Literal( v, NEGATIVE ) : Literal( v, POSITIVE );
-        }     
+        } 
         
         inline bool addLiteralInClause( Literal lit, Clause* clause )
         {            

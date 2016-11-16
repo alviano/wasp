@@ -25,8 +25,6 @@
 #include <vector>
 using namespace std;
 
-vector< Clause* > Solver::learnedFromAllSolvers;
-
 Solver::~Solver()
 {
     while( !clauses.empty() )
@@ -122,7 +120,6 @@ Solver::initFrom(
     assert( solver.restart != NULL );
     assert( this->restart == NULL );    
     this->restart = solver.restart->clone();
-    this->exchangeClauses_ = solver.exchangeClauses_;
     this->glucoseHeuristic_ = solver.glucoseHeuristic_;
 }
 
@@ -363,7 +360,7 @@ Solver::solvePropagators(
             if( partialChecks )
             {
                 postPropagators.push_back( afterConflictPropagator );
-                HCComponent* comp = dynamic_cast< HCComponent* >( afterConflictPropagator );
+                ReductBasedCheck* comp = dynamic_cast< ReductBasedCheck* >( afterConflictPropagator );
                 comp->setHasToTestModel( true );
             }
             afterConflictPropagator = NULL;
@@ -436,7 +433,7 @@ Solver::solvePropagators(
                     }
                     else if( afterConflictPropagator != NULL )
                     {
-                        HCComponent* comp = dynamic_cast< HCComponent* >( afterConflictPropagator );
+                        ReductBasedCheck* comp = dynamic_cast< ReductBasedCheck* >( afterConflictPropagator );
                         comp->setHasToTestModel( false );
                         afterConflictPropagator = NULL;
                     }
@@ -1198,11 +1195,11 @@ Solver::createCyclicComponents()
     }
 }
 
-HCComponent*
+ReductBasedCheck*
 Solver::createHCComponent(
     unsigned numberOfInputAtoms )
 {
-    return new HCComponent( gusDataVector, *this, numberOfInputAtoms );
+    return new ReductBasedCheck( gusDataVector, *this, numberOfInputAtoms );
 }
 
 void
@@ -1287,11 +1284,6 @@ Solver::addLearnedClause(
     else
     {
         attachClause( *learnedClause );
-        if( hcComponentForChecker != NULL && exchangeClauses_ )
-        {
-            assert( !generator );
-            hcComponentForChecker->addLearnedClausesFromChecker( learnedClause );
-        }
         learnedClauses.push_back( learnedClause );        
     }    
 }

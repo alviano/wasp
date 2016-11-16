@@ -45,7 +45,7 @@ using namespace std;
 #include "stl/BoundedQueue.h"
 #include "Component.h"
 #include "CardinalityConstraint.h"
-class HCComponent;
+class ReductBasedCheck;
 class WeakInterface;
 
 class DataStructures
@@ -239,7 +239,7 @@ class Solver
         inline void computeStrongConnectedComponents();                        
         
         void createCyclicComponents();
-        inline void addHCComponent( HCComponent* c ) { hcComponents.push_back( c ); }
+        inline void addHCComponent( ReductBasedCheck* c ) { hcComponents.push_back( c ); }
 
         inline bool tight() const { return cyclicComponents.empty() && hcComponents.empty(); }
         inline unsigned int getNumberOfCyclicComponents() const { return cyclicComponents.size(); }
@@ -321,8 +321,8 @@ class Solver
         
         inline bool inTheSameHCComponent( Var v1, Var v2 ) const { return variables.inTheSameHCComponent( v1, v2 ); } 
         inline bool isInCyclicHCComponent( Var v ) const { return variables.isInCyclicHCComponent( v ); }
-        inline void setHCComponent( Var v, HCComponent* c ){ variables.setHCComponent( v, c ); }
-        inline HCComponent* getHCComponent( Var v ) { return variables.getHCComponent( v ); }
+        inline void setHCComponent( Var v, ReductBasedCheck* c ){ variables.setHCComponent( v, c ); }
+        inline ReductBasedCheck* getHCComponent( Var v ) { return variables.getHCComponent( v ); }
         
         inline void addPropagator( Literal lit, Propagator* p, int position ) { getDataStructure( lit ).variablePropagators.push_back( pair< Propagator*, int >( p, position ) ); }
         inline void addPostPropagator( Literal lit, PostPropagator* p ) { getDataStructure( lit ).variablePostPropagators.push_back( p ); }
@@ -382,17 +382,13 @@ class Solver
         
         void initFrom( Solver& solver );
         
-        HCComponent* createHCComponent( unsigned numberOfInputAtoms );
+        ReductBasedCheck* createHCComponent( unsigned numberOfInputAtoms );
         
         void printLearnedClauses();
         
-        bool cleanAndAddLearnedClause( Clause* c );
-        inline void setExchangeClauses( bool ex ) { exchangeClauses_ = ex; }
-        inline bool exchangeClauses() const { return exchangeClauses_; }
-        inline void setGenerator( bool gen ) { generator = gen; statistics( this, setGenerator( gen ) ); }        
-        inline void setAfterConflictPropagator( PostPropagator* p ) { assert( afterConflictPropagator == NULL ); afterConflictPropagator = p; }
-        
-        static void addClauseInLearnedFromAllSolvers( Clause* c ) { learnedFromAllSolvers.push_back( c ); }
+        bool cleanAndAddLearnedClause( Clause* c );        
+        inline void setChecker() { statistics( this, setChecker() ); }        
+        inline void setAfterConflictPropagator( PostPropagator* p ) { assert( afterConflictPropagator == NULL ); afterConflictPropagator = p; }                
         
         inline void disableStatistics() { statistics( this, disable() ); }
         inline void enableStatistics() { statistics( this, enable() ); }
@@ -400,7 +396,6 @@ class Solver
         inline unsigned int numberOfHCComponents() const { return hcComponents.size(); }
         
         inline void printInterpretation() const { variables.printInterpretation(); }
-        inline void setHCComponentForChecker( HCComponent* hc ) { assert( hcComponentForChecker == NULL ); hcComponentForChecker = hc; }
         
         inline void onLearningALoopFormulaFromModelChecker() { learnedFromPropagators++; }
         inline void onLearningALoopFormulaFromGus() { learnedFromConflicts++; }
@@ -451,11 +446,7 @@ class Solver
         inline unsigned int getMaxLevelOfClause( const Clause* clause ) const;
         
     private:
-        HCComponent* hcComponentForChecker;
-        PostPropagator* afterConflictPropagator;
-        bool exchangeClauses_;
-        bool generator;
-        static vector< Clause* > learnedFromAllSolvers;
+        PostPropagator* afterConflictPropagator;        
         vector< Literal > choices;
 
         unsigned int solveWithoutPropagators( vector< Literal >& assumptions );
@@ -617,7 +608,7 @@ class Solver
         Vector< DataStructures* > variableDataStructures;
         
         vector< Component* > cyclicComponents;
-        vector< HCComponent* > hcComponents;
+        vector< ReductBasedCheck* > hcComponents;
         
         unsigned int numberOfAssumptions;
         unsigned int learnedFromPropagators;
@@ -650,10 +641,7 @@ class Solver
 
 Solver::Solver() 
 :    
-    hcComponentForChecker( NULL ),
-    afterConflictPropagator( NULL ),
-    exchangeClauses_( false ),
-    generator( true ),
+    afterConflictPropagator( NULL ),    
     currentDecisionLevel( 0 ),
     conflictLiteral( Literal::null ),
     conflictClause( NULL ),
@@ -1123,19 +1111,7 @@ Solver::doRestart()
     if( currentDecisionLevel > numberOfAssumptions )
         unroll( numberOfAssumptions );
     else
-        unroll( 0 );
-        
-
-    if( generator && exchangeClauses_ )
-    {
-        while( !learnedFromAllSolvers.empty() )
-        {
-            Clause* c = learnedFromAllSolvers.back();
-            learnedFromAllSolvers.pop_back();            
-            if( !cleanAndAddLearnedClause( c ) )
-                return false;
-        }
-    }
+        unroll( 0 );            
     return true;
 }
 
