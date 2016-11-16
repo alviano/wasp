@@ -31,14 +31,14 @@
 
 using namespace std;
 class Component;
-class ReductBasedCheck;
+class HCComponent;
 class Reason;
 
 struct VariableData
 {
     Reason* implicant;
     Component* component;
-    ReductBasedCheck* hcComponent;
+    HCComponent* hcComponent;
     ReasonForBinaryClauses* reasonForBinaryClauses;
     
     unsigned int decisionLevel : 27;
@@ -128,9 +128,9 @@ class Variables
         inline bool isInCyclicComponent( Var v ) const { return variablesData[ v ].component != NULL; }
         inline bool isInCyclicHCComponent( Var v ) const { return variablesData[ v ].hcComponent != NULL; }
         inline void setComponent( Var v, Component* c ){ assert( variablesData[ v ].component == NULL || c == NULL ); variablesData[ v ].component = c; }
-        inline void setHCComponent( Var v, ReductBasedCheck* c ){ assert( variablesData[ v ].hcComponent == NULL || c == NULL ); variablesData[ v ].hcComponent = c; }
+        inline void setHCComponent( Var v, HCComponent* c ){ assert( variablesData[ v ].hcComponent == NULL || c == NULL ); variablesData[ v ].hcComponent = c; }
         inline Component* getComponent( Var v ) { return variablesData[ v ].component; }
-        inline ReductBasedCheck* getHCComponent( Var v ) { return variablesData[ v ].hcComponent; }
+        inline HCComponent* getHCComponent( Var v ) { return variablesData[ v ].hcComponent; }
         
         inline ReasonForBinaryClauses* getReasonForBinaryClauses( Var v ) { return variablesData[ v ].reasonForBinaryClauses; }
         

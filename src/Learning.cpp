@@ -20,7 +20,7 @@
 #include "Clause.h"
 #include "Literal.h"
 #include "Solver.h"
-#include "ReductBasedCheck.h"
+#include "HCComponent.h"
 
 #include <cassert>
 
@@ -423,7 +423,7 @@ Learning::learnClausesFromDisjunctiveUnfoundedSet(
         Var tmp = unfoundedSet[ i ];
         assert( solver.isTrue( tmp ) || solver.isUndefined( tmp ) );
         
-        ReductBasedCheck* component = solver.getHCComponent( tmp );
+        HCComponent* component = solver.getHCComponent( tmp );
         component->computeReasonForUnfoundedAtom( tmp, *this );
         
         unsigned int dl = solver.getDecisionLevel( tmp );

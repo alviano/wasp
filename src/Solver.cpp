@@ -18,6 +18,7 @@
 
 #include "Solver.h"
 #include "input/Dimacs.h"
+#include "HCComponent.h"
 #include "ReductBasedCheck.h"
 #include "weakconstraints/WeakInterface.h"
 #include <algorithm>
@@ -354,18 +355,7 @@ Solver::solvePropagators(
             }
         }
         
-        postPropagationLabel:;
-        if( afterConflictPropagator != NULL )
-        {
-            if( partialChecks )
-            {
-                postPropagators.push_back( afterConflictPropagator );
-                ReductBasedCheck* comp = dynamic_cast< ReductBasedCheck* >( afterConflictPropagator );
-                comp->setHasToTestModel( true );
-            }
-            afterConflictPropagator = NULL;
-        }
-        
+        postPropagationLabel:;        
         while( !postPropagators.empty() )
         {
             PostPropagator* postPropagator = postPropagators.back();
@@ -430,13 +420,7 @@ Solver::solvePropagators(
                     {
                         assert( !isTrue( clauseToPropagate->getAt( 0 ) ) );
                         assignLiteral( clauseToPropagate );
-                    }
-                    else if( afterConflictPropagator != NULL )
-                    {
-                        ReductBasedCheck* comp = dynamic_cast< ReductBasedCheck* >( afterConflictPropagator );
-                        comp->setHasToTestModel( false );
-                        afterConflictPropagator = NULL;
-                    }
+                    }                    
                 }
                 
                 if( conflictDetected() )
@@ -1195,7 +1179,7 @@ Solver::createCyclicComponents()
     }
 }
 
-ReductBasedCheck*
+HCComponent*
 Solver::createHCComponent(
     unsigned numberOfInputAtoms )
 {
@@ -1211,9 +1195,6 @@ Solver::printLearnedClauses()
         learnedClauses[ i ]->printOrderedById();
         cout << " " << this << endl;
     }
-
-    for( unsigned int i = 0; i < hcComponents.size(); i++ )
-        hcComponents[ i ]->printLearnedClausesOfChecker();
 }
 
 bool

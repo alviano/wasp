@@ -20,9 +20,9 @@ ostream& operator<<( ostream& out, const ReductBasedCheck& component )
 ReductBasedCheck::ReductBasedCheck(
     vector< GUSData* >& gusData_,
     Solver& s,
-    unsigned numberOfInputAtoms ) : HCComponent(), gusData( gusData_ ), solver( s ), numberOfCalls( 0 ), 
-        hasToTestModel( false ), numberOfAtoms( numberOfInputAtoms ), 
-        id( 0 ), assumptionLiteral( Literal::null ), isConflictual( false ),
+    unsigned numberOfInputAtoms ) : HCComponent( gusData_, s ),
+        numberOfAtoms( numberOfInputAtoms ), 
+        assumptionLiteral( Literal::null ), isConflictual( false ),
         numberOfExternalLiterals( 0 ), numberOfInternalVariables( 0 ), numberOfZeroLevel( 0 ), removedHCVars( 0 ), literalToAdd( Literal::null ),
         low( 0 ), high( solver.numberOfVariables() )
 {   
@@ -38,11 +38,10 @@ ReductBasedCheck::ReductBasedCheck(
     assert_msg( checker.numberOfVariables() == numberOfInputAtoms, checker.numberOfVariables() << " != " << numberOfInputAtoms );
     assert( checker.numberOfVariables() == inUnfoundedSet.size() - 1 );
     
-    checker.setOutputBuilder( new WaspOutputBuilder() );
     checker.initFrom( solver );
     checker.setChecker(); 
     checker.disableStatistics();
-    checker.disableVariableElimination();        
+    checker.disableVariableElimination();
 }
 
 ReductBasedCheck::~ReductBasedCheck()
@@ -119,7 +118,6 @@ ReductBasedCheck::onLiteralFalse(
     
     if( trail.size() + numberOfZeroLevel == ( numberOfInternalVariables + numberOfExternalLiterals ) )
     {
-        //testModel();
         hasToTestModel = true;
         return true;
     }
@@ -292,93 +290,10 @@ ReductBasedCheck::getClauseToPropagate(
         Clause* loopFormula = learning.learnClausesFromDisjunctiveUnfoundedSet( unfoundedSet );
         trace_msg( modelchecker, 1, "Adding loop formula: " << *loopFormula );
         unfoundedSet.clear();
-        if( !( wasp::Options::forwardPartialChecks ) )
-            solver.setAfterConflictPropagator( this );        
         solver.onLearningALoopFormulaFromModelChecker();    
         return loopFormula;
     }
     return NULL;
-}
-
-void
-ReductBasedCheck::computeReasonForUnfoundedAtom(
-    Var v,
-    Learning& learning )
-{
-    trace_msg( modelchecker, 2, "Processing variable " << solver.getLiteral( v ) );
-    vector< Clause* >& definingRules = getGUSData( v ).definingRulesForNonHCFAtom;        
-    for( unsigned int i = 0; i < definingRules.size(); i++ )
-    {
-        Clause* rule = definingRules[ i ];
-        trace_msg( modelchecker, 3, "Processing rule " << *rule );
-        
-        bool skipRule = false;
-        
-        unsigned int min = UINT_MAX;
-        unsigned int pos = UINT_MAX;
-        for( unsigned int j = 0; j < rule->size(); j++ )
-        {
-            Literal lit = rule->getAt( j );
-            if( isInUnfoundedSet( lit.getVariable() ) )
-            {
-                trace_msg( modelchecker, 4, "Literal " << lit << " is in the unfounded set" );
-                if( lit.isHeadAtom() )
-                {
-                    trace_msg( modelchecker, 5, "Skip " << lit << " because it is in the head" );
-                    continue;
-                }
-                else if( lit.isPositiveBodyLiteral() )
-                {
-                    trace_msg( modelchecker, 5, "Skip rule because of an unfounded positive body literal: " << lit );
-                    skipRule = true;
-                    break;
-                }
-            }
-            
-            //This should be not true anymore.
-//            assert( !isInUnfoundedSet( lit.getVariable() ) );
-            //If the variable is in the HCC component and it is undefined can be a reason during partial checks
-            if( solver.isUndefined( lit ) && solver.getHCComponent( lit.getVariable() ) == this && ( lit.isNegativeBodyLiteral() || lit.isHeadAtom() ) )
-            {
-                if( pos == UINT_MAX )
-                    pos = j;
-                continue;
-            }
-            
-            if( !solver.isTrue( lit ) )
-            {
-                trace_msg( modelchecker, 5, "Skip " << lit << " because it is not true" );
-                continue;
-            }
-            
-            unsigned int dl = solver.getDecisionLevel( lit );
-            if( dl == 0 )
-            {
-                trace_msg( modelchecker, 5, "Skip rule because of a literal of level 0: " << lit );
-                skipRule = true;
-                break;
-            }
-            if( dl < min )
-            {
-                min = dl;
-                pos = j;
-            }
-        }
-        
-        if( !skipRule )
-        {
-            assert_msg( pos < rule->size(), "Trying to access " << pos << " in " << *rule );
-            trace_msg( modelchecker, 4, "The reason is: " << rule->getAt( pos ) );
-            learning.onNavigatingLiteralForUnfoundedSetLearning( rule->getAt( pos ).getOppositeLiteral() );
-        }
-    }
-}
-
-bool
-ReductBasedCheck::sameComponent(
-    Var v ) const
-{
-    return solver.getHCComponent( v ) == this;
 }
 
 void
@@ -496,4 +411,51 @@ void ReductBasedCheck::checkModel(
     
     assert( !checker.conflictDetected() );
     checker.unrollToZero();    
+}
+
+void ReductBasedCheck::addHCVariableProtected(
+    Var v )
+{
+    inUnfoundedSet[ v ] |= 4;
+    numberOfInternalVariables++;
+    attachLiterals( Literal( v, POSITIVE ) );
+    solver.setComponent( v, NULL );
+    solver.setHCComponent( v, this );
+}
+
+void ReductBasedCheck::processRule(
+    Rule* rule,
+    Var headAtom )
+{
+    Clause* c = new Clause();
+    for( unsigned int k = 0; k < rule->size(); k++ )
+    {
+        Literal lit = rule->literals[ k ];
+        c->addLiteral( lit );
+        if( ( !sameComponent( lit.getVariable() ) && addExternalLiteral( lit ) ) || ( lit.isNegativeBodyLiteral() && addExternalLiteralForInternalVariable( lit ) ) )
+            attachLiterals( lit );        
+    }
+    c->removeDuplicates();
+    addClauseToChecker( c, headAtom );  
+}
+
+void ReductBasedCheck::processComponentBeforeStarting()
+{
+    for( unsigned int j = 0; j < size(); j++ )
+    {
+        Var v = getVariable( j );
+        if( solver.isTrue( v ) )
+            onLiteralFalse( Literal( v, NEGATIVE ) );
+        else if( solver.isFalse( v ) )
+            onLiteralFalse( Literal( v, POSITIVE ) );
+    }
+
+    for( unsigned int j = 0; j < externalLiteralsSize(); j++ )
+    {
+        Literal lit = getExternalLiteral( j );
+        if( solver.isTrue( lit ) )
+            onLiteralFalse( lit.getOppositeLiteral() );
+        else if( solver.isFalse( lit ) )
+            onLiteralFalse( lit );
+    }
 }

@@ -24,7 +24,7 @@
 #include "stl/Vector.h"
 #include "HCComponent.h"
 #include "Literal.h"
-#include "Solver.h"
+#include "input/Rule.h"
 using namespace std;
 
 class Clause;
@@ -42,64 +42,38 @@ class ReductBasedCheck : public HCComponent
         virtual Clause* getClauseToPropagate( Learning& learning );
         virtual bool onLiteralFalse( Literal literal );
 
-        void addClauseToChecker( Clause* c, Var headAtom );
-        
-        inline void addHCVariable( Var v ) { inUnfoundedSet[ v ] |= 4; hcVariables.push_back( v ); numberOfInternalVariables++; }
-        bool addExternalLiteral( Literal lit );
-        bool addExternalLiteralForInternalVariable( Literal lit );
-        
-        inline unsigned int size() const { return hcVariables.size(); }
-        inline Var getVariable( unsigned int pos ) const { assert( pos < hcVariables.size() ); return hcVariables[ pos ]; }
-        
-        inline unsigned int externalLiteralsSize() const { return externalLiterals.size(); }
-        inline Literal getExternalLiteral( unsigned int pos ) const { assert( pos < externalLiterals.size() ); return externalLiterals[ pos ]; }
-        
-        void computeReasonForUnfoundedAtom( Var v, Learning& learning );
-        
-        GUSData& getGUSData( Var v ) { assert( v < gusData.size() ); return *( gusData[ v ] ); }
-        void printLearnedClausesOfChecker() { checker.printLearnedClauses(); }
+        void addClauseToChecker( Clause* c, Var headAtom );                
+                      
         void setHasToTestModel( bool b ) { hasToTestModel = b; }
-        
-        void setId( unsigned int i ) { id = i; }
-        unsigned int getId() const { return id; }                
-        
-    private:                
-        inline ReductBasedCheck( const ReductBasedCheck& orig );
+        void processRule( Rule* rule, Var headAtom );
+        void processComponentBeforeStarting();
 
-        bool isInUnfoundedSet( Var v ) { assert_msg( v < inUnfoundedSet.size(), "v = " << v << "; inUnfoundedSet.size() = " << inUnfoundedSet.size() ); return inUnfoundedSet[ v ] == numberOfCalls; }
-        void setInUnfoundedSet( Var v ) { assert_msg( v < inUnfoundedSet.size(), "v = " << v << "; inUnfoundedSet.size() = " << inUnfoundedSet.size() ); inUnfoundedSet[ v ] = numberOfCalls; }
-        
-        bool sameComponent( Var v ) const;
+    private:                
+        inline ReductBasedCheck( const ReductBasedCheck& orig );        
         
         void createInitialClauseAndSimplifyHCVars();
         
         void clearUnfoundedSetCandidates();
         Clause* computeClause();
         
+        bool addExternalLiteral( Literal lit );
+        bool addExternalLiteralForInternalVariable( Literal lit );                
+        
+        inline unsigned int externalLiteralsSize() const { return externalLiterals.size(); }
+        inline Literal getExternalLiteral( unsigned int pos ) const { assert( pos < externalLiterals.size() ); return externalLiterals[ pos ]; }
         Var addFreshVariable();
         
+        void addHCVariableProtected( Var v );
         void initDataStructures();
         void checkModel( vector< Literal >& assumptions );        
-
-        vector< GUSData* >& gusData;
-        Vector< Literal > trail;
-        Solver& solver;
-        Solver checker;
-
-        vector< Var > hcVariables;
+        
+        Vector< Literal > trail;        
+        
         vector< Literal > externalLiterals;
-        Vector< Var > unfoundedSet;
-        Vector< Literal > unfoundedSetCandidates;        
         
         vector< Var > generatorToCheckerId;
         
-        Vector< unsigned int > inUnfoundedSet;
-        unsigned int numberOfCalls;
-        
-        bool hasToTestModel;        
-        
-        unsigned int numberOfAtoms;
-        unsigned int id;
+        unsigned int numberOfAtoms;        
         
         Literal assumptionLiteral;
         bool isConflictual;

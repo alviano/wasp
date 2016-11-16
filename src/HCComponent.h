@@ -21,19 +21,69 @@
 
 #include "PostPropagator.h"
 #include "Literal.h"
+#include "Solver.h"
+#include "outputBuilders/OutputBuilder.h"
+#include "outputBuilders/NoopOutputBuilder.h"
 
 class Clause;
+class GUSData;
 class Learning;
+class Rule;
 
 class HCComponent : public PostPropagator
 {
     public:
-        HCComponent() : PostPropagator() {}
-        virtual ~HCComponent(){}
+        HCComponent( vector< GUSData* >& gusData_, Solver& s ) : PostPropagator(), id( 0 ), gusData( gusData_ ), solver( s ), numberOfCalls( 0 ), hasToTestModel( false )
+        {
+            outputBuilder = new NoopOutputBuilder();
+            checker.setOutputBuilder( outputBuilder );
+        }
+        virtual ~HCComponent(){ delete outputBuilder; }
 
         virtual bool onLiteralFalse( Literal ) = 0;
         virtual Clause* getClauseToPropagate( Learning& ) = 0;
-        virtual void reset() = 0;    
+        virtual void reset() = 0;
+        
+        void computeReasonForUnfoundedAtom( Var v, Learning& learning );
+        
+        inline void addHCVariable( Var v ) { hcVariables.push_back( v ); addHCVariableProtected( v ); }
+        inline Var getVariable( unsigned int pos ) const { assert( pos < hcVariables.size() ); return hcVariables[ pos ]; }        
+        inline unsigned int size() const { return hcVariables.size(); }
+                
+        virtual void processRule( Rule* rule, Var headAtom ) = 0;
+        virtual void processComponentBeforeStarting() = 0;
+        
+        void setId( unsigned int i ) { id = i; }
+        unsigned int getId() const { return id; }                
+        
+    protected:
+        virtual void addHCVariableProtected( Var v ) = 0;
+        
+        GUSData& getGUSData( Var v ) { assert( v < gusData.size() ); return *( gusData[ v ] ); }  
+        inline bool sameComponent( Var v ) const { return solver.getHCComponent( v ) == this; }
+        inline bool isInUnfoundedSet( Var v ) { assert_msg( v < inUnfoundedSet.size(), "v = " << v << "; inUnfoundedSet.size() = " << inUnfoundedSet.size() ); return inUnfoundedSet[ v ] == numberOfCalls; }
+        inline void setInUnfoundedSet( Var v ) { assert_msg( v < inUnfoundedSet.size(), "v = " << v << "; inUnfoundedSet.size() = " << inUnfoundedSet.size() ); inUnfoundedSet[ v ] = numberOfCalls; }
+        inline void attachLiterals( Literal lit );
+        unsigned int id;
+        vector< GUSData* >& gusData;
+        vector< Var > hcVariables;
+        Solver& solver;
+        Solver checker;
+        Vector< unsigned int > inUnfoundedSet;
+        unsigned int numberOfCalls;
+        Vector< Var > unfoundedSet;
+        Vector< Literal > unfoundedSetCandidates;        
+        bool hasToTestModel;
+        OutputBuilder* outputBuilder;
 };
+
+void
+HCComponent::attachLiterals(
+    Literal lit )
+{
+    solver.setFrozen( lit.getVariable() );
+    solver.addPostPropagator( lit, this );
+    solver.addPostPropagator( lit.getOppositeLiteral(), this );
+}
 
 #endif

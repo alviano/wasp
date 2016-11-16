@@ -5,7 +5,7 @@
 #include "../Clause.h"
 #include "../Aggregate.h"
 #include "../util/Istream.h"
-#include "../ReductBasedCheck.h"
+#include "../HCComponent.h"
 
 #include <cassert>
 #include <iostream>
@@ -1219,7 +1219,7 @@ GringoNumericFormat::computeGusStructures()
         else
         {
             trace_msg( parser, 4, "The component is non HCF" );            
-            ReductBasedCheck* hcComponent = solver.createHCComponent( atomData.size() - 1 ); //new HCComponent( solver );
+            HCComponent* hcComponent = solver.createHCComponent( atomData.size() - 1 ); //new HCComponent( solver );
 
             hcComponent->setId( solver.numberOfHCComponents() );
             for( unsigned int j = 0; j < component->size(); j++ )
@@ -1230,11 +1230,7 @@ GringoNumericFormat::computeGusStructures()
                     continue;
                 
                 trace_msg( parser, 5, "Variable " << Literal( v, POSITIVE ) << " is in the cyclic component " << i );                
-                hcComponent->addHCVariable( v );                                
-                solver.addPostPropagator( Literal( v, POSITIVE ), hcComponent );
-                solver.addPostPropagator( Literal( v, NEGATIVE ), hcComponent );
-                solver.setComponent( v, NULL );
-                solver.setHCComponent( v, hcComponent );
+                hcComponent->addHCVariable( v );                
             }
             statistics( &solver, removeComponent( component->getId() ) );            
             component->remove();
@@ -1249,54 +1245,14 @@ GringoNumericFormat::computeGusStructures()
                 {
                     Rule* rule = getRule( headOccs[ t ].getId() );
                     assert( rule != NULL );
-                    if( !rule->isRemoved() )
-                    {                        
-                        for( unsigned int k = 0; k < rule->size(); k++ )
-                        {
-                            assert( rule->literals[ k ].getVariable() < atomData.size() );
-                            if( solver.getHCComponent( rule->literals[ k ].getVariable() ) != hcComponent )
-                            {
-                                if( hcComponent->addExternalLiteral( rule->literals[ k ] ) )
-                                {
-                                    solver.setFrozen( rule->literals[ k ].getVariable() );
-                                    solver.addPostPropagator( rule->literals[ k ], hcComponent );
-                                    solver.addPostPropagator( rule->literals[ k ].getOppositeLiteral(), hcComponent );
-                                }
-                            }
-                            else if( rule->literals[ k ].isNegativeBodyLiteral() )
-                            {
-                                if( hcComponent->addExternalLiteralForInternalVariable( rule->literals[ k ] ) )
-                                {
-                                    solver.setFrozen( rule->literals[ k ].getVariable() );
-                                    solver.addPostPropagator( rule->literals[ k ], hcComponent );
-                                    solver.addPostPropagator( rule->literals[ k ].getOppositeLiteral(), hcComponent );
-                                }
-                            }
-                        }
-                        Clause* c = normalRuleToClause( rule );
-                        c->removeDuplicates();
-                        hcComponent->addClauseToChecker( c, v );
-                    }
+                    if( rule->isRemoved() )
+                        continue;
+                    
+                    hcComponent->processRule( rule, v );                  
                 }
             }
             
-            for( unsigned int j = 0; j < hcComponent->size(); j++ )
-            {
-                Var v = hcComponent->getVariable( j );
-                if( solver.isTrue( v ) )
-                    hcComponent->onLiteralFalse( Literal( v, NEGATIVE ) );
-                else if( solver.isFalse( v ) )
-                    hcComponent->onLiteralFalse( Literal( v, POSITIVE ) );
-            }
-            
-            for( unsigned int j = 0; j < hcComponent->externalLiteralsSize(); j++ )
-            {
-                Literal lit = hcComponent->getExternalLiteral( j );
-                if( solver.isTrue( lit ) )
-                    hcComponent->onLiteralFalse( lit.getOppositeLiteral() );
-                else if( solver.isFalse( lit ) )
-                    hcComponent->onLiteralFalse( lit );
-            }
+            hcComponent->processComponentBeforeStarting();            
             
             solver.addPostPropagator( hcComponent );
             solver.addHCComponent( hcComponent );
