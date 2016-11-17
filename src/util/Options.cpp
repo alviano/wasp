@@ -171,7 +171,7 @@ unsigned int Options::queryVerbosity = 0;
 
 map< string, WEAK_CONSTRAINTS_ALG > Options::stringToWeak;
 
-SHIFT_STRATEGY Options::shiftStrategy = SHIFT_AUTO;
+SHIFT_STRATEGY Options::shiftStrategy = SHIFT_NAIVE;
 
 bool Options::oneDefShift = false;
 
@@ -766,7 +766,8 @@ Options::initMap()
     stringToShift[ "shift" ] = SHIFT_NAIVE;
     stringToShift[ "propagator" ] = SHIFT_PROPAGATOR;
 //    stringToShift[ "lr" ] = SHIFT_LEFT_RIGHT;
-    stringToShift[ "completion" ] = SHIFT_NORMALIZE;
+    stringToShift[ "compv" ] = SHIFT_NORMALIZE;
+    stringToShift[ "auto" ] = SHIFT_AUTO;
 //    stringToShift[ "quadratic" ] = SHIFT_QUADRATIC;
 //    stringToShift[ "quadratic-aggregate" ] = SHIFT_QUADRATIC_AGGREGATE;
     

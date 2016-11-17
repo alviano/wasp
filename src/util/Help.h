@@ -137,6 +137,7 @@ class Help
             cout << "       =propagator                     - Use propagator for inferences" << endl;
 //            cout << "       =lr                             - Enable left/right strategy" << endl;
             cout << "       =compv                          - Perform the disjunctive completion" << endl;
+            cout << "       =auto                           - Perform an automatic choice between propagator and disjunctive completion" << endl;
 //            cout << "       =quadratic                      - Enable quadratic strategy" << endl;
 //            cout << "       =quadratic-aggregate            - Enable quadratic strategy with aggregate" << endl;
             cout << "--enable-shift-onedef                  - Enable shift also for atoms with one defition" << endl;
