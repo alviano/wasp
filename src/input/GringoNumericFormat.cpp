@@ -1504,6 +1504,12 @@ GringoNumericFormat::computeSCCsDisjunctive()
                             case SHIFT_QUADRATIC_AGGREGATE:
                                 quadraticStrategyAggregate( headAtoms, auxVars, addedLit );
                                 break;
+                            case SHIFT_AUTO:
+                                if( headAtoms.size() <= 4 )
+                                    normalizeHeads( headAtoms, auxVars, addedLit );
+                                else
+                                    createPropagatorForDisjunction( headAtoms, auxVars, addedLit );
+                                break;
                             default:
                                 ErrorMessage::errorDuringParsing( "Unknown shift strategy" );
                         }                        

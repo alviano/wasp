@@ -171,7 +171,7 @@ unsigned int Options::queryVerbosity = 0;
 
 map< string, WEAK_CONSTRAINTS_ALG > Options::stringToWeak;
 
-SHIFT_STRATEGY Options::shiftStrategy = SHIFT_NAIVE;
+SHIFT_STRATEGY Options::shiftStrategy = SHIFT_AUTO;
 
 bool Options::oneDefShift = false;
 
@@ -521,6 +521,8 @@ Options::parse(
                     else
                         ErrorMessage::errorGeneric( "Inserted invalid algorithm for model checker." );
                 }
+                else
+                    ErrorMessage::errorGeneric( "Inserted invalid algorithm for model checker." );
                 break;
                 
             case OPTIONID_help:
@@ -630,6 +632,8 @@ Options::parse(
                     else
                         ErrorMessage::errorGeneric( "Inserted invalid algorithm for query answering." );
                 }
+                else
+                        ErrorMessage::errorGeneric( "Inserted invalid algorithm for query answering." );
                 break;
                 
             case OPTIONID_queryverbosity:
@@ -642,6 +646,8 @@ Options::parse(
                     else
                         ErrorMessage::errorGeneric( "Inserted invalid value for query verbosity." );
                 }
+                else
+                        ErrorMessage::errorGeneric( "Inserted invalid value for query verbosity." );
                 break;
             
             case OPTIONID_querychunksize:
@@ -651,6 +657,8 @@ Options::parse(
                     if( chunkPercentage != UINT_MAX )
                         ErrorMessage::errorGeneric( "Only one option between chunk percentage and chunk size can be specified." );
                 }
+                else
+                    ErrorMessage::errorGeneric( "Only one option between chunk percentage and chunk size can be specified." );
                 break;
                 
             case OPTIONID_querychunkpercentage:
@@ -662,6 +670,8 @@ Options::parse(
                     if( chunkSize != UINT_MAX )
                         ErrorMessage::errorGeneric( "Only one option between chunk percentage and chunk size can be specified." );
                 }
+                else
+                    ErrorMessage::errorGeneric( "Inserted invalid value for chunk percentage." );
                 break;
                 
             default:

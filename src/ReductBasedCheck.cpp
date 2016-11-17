@@ -48,7 +48,7 @@ ReductBasedCheck::addExternalLiteral(
         inUnfoundedSet[ lit.getVariable() ] |= 2;
         checker.addVariable();
         generatorToCheckerId[ lit.getVariable() ] = checker.numberOfVariables();    
-    }    
+    }
     externalLiterals.push_back( lit );    
     numberOfExternalLiterals++;
     return true;
@@ -363,9 +363,14 @@ void ReductBasedCheck::processRule(
         Literal lit = rule->literals[ k ];
         clause->addLiteral( lit );
         c->addLiteral( lit );
-        if( ( !sameComponent( lit.getVariable() ) && addExternalLiteral( lit ) ) || ( lit.isNegativeBodyLiteral() && addExternalLiteralForInternalVariable( lit ) ) )
-            attachLiterals( lit );        
-    }
+        if( !sameComponent( lit.getVariable() ) )
+        {
+            if( addExternalLiteral( lit ) )
+                attachLiterals( lit );        
+        }
+        else if ( lit.isNegativeBodyLiteral() && addExternalLiteralForInternalVariable( lit ) )
+            attachLiterals( lit );
+    }    
     clause->removeDuplicates();
     c->removeDuplicates();
     addClauseToChecker( c );
