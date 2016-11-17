@@ -21,6 +21,16 @@
 #include "Learning.h"
 #include "Clause.h"
 #include "input/Rule.h"
+#include <iostream>
+using namespace std;
+
+ostream& operator<<( ostream& out, const HCComponent& component )
+{
+    out << "[ ";
+    for( unsigned i = 0; i < component.hcVariables.size(); ++i )
+        out << component.solver.getLiteral( component.hcVariables[ i ] ) << " ";
+    return out << "]";
+}
 
 void
 HCComponent::computeReasonForUnfoundedAtom(
@@ -104,21 +114,39 @@ HCComponent::~HCComponent()
         delete toDelete.back();
         toDelete.pop_back();
     }
+    checker.enableStatistics();
+    statistics( &checker, onDeletingChecker( id ) );
+}
+
+Clause*
+HCComponent::getClauseToPropagate(
+    Learning& learning )
+{
+    assert( unfoundedSet.empty() );
+    if( hasToTestModel )
+        testModel();
+
+    hasToTestModel = false;
+    if( !unfoundedSet.empty() )
+    {
+        trace_msg( modelchecker, 1, "Learning unfounded set rule for component " << *this );
+        Clause* loopFormula = learning.learnClausesFromDisjunctiveUnfoundedSet( unfoundedSet );
+        trace_msg( modelchecker, 1, "Adding loop formula: " << *loopFormula );
+        unfoundedSet.clear();
+        solver.onLearningALoopFormulaFromModelChecker();    
+        return loopFormula;
+    }
+    return NULL;
 }
 
 void
-HCComponent::createDefiningRules(
-    Rule* rule,
-    Clause* clause )
-{
-    for( unsigned int k = 0; k < rule->size(); k++ )
+HCComponent::reset()
+{    
+    while( !trail.empty() && solver.isUndefined( trail.back() ) )
     {
-        Literal lit = rule->literals[ k ];
-        if( !sameComponent( lit.getVariable() ) )
-            continue;
-        
-        if( lit.isHeadAtom() )
-            getGUSData( lit.getVariable() ).definingRulesForNonHCFAtom.push_back( clause );         
+        hasToTestModel = false;
+        trail.pop_back();
     }
-    toDelete.push_back( clause );
+
+    unfoundedSet.clear();
 }

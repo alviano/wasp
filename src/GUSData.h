@@ -40,6 +40,8 @@ class GUSData
         vector< Var > possiblySupportedByThis[ 2 ];
 
         vector< Clause* > definingRulesForNonHCFAtom;
+        Var unfoundedVarForHCC; //For an atom p in a HCC it represents up
+        Var headVarForHCC; //For an atom p in a HCC it represents hp
 
         /* CONJUNCTIVE */
         vector< Literal > literals;
@@ -81,6 +83,8 @@ class GUSData
 
 GUSData::GUSData() : numberOfSupporting( 0 ), sourcePointer( Literal::null ), aux( 0 ), founded( 1 ), inQueue( 0 ), inUnfoundedSet( 0 ), propagated( 0 )
 {
+    unfoundedVarForHCC = 0;
+    headVarForHCC = 0;
 }
 
 #endif

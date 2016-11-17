@@ -20,6 +20,7 @@
 #include "input/Dimacs.h"
 #include "HCComponent.h"
 #include "ReductBasedCheck.h"
+#include "UnfoundedBasedCheck.h"
 #include "weakconstraints/WeakInterface.h"
 #include <algorithm>
 #include <stdint.h>
@@ -1183,7 +1184,14 @@ HCComponent*
 Solver::createHCComponent(
     unsigned numberOfInputAtoms )
 {
-    return new ReductBasedCheck( gusDataVector, *this, numberOfInputAtoms );
+    switch( wasp::Options::modelcheckerAlgorithm )
+    {
+        case UNFOUNDED_BASED:
+            return new UnfoundedBasedCheck( gusDataVector, *this, numberOfInputAtoms );
+        case REDUCT_BASED:
+        default:
+            return new ReductBasedCheck( gusDataVector, *this, numberOfInputAtoms );            
+    }    
 }
 
 void

@@ -75,6 +75,8 @@ namespace wasp
             static unsigned int chunkPercentage;
             static unsigned int chunkSize;
             
+            static unsigned int modelcheckerAlgorithm;
+            
         private:
 
             static DELETION_POLICY deletionPolicy;

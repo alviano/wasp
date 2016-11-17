@@ -95,6 +95,9 @@
 #define ENUMERATION_BC 0
 #define ENUMERATION_BT 1
 
+#define REDUCT_BASED 0
+#define UNFOUNDED_BASED 1
+
 #define VERSION "2.0"
 
 /*

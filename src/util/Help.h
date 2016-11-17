@@ -89,6 +89,9 @@ class Help
             cout << separator << endl;
 
             cout << "Model Checker options                  " << endl << endl;
+            cout << "--modelchecker-algorithm               - Compute the unfounded check for HC components using the specified algorithm" << endl;
+            cout << "       =reduct                         - Algorithm based on the GL-reduct" << endl;
+            cout << "       =unfounded                      - Algorithm based on the unfounded sets conditions" << endl;
             cout << "--forward-partialchecks                - Enable forward partial checks" << endl;
             cout << "--heuristic-partialchecks              - Enable heuristic to activate or disactivate partial checks during the search" << endl;            
                 

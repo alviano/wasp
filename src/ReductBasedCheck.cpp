@@ -9,21 +9,12 @@
 #include <vector>
 #include "util/Options.h"
 
-ostream& operator<<( ostream& out, const ReductBasedCheck& component )
-{
-    out << "[ ";
-    for( unsigned i = 0; i < component.hcVariables.size(); ++i )
-        out << component.solver.getLiteral( component.hcVariables[ i ] ) << " ";
-    return out << "]";
-}
-
 ReductBasedCheck::ReductBasedCheck(
     vector< GUSData* >& gusData_,
     Solver& s,
     unsigned numberOfInputAtoms ) : HCComponent( gusData_, s ),
-        numberOfAtoms( numberOfInputAtoms ), 
-        assumptionLiteral( Literal::null ), isConflictual( false ),
-        numberOfExternalLiterals( 0 ), numberOfInternalVariables( 0 ), numberOfZeroLevel( 0 ), removedHCVars( 0 ), literalToAdd( Literal::null )        
+        numberOfAtoms( numberOfInputAtoms ), assumptionLiteral( Literal::null ), numberOfExternalLiterals( 0 ),
+        numberOfInternalVariables( 0 ), numberOfZeroLevel( 0 ), removedHCVars( 0 ), literalToAdd( Literal::null )        
 {   
     inUnfoundedSet.push_back( 0 );
     generatorToCheckerId.push_back( UINT_MAX );
@@ -36,17 +27,7 @@ ReductBasedCheck::ReductBasedCheck(
         
     assert_msg( checker.numberOfVariables() == numberOfInputAtoms, checker.numberOfVariables() << " != " << numberOfInputAtoms );
     assert( checker.numberOfVariables() == inUnfoundedSet.size() - 1 );
-    
-    checker.initFrom( solver );
-    checker.setChecker(); 
-    checker.disableStatistics();
-    checker.disableVariableElimination();
-}
-
-ReductBasedCheck::~ReductBasedCheck()
-{
-    checker.enableStatistics();
-    statistics( &checker, onDeletingChecker( id ) );    
+    initChecker();
 }
 
 bool
@@ -86,18 +67,6 @@ ReductBasedCheck::addExternalLiteralForInternalVariable(
     externalLiterals.push_back( lit );
     numberOfExternalLiterals++;
     return true;
-}
-
-void
-ReductBasedCheck::reset()
-{    
-    while( !trail.empty() && solver.isUndefined( trail.back() ) )
-    {
-        hasToTestModel = false;
-        trail.pop_back();
-    }
-
-    unfoundedSet.clear();
 }
 
 bool
@@ -151,8 +120,7 @@ ReductBasedCheck::testModel()
     assert( !checker.conflictDetected() );
     if( assumptionLiteral != Literal::null )
         checker.addClause( assumptionLiteral.getOppositeLiteral() );
-    assert( !checker.conflictDetected() );
-    statistics( &checker, endCheckerInvocation( time( 0 ) ) );
+    assert( !checker.conflictDetected() );    
 }
 
 void
@@ -270,27 +238,6 @@ ReductBasedCheck::addClauseToChecker(
     checker.addClause( c );    
 }
 
-Clause*
-ReductBasedCheck::getClauseToPropagate(
-    Learning& learning )
-{
-    assert( unfoundedSet.empty() );
-    if( hasToTestModel )
-        testModel();
-
-    hasToTestModel = false;
-    if( !unfoundedSet.empty() )
-    {
-        trace_msg( modelchecker, 1, "Learning unfounded set rule for component " << *this );
-        Clause* loopFormula = learning.learnClausesFromDisjunctiveUnfoundedSet( unfoundedSet );
-        trace_msg( modelchecker, 1, "Adding loop formula: " << *loopFormula );
-        unfoundedSet.clear();
-        solver.onLearningALoopFormulaFromModelChecker();    
-        return loopFormula;
-    }
-    return NULL;
-}
-
 void
 ReductBasedCheck::createInitialClauseAndSimplifyHCVars()
 {
@@ -344,13 +291,6 @@ ReductBasedCheck::clearUnfoundedSetCandidates()
     unfoundedSetCandidates.shrink( removedHCVars );
 }
 
-Var
-ReductBasedCheck::addFreshVariable()
-{
-    checker.addVariableRuntime();
-    return checker.numberOfVariables();
-}
-
 void
 ReductBasedCheck::initDataStructures()
 {
@@ -387,11 +327,7 @@ void ReductBasedCheck::checkModel(
         trace_msg( modelchecker, 1, "SATISFIABLE: the model is not stable." );
         for( unsigned int i = 0; i < unfoundedSetCandidates.size(); i++ )
             if( checker.isTrue( unfoundedSetCandidates[ i ] ) )
-            {
-                Var curr = unfoundedSetCandidates[ i ].getVariable();
-                unfoundedSet.push_back( curr );
-                setInUnfoundedSet( curr );
-            }
+                setInUnfoundedSet( unfoundedSetCandidates[ i ].getVariable() );            
         trace_action( modelchecker, 2, { printVector( unfoundedSet, "Unfounded set" ); } );
         statistics( &checker, foundUS( trail.size() != ( hcVariables.size() + externalLiterals.size() ), unfoundedSet.size() ) );
         assert( !unfoundedSet.empty() );
@@ -403,7 +339,8 @@ void ReductBasedCheck::checkModel(
     }
     
     assert( !checker.conflictDetected() );
-    checker.unrollToZero();    
+    checker.unrollToZero();
+    statistics( &checker, endCheckerInvocation( time( 0 ) ) );    
 }
 
 void ReductBasedCheck::addHCVariableProtected(
@@ -455,4 +392,21 @@ void ReductBasedCheck::processComponentBeforeStarting()
         else if( solver.isFalse( lit ) )
             onLiteralFalse( lit );
     }
+}
+
+void
+ReductBasedCheck::createDefiningRules(
+    Rule* rule,
+    Clause* clause )
+{
+    for( unsigned int k = 0; k < rule->size(); k++ )
+    {
+        Literal lit = rule->literals[ k ];
+        if( !sameComponent( lit.getVariable() ) )
+            continue;
+        
+        if( lit.isHeadAtom() )
+            getGUSData( lit.getVariable() ).definingRulesForNonHCFAtom.push_back( clause );         
+    }
+    toDelete.push_back( clause );
 }

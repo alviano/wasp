@@ -25,6 +25,9 @@
 #include "outputBuilders/OutputBuilder.h"
 #include "outputBuilders/NoopOutputBuilder.h"
 
+#include <iostream>
+using namespace std;
+
 class Clause;
 class GUSData;
 class Learning;
@@ -33,7 +36,8 @@ class Rule;
 class HCComponent : public PostPropagator
 {
     public:
-        HCComponent( vector< GUSData* >& gusData_, Solver& s ) : PostPropagator(), id( 0 ), gusData( gusData_ ), solver( s ), numberOfCalls( 0 ), hasToTestModel( false )
+        friend ostream& operator<<( ostream& out, const HCComponent& component );
+        HCComponent( vector< GUSData* >& gusData_, Solver& s ) : PostPropagator(), id( 0 ), gusData( gusData_ ), solver( s ), numberOfCalls( 0 ), hasToTestModel( false ), isConflictual( false )
         {
             outputBuilder = new NoopOutputBuilder();
             checker.setOutputBuilder( outputBuilder );
@@ -41,12 +45,12 @@ class HCComponent : public PostPropagator
         virtual ~HCComponent();
 
         virtual bool onLiteralFalse( Literal ) = 0;
-        virtual Clause* getClauseToPropagate( Learning& ) = 0;
-        virtual void reset() = 0;
+        Clause* getClauseToPropagate( Learning& );
+        void reset();
         
         void computeReasonForUnfoundedAtom( Var v, Learning& learning );
         
-        inline void addHCVariable( Var v ) { hcVariables.push_back( v ); addHCVariableProtected( v ); }
+        inline void addHCVariable( Var v ) { assert( find( hcVariables.begin(), hcVariables.end(), v ) == hcVariables.end() ); hcVariables.push_back( v ); addHCVariableProtected( v ); }
         inline Var getVariable( unsigned int pos ) const { assert( pos < hcVariables.size() ); return hcVariables[ pos ]; }        
         inline unsigned int size() const { return hcVariables.size(); }
                 
@@ -57,19 +61,21 @@ class HCComponent : public PostPropagator
         unsigned int getId() const { return id; }                
         
     protected:
-        virtual void addHCVariableProtected( Var v ) = 0;
-        void createDefiningRules( Rule* rule, Clause* clause );
+        virtual void addHCVariableProtected( Var v ) = 0;        
         
         GUSData& getGUSData( Var v ) { assert( v < gusData.size() ); return *( gusData[ v ] ); }  
         inline bool sameComponent( Var v ) const { return solver.getHCComponent( v ) == this; }
         inline bool isInUnfoundedSet( Var v ) { assert_msg( v < inUnfoundedSet.size(), "v = " << v << "; inUnfoundedSet.size() = " << inUnfoundedSet.size() ); return inUnfoundedSet[ v ] == numberOfCalls; }
-        inline void setInUnfoundedSet( Var v ) { assert_msg( v < inUnfoundedSet.size(), "v = " << v << "; inUnfoundedSet.size() = " << inUnfoundedSet.size() ); inUnfoundedSet[ v ] = numberOfCalls; }
+        inline void setInUnfoundedSet( Var v ) { assert_msg( v < inUnfoundedSet.size(), "v = " << v << "; inUnfoundedSet.size() = " << inUnfoundedSet.size() ); inUnfoundedSet[ v ] = numberOfCalls; unfoundedSet.push_back( v ); }
         inline void attachLiterals( Literal lit );
-        inline void setHasToTestModel( bool b ) { hasToTestModel = b; }
-    
+        inline Var addFreshVariable() { checker.addVariableRuntime(); return checker.numberOfVariables(); }
+        inline void initChecker();
+        virtual void testModel() = 0;
+        
         unsigned int id;
         vector< GUSData* >& gusData;
         vector< Var > hcVariables;
+        Vector< Literal > trail;
         Solver& solver;
         Solver checker;
         Vector< unsigned int > inUnfoundedSet;
@@ -77,9 +83,8 @@ class HCComponent : public PostPropagator
         Vector< Var > unfoundedSet;
         Vector< Literal > unfoundedSetCandidates;        
         bool hasToTestModel;
-        OutputBuilder* outputBuilder;
-        
-    private:
+        bool isConflictual;
+        OutputBuilder* outputBuilder;        
         vector< Clause* > toDelete;
 };
 
@@ -90,6 +95,15 @@ HCComponent::attachLiterals(
     solver.setFrozen( lit.getVariable() );
     solver.addPostPropagator( lit, this );
     solver.addPostPropagator( lit.getOppositeLiteral(), this );
+}
+
+void
+HCComponent::initChecker()
+{
+    checker.initFrom( solver );
+    checker.setChecker(); 
+    checker.disableStatistics();
+    checker.disableVariableElimination();
 }
 
 #endif

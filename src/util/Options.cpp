@@ -89,6 +89,7 @@ namespace wasp
 #define OPTIONID_time_limit ( 'z' + 101 )
 #define OPTIONID_max_cost ( 'z' + 102 )
 
+#define OPTIONID_modelchecker_algorithm ( 'z' + 104 )
 #define OPTIONID_forward_partialchecks ( 'z' + 105 )
 #define OPTIONID_heuristic_partialchecks ( 'z' + 106 )
 #define OPTIONID_shift_strategy ( 'z' + 107 )
@@ -192,6 +193,8 @@ unsigned int Options::chunkSize = UINT_MAX;
 
 unsigned int Options::chunkPercentage = UINT_MAX;
 
+unsigned int Options::modelcheckerAlgorithm = REDUCT_BASED;
+
 void
 Options::parse(
     int argc,
@@ -269,6 +272,7 @@ Options::parse(
                 
                 { "enumeration-strategy", required_argument, NULL, OPTIONID_enumeration },
                 
+                { "modelchecker-algorithm", required_argument, NULL, OPTIONID_modelchecker_algorithm },  
                 { "forward-partialchecks", no_argument, NULL, OPTIONID_forward_partialchecks },  
                 { "heuristic-partialchecks", no_argument, NULL, OPTIONID_heuristic_partialchecks },
                 
@@ -504,6 +508,19 @@ Options::parse(
                 
             case OPTIONID_simplifications:
                 simplifications = false;
+                break;
+                
+            case OPTIONID_modelchecker_algorithm:
+                modelcheckerAlgorithm = REDUCT_BASED;
+                if( optarg )
+                {
+                    if( !strcmp( optarg, "reduct" ) )
+                        modelcheckerAlgorithm = REDUCT_BASED;
+                    else if( !strcmp( optarg, "unfounded" ) )
+                        modelcheckerAlgorithm = UNFOUNDED_BASED;
+                    else
+                        ErrorMessage::errorGeneric( "Inserted invalid algorithm for model checker." );
+                }
                 break;
                 
             case OPTIONID_help:

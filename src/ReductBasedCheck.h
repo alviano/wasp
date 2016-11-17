@@ -31,15 +31,11 @@ class Clause;
 class Learning;
 
 class ReductBasedCheck : public HCComponent
-{
-    friend ostream& operator<<( ostream& out, const ReductBasedCheck& component );
+{    
     public:
         ReductBasedCheck( vector< GUSData* >& gusData_, Solver& s, unsigned numberOfInputAtoms );
-        ~ReductBasedCheck();
+        inline ~ReductBasedCheck(){}
 
-        virtual void reset();
-
-        virtual Clause* getClauseToPropagate( Learning& learning );
         virtual bool onLiteralFalse( Literal literal );
 
         void addClauseToChecker( Clause* c );                
@@ -48,8 +44,8 @@ class ReductBasedCheck : public HCComponent
         void processComponentBeforeStarting();
 
     private:                
-        inline ReductBasedCheck( const ReductBasedCheck& orig );        
-        
+        inline ReductBasedCheck( const ReductBasedCheck& orig );
+        void createDefiningRules( Rule* rule, Clause* clause );        
         void createInitialClauseAndSimplifyHCVars();
                 
         void clearUnfoundedSetCandidates();
@@ -59,23 +55,19 @@ class ReductBasedCheck : public HCComponent
         bool addExternalLiteralForInternalVariable( Literal lit );                
         
         inline unsigned int externalLiteralsSize() const { return externalLiterals.size(); }
-        inline Literal getExternalLiteral( unsigned int pos ) const { assert( pos < externalLiterals.size() ); return externalLiterals[ pos ]; }
-        Var addFreshVariable();
+        inline Literal getExternalLiteral( unsigned int pos ) const { assert( pos < externalLiterals.size() ); return externalLiterals[ pos ]; }        
         
         void addHCVariableProtected( Var v );
         void initDataStructures();
         void checkModel( vector< Literal >& assumptions );        
-        
-        Vector< Literal > trail;        
-        
+                
         vector< Literal > externalLiterals;
         
         vector< Var > generatorToCheckerId;
         
         unsigned int numberOfAtoms;        
         
-        Literal assumptionLiteral;
-        bool isConflictual;
+        Literal assumptionLiteral;        
         
         unsigned int numberOfExternalLiterals;
         unsigned int numberOfInternalVariables;
