@@ -259,44 +259,45 @@ UnfoundedBasedCheck::processRule(
         Var v = lit.getVariable();
         clause->addLiteral( lit );
         if( !sameComponent( v ) )
-        {
             addExternalVariable( v  );            
-        }
-        else
+        else if( lit.isHeadAtom() )
         {
-            if( lit.isHeadAtom() )
-            {
-                c->addLiteral( Literal( getGUSData( v ).headVarForHCC, POSITIVE ) );
-                headAtoms.push_back( v );
-            }
-            else
-            {
-                if( lit.isPositiveBodyLiteral() )
-                    c->addLiteral( Literal( getGUSData( v ).unfoundedVarForHCC, POSITIVE ) );
-            }
+            c->addLiteral( Literal( getGUSData( v ).headVarForHCC, POSITIVE ) );
+            headAtoms.push_back( v );
         }
+        else if( lit.isPositiveBodyLiteral() )
+            c->addLiteral( Literal( getGUSData( v ).unfoundedVarForHCC, POSITIVE ) );        
         
         //body literal with opposite polarity
         if( !lit.isHeadAtom() || !sameComponent( v ) )
             c->addLiteral( lit );
     }
     
-    clause->removeDuplicates();
-    c->removeDuplicates();
-    checker.addVariable();
-    Var freshVar = checker.numberOfVariables();
-    c->addLiteral( Literal( freshVar, NEGATIVE ) );    
-    checker.addClause( c );
-    trace_msg( modelchecker, 2, "Adding clause " << *c );
+    clause->removeDuplicates();    
     
-    for( unsigned int k = 0; k < headAtoms.size(); k++ )
+    assert( headAtoms.size() > 0 );
+    if( headAtoms.size() == 1 )
     {
-        Var v = headAtoms[ k ];
-        assert( sameComponent( v ) );
-        getGUSData( v ).definingRulesForNonHCFAtom.push_back( clause );
-        trace_msg( modelchecker, 2, "Adding clause: [ " << Literal( getGUSData( v ).unfoundedVarForHCC, NEGATIVE ) << " | " << Literal( freshVar, POSITIVE ) << " ]" );
-        checker.addClause( Literal( getGUSData( v ).unfoundedVarForHCC, NEGATIVE ), Literal( freshVar, POSITIVE ) );
+        c->addLiteral( Literal( headAtoms[ 0 ], NEGATIVE ) );
+        getGUSData( headAtoms[ 0 ] ).definingRulesForNonHCFAtom.push_back( clause );
     }
+    else
+    {
+        checker.addVariable();
+        Var freshVar = checker.numberOfVariables();
+        c->addLiteral( Literal( freshVar, NEGATIVE ) );
+        for( unsigned int k = 0; k < headAtoms.size(); k++ )
+        {
+            Var v = headAtoms[ k ];
+            assert( sameComponent( v ) );
+            getGUSData( v ).definingRulesForNonHCFAtom.push_back( clause );
+            trace_msg( modelchecker, 2, "Adding clause: [ " << Literal( getGUSData( v ).unfoundedVarForHCC, NEGATIVE ) << " | " << Literal( freshVar, POSITIVE ) << " ]" );
+            checker.addClause( Literal( getGUSData( v ).unfoundedVarForHCC, NEGATIVE ), Literal( freshVar, POSITIVE ) );
+        }
+    }
+    c->removeDuplicates();
+    checker.addClause( c );
+    trace_msg( modelchecker, 2, "Adding clause " << *c );    
     toDelete.push_back( clause );
 }
 
