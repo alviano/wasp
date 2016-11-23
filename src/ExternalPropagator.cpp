@@ -60,6 +60,7 @@ ExternalPropagator::ExternalPropagator(
     check_onLitsTrue = interpreter->checkMethod( method_plugins_onLitsTrue );
     check_onLitTrue = interpreter->checkMethod( method_plugins_onLitTrue );
     check_getReasonForLiteral = interpreter->checkMethod( method_plugins_getReasonForLiteral );
+    check_endPropagation = interpreter->checkMethod( method_plugins_endPropagation );
     checkWellFormed();
     
     if( check_onLitsTrue )
@@ -70,6 +71,9 @@ ExternalPropagator::ExternalPropagator(
     
     if( check_onNewLowerBound || check_onNewUpperBound )
         solver.addPropagatorAttachedToBounds( this );
+    
+    if( check_endPropagation )
+        solver.addPropagatorAttachedToEndPropagation( this );
 }
 
 bool
@@ -175,7 +179,13 @@ ExternalPropagator::checkWellFormed()
 //    checkWellFormed( method_plugins_getVariablesToFreeze );
 //    checkWellFormed( method_plugins_onLiteralsUndefined );
     if( !check_checkAnswerSet && ( ( check_onLitTrue && check_onLitsTrue ) || ( !check_onLitTrue && !check_onLitsTrue ) ) )
-        ErrorMessage::errorGeneric( "If " + string( method_plugins_checkAnswerSet ) + " is not used then exactly one method between " + string( method_plugins_onLitTrue ) + " and " +  string( method_plugins_onLitsTrue ) + " is required." );
+        ErrorMessage::errorGeneric( "If " + string( method_plugins_checkAnswerSet ) + " is not used then exactly one method between " + string( method_plugins_onLitTrue ) + " and " +  string( method_plugins_onLitsTrue ) + " is required." );    
+    
+    if( check_endPropagation && !check_onLitTrue )
+        ErrorMessage::errorGeneric( "If " + string( method_plugins_endPropagation ) + " is used then method " + string( method_plugins_onLitTrue ) + " is required." );    
+    
+    if( check_endPropagation && check_onLitsTrue )
+        ErrorMessage::errorGeneric( "If " + string( method_plugins_endPropagation ) + " is used then method " + string( method_plugins_onLitsTrue ) + " cannot be used." );    
     
     if( ( check_onLitTrue || check_onLitsTrue ) && 
         ( ( !interpreter->checkMethod( method_plugins_getReason ) && !interpreter->checkMethod( method_plugins_getReasonForLiteral ) ) || !interpreter->checkMethod( method_plugins_getLiterals ) || !interpreter->checkMethod( method_plugins_onLiteralsUndefined ) ) )
@@ -209,10 +219,12 @@ ExternalPropagator::getReason(
    
     if( output.empty() )
     {
-        solver.unrollToZero();
-        reset( solver );        
-        return NULL;
+        if( solver.getCurrentDecisionLevel() != 0 )
+            ErrorMessage::errorGeneric( "Reason is not well-formed: At least one of the literals in the reason must be inferred at the current decision level." );
+        else
+            return NULL;
     }
+    
     Clause* clause = new Clause();
     clause->addLiteral( currentLiteral );
     unsigned int max = 0;    
@@ -233,9 +245,7 @@ ExternalPropagator::getReason(
     }
     
     if( max < solver.getCurrentDecisionLevel() )
-        solver.unroll( max );
-    
-    reset( solver );
+        ErrorMessage::errorGeneric( "Reason is not well-formed: At least one of the literals in the reason must be inferred at the current decision level." );    
     return clause;
 }
 
@@ -418,6 +428,15 @@ void ExternalPropagator::endUnitPropagation(
     computeReason( solver, output );    
 }
 
+void ExternalPropagator::endPropagation(
+    Solver& solver )
+{
+    assert( check_endPropagation && check_onLitTrue && !check_onLitsTrue );
+    vector< int > output;
+    interpreter->callListMethod( method_plugins_endPropagation, solver.getCurrentDecisionLevel(), output );
+    computeReason( solver, output );
+}
+
 void ExternalPropagator::handleConflict(
     Solver& solver,
     Literal conflictLiteral )
@@ -505,7 +524,6 @@ void ExternalPropagator::computeReason(
         else
             solver.assignLiteral( lit, reason );
     }
-    return;
 }
 
 void ExternalPropagator::onStartingSolver()

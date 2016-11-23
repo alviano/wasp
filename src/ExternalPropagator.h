@@ -44,6 +44,7 @@ using namespace std;
 #define method_plugins_getReasonsForCheckFailure "getReasonsForCheckFailure"
 #define method_plugins_foundLB "onNewLowerBound" 
 #define method_plugins_foundUB "onNewUpperBound" 
+#define method_plugins_endPropagation "endPropagation"
 
 class ExternalPropagator : public Propagator
 {
@@ -64,6 +65,7 @@ class ExternalPropagator : public Propagator
         bool checkAnswerSet( Solver& solver );
         Clause* getReasonForCheckFailure( Solver& solver );        
         void endUnitPropagation( Solver& solver );
+        void endPropagation( Solver& solver );
         void onStartingSolver();
         
     private:
@@ -93,6 +95,7 @@ class ExternalPropagator : public Propagator
         bool check_onNewUpperBound;
         bool check_onLitsTrue;
         bool check_onLitTrue;
+        bool check_endPropagation;
 };
 
 #endif

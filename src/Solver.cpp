@@ -316,13 +316,13 @@ Solver::handlePropagatorFailure(
     ExternalPropagator* propagator )
 {
     Clause* clausePointer = propagator->getReasonForCheckFailure( *this );
-    Clause& clause = *clausePointer;
     if( clausePointer == NULL )
     {
         assert( getCurrentDecisionLevel() == 0 );
         return true;
     }
-
+    
+    Clause& clause = *clausePointer;
     unsigned int size = clause.size();
     statistics( this, onLearningFromPropagators( size ) );
     assert( !conflictDetected() );
@@ -345,11 +345,11 @@ Solver::handlePropagatorFailure(
         {
             trace( solving, 2, "Learned clause from check failure and backjumping to level %d.\n", dl );
             unroll( dl );
-        }          
+        }
 
         addLearnedClause( clausePointer, false );
         onLearning( clausePointer );
-        
+
         assert( !isUndefined( clause[ 1 ] ) );
         assert( !isTrue( clause[ 0 ] ) );
         assignLiteral( clausePointer );        
@@ -506,10 +506,21 @@ Solver::solvePropagators(
                 else
                     goto propagationLabel;
             }
+        }                
+        
+        #if defined(ENABLE_PYTHON) || defined(ENABLE_PERL)
+        for( unsigned int i = 0; i < propagatorsAttachedToEndPropagation.size(); i++ )
+        {
+            propagatorsAttachedToEndPropagation[ i ]->endPropagation( *this );
+            if( conflictDetected() )
+                goto conflict;
+            else if( hasNextVariableToPropagate() )
+                goto propagationLabel;
         }
+        #endif
         
         if( !restartIfNecessary() )
-            return INCOHERENT;
+            return INCOHERENT;        
     }
     
     #if defined(ENABLE_PYTHON) || defined(ENABLE_PERL)
