@@ -54,6 +54,7 @@ ExternalPropagator::ExternalPropagator(
     check_onAnswerSet = interpreter->checkMethod( method_plugins_onAnswerSet );
     
     check_checkAnswerSet = interpreter->checkMethod( method_plugins_checkAnswerSet );
+    check_checkPartialInterpretation = interpreter->checkMethod( method_plugins_checkPartialInterpretation );
     check_getReasonForCheckFailure = interpreter->checkMethod( method_plugins_getReasonsForCheckFailure );
     check_onNewLowerBound = interpreter->checkMethod( method_plugins_foundLB );
     check_onNewUpperBound = interpreter->checkMethod( method_plugins_foundUB );
@@ -64,7 +65,7 @@ ExternalPropagator::ExternalPropagator(
     checkWellFormed();
     
     if( check_onLitsTrue )
-        solver.addPropagatorAfterUnit( this );
+        solver.addPropagatorAfterUnit( this );        
     
     if( check_checkAnswerSet )
         solver.addPropagatorAttachedToCheckAnswerSet( this );
@@ -74,6 +75,9 @@ ExternalPropagator::ExternalPropagator(
     
     if( check_endPropagation )
         solver.addPropagatorAttachedToEndPropagation( this );
+    
+    if( check_checkPartialInterpretation )
+        solver.addPropagatorAttachedToPartialChecks( this );
 }
 
 bool
@@ -197,7 +201,12 @@ ExternalPropagator::checkWellFormed()
         ErrorMessage::errorGeneric( "Exactly one method between " + string( method_plugins_getReason ) + " and " + string( method_plugins_getReasonForLiteral ) + " can be used." );
         
     if( ( check_checkAnswerSet && !check_getReasonForCheckFailure ) || ( !check_checkAnswerSet && check_getReasonForCheckFailure ) )
-        ErrorMessage::errorGeneric( "Method " + string( method_plugins_getReasonsForCheckFailure ) + " is required when " +  string( method_plugins_checkAnswerSet ) + " is used." );    
+        if( !check_checkPartialInterpretation )
+            ErrorMessage::errorGeneric( "Method " + string( method_plugins_getReasonsForCheckFailure ) + " is required when " +  string( method_plugins_checkAnswerSet ) + " is used." );
+
+    if( ( check_checkPartialInterpretation && !check_getReasonForCheckFailure ) || ( !check_checkPartialInterpretation && check_getReasonForCheckFailure ) )
+        if( !check_checkAnswerSet )
+            ErrorMessage::errorGeneric( "Method " + string( method_plugins_getReasonsForCheckFailure ) + " is required when " +  string( method_plugins_checkPartialInterpretation ) + " is used." );        
 }
 
 Clause*
@@ -341,7 +350,8 @@ ExternalPropagator::simplifyAtLevelZero(
     }
 }
 
-void ExternalPropagator::onAnswerSet(
+void
+ExternalPropagator::onAnswerSet(
     const Solver& solver )
 {
     if( check_onAnswerSet )
@@ -360,7 +370,8 @@ void ExternalPropagator::onAnswerSet(
     }
 }
 
-void ExternalPropagator::checkIdOfLiteral(
+void
+ExternalPropagator::checkIdOfLiteral(
     const Solver& solver,
     int id ) const
 {
@@ -371,21 +382,25 @@ void ExternalPropagator::checkIdOfLiteral(
         ErrorMessage::errorGeneric( "Variable " + to_string( var ) + " has been removed from initial simplifications. Use " + method_plugins_getVariablesToFreeze + " to prevent the elimination of the variables." );
 }
 
-void ExternalPropagator::foundLowerBound(
+void
+ExternalPropagator::foundLowerBound(
     uint64_t lb )
 {
     if( check_onNewLowerBound )
         interpreter->callVoidMethod( method_plugins_foundLB, lb );    
 }
 
-void ExternalPropagator::foundUpperBound(
+void
+ExternalPropagator::foundUpperBound(
     uint64_t ub )
 {
     if( check_onNewUpperBound )
         interpreter->callVoidMethod( method_plugins_foundUB, ub );
 }
 
-bool ExternalPropagator::checkAnswerSet( Solver& solver )
+bool
+ExternalPropagator::checkAnswerSet(
+    Solver& solver )
 {
     bool retValue = true;
     if( check_checkAnswerSet )
@@ -405,7 +420,29 @@ bool ExternalPropagator::checkAnswerSet( Solver& solver )
     return retValue;
 }
 
-void ExternalPropagator::endUnitPropagation(
+bool
+ExternalPropagator::checkPartialInterpretation(
+    Solver& solver )
+{
+    bool retValue = true;
+    if( check_checkPartialInterpretation )
+    {
+        vector< int > interpretation;
+        interpretation.push_back( 0 );
+        for( unsigned int i = 1; i <= solver.numberOfVariables(); i++ )
+        {
+            if( solver.isTrue( i ) )
+                interpretation.push_back( i );
+            else if( solver.isFalse( i ) )
+                interpretation.push_back( -i );
+        }
+        retValue = interpreter->callIntMethod( method_plugins_checkPartialInterpretation, interpretation ) != 0;
+    }
+    return retValue;
+}
+
+void
+ExternalPropagator::endUnitPropagation(
     Solver& solver )
 {
     assert( check_onLitsTrue );
@@ -428,7 +465,8 @@ void ExternalPropagator::endUnitPropagation(
     computeReason( solver, output );    
 }
 
-void ExternalPropagator::endPropagation(
+void
+ExternalPropagator::endPropagation(
     Solver& solver )
 {
     assert( check_endPropagation && check_onLitTrue && !check_onLitsTrue );
@@ -437,7 +475,8 @@ void ExternalPropagator::endPropagation(
     computeReason( solver, output );
 }
 
-void ExternalPropagator::handleConflict(
+void
+ExternalPropagator::handleConflict(
     Solver& solver,
     Literal conflictLiteral )
 {
@@ -476,7 +515,8 @@ void ExternalPropagator::handleConflict(
     solver.assignLiteral( clause );
 }
 
-void ExternalPropagator::computeReason(
+void
+ExternalPropagator::computeReason(
     Solver& solver,
     const vector< int >& output )
 {
@@ -526,7 +566,8 @@ void ExternalPropagator::computeReason(
     }
 }
 
-void ExternalPropagator::onStartingSolver()
+void
+ExternalPropagator::onStartingSolver()
 {
     if( interpreter->checkMethod( method_plugins_onStartingSolver ) )
         interpreter->callVoidMethod( method_plugins_onStartingSolver );

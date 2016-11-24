@@ -490,6 +490,7 @@ class Solver
         inline void addPropagatorAfterUnit( ExternalPropagator* externalPropagator ) { assert( externalPropagator ); propagatorsAfterUnit.push_back( externalPropagator ); }
         inline void addPropagatorAttachedToCheckAnswerSet( ExternalPropagator* externalPropagator ) { assert( externalPropagator ); propagatorsAttachedToCheckAnswerSet.push_back( externalPropagator ); }
         inline void addPropagatorAttachedToEndPropagation( ExternalPropagator* externalPropagator ) { assert( externalPropagator ); propagatorsAttachedToEndPropagation.push_back( externalPropagator ); }
+        inline void addPropagatorAttachedToPartialChecks( ExternalPropagator* externalPropagator ) { assert( externalPropagator ); propagatorsAttachedToPartialChecks.push_back( externalPropagator ); }
         
     private:
         HCComponent* hcComponentForChecker;
@@ -657,6 +658,7 @@ class Solver
         vector< ExternalPropagator* > propagatorsAttachedToCheckAnswerSet;
         vector< ExternalPropagator* > propagatorsAfterUnit;
         vector< ExternalPropagator* > propagatorsAttachedToEndPropagation;
+        vector< ExternalPropagator* > propagatorsAttachedToPartialChecks;
         bool handlePropagatorFailure( ExternalPropagator* propagator );
 
         vector< bool > weighted_;

@@ -520,7 +520,20 @@ Solver::solvePropagators(
         #endif
         
         if( !restartIfNecessary() )
-            return INCOHERENT;        
+            return INCOHERENT;
+
+        #if defined(ENABLE_PYTHON) || defined(ENABLE_PERL)
+        for( unsigned int i = 0; i < propagatorsAttachedToPartialChecks.size(); i++ )
+            if( !propagatorsAttachedToPartialChecks[ i ]->checkPartialInterpretation( *this ) )
+            {
+                if( !handlePropagatorFailure( propagatorsAttachedToPartialChecks[ i ] ) )
+                    return INCOHERENT;
+                if( conflictDetected() )
+                    goto conflict;
+                else
+                    goto propagationLabel;
+            }
+        #endif
     }
     
     #if defined(ENABLE_PYTHON) || defined(ENABLE_PERL)

@@ -41,6 +41,7 @@ using namespace std;
 #define method_plugins_simplifyAtLevelZero "simplifyAtLevelZero"
 #define method_plugins_onAnswerSet "onAnswerSet"
 #define method_plugins_checkAnswerSet "checkAnswerSet"
+#define method_plugins_checkPartialInterpretation "checkPartialInterpretation"
 #define method_plugins_getReasonsForCheckFailure "getReasonsForCheckFailure"
 #define method_plugins_foundLB "onNewLowerBound" 
 #define method_plugins_foundUB "onNewUpperBound" 
@@ -63,6 +64,7 @@ class ExternalPropagator : public Propagator
         void foundLowerBound( uint64_t lb );
         void foundUpperBound( uint64_t ub );
         bool checkAnswerSet( Solver& solver );
+        bool checkPartialInterpretation( Solver& solver );
         Clause* getReasonForCheckFailure( Solver& solver );        
         void endUnitPropagation( Solver& solver );
         void endPropagation( Solver& solver );
@@ -89,6 +91,7 @@ class ExternalPropagator : public Propagator
         bool check_simplifyAtLevelZero;
         bool check_onAnswerSet;
         bool check_checkAnswerSet;
+        bool check_checkPartialInterpretation;
         bool check_getReasonForLiteral;
         bool check_getReasonForCheckFailure;
         bool check_onNewLowerBound;
