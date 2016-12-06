@@ -62,6 +62,8 @@ ExternalPropagator::ExternalPropagator(
     check_onLitTrue = interpreter->checkMethod( method_plugins_onLitTrue );
     check_getReasonForLiteral = interpreter->checkMethod( method_plugins_getReasonForLiteral );
     check_endPropagation = interpreter->checkMethod( method_plugins_endPropagation );
+    check_addWeakConstraints = interpreter->checkMethod( method_plugins_addWeakConstraints );
+    check_addWeightsForWeakConstraints = interpreter->checkMethod( method_plugins_addWeightsForWeakConstraints );
     checkWellFormed();
     
     if( check_onLitsTrue )
@@ -182,8 +184,14 @@ ExternalPropagator::checkWellFormed()
 //    checkWellFormed( method_plugins_getReason );
 //    checkWellFormed( method_plugins_getVariablesToFreeze );
 //    checkWellFormed( method_plugins_onLiteralsUndefined );
+    if( check_addWeakConstraints && !check_checkAnswerSet )
+        ErrorMessage::errorGeneric( "If " + string( method_plugins_addWeakConstraints ) + " is used then method " + string( method_plugins_checkAnswerSet ) + " is required." );
+    
+    if( check_addWeakConstraints && !check_addWeightsForWeakConstraints )
+        ErrorMessage::errorGeneric( "If " + string( method_plugins_addWeakConstraints ) + " is used then method " + string( method_plugins_addWeightsForWeakConstraints ) + " is required." );
+    
     if( !check_checkAnswerSet && ( ( check_onLitTrue && check_onLitsTrue ) || ( !check_onLitTrue && !check_onLitsTrue ) ) )
-        ErrorMessage::errorGeneric( "If " + string( method_plugins_checkAnswerSet ) + " is not used then exactly one method between " + string( method_plugins_onLitTrue ) + " and " +  string( method_plugins_onLitsTrue ) + " is required." );    
+        ErrorMessage::errorGeneric( "If " + string( method_plugins_checkAnswerSet ) + " is not used then exactly one method between " + string( method_plugins_onLitTrue ) + " and " +  string( method_plugins_onLitsTrue ) + " is required." );
     
     if( check_endPropagation && !check_onLitTrue )
         ErrorMessage::errorGeneric( "If " + string( method_plugins_endPropagation ) + " is used then method " + string( method_plugins_onLitTrue ) + " is required." );    
@@ -571,4 +579,63 @@ ExternalPropagator::onStartingSolver()
 {
     if( interpreter->checkMethod( method_plugins_onStartingSolver ) )
         interpreter->callVoidMethod( method_plugins_onStartingSolver );
+}
+
+bool
+ExternalPropagator::hasWeakConstraintsToAdd()
+{
+    if( !check_addWeakConstraints )
+        return false;
+        
+    weakConstraints.clear();
+    weights.clear();
+    interpreter->callListMethod( method_plugins_addWeakConstraints, weakConstraints );    
+    interpreter->callListMethod( method_plugins_addWeightsForWeakConstraints, weights );
+    
+    return !weakConstraints.empty();
+}
+
+uint64_t
+ExternalPropagator::addWeakConstraints(
+    const Solver& solver,
+    vector< Clause* >& weak,
+    vector< uint64_t >& weights_ )
+{
+    if( weakConstraints.size() < 2 || weakConstraints[ 0 ] != 0 || weakConstraints.back() != 0 )
+        ErrorMessage::errorGeneric( "Weak constraints must start and terminate with 0." );
+    
+    if( weakConstraints.size() > 2 )
+    {
+        Clause* clause = new Clause();    
+        for( unsigned int i = 1; i < weakConstraints.size(); i++ )
+        {
+            if( weakConstraints[ i ] == 0 )
+            {
+                weak.push_back( clause );
+                clause = new Clause();
+                continue;
+            }
+            checkIdOfLiteral( solver, weakConstraints[ i ] );
+            Literal l = Literal::createLiteralFromInt( weakConstraints[ i ] );
+            if( solver.isUndefined( l ) )
+                ErrorMessage::errorGeneric( "Weak constraint is not well-formed: Literal with id " + to_string( l.getId() ) + " is undefined." );
+            if( solver.isTrue( l ) )
+                ErrorMessage::errorGeneric( "Weak constraint is not well-formed: Literal with id " + to_string( l.getId() ) + " is true." );
+            if( solver.getDecisionLevel( l ) > 0 )
+                clause->addLiteral( l );
+        }
+        delete clause;
+    }
+    
+    if( weak.size() != weights.size() )
+        ErrorMessage::errorGeneric( "The numbers of weak constraints and weights are different. ("+ to_string( weak.size() ) + "!=" + to_string( weights.size() ) + ")" );
+    
+    uint64_t cost = 0;
+    for( unsigned int i = 0; i < weights.size(); i++ )
+    {
+        cost += weights[ i ];
+        weights_.push_back( weights[ i ] );
+    }
+    
+    return cost;
 }

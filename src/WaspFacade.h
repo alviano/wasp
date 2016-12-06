@@ -35,6 +35,7 @@ using namespace std;
 #include "weakconstraints/OneBB.h"
 #include "weakconstraints/K.h"
 #include "heuristic/ExternalHeuristic.h"
+#include "weakconstraints/LazyInstantiation.h"
 
 class WaspFacade
 {
@@ -131,6 +132,10 @@ WaspFacade::solveWithWeakConstraints()
             
         case KALG:
             w = new K( solver );
+            break;
+        
+        case LAZY:
+            w = new LazyInstantiation( solver, solver.getExternalPropagatorForLazyWeakConstraints() );
             break;
             
         case ONE:

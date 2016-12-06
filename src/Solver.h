@@ -492,6 +492,7 @@ class Solver
         inline void addPropagatorAttachedToEndPropagation( ExternalPropagator* externalPropagator ) { assert( externalPropagator ); propagatorsAttachedToEndPropagation.push_back( externalPropagator ); }
         inline void addPropagatorAttachedToPartialChecks( ExternalPropagator* externalPropagator ) { assert( externalPropagator ); propagatorsAttachedToPartialChecks.push_back( externalPropagator ); }
         
+        inline ExternalPropagator* getExternalPropagatorForLazyWeakConstraints() const;
     private:
         HCComponent* hcComponentForChecker;
         PostPropagator* afterConflictPropagator;
@@ -1936,12 +1937,12 @@ Solver::computeCostOfModel(
     uint64_t cost = getPrecomputedCost( level );
     for( unsigned int i = 0; i < numberOfOptimizationLiterals( level ); i++ )
     {        
-        assert( getOptimizationLiteral( level, i ).lit != Literal::null );        
+        assert( getOptimizationLiteral( level, i ).lit != Literal::null );
         //This is the first aux
         if( getOptimizationLiteral( level, i ).isAux() )
             continue;
         if( isTrue( getOptimizationLiteral( level, i ).lit ) )
-            cost += getOptimizationLiteral( level, i ).weight;        
+            cost += getOptimizationLiteral( level, i ).weight;
     }
     return cost;
 }
@@ -2709,6 +2710,24 @@ Solver::getMaxLevelOfClause(
             max = dl;
     }
     return max;
+}
+
+ExternalPropagator*
+Solver::getExternalPropagatorForLazyWeakConstraints() const
+{
+    ExternalPropagator* ret = NULL;
+    for( unsigned int i = 0; i < externalPropagators.size(); i++ )
+        if( externalPropagators[ i ]->isForLazyWeakConstraints() )
+        {
+            if( ret == NULL )
+                ret = externalPropagators[ i ];
+            else
+                ErrorMessage::errorGeneric( "Only one file can contain the methods to add weak constraints" );
+        }
+    
+    if( ret == NULL )
+        ErrorMessage::errorGeneric( "No propagator set to add weak constraints" );
+    return ret;
 }
 
 //void

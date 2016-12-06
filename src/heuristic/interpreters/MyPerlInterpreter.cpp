@@ -16,6 +16,8 @@
 *
 */
 
+#include <_types/_uint64_t.h>
+
 #include "MyPerlInterpreter.h"
 
 #ifdef ENABLE_PERL
@@ -48,14 +50,36 @@ void MyPerlInterpreter::callListMethod( const string& method_name, const vector<
     SAVETMPS;
     PUSHMARK(SP);
     for( unsigned int i = 0; i < parameters.size(); i++ )
-        XPUSHs(sv_2mortal(newSViv(parameters[ i ])));
+        XPUSHs( sv_2mortal( newSViv( parameters[ i ] ) ) );
     PUTBACK;
-    int count = call_pv(method_name.c_str(), G_ARRAY);    
-    SPAGAIN;    
+    int count = call_pv( method_name.c_str(), G_ARRAY );
+    SPAGAIN;
     for( int i = 0; i < count; i++ )
     {
         int tmp = 0;
         tmp = POPi;        
+        output.push_back( tmp );
+    }
+    PUTBACK;
+    FREETMPS;
+    LEAVE;
+}
+
+void MyPerlInterpreter::callListMethod( const string& method_name, const vector< int >& parameters, vector< uint64_t >& output )
+{
+    dSP;
+    ENTER;
+    SAVETMPS;
+    PUSHMARK( SP );
+    for( unsigned int i = 0; i < parameters.size(); i++ )
+        XPUSHs( sv_2mortal( newSViv( parameters[ i ] ) ) );
+    PUTBACK;
+    int count = call_pv( method_name.c_str(), G_ARRAY );
+    SPAGAIN;    
+    for( int i = 0; i < count; i++ )
+    {
+        uint64_t tmp = 0;
+        tmp = POPul;        
         output.push_back( tmp );
     }
     PUTBACK;
@@ -69,11 +93,11 @@ void MyPerlInterpreter::callVoidMethod( const string& method_name, int param1, c
     ENTER;
     SAVETMPS;
     
-    PUSHMARK(SP);
-    XPUSHs(sv_2mortal(newSViv(param1)));
-    XPUSHs(sv_2mortal(newSVpv(param2.c_str(), param2.length())));
+    PUSHMARK( SP );
+    XPUSHs( sv_2mortal( newSViv( param1 ) ) );
+    XPUSHs( sv_2mortal( newSVpv( param2.c_str(), param2.length() ) ) );
     PUTBACK;
-    call_pv(method_name.c_str(), G_DISCARD);
+    call_pv( method_name.c_str(), G_DISCARD );
     FREETMPS;
     LEAVE;
 }
@@ -81,9 +105,9 @@ void MyPerlInterpreter::callVoidMethod( const string& method_name, int param1, c
 bool MyPerlInterpreter::checkMethod( const string& method_name ) const
 {
     STRLEN value;
-    string check("$value = exists &" + method_name + ";");
-    eval_pv(check.c_str(), TRUE);
-    int result = SvIV(get_sv("value", FALSE));    
+    string check( "$value = exists &" + method_name + ";" );
+    eval_pv( check.c_str(), TRUE );
+    int result = SvIV( get_sv( "value", FALSE ) );    
     return result == 1;
 }
 

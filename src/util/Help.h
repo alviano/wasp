@@ -102,6 +102,7 @@ class Help
             #endif
             cout << "--plugins-files=file1,file2,...,filen  - Specify a list of plugins" << endl;
             cout << "--script-directory=absolutepath        - Specify a different folder for retrieving the python modules (default is .)" << endl;
+            cout << "--lazy-weakconstraints                 - Enable the algorithm to lazily add weak constraints" << endl;
             #endif
             cout << separator << endl;
 

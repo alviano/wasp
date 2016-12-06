@@ -35,6 +35,7 @@ class MyPerlInterpreter : public Interpreter
         ~MyPerlInterpreter();
 
         void callListMethod( const string& method_name, const vector< int >& parameters, vector< int >& output );
+        void callListMethod( const string& method_name, const vector< int >& parameters, vector< uint64_t >& output );
         void callVoidMethod( const string& method_name, int param1, const string& param2 );
         bool checkMethod( const string& method_name ) const;
         
@@ -51,6 +52,7 @@ class MyPerlInterpreter : public Interpreter
         ~MyPerlInterpreter() {}
 
         void callListMethod( const string&, const vector< int >&, vector< int >& ) {}
+        void callListMethod( const string&, const vector< int >&, vector< uint64_t >& ) {}
         void callVoidMethod( const string&, int, const string& ) {}
         bool checkMethod( const string& ) const { return false; }        
 };

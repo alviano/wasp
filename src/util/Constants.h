@@ -67,6 +67,7 @@
 #define ONEBBREST 6
 #define BBBT 7
 #define KALG 8
+#define LAZY 9
 
 #define MINIMIZATION_OFF 0
 #define MINIMIZATION_PROGRESSION 1

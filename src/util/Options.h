@@ -78,6 +78,8 @@ namespace wasp
             static unsigned int silent;
             static bool printOnlyOptimum;
             
+            static bool useLazyWeakConstraints;
+            
         private:
 
             static DELETION_POLICY deletionPolicy;

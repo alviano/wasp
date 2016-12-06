@@ -1,3 +1,5 @@
+import wasp
+
 reason = []
 answer = []
 
@@ -8,6 +10,7 @@ def checkAnswerSet(*answer_set):
     for i in range(2,6):
         if answer_set[i] > 0:
             count = count+1
+
     if count != 2:
         answer = answer_set
         return 0
@@ -16,12 +19,12 @@ def checkAnswerSet(*answer_set):
 def getReasonsForCheckFailure():
     #In case of failure compute the clause
     global answer
-    output = []
-    output.append(0);
+    reasons=[]
+    reason=[]
     for i in range(2,6):
         if answer[i] > 0:
-            output.append(-i)
+            reason.append(-i)
         else:
-            output.append(i)
-    output.append(0);
-    return output
+            reason.append(i)
+    reasons.append(reason)
+    return wasp.createReasonsForCheckFailure(reasons)

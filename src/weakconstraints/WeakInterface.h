@@ -72,6 +72,7 @@ class WeakInterface
         bool disjCoresPreprocessing;
         
         inline static void incrementLb( uint64_t value ) { lb_ += value; }
+        inline static void setUb( uint64_t value ) { ub_ = value; }
         inline static uint64_t lb() { return lb_; }
         inline static uint64_t ub() { return ub_; }
         inline static unsigned int level() { return level_; }

@@ -23,21 +23,23 @@ using namespace std;
 
 #ifdef ENABLE_PYTHON
 
-MyPythonInterpreter::MyPythonInterpreter( char* filename, string scriptDirectory ) : Interpreter()
+MyPythonInterpreter::MyPythonInterpreter(
+    char* filename,
+    string scriptDirectory ) : Interpreter()
 {
     setenv( "PYTHONPATH", ".", 1 );
     Py_Initialize();
     PyObject* pName = PyString_FromString( filename );
     if( scriptDirectory != "" )
     {
-        string s( "import sys; sys.path.append('" + scriptDirectory + "')");
+        string s( "import sys; sys.path.append('" + scriptDirectory + "')" );
         PyRun_SimpleString( s.c_str() );
     }
     pModule = PyImport_Import( pName );
     Py_DECREF( pName );
     if( pModule == NULL )
     {
-        if (PyErr_Occurred())
+        if( PyErr_Occurred() )
             PyErr_Print();
         string message = "Module " + string( filename ) + " does not exist.\n";        
         ErrorMessage::errorGeneric( message );
@@ -46,108 +48,161 @@ MyPythonInterpreter::MyPythonInterpreter( char* filename, string scriptDirectory
 
 MyPythonInterpreter::~MyPythonInterpreter()
 {
-    Py_XDECREF(pModule);
+    Py_XDECREF( pModule );
     Py_Finalize();
 }
 
-void MyPythonInterpreter::callListMethod( const string& method_name, const vector< int >& parameters, vector< int >& output )
+void
+MyPythonInterpreter::callListMethod(
+    const string& method_name,
+    const vector< int >& parameters,
+    vector< int >& output )
 {
-    if(pModule == NULL)
+    if( pModule == NULL )
         return;
-    PyObject* pFunc = PyObject_GetAttrString(pModule,method_name.c_str());
-    if(pFunc && PyCallable_Check(pFunc))
+    PyObject* pFunc = PyObject_GetAttrString( pModule, method_name.c_str() );
+    if( pFunc && PyCallable_Check( pFunc ) )
     {
-        PyObject* pArgs = PyTuple_New(parameters.size());
-        for(unsigned int i = 0; i < parameters.size(); i++)
+        PyObject* pArgs = PyTuple_New( parameters.size() );
+        for( unsigned int i = 0; i < parameters.size(); i++ )
         {
-            PyObject* pParam = Py_BuildValue("i",parameters[i]);
-            PyTuple_SetItem(pArgs, i, pParam);            
+            PyObject* pParam = Py_BuildValue( "i", parameters[ i ] );
+            PyTuple_SetItem( pArgs, i, pParam );
         }
-        PyObject* result = PyObject_CallObject(pFunc, pArgs);
-        if(result)
+        PyObject* result = PyObject_CallObject( pFunc, pArgs );
+        if( result )
         {
-            if(PyList_Check(result))
+            if( PyList_Check( result ) )
             {
-                int size = PyList_Size(result);
-                for(int i = size - 1; i >= 0; i--)
+                int size = PyList_Size( result );
+                for( int i = size - 1; i >= 0; i-- )
                 {
-                    PyObject* item = PyList_GetItem(result, i);                
-                    if (PyInt_Check(item))
+                    PyObject* item = PyList_GetItem( result, i );                
+                    if( PyInt_Check( item ) )
                     {
-                        int value = PyInt_AsLong(item);                    
-                        output.push_back(value);
+                        int value = PyInt_AsLong( item );
+                        output.push_back( value );
                     }
                 }
-                Py_XDECREF(result);            
+                Py_XDECREF( result );
             }
-            else if( PyInt_Check(result))
+            else if( PyInt_Check( result ) )
             {
                 int value = PyInt_AsLong( result );
                 output.push_back( value );
             }
-            else
-            {
-                if (PyErr_Occurred())
-                    PyErr_Print();        
-            }
+            else if( PyErr_Occurred() )
+                PyErr_Print();
         }
-        else
-        {
-            if (PyErr_Occurred())
-                PyErr_Print();        
-        }
-        Py_XDECREF(pArgs);
+        else if( PyErr_Occurred() )
+            PyErr_Print();
+        Py_XDECREF( pArgs );
     }
     else
     {
-        if (PyErr_Occurred())
+        if( PyErr_Occurred() )
             PyErr_Print();
-        printf("Method %s not found\n", method_name.c_str());
+        printf( "Method %s not found\n", method_name.c_str() );
     }
-    Py_XDECREF(pFunc);    
+    Py_XDECREF( pFunc );
 }
 
-void MyPythonInterpreter::callVoidMethod( const string& method_name, int param1, const string& param2 )
+void MyPythonInterpreter::callListMethod(
+    const string& method_name,
+    const vector< int >& parameters,
+    vector< uint64_t >& output )
 {
-    if(pModule == NULL)
+    if( pModule == NULL )
         return;
-    PyObject* pFunc = PyObject_GetAttrString(pModule,method_name.c_str());
-    if(pFunc && PyCallable_Check(pFunc))
+    PyObject* pFunc = PyObject_GetAttrString( pModule,method_name.c_str() );
+    if( pFunc && PyCallable_Check( pFunc ) )
     {
-        PyObject* pArgs = PyTuple_New(2);
-        PyTuple_SetItem(pArgs, 0, PyInt_FromSize_t(param1));
-        PyTuple_SetItem(pArgs, 1, PyString_FromString(param2.c_str()));        
-        PyObject* result = PyObject_CallObject(pFunc, pArgs);
-        if(result)
-            Py_XDECREF(result);
-        else if (PyErr_Occurred())
-            PyErr_Print();
-        Py_XDECREF(pArgs);
+        PyObject* pArgs = PyTuple_New( parameters.size() );
+        for( unsigned int i = 0; i < parameters.size(); i++ )
+        {
+            PyObject* pParam = Py_BuildValue( "i", parameters[ i ] );
+            PyTuple_SetItem( pArgs, i, pParam );
+        }
+        PyObject* result = PyObject_CallObject( pFunc, pArgs );
+        if( result )
+        {
+            if( PyList_Check( result ) )
+            {
+                int size = PyList_Size( result );
+                for( int i = size - 1; i >= 0; i-- )
+                {
+                    PyObject* item = PyList_GetItem( result, i );
+                    if( PyInt_Check( item ) )
+                    {
+                        uint64_t value = PyInt_AsLong( item );
+                        output.push_back( value );
+                    }
+                }
+                Py_XDECREF( result );
+            }
+            else if( PyInt_Check( result ) )
+            {
+                uint64_t value = PyInt_AsUnsignedLongLongMask( result );
+                output.push_back( value );
+            }
+            else if( PyErr_Occurred() )
+                PyErr_Print();
+        }
+        else if( PyErr_Occurred() )
+            PyErr_Print();        
+        Py_XDECREF( pArgs );
     }
     else
     {
-        if (PyErr_Occurred())
+        if( PyErr_Occurred() )
             PyErr_Print();
         printf("Method %s not found\n", method_name.c_str());
     }
-    Py_XDECREF(pFunc);    
+    Py_XDECREF( pFunc );    
 }
 
-bool MyPythonInterpreter::checkMethod( const string& method_name ) const
+void MyPythonInterpreter::callVoidMethod(
+    const string& method_name,
+    int param1,
+    const string& param2 )
+{
+    if( pModule == NULL )
+        return;
+    PyObject* pFunc = PyObject_GetAttrString( pModule, method_name.c_str() );
+    if( pFunc && PyCallable_Check( pFunc ) )
+    {
+        PyObject* pArgs = PyTuple_New( 2 );
+        PyTuple_SetItem( pArgs, 0, PyInt_FromSize_t( param1 ) );
+        PyTuple_SetItem( pArgs, 1, PyString_FromString( param2.c_str() ) );        
+        PyObject* result = PyObject_CallObject( pFunc, pArgs );
+        if( result )
+            Py_XDECREF( result );
+        else if( PyErr_Occurred() )
+            PyErr_Print();
+        Py_XDECREF( pArgs );
+    }
+    else
+    {
+        if( PyErr_Occurred() )
+            PyErr_Print();
+        printf( "Method %s not found\n", method_name.c_str() );
+    }
+    Py_XDECREF( pFunc );
+}
+
+bool MyPythonInterpreter::checkMethod(
+    const string& method_name ) const
 {
     bool res = false;
-    if(pModule == NULL)
+    if( pModule == NULL )
         return res;
-    PyObject* pFunc = PyObject_GetAttrString(pModule,method_name.c_str());
-    if(pFunc && PyCallable_Check(pFunc))
+    PyObject* pFunc = PyObject_GetAttrString( pModule, method_name.c_str() );
+    if( pFunc && PyCallable_Check( pFunc ) )
        res = true;
-    else
-    {
-        if (PyErr_Occurred())
-            PyErr_Clear();
-    }
+    else if( PyErr_Occurred() )
+        PyErr_Clear();
         
-    Py_XDECREF(pFunc);
+    Py_XDECREF( pFunc );
     return res;
 }
 

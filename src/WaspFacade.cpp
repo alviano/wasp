@@ -99,15 +99,15 @@ WaspFacade::solve()
         }
         solver.onStartingSolver( solver.numberOfVariables(), solver.numberOfClauses() );
 
-        if( !solver.isOptimizationProblem() )
+        if( !solver.isOptimizationProblem() && !wasp::Options::useLazyWeakConstraints )
         {            
             enumerateModels();
-        }
+        }        
         else
         {
             NoopOutputBuilder* tmp = new NoopOutputBuilder();
             if( wasp::Options::printOnlyOptimum && maxModels > 1 )
-                solver.setOutputBuilder( tmp );            
+                solver.setOutputBuilder( tmp );
             unsigned int result = solveWithWeakConstraints();
             switch( result )
             {

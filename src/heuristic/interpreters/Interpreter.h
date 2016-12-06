@@ -24,6 +24,11 @@ class Interpreter
         virtual void callListMethod( const string& method_name, int param1, int param2, vector< int >& output );
         virtual void callListMethod( const string& method_name, int param1, int param2, int param3, vector< int >& output );
         virtual void callListMethod( const string& method_name, const vector< int >& parameters, vector< int >& output ) = 0;
+        virtual void callListMethod( const string& method_name, vector< uint64_t >& output );
+        virtual void callListMethod( const string& method_name, int param1, vector< uint64_t >& output );
+        virtual void callListMethod( const string& method_name, int param1, int param2, vector< uint64_t >& output );
+        virtual void callListMethod( const string& method_name, int param1, int param2, int param3, vector< uint64_t >& output );
+        virtual void callListMethod( const string& method_name, const vector< int >& parameters, vector< uint64_t >& output ) = 0;
         virtual bool checkMethod( const string& method_name ) const = 0;
 };
 

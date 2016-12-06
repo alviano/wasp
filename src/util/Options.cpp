@@ -77,6 +77,7 @@ namespace wasp
 #define OPTIONID_heuristic_pluginsinterpreter ( 'z' + 62 )
 #define OPTIONID_heuristic_plugins ( 'z' + 63 )
 #define OPTIONID_heuristic_setscriptdirectory ( 'z' + 64 )
+#define OPTIONID_heuristic_lazyweakconstraints ( 'z' + 65 )
 
 /* INPUT OPTIONS */
 #define OPTIONID_dimacs ( 'z' + 90 )
@@ -123,6 +124,8 @@ bool Options::printLastModelOnly = false;
 bool Options::printBounds = false;
 bool Options::printAtomTable = false;
 bool Options::printOnlyOptimum = false;
+
+bool Options::useLazyWeakConstraints = false;
 
 bool Options::minisatPolicy = false;
 
@@ -249,6 +252,7 @@ Options::parse(
                 { "plugins-interpreter", required_argument, NULL, OPTIONID_heuristic_pluginsinterpreter },
                 { "plugins-files", required_argument, NULL, OPTIONID_heuristic_plugins },
                 { "script-directory", required_argument, NULL, OPTIONID_heuristic_setscriptdirectory },
+                { "lazy-weakconstraints", no_argument, NULL, OPTIONID_heuristic_lazyweakconstraints },
                 #endif
                 /* RESTART OPTIONS */                
 //                { "geometric-restarts", optional_argument, NULL, OPTIONID_geometric_restarts },
@@ -466,6 +470,11 @@ Options::parse(
                     scriptDirectory = string( optarg );
                 break;
                 
+            case OPTIONID_heuristic_lazyweakconstraints:
+                useLazyWeakConstraints = true;
+                weakConstraintsAlg = LAZY;
+                break;
+
             case OPTIONID_sequence_based_restarts:
                 restartsPolicy = SEQUENCE_BASED_RESTARTS_POLICY;
                 if( optarg )

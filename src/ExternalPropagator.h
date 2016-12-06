@@ -46,6 +46,8 @@ using namespace std;
 #define method_plugins_foundLB "onNewLowerBound" 
 #define method_plugins_foundUB "onNewUpperBound" 
 #define method_plugins_endPropagation "endPropagation"
+#define method_plugins_addWeakConstraints "addWeakConstraints"
+#define method_plugins_addWeightsForWeakConstraints "addWeightsForWeakConstraints"
 
 class ExternalPropagator : public Propagator
 {
@@ -70,6 +72,10 @@ class ExternalPropagator : public Propagator
         void endPropagation( Solver& solver );
         void onStartingSolver();
         
+        bool hasWeakConstraintsToAdd();
+        uint64_t addWeakConstraints( const Solver& solver, vector< Clause* >& weakConstraints, vector< uint64_t >& weights_ );
+        inline bool isForLazyWeakConstraints() const { return check_addWeakConstraints; }
+
     private:
         inline ExternalPropagator( const ExternalPropagator& orig );
         void checkWellFormed();
@@ -99,6 +105,11 @@ class ExternalPropagator : public Propagator
         bool check_onLitsTrue;
         bool check_onLitTrue;
         bool check_endPropagation;
+        bool check_addWeakConstraints;
+        bool check_addWeightsForWeakConstraints;
+        
+        vector< int > weakConstraints;
+        vector< uint64_t > weights;
 };
 
 #endif
