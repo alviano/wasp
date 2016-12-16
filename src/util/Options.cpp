@@ -96,6 +96,7 @@ namespace wasp
 #define OPTIONID_shift_onedef ( 'z' + 108 )
 #define OPTIONID_simplifications ( 'z' + 109 )
 #define OPTIONID_enumeration ( 'z' + 110 )
+#define OPTIONID_modelchecker_compactreasons ( 'z' + 111 )
     
 /* WEAK CONSTRAINTS OPTIONS */
 #define OPTIONID_weakconstraintsalgorithm ( 'z' + 200 )
@@ -195,6 +196,8 @@ unsigned int Options::chunkPercentage = UINT_MAX;
 
 unsigned int Options::modelcheckerAlgorithm = REDUCT_BASED;
 
+bool Options::compactReasonsForHCC = false;
+
 void
 Options::parse(
     int argc,
@@ -275,6 +278,7 @@ Options::parse(
                 { "modelchecker-algorithm", required_argument, NULL, OPTIONID_modelchecker_algorithm },  
                 { "forward-partialchecks", no_argument, NULL, OPTIONID_forward_partialchecks },  
                 { "heuristic-partialchecks", no_argument, NULL, OPTIONID_heuristic_partialchecks },
+                { "modelchecker-compactreasons", no_argument, NULL, OPTIONID_modelchecker_compactreasons },                
                 
                 /* WEAK CONSTRAINTS */
                 { "weakconstraints-algorithm", required_argument, NULL, OPTIONID_weakconstraintsalgorithm },
@@ -525,6 +529,11 @@ Options::parse(
                     ErrorMessage::errorGeneric( "Inserted invalid algorithm for model checker." );
                 break;
                 
+            case OPTIONID_modelchecker_compactreasons:
+                compactReasonsForHCC = true;
+                shiftStrategy = SHIFT_AUTO;
+                break;
+                
             case OPTIONID_help:
                 Help::printHelp();
                 exit( 0 );
@@ -686,6 +695,7 @@ Options::parse(
     {
         inputFiles.push_back( argv[ i ] );
     }
+    checkOptions();
 }
 
 void
@@ -775,5 +785,17 @@ Options::initMap()
     stringToMinimization[ "linearsearch" ] = MINIMIZATION_LINEARSEARCH;
 }
 
-};
+void
+Options::checkOptions()
+{
+    if( compactReasonsForHCC && shiftStrategy == SHIFT_NAIVE )
+        ErrorMessage::errorGeneric( "Compact reasons canno be combined with shift" );
+    
+    if( modelcheckerAlgorithm == UNFOUNDED_BASED && heuristicPartialChecks )
+        ErrorMessage::errorGeneric( "Partial checks are not available for the unfounded based approach" );
+    
+    if( modelcheckerAlgorithm == UNFOUNDED_BASED && forwardPartialChecks )
+        ErrorMessage::errorGeneric( "Partial checks are not available for the unfounded based approach" );
+}
 
+};

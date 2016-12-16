@@ -1253,7 +1253,7 @@ GringoNumericFormat::computeGusStructures()
                     if( rule->isHandledForModelChecker( nbOfCallsHCC ) )
                         continue;
                     
-                    rule->setHandledForModelChecker( nbOfCallsHCC );                    
+                    rule->setHandledForModelChecker( nbOfCallsHCC );
                     hcComponent->processRule( rule );
                 }
             }
@@ -1460,6 +1460,7 @@ GringoNumericFormat::computeSCCsDisjunctive()
                     rule->setHandled();
                     Vector< Var > headAtoms;
                     Literal addedLit = createAuxForBody( rule, headAtoms );
+                    rule->setBodyAux( addedLit.getId() );
                     Var addedVar = addedLit.getVariable();
                     assert( !headAtoms.empty() );
                     if( headAtoms.size() == 1 || data.headOccurrences[ j ].isChoice() )

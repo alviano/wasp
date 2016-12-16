@@ -72,6 +72,8 @@ class HCComponent : public PostPropagator
         inline void initChecker();
         virtual void testModel() = 0;
         
+        void computeReasonForUnfoundedAtomCompactReasons( Var v, Learning& learning );
+        
         unsigned int id;
         vector< GUSData* >& gusData;
         vector< Var > hcVariables;

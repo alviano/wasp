@@ -280,6 +280,10 @@ UnfoundedBasedCheck::processRule(
     {
         c->addLiteral( Literal( headAtoms[ 0 ], NEGATIVE ) );
         getGUSData( headAtoms[ 0 ] ).definingRulesForNonHCFAtom.push_back( clause );
+        Literal defLit = solver.getLiteral( rule->getBodyAux() );
+        if( defLit.getVariable() != 0 )
+            solver.setFrozen( defLit.getVariable() );
+        getGUSData( headAtoms[ 0 ] ).definingLiteralsForNonHCFAtom.push_back( defLit );
     }
     else
     {
@@ -291,6 +295,10 @@ UnfoundedBasedCheck::processRule(
             Var v = headAtoms[ k ];
             assert( sameComponent( v ) );
             getGUSData( v ).definingRulesForNonHCFAtom.push_back( clause );
+            Literal defLit = solver.getLiteral( rule->getBodyAux() );
+            if( defLit.getVariable() != 0 )
+                solver.setFrozen( defLit.getVariable() );
+            getGUSData( v ).definingLiteralsForNonHCFAtom.push_back( defLit );
             trace_msg( modelchecker, 2, "Adding clause: [ " << Literal( getGUSData( v ).unfoundedVarForHCC, NEGATIVE ) << " | " << Literal( freshVar, POSITIVE ) << " ]" );
             checker.addClause( Literal( getGUSData( v ).unfoundedVarForHCC, NEGATIVE ), Literal( freshVar, POSITIVE ) );
         }

@@ -40,6 +40,7 @@ class GUSData
         vector< Var > possiblySupportedByThis[ 2 ];
 
         vector< Clause* > definingRulesForNonHCFAtom;
+        vector< Literal > definingLiteralsForNonHCFAtom;
         Var unfoundedVarForHCC; //For an atom p in a HCC it represents up
         Var headVarForHCC; //For an atom p in a HCC it represents hp
 

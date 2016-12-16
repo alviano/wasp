@@ -37,6 +37,11 @@ HCComponent::computeReasonForUnfoundedAtom(
     Var v,
     Learning& learning )
 {
+    if( wasp::Options::compactReasonsForHCC )
+    {
+        computeReasonForUnfoundedAtomCompactReasons( v, learning );
+        return;
+    }
     trace_msg( modelchecker, 2, "Processing variable " << solver.getLiteral( v ) );
     vector< Clause* >& definingRules = getGUSData( v ).definingRulesForNonHCFAtom;        
     for( unsigned int i = 0; i < definingRules.size(); i++ )
@@ -106,6 +111,88 @@ HCComponent::computeReasonForUnfoundedAtom(
     }
 }
 
+void
+HCComponent::computeReasonForUnfoundedAtomCompactReasons(
+    Var v,
+    Learning& learning )
+{
+    trace_msg( modelchecker, 2, "Processing variable " << solver.getLiteral( v ) );
+    vector< Clause* >& definingRules = getGUSData( v ).definingRulesForNonHCFAtom;
+    vector< Literal >& definingLiterals = getGUSData( v ).definingLiteralsForNonHCFAtom;
+    for( unsigned int i = 0; i < definingRules.size(); i++ )
+    {
+        Clause* rule = definingRules[ i ];
+        bool skipRule = false;
+        Literal l = Literal::null;
+        for( unsigned int j = 0; j < rule->size(); j++ )
+        {            
+            Literal lit = rule->getAt( j );
+            if( isInUnfoundedSet( lit.getVariable() ) )
+            {
+                trace_msg( modelchecker, 4, "Literal " << lit << " is in the unfounded set" );
+                if( lit.isHeadAtom() )
+                {
+                    trace_msg( modelchecker, 5, "Skip " << lit << " because it is in the head" );
+                    continue;
+                }
+                else if( lit.isPositiveBodyLiteral() )
+                {
+                    trace_msg( modelchecker, 5, "Skip rule because of an unfounded positive body literal: " << lit );
+                    skipRule = true;
+                    break;
+                }
+            }
+            
+            if( solver.isUndefined( lit ) && sameComponent( lit.getVariable() ) && ( lit.isNegativeBodyLiteral() || lit.isHeadAtom() ) )
+            {
+                trace_msg( modelchecker, 4, "is undefined and in the same component" );
+                if( l == Literal::null )
+                    l = lit;
+                continue;
+            }
+            
+            if( !solver.isTrue( lit ) )
+            {
+                trace_msg( modelchecker, 5, "Skip " << lit << " because it is not true" );
+                continue;
+            }
+            
+            if( solver.getDecisionLevel( lit ) == 0 )
+            {
+                skipRule = true;
+                break;
+            }
+            
+            if( !lit.isHeadAtom() )
+            {
+                trace_msg( modelchecker, 5, "Skip " << lit << "because it is a body literal" );
+                continue;
+            }
+            
+            if( l == Literal::null || solver.getDecisionLevel( lit ) < solver.getDecisionLevel( l ) )
+                l = lit;
+        }
+        
+        if( skipRule )
+            continue;
+        
+        assert( i < definingLiterals.size() );
+        Literal defLit = definingLiterals[ i ];
+        trace_msg( modelchecker, 2, "Def rule " << *rule );
+        trace_msg( modelchecker, 2, "Def lit " << defLit << " which is " << ( solver.isTrue( defLit ) ? "true" : "false/undefined" ) );
+        if( defLit.getVariable() != 0 && solver.isTrue( defLit ) )
+        {
+            if( solver.getDecisionLevel( defLit ) != 0 )
+                learning.onNavigatingLiteralForUnfoundedSetLearning( defLit.getOppositeLiteral() );
+        }
+        else
+        {
+            assert( l != Literal::null );
+            learning.onNavigatingLiteralForUnfoundedSetLearning( l.getOppositeLiteral() );
+        }        
+    }
+}
+
 HCComponent::~HCComponent()
 {
     delete outputBuilder;
@@ -133,7 +220,7 @@ HCComponent::getClauseToPropagate(
         Clause* loopFormula = learning.learnClausesFromDisjunctiveUnfoundedSet( unfoundedSet );
         trace_msg( modelchecker, 1, "Adding loop formula: " << *loopFormula );
         unfoundedSet.clear();
-        solver.onLearningALoopFormulaFromModelChecker();    
+        solver.onLearningALoopFormulaFromModelChecker();
         return loopFormula;
     }
     return NULL;

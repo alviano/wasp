@@ -33,12 +33,16 @@ class Rule
         
         inline bool isHandledForModelChecker( unsigned int nb ) const { return handledForModelChecker == nb; }
         inline void setHandledForModelChecker( unsigned int nb ) { handledForModelChecker = nb; }
+        
+        inline void setBodyAux( int b ) { body = b; }
+        inline int getBodyAux() const { return body; }
                 
     private:
         unsigned int handled : 1;
         unsigned int handledForModelChecker : 31;
+        int body;
         
-        inline void initData() { handled = 0; handledForModelChecker = 0; }
+        inline void initData() { handled = 0; handledForModelChecker = 0; body = 0; }
 };
 
 #endif

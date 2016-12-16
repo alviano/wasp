@@ -1429,6 +1429,9 @@ bool
 Solver::propagateLiteralAsDeterministicConsequence(
     Literal literal )
 {
+    if( conflictDetected() )
+        return false;
+    
     assignLiteral( literal );
     if( conflictDetected() )
         return false;
@@ -1450,6 +1453,9 @@ bool
 Solver::propagateLiteralAsDeterministicConsequenceSatelite(
     Literal literal )
 {
+    if( conflictDetected() )
+        return false;
+    
     assignLiteral( literal );
     if( conflictDetected() )
         return false;

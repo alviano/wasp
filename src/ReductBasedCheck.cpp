@@ -137,15 +137,21 @@ void
 ReductBasedCheck::iterationInternalLiterals(
     vector< Literal >& assumptions )
 {
+    trace_msg( modelchecker, 2, "Iteration on internal literals" );
     bool hasToAddClause = true;
     Clause* clause = new Clause();    
     for( unsigned int i = 0; i < hcVariables.size(); i++ )
     {
         Literal lit = Literal( hcVariables[ i ], NEGATIVE );
+        trace_msg( modelchecker, 3, "Considering var " << Literal( hcVariables[ i ], POSITIVE ) << " which is " << ( solver.isFalse( hcVariables[ i ] ) ? "false" : "true/undefined" ) );
         if( solver.isFalse( hcVariables[ i ] ) )
+        {
+            trace_msg( modelchecker, 4, "Adding in assumptions" );
             assumptions.push_back( lit );            
+        }
         else
         {
+            trace_msg( modelchecker, 4, "Adding in candidates" );
             unfoundedSetCandidates.push_back( lit );
             if( !hasToAddClause )
                 continue;
@@ -167,27 +173,30 @@ ReductBasedCheck::iterationInternalLiterals(
     clause->addLiteral( assumptionLiteral.getOppositeLiteral() );
     assumptions.push_back( assumptionLiteral );
 
-    trace_msg( modelchecker, 2, "Adding clause " << *clause );
+    trace_msg( modelchecker, 5, "Adding clause " << *clause );
     #ifndef NDEBUG
     bool result =
     #endif
     checker.addClauseRuntime( clause );
     assert( result );
     statistics( &checker, assumptionsOR( clause->size() ) );            
-    trace_msg( modelchecker, 3, "Adding " << assumptionLiteral << " as assumption" );    
+    trace_msg( modelchecker, 6, "Adding " << assumptionLiteral << " as assumption" );    
 }
 void
 
 ReductBasedCheck::iterationExternalLiterals(
     vector< Literal >& assumptions )
 {
+    trace_msg( modelchecker, 2, "Iteration on external literals" );
     int j = 0;
     for( unsigned int i = 0; i < externalLiterals.size(); i++ )
     {
         Literal lit = externalLiterals[ j ] = externalLiterals[ i ];
+        trace_msg( modelchecker, 3, "Considering literal " << lit );
         assert( getCheckerVarFromExternalLiteral( lit ) != UINT_MAX );
         if( solver.getDecisionLevel( lit ) > 0 || solver.isUndefined( lit ) )
         {
+            trace_msg( modelchecker, 4, "Adding assumption " << Literal( getCheckerVarFromExternalLiteral( lit ), solver.isTrue( lit ) ? POSITIVE : NEGATIVE ) );
             assumptions.push_back( Literal( getCheckerVarFromExternalLiteral( lit ), solver.isTrue( lit ) ? POSITIVE : NEGATIVE ) );
             j++;
         }
@@ -411,7 +420,13 @@ ReductBasedCheck::createDefiningRules(
             continue;
         
         if( lit.isHeadAtom() )
-            getGUSData( lit.getVariable() ).definingRulesForNonHCFAtom.push_back( clause );         
+        {
+            getGUSData( lit.getVariable() ).definingRulesForNonHCFAtom.push_back( clause );
+            Literal defLit = solver.getLiteral( rule->getBodyAux() );
+            if( defLit.getVariable() != 0 )
+                solver.setFrozen( defLit.getVariable() );
+            getGUSData( lit.getVariable() ).definingLiteralsForNonHCFAtom.push_back( defLit );
+        }
     }
     toDelete.push_back( clause );
 }

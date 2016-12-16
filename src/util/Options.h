@@ -77,6 +77,8 @@ namespace wasp
             
             static unsigned int modelcheckerAlgorithm;
             
+            static bool compactReasonsForHCC;
+            
         private:
 
             static DELETION_POLICY deletionPolicy;
@@ -121,6 +123,8 @@ namespace wasp
             static unsigned int getEnumerationStrategy( const string& s );
             
             static void initMap();
+            
+            static void checkOptions();
     };
 }
 
