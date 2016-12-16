@@ -92,6 +92,7 @@ class Help
             cout << "--modelchecker-algorithm               - Compute the unfounded check for HC components using the specified algorithm" << endl;
             cout << "       =reduct                         - Algorithm based on the GL-reduct" << endl;
             cout << "       =unfounded                      - Algorithm based on the unfounded sets conditions" << endl;
+            cout << "--modelchecker-compactreasons          - Enable a different strategy to compute reasons. (Note: it enables the option --disjunction=auto)" << endl;            
             cout << "--forward-partialchecks                - Enable forward partial checks" << endl;
             cout << "--heuristic-partialchecks              - Enable heuristic to activate or disactivate partial checks during the search" << endl;            
                 
