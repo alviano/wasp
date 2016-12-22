@@ -19,203 +19,93 @@
 #ifndef HCCOMPONENT_H
 #define	HCCOMPONENT_H
 
-#include <vector>
-#include "util/Assert.h"
-#include "stl/Vector.h"
 #include "PostPropagator.h"
 #include "Literal.h"
 #include "Solver.h"
+#include "outputBuilders/OutputBuilder.h"
+#include "outputBuilders/NoopOutputBuilder.h"
+
+#include <iostream>
 using namespace std;
 
 class Clause;
+class GUSData;
 class Learning;
+class Rule;
 
 class HCComponent : public PostPropagator
 {
-    friend ostream& operator<<( ostream& out, const HCComponent& component );
     public:
-        HCComponent( vector< GUSData* >& gusData_, Solver& s, unsigned numberOfInputAtoms );
-        ~HCComponent();
+        friend ostream& operator<<( ostream& out, const HCComponent& component );
+        HCComponent( vector< GUSData* >& gusData_, Solver& s ) : PostPropagator(), id( 0 ), gusData( gusData_ ), solver( s ), numberOfCalls( 0 ), hasToTestModel( false ), isConflictual( false )
+        {
+            outputBuilder = new NoopOutputBuilder();
+            checker.setOutputBuilder( outputBuilder );
+        }
+        virtual ~HCComponent();
 
-        virtual void reset();
-
-        virtual Clause* getClauseToPropagate( Learning& learning );
-        virtual bool onLiteralFalse( Literal literal );
-
-        void addClauseToChecker( Clause* c, Var headAtom );
-        
-        inline void addHCVariable( Var v ) { inUnfoundedSet[ v ] |= 4; hcVariables.push_back( v ); numberOfInternalVariables++; }
-//        inline bool isExternal( Var v ) const { assert( numberOfCalls == 0 ); assert( v < inUnfoundedSet.size() ); return inUnfoundedSet[ v ] & 3; }
-        bool addExternalLiteral( Literal lit );
-        bool addExternalLiteralForInternalVariable( Literal lit );
-        
-        inline unsigned int size() const { return hcVariables.size(); }
-        inline Var getVariable( unsigned int pos ) const { assert( pos < hcVariables.size() ); return hcVariables[ pos ]; }
-        
-        inline unsigned int externalLiteralsSize() const { return externalLiterals.size(); }
-        inline Literal getExternalLiteral( unsigned int pos ) const { assert( pos < externalLiterals.size() ); return externalLiterals[ pos ]; }
+        virtual bool onLiteralFalse( Literal ) = 0;
+        Clause* getClauseToPropagate( Learning& );
+        void reset();
         
         void computeReasonForUnfoundedAtom( Var v, Learning& learning );
         
-        GUSData& getGUSData( Var v ) { assert( v < gusData.size() ); return *( gusData[ v ] ); }
-        void printLearnedClausesOfChecker() { checker.printLearnedClauses(); }
-        void setHasToTestModel( bool b ) { hasToTestModel = b; }
+        inline void addHCVariable( Var v ) { assert( find( hcVariables.begin(), hcVariables.end(), v ) == hcVariables.end() ); hcVariables.push_back( v ); addHCVariableProtected( v ); }
+        inline Var getVariable( unsigned int pos ) const { assert( pos < hcVariables.size() ); return hcVariables[ pos ]; }        
+        inline unsigned int size() const { return hcVariables.size(); }
+                
+        virtual void processRule( Rule* rule ) = 0;
+        virtual void processComponentBeforeStarting() = 0;
         
         void setId( unsigned int i ) { id = i; }
-        unsigned int getId() const { return id; }
+        unsigned int getId() const { return id; }                
         
-        void addLearnedClausesFromChecker( Clause* c );
+    protected:
+        virtual void addHCVariableProtected( Var v ) = 0;        
         
-    private:                
-        inline HCComponent( const HCComponent& orig );
-
-        bool isInUnfoundedSet( Var v ) { assert_msg( v < inUnfoundedSet.size(), "v = " << v << "; inUnfoundedSet.size() = " << inUnfoundedSet.size() ); return inUnfoundedSet[ v ] == numberOfCalls; }
-        void setInUnfoundedSet( Var v ) { assert_msg( v < inUnfoundedSet.size(), "v = " << v << "; inUnfoundedSet.size() = " << inUnfoundedSet.size() ); inUnfoundedSet[ v ] = numberOfCalls; }
+        GUSData& getGUSData( Var v ) { assert( v < gusData.size() ); return *( gusData[ v ] ); }  
+        inline bool sameComponent( Var v ) const { return solver.getHCComponent( v ) == this; }
+        inline bool isInUnfoundedSet( Var v ) { assert_msg( v < inUnfoundedSet.size(), "v = " << v << "; inUnfoundedSet.size() = " << inUnfoundedSet.size() ); return inUnfoundedSet[ v ] == numberOfCalls; }
+        inline void setInUnfoundedSet( Var v ) { assert_msg( v < inUnfoundedSet.size(), "v = " << v << "; inUnfoundedSet.size() = " << inUnfoundedSet.size() ); inUnfoundedSet[ v ] = numberOfCalls; unfoundedSet.push_back( v ); }
+        inline void attachLiterals( Literal lit );
+        inline Var addFreshVariable() { checker.addVariableRuntime(); return checker.numberOfVariables(); }
+        inline void initChecker();
+        virtual void testModel() = 0;
         
-        bool sameComponent( Var v ) const;
+        void computeReasonForUnfoundedAtomCompactReasons( Var v, Learning& learning );
         
-        void createInitialClauseAndSimplifyHCVars();
-        
-        void clearUnfoundedSetCandidates();
-        Clause* computeClause();
-        
-        Var addFreshVariable();
-        
-        void initDataStructures();
-        void checkModel( vector< Literal >& assumptions );
-        
-        void sendLearnedClausesToSolver();
-
+        unsigned int id;
         vector< GUSData* >& gusData;
+        vector< Var > hcVariables;
         Vector< Literal > trail;
         Solver& solver;
         Solver checker;
-
-        vector< Var > hcVariables;
-        vector< Literal > externalLiterals;
-        Vector< Var > unfoundedSet;
-        Vector< Literal > unfoundedSetCandidates;
-        
-        Vector< Clause* > learnedClausesFromChecker;
-        
-        vector< Var > generatorToCheckerId;
-        vector< Var > checkerToGeneratorId;
-//        vector< bool > usedAuxVars;        
-        
         Vector< unsigned int > inUnfoundedSet;
         unsigned int numberOfCalls;
-        
-        bool hasToTestModel;        
-        
-        unsigned int numberOfAtoms;
-        unsigned int id;
-        
-        Literal assumptionLiteral;
+        Vector< Var > unfoundedSet;
+        Vector< Literal > unfoundedSetCandidates;        
+        bool hasToTestModel;
         bool isConflictual;
-        
-        unsigned int numberOfExternalLiterals;
-        unsigned int numberOfInternalVariables;
-        unsigned int numberOfZeroLevel;
-        unsigned int removedHCVars;
-        
-        Literal literalToAdd;
-        
-        unsigned int low;
-        unsigned int high;
-        
-        void testModel();
-        void computeAssumptions( vector< Literal >& assumptions );
-        void iterationInternalLiterals( vector< Literal >& assumptions );
-        void iterationExternalLiterals( vector< Literal >& assumptions );
-        
-        inline Var getCheckerVarFromExternalLiteral( Literal l ) const
-        { 
-            if( l.isNegative() || sameComponent( l.getVariable() ) )
-                return generatorToCheckerId[ l.getVariable() ];
-            else            
-                return l.getVariable();            
-//            return l.isPositive() ? l.getVariable() : generatorToCheckerId[ l.getVariable() ]; 
-        }
-        inline Var getCheckerTrueVar( Var v ) const { return v; }
-        inline Var getCheckerFalseVar( Var v ) const
-        {
-            assert( v < generatorToCheckerId.size() );
-            assert( generatorToCheckerId[ v ] > 0 );
-            
-            //Can be UINT_MAX;
-            return generatorToCheckerId[ v ];
-        }
-
-        inline Literal getGeneratorLiteralFromCheckerLiteral( Literal l )
-        {
-            Var checkerVar = l.getVariable();
-            if( checkerVar <= numberOfAtoms )
-                return l;
-
-            assert( checkerVar < checkerToGeneratorId.size() );
-            Var v = checkerToGeneratorId[ checkerVar ];
-            assert( v > 0 && v <= solver.numberOfVariables() );
-            return ( solver.getHCComponent( v ) != this ) ? Literal( v, NEGATIVE ) : Literal( v, POSITIVE );
-        }     
-        
-        inline bool addLiteralInClause( Literal lit, Clause* clause )
-        {            
-            if( checker.isTrue( lit ) )
-                return false;
-            
-            if( !checker.isFalse( lit ) )
-                clause->addLiteral( lit );
-            return true;
-                
-        }
-        
-        #ifdef TRACE_ON
-        template< class T >
-        void printVector( const vector< T >& v, const string& description )
-        {            
-            trace_tag( cerr, modelchecker, 2 );
-            cerr << description << ": ";
-            if( !v.empty() )
-            {
-                cerr << v[ 0 ];
-                for( unsigned int i = 1; i < v.size(); i++ )
-                    cerr << ", " << v[ i ];
-            }
-            else
-                cerr << "empty";
-            cerr << endl;
-        }
-                
-        void printVector( const Vector< Literal >& v, const string& description )
-        {            
-            trace_tag( cerr, modelchecker, 2 );
-            cerr << description << ": ";
-            if( !v.empty() )
-            {
-                cerr << v[ 0 ];
-                for( unsigned int i = 1; i < v.size(); i++ )
-                    cerr << ", " << v[ i ];
-            }
-            else
-                cerr << "empty";
-            cerr << endl;
-        }
-        
-        void printVector( const Vector< Var >& v, const string& description )
-        {            
-            trace_tag( cerr, modelchecker, 2 );
-            cerr << description << ": ";
-            if( !v.empty() )
-            {
-                cerr << Literal( v[ 0 ] );
-                for( unsigned int i = 1; i < v.size(); i++ )
-                    cerr << ", " << Literal( v[ i ] );
-            }
-            else
-                cerr << "empty";
-            cerr << endl;
-        }
-        #endif                    
+        OutputBuilder* outputBuilder;        
+        vector< Clause* > toDelete;
 };
+
+void
+HCComponent::attachLiterals(
+    Literal lit )
+{
+    solver.setFrozen( lit.getVariable() );
+    solver.addPostPropagator( lit, this );
+    solver.addPostPropagator( lit.getOppositeLiteral(), this );
+}
+
+void
+HCComponent::initChecker()
+{
+    checker.initFrom( solver );
+    checker.setChecker(); 
+    checker.disableStatistics();
+    checker.disableVariableElimination();
+}
 
 #endif

@@ -19,13 +19,13 @@
 #include "Solver.h"
 #include "input/Dimacs.h"
 #include "HCComponent.h"
+#include "ReductBasedCheck.h"
+#include "UnfoundedBasedCheck.h"
 #include "weakconstraints/WeakInterface.h"
 #include <algorithm>
 #include <stdint.h>
 #include <vector>
 using namespace std;
-
-vector< Clause* > Solver::learnedFromAllSolvers;
 
 Solver::~Solver()
 {
@@ -122,7 +122,6 @@ Solver::initFrom(
     assert( solver.restart != NULL );
     assert( this->restart == NULL );    
     this->restart = solver.restart->clone();
-    this->exchangeClauses_ = solver.exchangeClauses_;
     this->glucoseHeuristic_ = solver.glucoseHeuristic_;
 }
 
@@ -357,18 +356,7 @@ Solver::solvePropagators(
             }
         }
         
-        postPropagationLabel:;
-        if( afterConflictPropagator != NULL )
-        {
-            if( partialChecks )
-            {
-                postPropagators.push_back( afterConflictPropagator );
-                HCComponent* comp = dynamic_cast< HCComponent* >( afterConflictPropagator );
-                comp->setHasToTestModel( true );
-            }
-            afterConflictPropagator = NULL;
-        }
-        
+        postPropagationLabel:;        
         while( !postPropagators.empty() )
         {
             PostPropagator* postPropagator = postPropagators.back();
@@ -389,12 +377,12 @@ Solver::solvePropagators(
             else
             {
                 assert( !conflictDetected() );
-                if( !wasp::Options::backwardPartialChecks )
+                if( wasp::Options::heuristicPartialChecks )
                 {
                     if( learnedFromPropagators > ( learnedFromConflicts * 0.5 ) )
-                        partialChecks = false;
+                        wasp::Options::forwardPartialChecks = false;
                     else
-                        partialChecks = true;
+                        wasp::Options::forwardPartialChecks = true;
                 }
                 unsigned int size = clauseToPropagate->size();
                 statistics( this, onLearningFromPropagators( size ) );
@@ -433,13 +421,7 @@ Solver::solvePropagators(
                     {
                         assert( !isTrue( clauseToPropagate->getAt( 0 ) ) );
                         assignLiteral( clauseToPropagate );
-                    }
-                    else if( afterConflictPropagator != NULL )
-                    {
-                        HCComponent* comp = dynamic_cast< HCComponent* >( afterConflictPropagator );
-                        comp->setHasToTestModel( false );
-                        afterConflictPropagator = NULL;
-                    }
+                    }                    
                 }
                 
                 if( conflictDetected() )
@@ -1202,7 +1184,14 @@ HCComponent*
 Solver::createHCComponent(
     unsigned numberOfInputAtoms )
 {
-    return new HCComponent( gusDataVector, *this, numberOfInputAtoms );
+    switch( wasp::Options::modelcheckerAlgorithm )
+    {
+        case UNFOUNDED_BASED:
+            return new UnfoundedBasedCheck( gusDataVector, *this, numberOfInputAtoms );
+        case REDUCT_BASED:
+        default:
+            return new ReductBasedCheck( gusDataVector, *this, numberOfInputAtoms );            
+    }    
 }
 
 void
@@ -1214,9 +1203,6 @@ Solver::printLearnedClauses()
         learnedClauses[ i ]->printOrderedById();
         cout << " " << this << endl;
     }
-
-    for( unsigned int i = 0; i < hcComponents.size(); i++ )
-        hcComponents[ i ]->printLearnedClausesOfChecker();
 }
 
 bool
@@ -1287,11 +1273,6 @@ Solver::addLearnedClause(
     else
     {
         attachClause( *learnedClause );
-        if( hcComponentForChecker != NULL && exchangeClauses_ )
-        {
-            assert( !generator );
-            hcComponentForChecker->addLearnedClausesFromChecker( learnedClause );
-        }
         learnedClauses.push_back( learnedClause );        
     }    
 }

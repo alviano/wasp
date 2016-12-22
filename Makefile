@@ -119,11 +119,12 @@ TESTS_DIR = tests
 
 TESTS_TESTER = $(TESTS_DIR)/pyregtest.py
 
-TESTS_COMMAND_wasp = $(BINARY) -n 0 --silent
-TESTS_COMMAND_waspweak = $(BINARY) --silent
+BINARY_WASP = $(BINARY)
+TESTS_COMMAND_wasp = $(BINARY_WASP) -n 0 --silent
+TESTS_COMMAND_waspweak = $(BINARY_WASP) --silent
 TESTS_COMMAND_AllAnswerSets = $(TESTS_COMMAND_wasp)
 TESTS_COMMAND_gringo = gringo3 | $(TESTS_COMMAND_wasp)
-TESTS_COMMAND_SatModel = $(BINARY)
+TESTS_COMMAND_SatModel = $(BINARY_WASP)
 TESTS_COMMAND_WeakConstraints = $(TESTS_COMMAND_waspweak)
 
 TESTS_CHECKER_AllAnswerSets = $(TESTS_DIR)/allAnswerSets.checker.py

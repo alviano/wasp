@@ -1221,6 +1221,7 @@ GringoNumericFormat::computeGusStructures()
         solver.addGUSData( gd );
     }
 
+    unsigned int nbOfCallsHCC = 0;
     trace_msg( parser, 2, "Program is not tight. Number of cyclic components " << solver.getNumberOfCyclicComponents() );
     for( unsigned int i = 0; i < solver.getNumberOfCyclicComponents(); i++ )
     {
@@ -1244,6 +1245,7 @@ GringoNumericFormat::computeGusStructures()
         }
         else
         {
+            nbOfCallsHCC++;
             trace_msg( parser, 4, "The component is non HCF" );            
             HCComponent* hcComponent = solver.createHCComponent( atomData.size() - 1 ); //new HCComponent( solver );
 
@@ -1256,11 +1258,7 @@ GringoNumericFormat::computeGusStructures()
                     continue;
                 
                 trace_msg( parser, 5, "Variable " << Literal( v, POSITIVE ) << " is in the cyclic component " << i );                
-                hcComponent->addHCVariable( v );                                
-                solver.addPostPropagator( Literal( v, POSITIVE ), hcComponent );
-                solver.addPostPropagator( Literal( v, NEGATIVE ), hcComponent );
-                solver.setComponent( v, NULL );
-                solver.setHCComponent( v, hcComponent );
+                hcComponent->addHCVariable( v );                
             }
             statistics( &solver, removeComponent( component->getId() ) );            
             component->remove();
@@ -1275,54 +1273,18 @@ GringoNumericFormat::computeGusStructures()
                 {
                     Rule* rule = getRule( headOccs[ t ].getId() );
                     assert( rule != NULL );
-                    if( !rule->isRemoved() )
-                    {                        
-                        for( unsigned int k = 0; k < rule->size(); k++ )
-                        {
-                            assert( rule->literals[ k ].getVariable() < atomData.size() );
-                            if( solver.getHCComponent( rule->literals[ k ].getVariable() ) != hcComponent )
-                            {
-                                if( hcComponent->addExternalLiteral( rule->literals[ k ] ) )
-                                {
-                                    solver.setFrozen( rule->literals[ k ].getVariable() );
-                                    solver.addPostPropagator( rule->literals[ k ], hcComponent );
-                                    solver.addPostPropagator( rule->literals[ k ].getOppositeLiteral(), hcComponent );
-                                }
-                            }
-                            else if( rule->literals[ k ].isNegativeBodyLiteral() )
-                            {
-                                if( hcComponent->addExternalLiteralForInternalVariable( rule->literals[ k ] ) )
-                                {
-                                    solver.setFrozen( rule->literals[ k ].getVariable() );
-                                    solver.addPostPropagator( rule->literals[ k ], hcComponent );
-                                    solver.addPostPropagator( rule->literals[ k ].getOppositeLiteral(), hcComponent );
-                                }
-                            }
-                        }
-                        Clause* c = normalRuleToClause( rule );
-                        c->removeDuplicates();
-                        hcComponent->addClauseToChecker( c, v );
-                    }
+                    if( rule->isRemoved() )
+                        continue;
+                    
+                    if( rule->isHandledForModelChecker( nbOfCallsHCC ) )
+                        continue;
+                    
+                    rule->setHandledForModelChecker( nbOfCallsHCC );
+                    hcComponent->processRule( rule );
                 }
             }
             
-            for( unsigned int j = 0; j < hcComponent->size(); j++ )
-            {
-                Var v = hcComponent->getVariable( j );
-                if( solver.isTrue( v ) )
-                    hcComponent->onLiteralFalse( Literal( v, NEGATIVE ) );
-                else if( solver.isFalse( v ) )
-                    hcComponent->onLiteralFalse( Literal( v, POSITIVE ) );
-            }
-            
-            for( unsigned int j = 0; j < hcComponent->externalLiteralsSize(); j++ )
-            {
-                Literal lit = hcComponent->getExternalLiteral( j );
-                if( solver.isTrue( lit ) )
-                    hcComponent->onLiteralFalse( lit.getOppositeLiteral() );
-                else if( solver.isFalse( lit ) )
-                    hcComponent->onLiteralFalse( lit );
-            }
+            hcComponent->processComponentBeforeStarting();            
             
             solver.addPostPropagator( hcComponent );
             solver.addHCComponent( hcComponent );
@@ -1519,11 +1481,13 @@ GringoNumericFormat::computeSCCsDisjunctive()
                     continue;
                 if( isSupporting( rule, var ) )
                 {
-                    if( rule->handled )
+                    if( rule->isHandled() )
                         continue;
-                    rule->handled = true;
+                    rule->setHandled();
                     Vector< Var > headAtoms;
                     Literal addedLit = createAuxForBody( rule, headAtoms );
+                    if( wasp::Options::compactReasonsForHCC )
+                        rule->setBodyAux( addedLit.getId() );
                     Var addedVar = addedLit.getVariable();
                     assert( !headAtoms.empty() );
                     if( headAtoms.size() == 1 || data.headOccurrences[ j ].isChoice() )
@@ -1567,6 +1531,12 @@ GringoNumericFormat::computeSCCsDisjunctive()
                                 break;
                             case SHIFT_QUADRATIC_AGGREGATE:
                                 quadraticStrategyAggregate( headAtoms, auxVars, addedLit );
+                                break;
+                            case SHIFT_AUTO:
+                                if( headAtoms.size() <= 4 )
+                                    normalizeHeads( headAtoms, auxVars, addedLit );
+                                else
+                                    createPropagatorForDisjunction( headAtoms, auxVars, addedLit );
                                 break;
                             default:
                                 ErrorMessage::errorDuringParsing( "Unknown shift strategy" );

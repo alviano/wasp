@@ -63,9 +63,7 @@ class NoopOutputBuilder : public OutputBuilder
         
     private:
         string lastModel;
-        stringstream modelStream;
-        bool optimum;
-        
+        stringstream modelStream;        
         string lastWeight;
 };
 

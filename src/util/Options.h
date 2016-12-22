@@ -45,8 +45,7 @@ namespace wasp
             static void setOptions( WaspFacade& waspFacade );
             static unsigned int maxCost;        
             static bool forwardPartialChecks;
-            static bool backwardPartialChecks;
-            static bool bumpActivityAfterPartialCheck;
+            static bool heuristicPartialChecks;
             
             static unsigned int queryAlgorithm;
             static unsigned int queryVerbosity;
@@ -79,6 +78,12 @@ namespace wasp
             static bool printOnlyOptimum;
             
             static bool checkTrivialSolutionPredMin;
+            static unsigned int chunkPercentage;
+            static unsigned int chunkSize;
+            
+            static unsigned int modelcheckerAlgorithm;
+            
+            static bool compactReasonsForHCC;
             
         private:
 
@@ -103,9 +108,7 @@ namespace wasp
             
             static unsigned int restartsThreshold;            
 
-            static unsigned int timeLimit;
-            
-            static bool exchangeClauses;                                                
+            static unsigned int timeLimit;                        
             
             static bool disjCoresPreprocessing;
             
@@ -128,6 +131,8 @@ namespace wasp
             static unsigned int getEnumerationStrategy( const string& s );
             
             static void initMap();
+            
+            static void checkOptions();
     };
 }
 
