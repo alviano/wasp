@@ -16,8 +16,6 @@
 *
 */
 
-#include <_types/_uint64_t.h>
-
 #include "MyPerlInterpreter.h"
 
 #ifdef ENABLE_PERL

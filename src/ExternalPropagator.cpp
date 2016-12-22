@@ -310,9 +310,29 @@ ExternalPropagator::getReasonForCheckFailure(
 
     solver.unrollToZero();
     reset( solver );
-    for( unsigned int i = 0; i < clauses.size(); i++ )
-        solver.addLearnedClause( clauses[ i ], true );
-    return NULL;
+    unsigned int i = 0;
+    for( ; i < clauses.size(); i++ )
+    {
+        unsigned int size = clauses[ i ]->size();
+        if( size == 0 )
+        {
+            for( unsigned int j = i + 1; j < clauses.size(); j++ )
+                delete clauses[ j ];
+            return clauses[ i ];
+        }
+        else if( size == 1 )
+        {
+            if( !solver.addClauseRuntime( clauses[ i ] ) )
+            {
+                for( unsigned int j = i + 1; j < clauses.size(); j++ )
+                    delete clauses[ j ];
+                return NULL;
+            }
+        }
+        else
+            solver.addLearnedClause( clauses[ i ], true );
+    }
+    return NULL;    
 }
 
 void

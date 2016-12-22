@@ -319,7 +319,7 @@ Solver::handlePropagatorFailure(
     if( clausePointer == NULL )
     {
         assert( getCurrentDecisionLevel() == 0 );
-        return true;
+        return !conflictDetected();
     }
     
     Clause& clause = *clausePointer;

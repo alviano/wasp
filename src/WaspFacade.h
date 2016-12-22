@@ -46,7 +46,7 @@ class WaspFacade
         void readInput();
         void solve();
         inline void onFinish() { solver.onFinish(); }
-        inline void onKill() { cout << "ON KILL " << endl; statistics( &solver, endSolving() ); estatistics( &solver, endSolving() ); solver.onKill(); }
+        inline void onKill() { statistics( &solver, endSolving() ); estatistics( &solver, endSolving() ); solver.onKill(); }
         
         inline void greetings(){ solver.greetings(); }
         
