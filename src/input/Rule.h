@@ -14,7 +14,7 @@ class Rule
 
         inline Rule() { initData(); }
         inline Rule( unsigned head_ ) { initData(); addHeadAtom( head_ ); }
-        Rule( const Rule& init ) { handled = init.handled; handledForModelChecker = init.handledForModelChecker; literals.initFrom( init.literals ); }        
+        Rule( const Rule& init ) { handled = init.handled; handledForModelChecker = init.handledForModelChecker; body = init.body; literals.initFrom( init.literals ); }        
 
         inline bool isRemoved() const { return literals.empty(); }
         inline void remove() { literals.clearAndDelete(); }

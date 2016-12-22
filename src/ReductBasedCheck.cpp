@@ -58,7 +58,7 @@ bool
 ReductBasedCheck::addExternalLiteralForInternalVariable(
     Literal lit )
 {
-    assert( lit.isPositive() );
+//    assert( lit.isPositive() );
     if( inUnfoundedSet[ lit.getVariable() ] & 2 )
         return false;
     inUnfoundedSet[ lit.getVariable() ] |= 2;
@@ -217,7 +217,6 @@ ReductBasedCheck::addClauseToChecker(
     Clause* c )
 {
     assert( c != NULL );
-    trace_msg( modelchecker, 2, "Adding clause " << *c );
     Clause& orig = *c;
     for( unsigned int i = 0; i < orig.size(); i++ )
     {        
@@ -242,8 +241,18 @@ ReductBasedCheck::addClauseToChecker(
                     orig[ i ].setPositive();
                 }
             }
+            else if( orig[ i ].isDoubleNegatedBodyLiteral() )
+            {
+                Var newVar = getCheckerVarFromExternalLiteral( orig[ i ] );
+                if( newVar != v )
+                {
+                    orig[ i ].setVariable( newVar );
+                    orig[ i ].setNegative();
+                }
+            }
         }
-    }    
+    }
+    trace_msg( modelchecker, 2, "Adding clause " << *c );    
     checker.addClause( c );    
 }
 
@@ -378,6 +387,8 @@ void ReductBasedCheck::processRule(
                 attachLiterals( lit );        
         }
         else if ( lit.isNegativeBodyLiteral() && addExternalLiteralForInternalVariable( lit ) )
+            attachLiterals( lit );
+        else if( lit.isDoubleNegatedBodyLiteral() && addExternalLiteralForInternalVariable( lit.getOppositeLiteral() ) )
             attachLiterals( lit );
     }    
     clause->removeDuplicates();
