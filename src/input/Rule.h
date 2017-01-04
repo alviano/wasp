@@ -14,7 +14,13 @@ class Rule
 
         inline Rule() { initData(); }
         inline Rule( unsigned head_ ) { initData(); addHeadAtom( head_ ); }
-        Rule( const Rule& init ) { handled = init.handled; handledForModelChecker = init.handledForModelChecker; body = init.body; literals.initFrom( init.literals ); }        
+        Rule( const Rule& init ) { 
+            handled = init.handled;
+            createdBody = init.createdBody;
+            handledForModelChecker = init.handledForModelChecker;
+            body = init.body;
+            literals.initFrom( init.literals );
+        }        
 
         inline bool isRemoved() const { return literals.empty(); }
         inline void remove() { literals.clearAndDelete(); }
@@ -31,6 +37,9 @@ class Rule
         inline bool isHandled() const { return handled; }
         inline void setHandled() { handled = 1; }
         
+        inline bool isBodyCreated() const { return createdBody; }
+        inline void setBodyCreated() { createdBody = 1; }
+        
         inline bool isHandledForModelChecker( unsigned int nb ) const { return handledForModelChecker == nb; }
         inline void setHandledForModelChecker( unsigned int nb ) { handledForModelChecker = nb; }
         
@@ -39,10 +48,11 @@ class Rule
                 
     private:
         unsigned int handled : 1;
-        unsigned int handledForModelChecker : 31;
+        unsigned int createdBody : 1;
+        unsigned int handledForModelChecker : 30;
         int body;
         
-        inline void initData() { handled = 0; handledForModelChecker = 0; body = 0; }
+        inline void initData() { handled = 0; createdBody = 0; handledForModelChecker = 0; body = 0; }
 };
 
 #endif

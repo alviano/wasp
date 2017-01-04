@@ -1438,11 +1438,11 @@ GringoNumericFormat::computeSCCsDisjunctive()
     
     for( unsigned i = 2; i < atomData.size(); ++i )
     {
-        trace_msg( parser, 2, "Processing atom " << i );
+        trace_msg( parser, 2, "Processing atom " << Literal( i, POSITIVE ) << " with id " << i );
         AtomData& data = atomData[ i ];
         Var var = i;
         if( data.isSupported() || solver.isFalse( var ) || data.isWeightConstraint() )
-            continue;        
+            continue;
         assert( data.numberOfHeadOccurrences > 0 );
         {
             trace_msg( parser, 3, "Creating crule" );            
@@ -1459,9 +1459,25 @@ GringoNumericFormat::computeSCCsDisjunctive()
                         continue;
                     rule->setHandled();
                     Vector< Var > headAtoms;
-                    Literal addedLit = createAuxForBody( rule, headAtoms );
-                    if( wasp::Options::compactReasonsForHCC )
-                        rule->setBodyAux( addedLit.getId() );
+                    Literal addedLit;
+                    if( !wasp::Options::compactReasonsForHCC || !rule->isBodyCreated() )
+                    {
+                        rule->setBodyCreated();
+                        addedLit = createAuxForBody( rule, headAtoms );
+                        if( wasp::Options::compactReasonsForHCC )
+                            rule->setBodyAux( addedLit.getId() );
+                    }
+                    else
+                    {
+                        const Vector< Literal >& myLiterals = rule->literals;    
+                        for( unsigned k = 0; k < myLiterals.size(); ++k )
+                        {
+                            Literal myLit = myLiterals[ k ];
+                            if( myLit.isHeadAtom() )
+                                headAtoms.push_back( myLit.getVariable() );
+                        }
+                        addedLit = rule->getBodyAux() != 0 ? solver.getLiteral( rule->getBodyAux() ) : Literal::null;
+                    }
                     Var addedVar = addedLit.getVariable();
                     assert( !headAtoms.empty() );
                     if( headAtoms.size() == 1 || data.headOccurrences[ j ].isChoice() )
@@ -1531,7 +1547,15 @@ GringoNumericFormat::computeSCCsDisjunctive()
                     }
                 }
                 else
+                {
+                    if( wasp::Options::compactReasonsForHCC && !rule->isBodyCreated() )
+                    {
+                        rule->setBodyCreated();
+                        Vector< Var > headAtoms;
+                        rule->setBodyAux( createAuxForBody( rule, headAtoms ).getId() );
+                    }
                     addDependencies( Literal( i, POSITIVE ), rule );
+                }
             }
             crules.push_back( crule );
             trace_msg( parser, 5, "New crule: " << *crule );
