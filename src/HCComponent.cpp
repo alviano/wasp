@@ -26,7 +26,7 @@ using namespace std;
 
 ostream& operator<<( ostream& out, const HCComponent& component )
 {
-    out << "[ ";
+    out << component.id << ": [ ";
     for( unsigned i = 0; i < component.hcVariables.size(); ++i )
         out << component.solver.getLiteral( component.hcVariables[ i ] ) << " ";
     return out << "]";
@@ -167,7 +167,7 @@ HCComponent::computeReasonForUnfoundedAtomCompactReasons(
             
             if( !lit.isHeadAtom() )
             {
-                trace_msg( modelchecker, 5, "Skip " << lit << "because it is a body literal" );
+                trace_msg( modelchecker, 5, "Skip " << lit << " because it is a body literal" );
                 continue;
             }
             
