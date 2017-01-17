@@ -41,7 +41,7 @@ class WaspFacade
         inline WaspFacade();
         inline ~WaspFacade(){ delete outputBuilder; }
         
-        void readInput();
+        void readInput( istream& i );
         void solve();
         inline void onFinish() { solver.onFinish(); }
         inline void onKill() { solver.onKill(); }

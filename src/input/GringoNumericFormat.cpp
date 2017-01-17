@@ -15,9 +15,9 @@
 using namespace std;
 
 void
-GringoNumericFormat::parse()
+GringoNumericFormat::parse( istream& i )
 {
-    Istream input( cin );
+    Istream input( i );
     this->parse( input );
 }
 

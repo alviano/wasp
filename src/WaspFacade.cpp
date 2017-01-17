@@ -35,17 +35,18 @@
 #include "outputBuilders/NoopOutputBuilder.h"
 
 void
-WaspFacade::readInput()
+WaspFacade::readInput(
+    istream& in )
 {
     char tmp;
-    cin >> tmp;
+    in >> tmp;
 
-    if( !cin.good() && !cin.eof() )
+    if( !in.good() && !in.eof() )
     {   
         ErrorMessage::errorDuringParsing( "Unexpected symbol." );
     }    
 
-    cin.putback( tmp );
+    in.putback( tmp );
     switch ( tmp )
     {
         case COMMENT_DIMACS:
@@ -66,7 +67,7 @@ WaspFacade::readInput()
         default:
         {
             GringoNumericFormat gringo( solver );
-            gringo.parse();
+            gringo.parse( in );
 //            solver.setOutputBuilder( new WaspOutputBuilder() );
             greetings();
             break;

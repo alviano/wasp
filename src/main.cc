@@ -18,7 +18,7 @@
 
 #include <cstdlib>
 #include <csignal>
-
+#include <iostream>
 #include "WaspFacade.h"
 #include "util/Options.h"
 using namespace std;
@@ -47,7 +47,7 @@ int main( int argc, char** argv )
     signal( SIGTERM, my_handler );
     signal( SIGXCPU, my_handler );
     
-    waspFacade.readInput();
+    waspFacade.readInput( cin );
     waspFacade.solve();
     waspFacade.onFinish();
     delete waspFacadePointer; 
