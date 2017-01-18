@@ -109,7 +109,7 @@ run: $(BINARY)
 lib: $(BUILD_DIR)/wasp.a
 	rm -rf $(LIB_DIR)
 	mkdir -p $(LIB_DIR)
-	mv $(BUILD_DIR)/wasp.a $(LIB_DIR)
+	mv $(BUILD_DIR)/wasp.a $(LIB_DIR)/libwasp.a
 	cp -r $(SOURCE_DIR) $(LIB_SRC_DIR)
 	rm -rf $(LIBCPP) $(LIBCC)
 	mv $(LIB_SRC_DIR) $(LIB_SRC_WASP_DIR)

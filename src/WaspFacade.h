@@ -24,7 +24,7 @@
 #include <unordered_map>
 using namespace std;
 
-#include "util/Constants.h"
+#include "util/WaspConstants.h"
 #include "Solver.h"
 #include "input/Dimacs.h"
 #include "weakconstraints/WeakInterface.h"

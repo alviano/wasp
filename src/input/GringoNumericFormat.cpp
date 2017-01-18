@@ -1,6 +1,6 @@
 #include "GringoNumericFormat.h"
 
-#include "../util/Constants.h"
+#include "../util/WaspConstants.h"
 #include "../util/ErrorMessage.h"
 #include "../Clause.h"
 #include "../Aggregate.h"

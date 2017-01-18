@@ -16,12 +16,12 @@
  *
  */
 
-#ifndef OPTIONS_H
-#define OPTIONS_H
+#ifndef WASPOPTIONS_H
+#define WASPOPTIONS_H
 
 #include <vector>
 #include <map>
-#include "Constants.h"
+#include "WaspConstants.h"
 #include "Trace.h"
 using namespace std;
 
@@ -128,4 +128,4 @@ namespace wasp
     };
 }
 
-#endif /* OPTIONS_H */
+#endif

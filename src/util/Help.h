@@ -21,7 +21,7 @@
 
 #include <iostream>
 using namespace std;
-#include "Constants.h"
+#include "WaspConstants.h"
 
 class Help
 {

@@ -21,7 +21,7 @@
 
 class Literal;
 class Solver;
-#include "util/Constants.h"
+#include "util/WaspConstants.h"
 
 class Propagator
 {

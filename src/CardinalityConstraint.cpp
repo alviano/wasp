@@ -18,7 +18,7 @@
 
 #include "CardinalityConstraint.h"
 #include "Solver.h"
-#include "util/Options.h"
+#include "util/WaspOptions.h"
 #include "Learning.h"
 #include "Clause.h"
 

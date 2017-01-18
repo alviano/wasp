@@ -16,7 +16,7 @@
  *
  */
 
-#include "Options.h"
+#include "WaspOptions.h"
 
 #include "ErrorMessage.h"
 #include "Help.h"
