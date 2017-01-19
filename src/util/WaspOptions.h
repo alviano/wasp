@@ -79,8 +79,6 @@ namespace wasp
             
             static bool compactReasonsForHCC;
             
-        private:
-
             static DELETION_POLICY deletionPolicy;
 
             static unsigned int deletionThreshold;
@@ -108,6 +106,8 @@ namespace wasp
             
             static bool minimizeUnsatCore;                                                                  
             
+        private:
+
             static map< string, WEAK_CONSTRAINTS_ALG > stringToWeak;
             
             static map< string, SHIFT_STRATEGY > stringToShift;
