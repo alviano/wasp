@@ -106,8 +106,6 @@ namespace wasp
             
             static bool minimizeUnsatCore;                                                                  
             
-        private:
-
             static map< string, WEAK_CONSTRAINTS_ALG > stringToWeak;
             
             static map< string, SHIFT_STRATEGY > stringToShift;
