@@ -24,7 +24,7 @@
 #include <cstring>
 using namespace std;
 
-#include "../util/Constants.h"
+#include "../util/WaspConstants.h"
 #include "../Literal.h"
 #include "../stl/Vector.h"
 class Solver;

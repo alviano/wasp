@@ -26,4 +26,5 @@ def reportEndTest(args, testcase):
     global report_command
     global report_begin
     diff = time.time() - report_begin
-    print("%10.3f s  %s  %s" % (diff, report_testcase, report_command))
+    print("%10.3f s ./tests/printInput.py %s | %s" % (diff, report_testcase, report_command))
+#    print("%10.3f s  %s  %s" % (diff, report_testcase, report_command))

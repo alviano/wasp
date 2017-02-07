@@ -20,7 +20,7 @@
 
 #include "Propagator.h"
 #include "util/Assert.h"
-#include "util/Options.h"
+#include "util/WaspOptions.h"
 #include "util/Trace.h"
 #include "stl/Vector.h"
 #include "Literal.h"

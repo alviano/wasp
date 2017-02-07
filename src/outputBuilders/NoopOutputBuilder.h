@@ -19,7 +19,7 @@
 #ifndef NOOPOUTPUTBUILDER_H
 #define NOOPOUTPUTBUILDER_H
 
-#include "../util/Constants.h"
+#include "../util/WaspConstants.h"
 #include "../stl/Vector.h"
 #include "OutputBuilder.h"
 
@@ -63,9 +63,7 @@ class NoopOutputBuilder : public OutputBuilder
         
     private:
         string lastModel;
-        stringstream modelStream;
-        bool optimum;
-        
+        stringstream modelStream;        
         string lastWeight;
 };
 

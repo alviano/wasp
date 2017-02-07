@@ -22,7 +22,7 @@
 #include <string>
 using namespace std;
 
-#include "Constants.h"
+#include "WaspConstants.h"
 
 class ErrorMessage
 {

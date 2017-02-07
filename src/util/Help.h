@@ -21,7 +21,7 @@
 
 #include <iostream>
 using namespace std;
-#include "Constants.h"
+#include "WaspConstants.h"
 
 class Help
 {
@@ -107,10 +107,12 @@ class Help
             cout << separator << endl;
 
             cout << "Model Checker options                  " << endl << endl;
-            cout << "--exchange-clauses                     - Exchange clauses from checker to generator" << endl;
+            cout << "--modelchecker-algorithm               - Compute the unfounded check for HC components using the specified algorithm" << endl;
+            cout << "       =reduct                         - Algorithm based on the GL-reduct" << endl;
+            cout << "       =unfounded                      - Algorithm based on the unfounded sets conditions" << endl;
+            cout << "--modelchecker-compactreasons          - Enable a different strategy to compute reasons. (Note: it enables the option --disjunction=auto)" << endl;            
             cout << "--forward-partialchecks                - Enable forward partial checks" << endl;
-            cout << "--backward-partialchecks               - Enable backward partial checks" << endl;
-            cout << "--bump-activity-partialchecks          - Bump activity after partial checks" << endl;
+            cout << "--heuristic-partialchecks              - Enable heuristic to activate or disactivate partial checks during the search" << endl;            
                 
             cout << separator << endl;
             cout << "Weak Constraints options               " << endl << endl;
@@ -141,7 +143,11 @@ class Help
             cout << "--query-algorithm                      - Compute cautious consequences according to the specified algorithm" << endl;
             cout << "       =ict                            - Enable iterative coherence testing" << endl;
             cout << "       =or                             - Enable overestimate reduction" << endl;
-            cout << "--query-verbosity=(0,1,2)              - Enable verbosity of queries algorithms" << endl;
+            cout << "       =chunk-static                   - Enable algorithm based on static chunks. (Default size=2)" << endl;
+            cout << "       =chunk-dynamic                  - Enable algorithm based on dynamic chunks. (Default size=2)" << endl;
+            cout << "--query-verbosity=(0,...,3)            - Enable verbosity of queries algorithms" << endl;
+            cout << "--query-chunk-size=n                   - Specify the size of each chunk" << endl;
+            cout << "--query-chunk-percentage=(1,...,100)   - The size of each chunk is a percentage of the number of candidates" << endl;
 
             cout << separator << endl;
             cout << "Disjunction options                    " << endl << endl;
@@ -150,6 +156,7 @@ class Help
             cout << "       =propagator                     - Use propagator for inferences" << endl;
 //            cout << "       =lr                             - Enable left/right strategy" << endl;
             cout << "       =compv                          - Perform the disjunctive completion" << endl;
+            cout << "       =auto                           - Perform an automatic choice between propagator and disjunctive completion" << endl;
 //            cout << "       =quadratic                      - Enable quadratic strategy" << endl;
 //            cout << "       =quadratic-aggregate            - Enable quadratic strategy with aggregate" << endl;
             cout << "--enable-shift-onedef                  - Enable shift also for atoms with one defition" << endl;

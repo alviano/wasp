@@ -24,7 +24,7 @@
 #include <unordered_map>
 using namespace std;
 
-#include "util/Constants.h"
+#include "util/WaspConstants.h"
 #include "Solver.h"
 #include "input/Dimacs.h"
 #include "weakconstraints/WeakInterface.h"
@@ -43,7 +43,7 @@ class WaspFacade
         inline WaspFacade();
         inline ~WaspFacade(){ delete outputBuilder; }
         
-        void readInput();
+        void readInput( istream& i );
         void solve();
         inline void onFinish() { solver.onFinish(); }
         inline void onKill() { statistics( &solver, endSolving() ); estatistics( &solver, endSolving() ); solver.onKill(); }
@@ -57,7 +57,6 @@ class WaspFacade
         inline void setMaxModels( unsigned int max ) { maxModels = max; }
         inline void setPrintProgram( bool printProgram ) { this->printProgram = printProgram; }
         inline void setPrintDimacs( bool printDimacs ) { this->printDimacs = printDimacs; }
-        void setExchangeClauses( bool exchangeClauses ) { solver.setExchangeClauses( exchangeClauses ); }                
         
         inline void setWeakConstraintsAlgorithm( WEAK_CONSTRAINTS_ALG alg ) { weakConstraintsAlg = alg; }
         inline void setDisjCoresPreprocessing( bool value ) { disjCoresPreprocessing = value; }

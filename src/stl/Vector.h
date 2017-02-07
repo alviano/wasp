@@ -4,7 +4,7 @@
 #include <cassert>
 #include <cstdio>
 #include <cstring>
-#include "../util/Constants.h"
+#include "../util/WaspConstants.h"
 using namespace std;
 
 template< class T >

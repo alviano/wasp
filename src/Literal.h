@@ -25,7 +25,7 @@
 #include <string>
 using namespace std;
 
-#include "util/Constants.h"
+#include "util/WaspConstants.h"
 class Literal
 {
     friend ostream &operator<<( ostream &, const Literal & );
@@ -43,28 +43,29 @@ class Literal
             else { Literal l( -lit, NEGATIVE ); return l; } 
         }
         
-        inline ~Literal();
+        inline ~Literal() {}
 
-        inline int getId() const;
+        inline int getId() const { return isPositive() ? getVariable() : -getVariable(); }
         inline unsigned int getIndex() const { return ( variable << 1 ) | sign; }
 
-        inline bool operator==( const Literal& ) const;
-        inline bool operator!=( const Literal& ) const;
+        inline bool operator==( const Literal& literal ) const { return variable == literal.variable && sign == literal.sign; }
+        inline bool operator!=( const Literal& literal ) const { return !( *this == literal ); }
 
-        inline Var getVariable() const;
-        inline void setVariable( Var v );
-        
+        inline Var getVariable() const { return variable; }
+        inline void setVariable( Var v ) { variable = v; }
+                
         /**
          * This function returns 0 if the literal is positive, 1 otherwise.
          */
-        inline unsigned int getSign() const;
+        inline unsigned int getSign() const { assert( "Variable has not been set." && variable != 0 ); return sign; }
         
-        inline Literal getOppositeLiteral() const;
+        inline Literal getOppositeLiteral() const { return Literal( getVariable(), getOppositeSign() ); }
 
-        inline bool isPositive() const;
-        inline bool isNegative() const;
+        inline bool isPositive() const { return sign == POSITIVE; }
+        inline bool isNegative() const { return !isPositive(); }
         
-        inline void setPositive();
+        inline void setPositive() { sign = POSITIVE; }
+        inline void setNegative() { sign = NEGATIVE; }
         
         static Literal newUndefinedPositiveBodyLiteral( Var v ) { return Literal( v, NEGATIVE, true, false ); }
         static Literal newTruePositiveBodyLiteral( Var v ) { return Literal( v, NEGATIVE, true, true ); }
@@ -91,7 +92,7 @@ class Literal
         /**
          * This function returns 1 if the literal is positive, 0 otherwise.
          */
-        inline unsigned int getOppositeSign() const;
+        inline unsigned int getOppositeSign() const { assert( "Variable has not been set." && variable != 0 ); return ( ~sign ) & 1; }
         
         unsigned int variable : 29;
         unsigned int sign : 1;
@@ -107,81 +108,6 @@ Literal::Literal(
     assert( sign == 0 || sign == 1 );
     assert( ( sign == 0 && isPositive() ) || ( sign == 1 && !isPositive() ) );
     assert( getVariable() == v );
-}
-
-Literal::~Literal()
-{
-}
-
-bool
-Literal::isPositive() const
-{
-    return sign == POSITIVE;
-}
-
-bool
-Literal::isNegative() const
-{
-    return !isPositive();
-}
-
-unsigned int
-Literal::getSign() const
-{
-    assert( "Variable has not been set." && variable != 0 );
-    return sign;
-}
-
-unsigned int
-Literal::getOppositeSign() const
-{
-    assert( "Variable has not been set." && variable != 0 );
-    return ( ~sign ) & 1;
-}
-
-Var
-Literal::getVariable() const
-{
-    return variable;
-}
-
-void
-Literal::setVariable(
-    Var v )
-{
-    variable = v;
-}
-
-void
-Literal::setPositive()
-{
-    sign = POSITIVE;
-}
-
-bool
-Literal::operator==(
-    const Literal& literal ) const
-{
-    return variable == literal.variable && sign == literal.sign;
-}
-
-bool
-Literal::operator!=(
-    const Literal& literal ) const
-{
-    return !( *this == literal );
-}
-
-Literal
-Literal::getOppositeLiteral() const
-{
-    return Literal( getVariable(), getOppositeSign() );
-}
-
-int
-Literal::getId() const
-{
-    return isPositive() ? getVariable() : -getVariable();
 }
 
 #endif

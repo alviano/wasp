@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef CONSTANTS_H
-#define CONSTANTS_H
+#ifndef WASPCONSTANTS_H
+#define WASPCONSTANTS_H
 
 #include <climits>
 //enum TruthValue { UNDEFINED = 0, FALSE = 1, TRUE = 2 };
@@ -54,6 +54,8 @@
 #define NO_QUERY 0
 #define OVERESTIMATE_REDUCTION 1
 #define ITERATIVE_COHERENCE_TESTING 2
+#define CHUNK_STATIC 3
+#define CHUNK_DYNAMIC 4
 
 /*
  * Weak constraints
@@ -99,9 +101,13 @@
 #define SHIFT_QUADRATIC 3
 #define SHIFT_QUADRATIC_AGGREGATE 4
 #define SHIFT_NAIVE 5
+#define SHIFT_AUTO 6
 
 #define ENUMERATION_BC 0
 #define ENUMERATION_BT 1
+
+#define REDUCT_BASED 0
+#define UNFOUNDED_BASED 1
 
 #define VERSION "2.0"
 

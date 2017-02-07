@@ -16,7 +16,7 @@
  *
  */
 
-#include "Options.h"
+#include "WaspOptions.h"
 
 #include "ErrorMessage.h"
 #include "Help.h"
@@ -86,14 +86,15 @@ namespace wasp
 #define OPTIONID_stdin ( 'z' + 100 )
 #define OPTIONID_time_limit ( 'z' + 101 )
 #define OPTIONID_max_cost ( 'z' + 102 )
-#define OPTIONID_exchange_clauses ( 'z' + 103 )
-#define OPTIONID_forward_partialchecks ( 'z' + 104 )
-#define OPTIONID_bumpactivityafterpartialchecks ( 'z' + 105 )
-#define OPTIONID_backward_partialchecks ( 'z' + 106 )
+
+#define OPTIONID_modelchecker_algorithm ( 'z' + 104 )
+#define OPTIONID_forward_partialchecks ( 'z' + 105 )
+#define OPTIONID_heuristic_partialchecks ( 'z' + 106 )
 #define OPTIONID_shift_strategy ( 'z' + 107 )
 #define OPTIONID_shift_onedef ( 'z' + 108 )
 #define OPTIONID_simplifications ( 'z' + 109 )
 #define OPTIONID_enumeration ( 'z' + 110 )
+#define OPTIONID_modelchecker_compactreasons ( 'z' + 111 )
     
 /* WEAK CONSTRAINTS OPTIONS */
 #define OPTIONID_weakconstraintsalgorithm ( 'z' + 200 )
@@ -109,6 +110,8 @@ namespace wasp
 /* QUERY OPTIONS */
 #define OPTIONID_queryalgorithm ( 'z' + 300 )
 #define OPTIONID_queryverbosity ( 'z' + 301 )
+#define OPTIONID_querychunksize ( 'z' + 302 )
+#define OPTIONID_querychunkpercentage ( 'z' + 303 )
     
 #ifdef TRACE_ON
 TraceLevels Options::traceLevels;
@@ -143,13 +146,9 @@ unsigned int Options::maxModels = 1;
 
 unsigned int Options::maxCost = MAXUNSIGNEDINT;
 
-bool Options::exchangeClauses = false;
-
 bool Options::forwardPartialChecks = false;
 
-bool Options::backwardPartialChecks = false;
-
-bool Options::bumpActivityAfterPartialCheck = false;
+bool Options::heuristicPartialChecks = false;
 
 WEAK_CONSTRAINTS_ALG Options::weakConstraintsAlg = ONE;
 
@@ -194,6 +193,14 @@ unsigned int Options::minimizationStrategy = MINIMIZATION_OFF;
 unsigned int Options::minimizationBudget = UINT_MAX;
 
 unsigned int Options::enumerationStrategy = ENUMERATION_BT;
+
+unsigned int Options::chunkSize = UINT_MAX;
+
+unsigned int Options::chunkPercentage = UINT_MAX;
+
+unsigned int Options::modelcheckerAlgorithm = REDUCT_BASED;
+
+bool Options::compactReasonsForHCC = false;
 
 void
 Options::parse(
@@ -272,10 +279,10 @@ Options::parse(
                 
                 { "enumeration-strategy", required_argument, NULL, OPTIONID_enumeration },
                 
-                { "exchange-clauses", no_argument, NULL, OPTIONID_exchange_clauses },
+                { "modelchecker-algorithm", required_argument, NULL, OPTIONID_modelchecker_algorithm },  
                 { "forward-partialchecks", no_argument, NULL, OPTIONID_forward_partialchecks },  
-                { "backward-partialchecks", no_argument, NULL, OPTIONID_backward_partialchecks },  
-                { "bump-activity-partialchecks", no_argument, NULL, OPTIONID_bumpactivityafterpartialchecks },  
+                { "heuristic-partialchecks", no_argument, NULL, OPTIONID_heuristic_partialchecks },
+                { "modelchecker-compactreasons", no_argument, NULL, OPTIONID_modelchecker_compactreasons },                
                 
                 /* WEAK CONSTRAINTS */
                 { "weakconstraints-algorithm", required_argument, NULL, OPTIONID_weakconstraintsalgorithm },
@@ -294,6 +301,8 @@ Options::parse(
                 /* QUERY */
                 { "query-algorithm", optional_argument, NULL, OPTIONID_queryalgorithm },
                 { "query-verbosity", required_argument, NULL, OPTIONID_queryverbosity },
+                { "query-chunk-size", required_argument, NULL, OPTIONID_querychunksize },
+                { "query-chunk-percentage", required_argument, NULL, OPTIONID_querychunkpercentage },
                 
                 // The NULL-option indicates the end of the array.
                 { NULL, 0, NULL, 0 }
@@ -517,6 +526,26 @@ Options::parse(
                 simplifications = false;
                 break;
                 
+            case OPTIONID_modelchecker_algorithm:
+                modelcheckerAlgorithm = REDUCT_BASED;
+                if( optarg )
+                {
+                    if( !strcmp( optarg, "reduct" ) )
+                        modelcheckerAlgorithm = REDUCT_BASED;
+                    else if( !strcmp( optarg, "unfounded" ) )
+                        modelcheckerAlgorithm = UNFOUNDED_BASED;
+                    else
+                        ErrorMessage::errorGeneric( "Inserted invalid algorithm for model checker." );
+                }
+                else
+                    ErrorMessage::errorGeneric( "Inserted invalid algorithm for model checker." );
+                break;
+                
+            case OPTIONID_modelchecker_compactreasons:
+                compactReasonsForHCC = true;
+                shiftStrategy = SHIFT_AUTO;
+                break;
+                
             case OPTIONID_help:
                 Help::printHelp();
                 exit( 0 );
@@ -534,23 +563,15 @@ Options::parse(
             case OPTIONID_max_cost:
                 if( optarg )
                     maxCost = atoi( optarg );
-                break;
-                
-            case OPTIONID_exchange_clauses:
-                exchangeClauses = true;
-                break;
+                break;                
                 
             case OPTIONID_forward_partialchecks:
                 forwardPartialChecks = true;
                 break;
                 
-            case OPTIONID_backward_partialchecks:
-                backwardPartialChecks = true;
-                break;            
-                
-            case OPTIONID_bumpactivityafterpartialchecks:
-                bumpActivityAfterPartialCheck = true;
-                break;
+            case OPTIONID_heuristic_partialchecks:
+                heuristicPartialChecks = true;
+                break;                         
 
             case OPTIONID_weakconstraintsalgorithm:
                 if( optarg )
@@ -625,9 +646,15 @@ Options::parse(
                         queryAlgorithm = OVERESTIMATE_REDUCTION;
                     else if( !strcmp( optarg, "ict" ) )
                         queryAlgorithm = ITERATIVE_COHERENCE_TESTING;
+                    else if( !strcmp( optarg, "chunk-static" ) )
+                        queryAlgorithm = CHUNK_STATIC;
+                    else if( !strcmp( optarg, "chunk-dynamic" ) )
+                        queryAlgorithm = CHUNK_DYNAMIC;
                     else
                         ErrorMessage::errorGeneric( "Inserted invalid algorithm for query answering." );
                 }
+                else
+                        ErrorMessage::errorGeneric( "Inserted invalid algorithm for query answering." );
                 break;
                 
             case OPTIONID_queryverbosity:
@@ -635,11 +662,37 @@ Options::parse(
                 if( optarg )
                 {
                     unsigned int value = atoi( optarg );
-                    if( value <= 2 )
+                    if( value <= 3 )
                         queryVerbosity = value;
                     else
                         ErrorMessage::errorGeneric( "Inserted invalid value for query verbosity." );
                 }
+                else
+                        ErrorMessage::errorGeneric( "Inserted invalid value for query verbosity." );
+                break;
+            
+            case OPTIONID_querychunksize:
+                if( optarg )
+                {
+                    chunkSize = atoi( optarg );
+                    if( chunkPercentage != UINT_MAX )
+                        ErrorMessage::errorGeneric( "Only one option between chunk percentage and chunk size can be specified." );
+                }
+                else
+                    ErrorMessage::errorGeneric( "Only one option between chunk percentage and chunk size can be specified." );
+                break;
+                
+            case OPTIONID_querychunkpercentage:
+                if( optarg )
+                {
+                    chunkPercentage = atoi( optarg );
+                    if( chunkPercentage == 0 || chunkPercentage > 100 )
+                        ErrorMessage::errorGeneric( "Inserted invalid value for chunk percentage." );
+                    if( chunkSize != UINT_MAX )
+                        ErrorMessage::errorGeneric( "Only one option between chunk percentage and chunk size can be specified." );
+                }
+                else
+                    ErrorMessage::errorGeneric( "Inserted invalid value for chunk percentage." );
                 break;
                 
             default:
@@ -654,6 +707,7 @@ Options::parse(
     {
         inputFiles.push_back( argv[ i ] );
     }
+    checkOptions();
 }
 
 void
@@ -667,7 +721,6 @@ Options::setOptions(
     waspFacade.setMaxModels( maxModels );
     waspFacade.setPrintProgram( printProgram );
     waspFacade.setPrintDimacs( printDimacs);
-    waspFacade.setExchangeClauses( exchangeClauses );
     waspFacade.setWeakConstraintsAlgorithm( weakConstraintsAlg );
     waspFacade.setDisjCoresPreprocessing( disjCoresPreprocessing );
     waspFacade.setMinimizeUnsatCore( minimizeUnsatCore );
@@ -735,7 +788,8 @@ Options::initMap()
     stringToShift[ "shift" ] = SHIFT_NAIVE;
     stringToShift[ "propagator" ] = SHIFT_PROPAGATOR;
 //    stringToShift[ "lr" ] = SHIFT_LEFT_RIGHT;
-    stringToShift[ "completion" ] = SHIFT_NORMALIZE;
+    stringToShift[ "compv" ] = SHIFT_NORMALIZE;
+    stringToShift[ "auto" ] = SHIFT_AUTO;
 //    stringToShift[ "quadratic" ] = SHIFT_QUADRATIC;
 //    stringToShift[ "quadratic-aggregate" ] = SHIFT_QUADRATIC_AGGREGATE;
     
@@ -743,5 +797,17 @@ Options::initMap()
     stringToMinimization[ "linearsearch" ] = MINIMIZATION_LINEARSEARCH;
 }
 
-};
+void
+Options::checkOptions()
+{
+    if( compactReasonsForHCC && shiftStrategy == SHIFT_NAIVE )
+        ErrorMessage::errorGeneric( "Compact reasons canno be combined with shift" );
+    
+    if( modelcheckerAlgorithm == UNFOUNDED_BASED && heuristicPartialChecks )
+        ErrorMessage::errorGeneric( "Partial checks are not available for the unfounded based approach" );
+    
+    if( modelcheckerAlgorithm == UNFOUNDED_BASED && forwardPartialChecks )
+        ErrorMessage::errorGeneric( "Partial checks are not available for the unfounded based approach" );
+}
 
+};

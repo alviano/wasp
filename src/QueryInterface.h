@@ -35,22 +35,30 @@ class QueryInterface
         
         bool computeFirstModel();
         
-        void enumerationOfModels();
         void iterativeCoherenceTesting();
         void overestimateReduction();
+        void chunkDynamicAlgorithm( unsigned int chunkSize );
+        void chunkStaticAlgorithm( unsigned int chunkSize );
+        
         void computeCandidates();
         void reduceCandidates();
+        void reduceCandidatesForChunk( unsigned int chunkSize );
         
         Clause* computeClauseFromCandidates();
+        Clause* computeClauseForChunk( unsigned int chunkSize, Var& auxVar );        
         
         void addAnswer( Var v );
         
         void printCandidates();
         
+        
+        void computeCandidatesForChunk( Vector< Var >& candidatesForChunk, unsigned int chunkSize );
+        Clause* computeClauseFromChunkCandidates( Vector< Var >& candidatesForChunk, Var& auxVar );
+
         Vector< Var > candidates;
         Vector< Var > answers;
         
-        Solver& solver;
+        Solver& solver;        
 };
 
 #endif

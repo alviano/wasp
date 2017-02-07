@@ -20,7 +20,7 @@
 #define SILENTOUTPUTBUILDER_H
 
 #include "WaspOutputBuilder.h"
-#include "../util/Options.h"
+#include "../util/WaspOptions.h"
 
 class SilentOutputBuilder : public WaspOutputBuilder
 {

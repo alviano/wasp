@@ -21,7 +21,7 @@
 
 #include <vector>
 #include <cassert>
-#include "util/Constants.h"
+#include "util/WaspConstants.h"
 using namespace std;
 
 class AdjacencyList;

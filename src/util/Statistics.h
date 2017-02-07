@@ -28,7 +28,7 @@ using namespace std;
 
 class Solver;
 
-#include "Constants.h"
+#include "WaspConstants.h"
 #include "ErrorMessage.h"
 
 #ifdef STATS_ON
@@ -278,7 +278,7 @@ class Solver;
             inline void startCompletion() { cerr << "Start completion" << endl; }
             inline void endCompletion() { cerr << "End completion" << endl; }
             
-            inline void setGenerator( bool gen ) { generator = gen; }                        
+            inline void setChecker() { generator = false; }                        
 
             inline void startCheckerInvocation( bool isPartial, time_t curr )
             {

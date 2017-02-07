@@ -22,7 +22,7 @@
 #include <cassert>
 #include <iostream>
 #include <vector>
-#include "Constants.h"
+#include "WaspConstants.h"
 using namespace std;
 
 class VariableNames

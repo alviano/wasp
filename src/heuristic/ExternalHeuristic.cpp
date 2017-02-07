@@ -17,7 +17,7 @@
 */
 
 #include "ExternalHeuristic.h"
-#include "../util/Constants.h"
+#include "../util/WaspConstants.h"
 #include "../util/ErrorMessage.h"
 #include "../Solver.h"
 #include "interpreters/MyPerlInterpreter.h"

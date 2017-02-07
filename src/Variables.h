@@ -27,7 +27,7 @@
 #include "util/VariableNames.h"
 #include "stl/Vector.h"
 #include "ReasonForBinaryClauses.h"
-#include "util/Options.h"
+#include "util/WaspOptions.h"
 
 using namespace std;
 class Component;

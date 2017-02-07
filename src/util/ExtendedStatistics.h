@@ -27,7 +27,7 @@ using namespace std;
 
 class Solver;
 
-#include "Constants.h"
+#include "WaspConstants.h"
 #include "ErrorMessage.h"
 #include "../Literal.h"
 

@@ -16,12 +16,12 @@
  *
  */
 
-#ifndef OPTIONS_H
-#define OPTIONS_H
+#ifndef WASPOPTIONS_H
+#define WASPOPTIONS_H
 
 #include <vector>
 #include <map>
-#include "Constants.h"
+#include "WaspConstants.h"
 #include "Trace.h"
 using namespace std;
 
@@ -44,8 +44,7 @@ namespace wasp
             static void setOptions( WaspFacade& waspFacade );
             static unsigned int maxCost;        
             static bool forwardPartialChecks;
-            static bool backwardPartialChecks;
-            static bool bumpActivityAfterPartialCheck;
+            static bool heuristicPartialChecks;
             
             static unsigned int queryAlgorithm;
             static unsigned int queryVerbosity;
@@ -80,13 +79,16 @@ namespace wasp
             
             static bool useLazyWeakConstraints;
             
-        private:
-
+            static unsigned int chunkPercentage;
+            static unsigned int chunkSize;
+            
+            static unsigned int modelcheckerAlgorithm;
+            
+            static bool compactReasonsForHCC;
+            
             static DELETION_POLICY deletionPolicy;
             static unsigned int deletionThreshold;
             
-        private:
-
             static vector< const char* > inputFiles;            
 
             static unsigned int maxModels;
@@ -102,9 +104,7 @@ namespace wasp
             
             static unsigned int restartsThreshold;            
 
-            static unsigned int timeLimit;
-            
-            static bool exchangeClauses;                                                
+            static unsigned int timeLimit;                        
             
             static bool disjCoresPreprocessing;
             
@@ -125,7 +125,9 @@ namespace wasp
             static unsigned int getEnumerationStrategy( const string& s );
             
             static void initMap();
+            
+            static void checkOptions();
     };
 }
 
-#endif /* OPTIONS_H */
+#endif

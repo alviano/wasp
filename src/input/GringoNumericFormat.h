@@ -39,19 +39,11 @@ public:
     * This function read instruction from standard input and
     * build the program.
     */
-    void parse();
-
-    /**
-    * This function read instruction from input and
-    * build the program.
-    *
-    * @param input The istream input.
-    */
-    void parse( Istream& input );
-    
+    void parse( istream& i );    
     inline bool isHeadCycleFree( Component* component );    
     
 private:
+    void parse( Istream& input );
     inline void readChoiceRule( Istream& input );
     inline void readNormalRule( Istream& input );
     inline void readNormalRule( Istream& input, unsigned head, unsigned bodySize, unsigned negativeSize );
@@ -78,7 +70,7 @@ private:
     void computeSCCsDisjunctive();
     void createClausesForShift( const Vector< Var >& headAtoms, Vector< Var >& auxVars, Literal bodyLiteral );
     void createPropagatorForDisjunction( const Vector< Var >& headAtoms, Vector< Var >& auxVars, Literal bodyLiteral );
-    void normalizeHeads( const Vector< Var >& headAtoms, Vector< Var >& auxVars, Literal bodyLiteral );
+    void normalizeHeads( const Vector< Var >& headAtoms, Vector< Var >& auxVars, Literal bodyLiteral );    
     void quadraticStrategy( const Vector< Var >& headAtoms, Vector< Var >& auxVars, Literal bodyLiteral );
     void quadraticStrategyAggregate( const Vector< Var >& headAtoms, Vector< Var >& auxVars, Literal bodyLiteral );
     void addBinaryImplication( Literal lit1, Literal lit2 );

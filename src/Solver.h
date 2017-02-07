@@ -26,7 +26,7 @@ using namespace std;
 #include "Clause.h"
 #include "Variables.h"
 #include "Literal.h"
-#include "util/Options.h"
+#include "util/WaspOptions.h"
 #include "util/Trace.h"
 #include "stl/UnorderedSet.h"
 #include "Learning.h"
@@ -41,7 +41,7 @@ using namespace std;
 #include "DependencyGraph.h"
 #include "Aggregate.h"
 #include "DisjunctionPropagator.h"
-#include "util/Constants.h"
+#include "util/WaspConstants.h"
 #include "WatchedList.h"
 #include "stl/BoundedQueue.h"
 #include "Component.h"
@@ -395,13 +395,8 @@ class Solver
         
         void printLearnedClauses();
         
-        bool cleanAndAddLearnedClause( Clause* c );
-        inline void setExchangeClauses( bool ex ) { exchangeClauses_ = ex; }
-        inline bool exchangeClauses() const { return exchangeClauses_; }
-        inline void setGenerator( bool gen ) { generator = gen; statistics( this, setGenerator( gen ) ); }        
-        inline void setAfterConflictPropagator( PostPropagator* p ) { assert( afterConflictPropagator == NULL ); afterConflictPropagator = p; }
-        
-        static void addClauseInLearnedFromAllSolvers( Clause* c ) { learnedFromAllSolvers.push_back( c ); }
+        bool cleanAndAddLearnedClause( Clause* c );        
+        inline void setChecker() { statistics( this, setChecker() ); }
         
         inline void disableStatistics() { statistics( this, disable() ); }
         inline void enableStatistics() { statistics( this, enable() ); }
@@ -409,7 +404,6 @@ class Solver
         inline unsigned int numberOfHCComponents() const { return hcComponents.size(); }
         
         inline void printInterpretation() const { variables.printInterpretation(); }
-        inline void setHCComponentForChecker( HCComponent* hc ) { assert( hcComponentForChecker == NULL ); hcComponentForChecker = hc; }
         
         inline void onLearningALoopFormulaFromModelChecker() { learnedFromPropagators++; }
         inline void onLearningALoopFormulaFromGus() { learnedFromConflicts++; }
@@ -494,11 +488,6 @@ class Solver
         
         inline ExternalPropagator* getExternalPropagatorForLazyWeakConstraints() const;
     private:
-        HCComponent* hcComponentForChecker;
-        PostPropagator* afterConflictPropagator;
-        bool exchangeClauses_;
-        bool generator;
-        static vector< Clause* > learnedFromAllSolvers;
         vector< Literal > choices;
 
         unsigned int solveWithoutPropagators( vector< Literal >& assumptions );
@@ -672,8 +661,7 @@ class Solver
         
         unsigned int numberOfAssumptions;
         unsigned int learnedFromPropagators;
-        unsigned int learnedFromConflicts;                
-        bool partialChecks;
+        unsigned int learnedFromConflicts;                        
         bool computeUnsatCores_;
         bool minimizeUnsatCore_;
         Clause* unsatCore;        
@@ -709,11 +697,7 @@ class Solver
 };
 
 Solver::Solver() 
-:    
-    hcComponentForChecker( NULL ),
-    afterConflictPropagator( NULL ),
-    exchangeClauses_( false ),
-    generator( true ),
+:
     currentDecisionLevel( 0 ),
     conflictLiteral( Literal::null ),
     conflictClause( NULL ),
@@ -733,8 +717,7 @@ Solver::Solver()
     conflictsRestarts( 0 ),
     numberOfAssumptions( 0 ),
     learnedFromPropagators( 0 ),
-    learnedFromConflicts( 0 ),
-    partialChecks( true ),
+    learnedFromConflicts( 0 ),    
     computeUnsatCores_( false ),
     minimizeUnsatCore_( true ),
     unsatCore( NULL ),
@@ -755,7 +738,9 @@ Solver::Solver()
     variableDataStructures.push_back( NULL );
     variableDataStructures.push_back( NULL );
     fromLevelToPropagators.push_back( 0 );
-    choices.push_back( Literal::null );
+    choices.push_back( Literal::null );    
+    if( wasp::Options::heuristicPartialChecks )
+        wasp::Options::forwardPartialChecks = true;
 }
 
 void
@@ -1225,19 +1210,7 @@ Solver::doRestart()
     if( currentDecisionLevel > numberOfAssumptions )
         unroll( numberOfAssumptions );
     else
-        unroll( 0 );
-        
-
-    if( generator && exchangeClauses_ )
-    {
-        while( !learnedFromAllSolvers.empty() )
-        {
-            Clause* c = learnedFromAllSolvers.back();
-            learnedFromAllSolvers.pop_back();            
-            if( !cleanAndAddLearnedClause( c ) )
-                return false;
-        }
-    }
+        unroll( 0 );            
     return true;
 }
 
@@ -1564,6 +1537,9 @@ bool
 Solver::propagateLiteralAsDeterministicConsequence(
     Literal literal )
 {
+    if( conflictDetected() )
+        return false;
+    
     assignLiteral( literal );
     if( conflictDetected() )
         return false;
@@ -1585,6 +1561,9 @@ bool
 Solver::propagateLiteralAsDeterministicConsequenceSatelite(
     Literal literal )
 {
+    if( conflictDetected() )
+        return false;
+    
     assignLiteral( literal );
     if( conflictDetected() )
         return false;
