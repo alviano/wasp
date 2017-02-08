@@ -2701,11 +2701,17 @@ Solver::getExternalPropagatorForLazyWeakConstraints() const
             if( ret == NULL )
                 ret = externalPropagators[ i ];
             else
-                ErrorMessage::errorGeneric( "Only one file can contain the methods to add weak constraints" );
+            {
+                cerr << ERRORGENERIC << " Only one file can contain the methods to add weak constraints" << endl;
+                exit( ERRORGENERICCODE );
+            }
         }
     
     if( ret == NULL )
-        ErrorMessage::errorGeneric( "No propagator set to add weak constraints" );
+    {
+        cerr << ERRORGENERIC << " No propagator set to add weak constraints" << endl;
+        exit( ERRORGENERICCODE );
+    }
     return ret;
 }
 

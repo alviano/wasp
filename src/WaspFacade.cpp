@@ -52,7 +52,6 @@ WaspFacade::readInput(
         {
             DimacsOutputBuilder* d = new DimacsOutputBuilder();            
             solver.setOutputBuilder( d );
-            greetings();
             Dimacs dimacs( solver );
             dimacs.parse();
             if( dimacs.isMaxsat() )
@@ -65,7 +64,6 @@ WaspFacade::readInput(
 
         default:
         {
-            greetings();            
             GringoNumericFormat gringo( solver );
             gringo.parse( in );
 //            solver.setOutputBuilder( new WaspOutputBuilder() );

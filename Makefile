@@ -72,6 +72,10 @@ scriptsc.python = $(shell python2.7-config --cflags | sed "s/-Wshorten-64-to-32/
 scriptsld.python = $(shell python2.7-config --ldflags | sed "s/-Wshorten-64-to-32//g" | sed "s/-Wstrict-prototypes//g")
 cxxscripts.python = -DENABLE_PYTHON
 
+scriptsc.python3 = $(shell python3-config --cflags | sed "s/-Wshorten-64-to-32//g" | sed "s/-Wstrict-prototypes//g" | sed "s/-arch i386//g" | sed "s/-DNDEBUG//g" | sed "s/-Os//g" )
+scriptsld.python3 = $(shell python3-config --ldflags | sed "s/-Wshorten-64-to-32//g" | sed "s/-Wstrict-prototypes//g")
+cxxscripts.python3 = -DENABLE_PYTHON -DPYTHON_THREE
+
 scriptsc.all = -I/usr/local/include -I$(shell perl -MConfig -e 'print $$Config{archlib}')/CORE/ $(shell python2.7-config --cflags | sed "s/-Wshorten-64-to-32//g" | sed "s/-Wstrict-prototypes//g" | sed "s/-arch i386//g" | sed "s/-DNDEBUG//g" | sed "s/-Os//g" )
 scriptsld.all = -L$(shell perl -MConfig -e 'print $$Config{archlib}')/CORE/ -L/usr/local/lib/ -lperl $(shell python2.7-config --ldflags | sed "s/-Wshorten-64-to-32//g" | sed "s/-Wstrict-prototypes//g")
 cxxscripts.all = -DENABLE_PERL -DENABLE_PYTHON

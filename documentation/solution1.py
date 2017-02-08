@@ -65,9 +65,9 @@ def onLiteralsUndefined(*lits):
     #If a literal is again undefined 
     #the interpretation is restored.
     for i, l in enumerate(lits):
-    	if(i==0):
-    		continue    
-        if(l>=0):
+        if i == 0:
+            continue
+        if l >= 0:
             countTrue = countTrue -1
         else:
             countFalse = countFalse - 1

@@ -29,7 +29,12 @@ MyPythonInterpreter::MyPythonInterpreter(
 {
     setenv( "PYTHONPATH", ".", 1 );
     Py_Initialize();
-    PyObject* pName = PyString_FromString( filename );
+    PyObject* pName = 
+    #ifdef PYTHON_THREE
+        PyUnicode_FromString( filename );
+    #else
+        PyString_FromString( filename );
+    #endif
     if( scriptDirectory != "" )
     {
         string s( "import sys; sys.path.append('" + scriptDirectory + "')" );
@@ -72,23 +77,45 @@ MyPythonInterpreter::callListMethod(
         PyObject* result = PyObject_CallObject( pFunc, pArgs );
         if( result )
         {
+            bool isInt = 
+            #ifdef PYTHON_THREE
+                PyLong_Check( result );
+            #else
+                PyInt_Check( result );
+            #endif
             if( PyList_Check( result ) )
             {
                 int size = PyList_Size( result );
                 for( int i = size - 1; i >= 0; i-- )
                 {
                     PyObject* item = PyList_GetItem( result, i );                
-                    if( PyInt_Check( item ) )
+                    bool isInt = 
+                    #ifdef PYTHON_THREE
+                        PyLong_Check( item );
+                    #else
+                        PyInt_Check( item );
+                    #endif
+                    if( isInt )
                     {
-                        int value = PyInt_AsLong( item );
+                        int value = 
+                        #ifdef PYTHON_THREE
+                            PyLong_AsLong( item );
+                        #else
+                            PyInt_AsLong( item );
+                        #endif
                         output.push_back( value );
                     }
                 }
                 Py_XDECREF( result );
             }
-            else if( PyInt_Check( result ) )
+            else if( isInt )
             {
-                int value = PyInt_AsLong( result );
+                int value = 
+                #ifdef PYTHON_THREE
+                    PyLong_AsLong( result );
+                #else
+                    PyInt_AsLong( result );
+                #endif
                 output.push_back( value );
             }
             else if( PyErr_Occurred() )
@@ -126,23 +153,45 @@ void MyPythonInterpreter::callListMethod(
         PyObject* result = PyObject_CallObject( pFunc, pArgs );
         if( result )
         {
+            bool isInt = 
+            #ifdef PYTHON_THREE
+                PyLong_Check( result );
+            #else
+                PyInt_Check( result );
+            #endif
             if( PyList_Check( result ) )
             {
                 int size = PyList_Size( result );
                 for( int i = size - 1; i >= 0; i-- )
                 {
                     PyObject* item = PyList_GetItem( result, i );
-                    if( PyInt_Check( item ) )
+                    bool isInt = 
+                    #ifdef PYTHON_THREE
+                        PyLong_Check( item );
+                    #else
+                        PyInt_Check( item );
+                    #endif
+                    if( isInt )
                     {
-                        uint64_t value = PyInt_AsLong( item );
+                        uint64_t value = 
+                        #ifdef PYTHON_THREE
+                            PyLong_AsLong( item );
+                        #else
+                            PyInt_AsLong( item );
+                        #endif
                         output.push_back( value );
                     }
                 }
                 Py_XDECREF( result );
             }
-            else if( PyInt_Check( result ) )
+            else if( isInt )
             {
-                uint64_t value = PyInt_AsUnsignedLongLongMask( result );
+                uint64_t value =
+                #ifdef PYTHON_THREE 
+                    PyLong_AsUnsignedLongLongMask( result );
+                #else
+                    PyInt_AsUnsignedLongLongMask( result );
+                #endif
                 output.push_back( value );
             }
             else if( PyErr_Occurred() )
@@ -172,8 +221,22 @@ void MyPythonInterpreter::callVoidMethod(
     if( pFunc && PyCallable_Check( pFunc ) )
     {
         PyObject* pArgs = PyTuple_New( 2 );
-        PyTuple_SetItem( pArgs, 0, PyInt_FromSize_t( param1 ) );
-        PyTuple_SetItem( pArgs, 1, PyString_FromString( param2.c_str() ) );        
+        PyObject* param1_python = 
+        #ifdef PYTHON_THREE
+            PyLong_FromSize_t( param1 );
+        #else
+            PyInt_FromSize_t( param1 );
+        #endif
+
+        PyObject* param2_python =
+        #ifdef PYTHON_THREE
+            PyUnicode_FromString( param2.c_str() );
+        #else
+            PyString_FromString( param2.c_str() );
+        #endif
+
+        PyTuple_SetItem( pArgs, 0, param1_python );
+        PyTuple_SetItem( pArgs, 1, param2_python );        
         PyObject* result = PyObject_CallObject( pFunc, pArgs );
         if( result )
             Py_XDECREF( result );
