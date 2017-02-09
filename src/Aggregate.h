@@ -28,7 +28,7 @@
 #include "Literal.h"
 #include "stl/Vector.h"
 #include "util/WaspOptions.h"
-#include "util/Trace.h"
+#include "util/WaspTrace.h"
 
 class Solver;
 using namespace std;

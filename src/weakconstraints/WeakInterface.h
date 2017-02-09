@@ -22,7 +22,7 @@
 #include <vector>
 #include <iostream>
 using namespace std;
-#include "../util/Trace.h"
+#include "../util/WaspTrace.h"
 #include "../util/Assert.h"
 #include "../Literal.h"
 #include "../Solver.h"

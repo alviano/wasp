@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef TRACE_H
-#define TRACE_H
+#ifndef WASPTRACE_H
+#define WASPTRACE_H
 
 #include <cstdio>
 #include <string>

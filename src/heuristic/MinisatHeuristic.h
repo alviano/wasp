@@ -20,7 +20,7 @@
 #define MINISATHEURISTIC_H
 
 #include "../util/WaspOptions.h"
-#include "../util/Trace.h"
+#include "../util/WaspTrace.h"
 #include "../Literal.h"
 #include "../stl/Heap.h"
 #include "HeuristicStrategy.h"

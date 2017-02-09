@@ -21,7 +21,7 @@
 #include "../Solver.h"
 #include "../Clause.h"
 #include "../util/WaspConstants.h"
-#include "../util/Trace.h"
+#include "../util/WaspTrace.h"
 #include "../util/WaspOptions.h"
 
 #include <cassert>

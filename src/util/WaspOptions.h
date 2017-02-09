@@ -22,7 +22,7 @@
 #include <vector>
 #include <map>
 #include "WaspConstants.h"
-#include "Trace.h"
+#include "WaspTrace.h"
 using namespace std;
 
 class WaspFacade;

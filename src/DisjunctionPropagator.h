@@ -21,7 +21,7 @@
 #include "Propagator.h"
 #include "util/Assert.h"
 #include "util/WaspOptions.h"
-#include "util/Trace.h"
+#include "util/WaspTrace.h"
 #include "stl/Vector.h"
 #include "Literal.h"
 #include "ReasonForBinaryClauses.h"

@@ -27,7 +27,7 @@ using namespace std;
 #include "Variables.h"
 #include "Literal.h"
 #include "util/WaspOptions.h"
-#include "util/Trace.h"
+#include "util/WaspTrace.h"
 #include "stl/UnorderedSet.h"
 #include "Learning.h"
 #include "outputBuilders/OutputBuilder.h"

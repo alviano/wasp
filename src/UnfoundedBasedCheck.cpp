@@ -1,6 +1,6 @@
 #include "UnfoundedBasedCheck.h"
 #include "Solver.h"
-#include "util/Trace.h"
+#include "util/WaspTrace.h"
 #include "util/WaspOptions.h"
 #include "input/Rule.h"
 

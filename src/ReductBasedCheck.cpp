@@ -3,7 +3,7 @@
 #include "input/Dimacs.h"
 #include "outputBuilders/DimacsOutputBuilder.h"
 #include "outputBuilders/WaspOutputBuilder.h"
-#include "util/Trace.h"
+#include "util/WaspTrace.h"
 #include "util/WaspOptions.h"
 
 #include <vector>

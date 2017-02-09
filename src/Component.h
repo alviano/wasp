@@ -28,7 +28,7 @@
 #include "Literal.h"
 #include "GUSData.h"
 #include "util/WaspOptions.h"
-#include "util/Trace.h"
+#include "util/WaspTrace.h"
 #include "util/Assert.h"
 
 class Learning;

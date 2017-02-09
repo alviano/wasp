@@ -24,7 +24,7 @@
 using namespace std;
 
 #include "util/Assert.h"
-#include "util/Trace.h"
+#include "util/WaspTrace.h"
 #include "util/WaspOptions.h"
 #include "Clause.h"
 #include "stl/UnorderedSet.h"
