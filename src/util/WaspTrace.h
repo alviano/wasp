@@ -34,41 +34,45 @@ using std::stringstream;
  * The tracing structures are defined only if TRACE_OFF is not defined.
  */
 #ifndef TRACE_ON
-    #define trace_tag( stream, type, level )
-    #define trace( type, level, msg, ... )
-    #define traceIf( type, level, condition, msg, ... )
-    #define setTraceLevel( type, level )
-    #define trace_msg( type, level, msg )
-    #define trace_action( type, level, action )
+    #ifndef DLV_TWO
+        #define trace_tag( stream, type, level )
+        #define trace( type, level, msg, ... )
+        #define traceIf( type, level, condition, msg, ... )
+        #define setTraceLevel( type, level )
+        #define trace_msg( type, level, msg )
+        #define trace_action( type, level, action )
+    #endif
 #else
-    #define trace_tag( stream, type, level ) \
-        stream << "[" << wasp::Options::traceLevels.types[ wasp::Options::traceLevels.type() ].first.substr( 0, 10 ) << "]"; \
-        for( unsigned __indent_Level__ = 0; __indent_Level__ < 11 - wasp::Options::traceLevels.types[ wasp::Options::traceLevels.type() ].first.substr( 0, 10 ).length(); ++__indent_Level__ ) \
-            stream <<  " "; \
-        for( unsigned __indent_Level__ = 1; __indent_Level__ < level; ++__indent_Level__ ) \
-            stream << "    ";
-    #define trace( type, level, msg, ... ) \
-        if( wasp::Options::traceLevels.types[ wasp::Options::traceLevels.type() ].second >= level ) \
-        { \
+    #ifndef DLV_TWO
+        #define trace_tag( stream, type, level ) \
+            stream << "[" << wasp::Options::traceLevels.types[ wasp::Options::traceLevels.type() ].first.substr( 0, 10 ) << "]"; \
+            for( unsigned __indent_Level__ = 0; __indent_Level__ < 11 - wasp::Options::traceLevels.types[ wasp::Options::traceLevels.type() ].first.substr( 0, 10 ).length(); ++__indent_Level__ ) \
+                stream <<  " "; \
+            for( unsigned __indent_Level__ = 1; __indent_Level__ < level; ++__indent_Level__ ) \
+                stream << "    ";
+        #define trace( type, level, msg, ... ) \
+            if( wasp::Options::traceLevels.types[ wasp::Options::traceLevels.type() ].second >= level ) \
+            { \
+                trace_tag( cerr, type, level ); \
+                fprintf( stderr, msg, ##__VA_ARGS__ ); \
+            }
+        #define traceIf( type, level, condition, msg, ... ) \
+            if( condition ) \
+                trace( type, level, msg, ##__VA_ARGS__ )
+        #define setTraceLevel( type, level ) \
+            wasp::Options::traceLevels.types[ wasp::Options::traceLevels.type() ].second = level
+        #define trace_msg( type, level, msg ) {\
+            if( wasp::Options::traceLevels.types[ wasp::Options::traceLevels.type() ].second >= level ) \
+            { \
             trace_tag( cerr, type, level ); \
-            fprintf( stderr, msg, ##__VA_ARGS__ ); \
+            cerr << msg << std::endl; \
+            } \
         }
-    #define traceIf( type, level, condition, msg, ... ) \
-        if( condition ) \
-            trace( type, level, msg, ##__VA_ARGS__ )
-    #define setTraceLevel( type, level ) \
-        wasp::Options::traceLevels.types[ wasp::Options::traceLevels.type() ].second = level
-    #define trace_msg( type, level, msg ) {\
-        if( wasp::Options::traceLevels.types[ wasp::Options::traceLevels.type() ].second >= level ) \
-        { \
-        trace_tag( cerr, type, level ); \
-        cerr << msg << std::endl; \
-        } \
-    }
-    #define trace_action( type, level, action ) \
-        if( wasp::Options::traceLevels.types[ wasp::Options::traceLevels.type() ].second >= level ) \
-        { action }
-    
+        #define trace_action( type, level, action ) \
+            if( wasp::Options::traceLevels.types[ wasp::Options::traceLevels.type() ].second >= level ) \
+            { action }
+    #endif
+
 namespace wasp
 {
 
