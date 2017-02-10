@@ -20,6 +20,7 @@
 #include <cstring>
 using namespace std;
 #include "../../util/ErrorMessage.h"
+#include "../../util/WaspOptions.h"
 
 #ifdef ENABLE_PYTHON
 
@@ -54,7 +55,8 @@ MyPythonInterpreter::MyPythonInterpreter(
 MyPythonInterpreter::~MyPythonInterpreter()
 {
     Py_XDECREF( pModule );
-    Py_Finalize();
+    if( wasp::Options::callPyFinalize )
+        Py_Finalize();
 }
 
 void

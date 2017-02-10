@@ -108,7 +108,9 @@ namespace wasp
             
             static bool disjCoresPreprocessing;
             
-            static bool minimizeUnsatCore;                                                                  
+            static bool minimizeUnsatCore;     
+            
+            static bool callPyFinalize;
             
             static map< string, WEAK_CONSTRAINTS_ALG > stringToWeak;
             

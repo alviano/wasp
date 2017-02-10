@@ -163,6 +163,8 @@ unsigned Options::budget = UINT_MAX;
 unsigned int Options::queryAlgorithm = NO_QUERY;
 unsigned int Options::queryVerbosity = 0;
 
+bool Options::callPyFinalize = true;
+
 map< string, WEAK_CONSTRAINTS_ALG > Options::stringToWeak;
 
 vector< string > Options::pluginsFilenames;
