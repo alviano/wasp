@@ -69,26 +69,3 @@ def fromDisjImplLit(lit, disj):
         clauses.append(clause)
     return clauses
 
-class Atom:
-    atomId=0
-    name=""
-    predicate=""
-    terms=[]
-
-class AtomTable:
-    id2Name={}
-    name2Id={}
-
-    def addVarName(var,name):
-        id2Name[var]=name
-        name2Id[name]=var
-
-    def getId(name):
-        return name2Id[name]
-
-    def getName(var):
-        return id2Name[var]
-
-    def parseAtom(name):
-        return
-
