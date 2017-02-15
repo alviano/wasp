@@ -16,17 +16,10 @@
  *
  */
 
-#ifndef WATCHEDLIST_H
-#define    WATCHEDLIST_H
+#ifndef WASP_WATCHEDLIST_H
+#define WASP_WATCHEDLIST_H
 
-#include <algorithm>
 #include <cassert>
-//#include <iostream>
-//#include <vector>
-//#include <unordered_map>
-//#include <unordered_set>
-
-//#include "util/Constants.h"
 #include "stl/Vector.h"
 using namespace std;
 
@@ -77,7 +70,6 @@ void
 WatchedList< T >::add( 
     T element )
 {
-//    assert( find( vector< T >::begin(), vector< T >::end(), element ) == vector< T >::end() );
     assert( !Vector< T >::existElement( element ) );
     Vector< T >::push_back( element );
 }

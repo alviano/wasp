@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef K_H
-#define K_H
+#ifndef WASP_K_H
+#define WASP_K_H
 
 #include "WeakInterface.h"
 

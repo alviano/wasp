@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef EXTERNALPROPAGATOR_H
-#define EXTERNALPROPAGATOR_H
+#ifndef WASP_EXTERNALPROPAGATOR_H
+#define WASP_EXTERNALPROPAGATOR_H
 
 #include "Propagator.h"
 #include "./stl/Vector.h"

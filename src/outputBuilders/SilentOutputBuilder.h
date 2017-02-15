@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef SILENTOUTPUTBUILDER_H
-#define SILENTOUTPUTBUILDER_H
+#ifndef WASP_SILENTOUTPUTBUILDER_H
+#define WASP_SILENTOUTPUTBUILDER_H
 
 #include "WaspOutputBuilder.h"
 #include "../util/WaspOptions.h"

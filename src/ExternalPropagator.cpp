@@ -24,6 +24,7 @@
 #include "Clause.h"
 #include "heuristic/interpreters/MyPerlInterpreter.h"
 #include "heuristic/interpreters/MyPythonInterpreter.h"
+#include "util/WaspOptions.h"
 
 ExternalPropagator::~ExternalPropagator()
 {
@@ -43,7 +44,7 @@ ExternalPropagator::ExternalPropagator(
     interpreter = NULL;
     
     if( interpr == PYTHON_INTERPRETER )
-        interpreter = new MyPythonInterpreter( fn, scriptDirectory );
+        interpreter = new MyPythonInterpreter( fn, scriptDirectory, wasp::Options::callPyFinalize );
     else if( interpr == PERL_INTERPRETER )
         interpreter = new MyPerlInterpreter( fn, scriptDirectory );
     else

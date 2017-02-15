@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef LEARNING_H
-#define LEARNING_H
+#ifndef WASP_LEARNING_H
+#define WASP_LEARNING_H
 
 #include <cassert>
 #include <iostream>

@@ -16,8 +16,8 @@
 *
 */
 
-#ifndef CARDINALITYCONSTRAINT_H
-#define CARDINALITYCONSTRAINT_H
+#ifndef WASP_CARDINALITYCONSTRAINT_H
+#define WASP_CARDINALITYCONSTRAINT_H
 
 #include <cassert>
 #include <iostream>

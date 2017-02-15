@@ -16,8 +16,8 @@
 *
 */
 
-#ifndef COMPONENT_H
-#define COMPONENT_H
+#ifndef WASP_COMPONENT_H
+#define WASP_COMPONENT_H
 
 #include <vector>
 #include <cassert>

@@ -16,8 +16,8 @@
 *
 */
 
-#ifndef AGGREGATE_H
-#define AGGREGATE_H
+#ifndef WASP_AGGREGATE_H
+#define WASP_AGGREGATE_H
 
 #include <cassert>
 #include <iostream>

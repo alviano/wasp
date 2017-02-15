@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef WASPOUTPUTBUILDER_H
-#define WASPOUTPUTBUILDER_H
+#ifndef WASP_WASPOUTPUTBUILDER_H
+#define WASP_WASPOUTPUTBUILDER_H
 
 #include "OutputBuilder.h"
 

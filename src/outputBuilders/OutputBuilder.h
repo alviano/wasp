@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef OUTPUTBUILDER_H
-#define OUTPUTBUILDER_H
+#ifndef WASP_OUTPUTBUILDER_H
+#define WASP_OUTPUTBUILDER_H
 
 #include "../util/WaspConstants.h"
 #include "../stl/Vector.h"

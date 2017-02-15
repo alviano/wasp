@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef WEAKINTERFACE_H
-#define WEAKINTERFACE_H
+#ifndef WASP_WEAKINTERFACE_H
+#define WASP_WEAKINTERFACE_H
 
 #include <vector>
 #include <iostream>

@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef WEIGHTCONSTRAINT_H
-#define WEIGHTCONSTRAINT_H
+#ifndef WASP_WEIGHTCONSTRAINT_H
+#define WASP_WEIGHTCONSTRAINT_H
 
 #include <iostream>
 #include <vector>

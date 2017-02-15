@@ -16,8 +16,8 @@
 *
 */
 
-#ifndef EXTERNALHEURISTIC_H
-#define EXTERNALHEURISTIC_H
+#ifndef WASP_EXTERNALHEURISTIC_H
+#define WASP_EXTERNALHEURISTIC_H
 
 #define method_addedVarName "addedVarName"
 

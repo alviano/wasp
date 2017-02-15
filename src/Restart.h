@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef RESTART_H
-#define RESTART_H
+#ifndef WASP_RESTART_H
+#define WASP_RESTART_H
 
 #include <cassert>
 #include <cmath>

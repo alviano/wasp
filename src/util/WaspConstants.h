@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef WASPCONSTANTS_H
-#define WASPCONSTANTS_H
+#ifndef WASP_CONSTANTS_H
+#define WASP_CONSTANTS_H
 
 #include <climits>
 //enum TruthValue { UNDEFINED = 0, FALSE = 1, TRUE = 2 };

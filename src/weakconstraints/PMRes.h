@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef PMRES_H
-#define	PMRES_H
+#ifndef WASP_PMRES_H
+#define	WASP_PMRES_H
 
 #include "WeakInterface.h"
 

@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef STATISTICS_H
-#define STATISTICS_H
+#ifndef WASP_STATISTICS_H
+#define WASP_STATISTICS_H
 
 #include <cassert>
 #include <string>

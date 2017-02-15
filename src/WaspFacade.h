@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef WASPFACADE_H
-#define WASPFACADE_H
+#ifndef WASP_WASPFACADE_H
+#define WASP_WASPFACADE_H
 
 #include <cassert>
 #include <vector>

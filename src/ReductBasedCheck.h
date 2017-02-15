@@ -16,8 +16,8 @@
 *
 */
 
-#ifndef REDUCTBASEDCHECK_H
-#define	REDUCTBASEDCHECK_H
+#ifndef WASP_REDUCTBASEDCHECK_H
+#define	WASP_REDUCTBASEDCHECK_H
 
 #include <vector>
 #include "util/WaspAssert.h"

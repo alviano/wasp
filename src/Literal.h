@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef LITERAL_H
-#define LITERAL_H
+#ifndef WASP_LITERAL_H
+#define WASP_LITERAL_H
 
 #include <cstdint>
 #include <cassert>

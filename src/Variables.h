@@ -16,8 +16,8 @@
  *
  */
  
-#ifndef VARIABLES_H
-#define VARIABLES_H
+#ifndef WASP_VARIABLES_H
+#define WASP_VARIABLES_H
 
 #include <vector>
 

@@ -16,8 +16,8 @@
 *
 */
 
-#ifndef UNFOUNDEDBASEDCHECK_H
-#define	UNFOUNDEDBASEDCHECK_H
+#ifndef WASP_UNFOUNDEDBASEDCHECK_H
+#define	WASP_UNFOUNDEDBASEDCHECK_H
 
 #include <vector>
 #include "util/WaspAssert.h"

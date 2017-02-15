@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef NOOPOUTPUTBUILDER_H
-#define NOOPOUTPUTBUILDER_H
+#ifndef WASP_NOOPOUTPUTBUILDER_H
+#define WASP_NOOPOUTPUTBUILDER_H
 
 #include "../util/WaspConstants.h"
 #include "../stl/Vector.h"

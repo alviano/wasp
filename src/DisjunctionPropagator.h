@@ -15,8 +15,8 @@
  *  limitations under the License.
  *
  */
-#ifndef DISJUNCTIONPROPAGATOR_H
-#define	DISJUNCTIONPROPAGATOR_H
+#ifndef WASP_DISJUNCTIONPROPAGATOR_H
+#define	WASP_DISJUNCTIONPROPAGATOR_H
 
 #include "Propagator.h"
 #include "util/WaspAssert.h"

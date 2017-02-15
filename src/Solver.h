@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef SOLVER_H
-#define SOLVER_H
+#ifndef WASP_SOLVER_H
+#define WASP_SOLVER_H
 
 #include <cassert>
 #include <vector>

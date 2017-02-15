@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef SATELITE_H
-#define SATELITE_H
+#ifndef WASP_SATELITE_H
+#define WASP_SATELITE_H
 
 #include <iostream>
 #include <queue>

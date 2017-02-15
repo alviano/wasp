@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef WASPTRACE_H
-#define WASPTRACE_H
+#ifndef WASP_TRACE_H
+#define WASP_TRACE_H
 
 #include <cstdio>
 #include <string>

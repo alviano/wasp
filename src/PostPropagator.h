@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef _POSTPROPAGATOR_H
-#define _POSTPROPAGATOR_H
+#ifndef WASP_POSTPROPAGATOR_H
+#define WASP_POSTPROPAGATOR_H
 
 class Clause;
 class Learning;

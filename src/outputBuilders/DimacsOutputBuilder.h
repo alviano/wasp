@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef DIMACSOUTPUTBUILDER_H
-#define DIMACSOUTPUTBUILDER_H
+#ifndef WASP_DIMACSOUTPUTBUILDER_H
+#define WASP_DIMACSOUTPUTBUILDER_H
 
 #include "OutputBuilder.h"
 

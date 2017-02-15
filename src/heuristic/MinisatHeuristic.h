@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef MINISATHEURISTIC_H
-#define MINISATHEURISTIC_H
+#ifndef WASP_MINISATHEURISTIC_H
+#define WASP_MINISATHEURISTIC_H
 
 #include "../util/WaspOptions.h"
 #include "../util/WaspTrace.h"

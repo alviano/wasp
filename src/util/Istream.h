@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef ISTREAM_H
-#define ISTREAM_H
+#ifndef WASP_ISTREAM_H
+#define WASP_ISTREAM_H
 
 #include <iostream>
 

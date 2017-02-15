@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef EXTENDED_STATISTICS_H
-#define EXTENDED_STATISTICS_H
+#ifndef WASP_EXTENDED_STATISTICS_H
+#define WASP_EXTENDED_STATISTICS_H
 
 #include <cassert>
 #include <string>

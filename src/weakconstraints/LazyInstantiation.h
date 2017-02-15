@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef LAZYINSTANTIATION_H
-#define	LAZYINSTANTIATION_H
+#ifndef WASP_LAZYINSTANTIATION_H
+#define	WASP_LAZYINSTANTIATION_H
 
 #include "WeakInterface.h"
 #include "One.h"

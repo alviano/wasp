@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef WASPOPTIONS_H
-#define WASPOPTIONS_H
+#ifndef WASP_OPTIONS_H
+#define WASP_OPTIONS_H
 
 #include <vector>
 #include <map>

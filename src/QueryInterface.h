@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef QUERYINTERFACE_H
-#define	QUERYINTERFACE_H
+#ifndef WASP_QUERYINTERFACE_H
+#define	WASP_QUERYINTERFACE_H
 
 #include "stl/Vector.h"
 

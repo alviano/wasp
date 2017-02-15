@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef HEURISTICSTRATEGY_H
-#define	HEURISTICSTRATEGY_H
+#ifndef WASP_HEURISTICSTRATEGY_H
+#define	WASP_HEURISTICSTRATEGY_H
 
 #include <cassert>
 #include <vector>

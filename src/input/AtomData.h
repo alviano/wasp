@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef ATOMDATA_H
-#define ATOMDATA_H
+#ifndef WASP_ATOMDATA_H
+#define WASP_ATOMDATA_H
 
 #include "Rule.h"
 #include "WeightConstraint.h"

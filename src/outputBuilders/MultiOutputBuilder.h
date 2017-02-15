@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef MULTIOUTPUTBUILDER_H
-#define MULTIOUTPUTBUILDER_H
+#ifndef WASP_MULTIOUTPUTBUILDER_H
+#define WASP_MULTIOUTPUTBUILDER_H
 
 #include "CompetitionOutputBuilder.h"
 #include <sstream>

@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef PROPAGATOR_H
-#define	PROPAGATOR_H
+#ifndef WASP_PROPAGATOR_H
+#define	WASP_PROPAGATOR_H
 
 class Literal;
 class Solver;

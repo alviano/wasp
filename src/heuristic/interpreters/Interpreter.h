@@ -1,5 +1,5 @@
-#ifndef INTERPRETER_H
-#define INTERPRETER_H
+#ifndef WASP_INTERPRETER_H
+#define WASP_INTERPRETER_H
 
 #include <string>
 #include <vector>

@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef CLAUSE_H
-#define CLAUSE_H
+#ifndef WASP_CLAUSE_H
+#define WASP_CLAUSE_H
 
 #include <cassert>
 #include <iostream>

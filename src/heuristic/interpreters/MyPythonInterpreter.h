@@ -16,8 +16,8 @@
 *
 */
 
-#ifndef PYTHONINTERPRETER_H
-#define PYTHONINTERPRETER_H
+#ifndef WASP_PYTHONINTERPRETER_H
+#define WASP_PYTHONINTERPRETER_H
 
 #include "Interpreter.h"
 #include <string>
@@ -31,7 +31,7 @@ using namespace std;
 class MyPythonInterpreter : public Interpreter
 {
     public:
-        MyPythonInterpreter( char* filename, string );
+        MyPythonInterpreter( char* filename, string, bool );
         ~MyPythonInterpreter();
         
         void callListMethod( const string& method_name, const vector< int >& parameters, vector< int >& output );
@@ -41,6 +41,7 @@ class MyPythonInterpreter : public Interpreter
 
     private:        
         PyObject* pModule;
+        bool callPyFinalize;
 };
 
 #else
@@ -48,7 +49,7 @@ class MyPythonInterpreter : public Interpreter
 class MyPythonInterpreter : public Interpreter
 {
     public:
-        MyPythonInterpreter( char*, string ){}
+        MyPythonInterpreter( char*, string, bool ){}
         ~MyPythonInterpreter() {}
         
         void callListMethod( const string&, const vector< int >&, vector< int >& ) {}

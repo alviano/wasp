@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef VARIABLENAMES_H
-#define VARIABLENAMES_H
+#ifndef WASP_VARIABLENAMES_H
+#define WASP_VARIABLENAMES_H
 
 #include <cassert>
 #include <iostream>

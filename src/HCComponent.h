@@ -16,8 +16,8 @@
 *
 */
 
-#ifndef HCCOMPONENT_H
-#define	HCCOMPONENT_H
+#ifndef WASP_HCCOMPONENT_H
+#define	WASP_HCCOMPONENT_H
 
 #include "PostPropagator.h"
 #include "Literal.h"

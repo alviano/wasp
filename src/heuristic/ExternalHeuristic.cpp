@@ -19,6 +19,7 @@
 #include "ExternalHeuristic.h"
 #include "../util/WaspConstants.h"
 #include "../util/WaspErrorMessage.h"
+#include "../util/WaspOptions.h"
 #include "../Solver.h"
 #include "interpreters/MyPerlInterpreter.h"
 #include "interpreters/MyPythonInterpreter.h"
@@ -29,7 +30,7 @@ ExternalHeuristic::ExternalHeuristic( Solver& s, char* filename, unsigned int in
         WaspErrorMessage::errorGeneric( "Please specify the script file" );
 
     if( interpr == PYTHON_INTERPRETER )
-        interpreter = new MyPythonInterpreter( filename, scriptDirectory );
+        interpreter = new MyPythonInterpreter( filename, scriptDirectory, wasp::Options::callPyFinalize );
     else if( interpr == PERL_INTERPRETER )
         interpreter = new MyPerlInterpreter( filename, scriptDirectory );
     else

@@ -16,8 +16,8 @@
 *
 */
 
-#ifndef PERLINTERPRETER_H
-#define PERLINTERPRETER_H
+#ifndef WASP_PERLINTERPRETER_H
+#define WASP_PERLINTERPRETER_H
 
 #include "Interpreter.h"
 #include <string>

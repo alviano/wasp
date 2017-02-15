@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef GRINGONUMERICFORMAT_H
-#define GRINGONUMERICFORMAT_H
+#ifndef WASP_GRINGONUMERICFORMAT_H
+#define WASP_GRINGONUMERICFORMAT_H
 
 #include "../Solver.h"
 #include "../stl/Trie.h"

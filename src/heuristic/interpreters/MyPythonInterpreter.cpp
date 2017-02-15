@@ -20,13 +20,13 @@
 #include <cstring>
 using namespace std;
 #include "../../util/WaspErrorMessage.h"
-#include "../../util/WaspOptions.h"
 
 #ifdef ENABLE_PYTHON
 
 MyPythonInterpreter::MyPythonInterpreter(
     char* filename,
-    string scriptDirectory ) : Interpreter()
+    string scriptDirectory,
+    bool callPyFinalize_ ) : Interpreter(), callPyFinalize( callPyFinalize_ )
 {
     setenv( "PYTHONPATH", ".", 1 );
     Py_Initialize();
@@ -55,7 +55,7 @@ MyPythonInterpreter::MyPythonInterpreter(
 MyPythonInterpreter::~MyPythonInterpreter()
 {
     Py_XDECREF( pModule );
-    if( wasp::Options::callPyFinalize )
+    if( callPyFinalize )
         Py_Finalize();
 }
 

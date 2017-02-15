@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef UNORDEREDSET_H
-#define UNORDEREDSET_H
+#ifndef WASP_UNORDEREDSET_H
+#define WASP_UNORDEREDSET_H
 
 #include <cassert>
 #include <iostream>
