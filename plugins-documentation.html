@@ -27,8 +27,8 @@
             <hr/>
             <p><b>Method</b>: addedVarName(id, name) - <b>Return</b>: -
             <ul>
-                <li><i>id:</i> an integer representation of a variable</li>
-                <li><i>name:</i> the name associated to the id</li>
+                <li><i>id:</i> an integer representation of a variable.</li>
+                <li><i>name:</i> the name associated to the id.</li>
             </ul>
             This method is invoked while reading the name associated to an atom. <br/> <br/>
 
@@ -39,7 +39,7 @@
             <p><b>Method</b>: getLiterals(*lits) - <b>Return</b>: L
             <ul>
                 <li><i>lits:</i> a list of literals derived as true during the parsing. The first element of the list is the number of variables used in wasp. Literal 1 is always false.</li>
-                <li><i>L: </i> a list of integers</li>
+                <li><i>L: </i> a list of integers.</li>
             </ul>
             This method returns a list of literals L attached to the propagator, i.e. when a literal in L is derived as true a notification is sent to the propagator using either method onLiteralTrue or method onLiteralsTrue.<br/> <br/>
 
@@ -110,7 +110,7 @@
             <ul>
                 <li><i>S:</i> a set of literals.</li>
             </ul>
-            This method returns a clause modeling the reason for the assignments made by onLiteralTrue (onLiteralsTrue). That is, let P = {p1;...;pm} be the literals returned by onLiteralTrue (onLiteralsTrue), and the reason is of the form l1 ^ ... ^ ln -> p (for each p in P). Then, S={-l1;...;-ln}<br/> <br/>
+            This method returns a clause modeling the reason for the assignments made by onLiteralTrue (onLiteralsTrue). That is, let P = {p1;...;pm} be the literals returned by onLiteralTrue (onLiteralsTrue), and the reason is of the form l1 ^ ... ^ ln -> p (for each p in P). Then, S={-l1;...;-ln}.<br/> <br/>
 
             <b>Note:</b> Required only if one between onLiteralTrue and onLiteralsTrue is used. Otherwise, it is useless. Exactly one between getReason and getReasonForLiteral is required.
             </p>
@@ -118,10 +118,10 @@
 
             <p><b>Method</b>: getReasonForLiteral(lit)  - <b>Return</b>: S
             <ul>
-                <li><i>lit:</i> one of the literals inferred as true by onLiteralTrue (onLiteralsTrue)</li>
+                <li><i>lit:</i> one of the literals inferred as true by onLiteralTrue (onLiteralsTrue).</li>
                 <li><i>S: </i> a set of literals.</li>
             </ul>
-            This method returns a clause modeling the reason for the assignment of one literal. That is, if the reason is of the form l1 ^ ... ^ ln -> lit. Then, S={-l1;...;-ln}<br/> <br/>
+            This method returns a clause modeling the reason for the assignment of one literal. That is, if the reason is of the form l1 ^ ... ^ ln -> lit. Then, S={-l1;...;-ln}.<br/> <br/>
 
             <b>Note:</b> Required only if one between onLiteralTrue and onLiteralsTrue is used. Otherwise, it is useless. Exactly one between getReason and getReasonForLiteral is required.
             </p>
@@ -140,7 +140,7 @@
             <p><b>Method</b>: checkAnswerSet(*lits) - <b>Return</b>: i
             <ul>
                 <li><i>lits:</i> a list of literals representing the answer set.</li>
-                <li><i>i: </i> an integer</li>
+                <li><i>i: </i> an integer.</li>
             </ul>
             This method is invoked after an answer set is found. The role of the method is to check whether the answer set is consistent with the propagator. Returns 0 if the answer set is inconsistent, !=0 otherwise.<br/> <br/>
 
@@ -151,7 +151,7 @@
             <p><b>Method</b>: checkPartialInterpretation(*lits) - <b>Return</b>: i
             <ul>
                 <li><i>lits:</i> a list of literals representing the partial interpretation.</li>
-                <li><i>i: </i> an integer</li>
+                <li><i>i: </i> an integer.</li>
             </ul>
             This method is invoked after each propagation. The role of the method is to check whether the interpretation is consistent with the propagator. Returns 0 if the interpretation is inconsistent, !=0 otherwise. <br/> <br/>
 
