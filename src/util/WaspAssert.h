@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef ASSERT_H
-#define ASSERT_H
+#ifndef WASP_ASSERT_H
+#define WASP_ASSERT_H
 
 #include <cassert>
 #include <iostream>

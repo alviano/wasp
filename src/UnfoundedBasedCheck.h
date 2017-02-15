@@ -20,7 +20,7 @@
 #define	UNFOUNDEDBASEDCHECK_H
 
 #include <vector>
-#include "util/Assert.h"
+#include "util/WaspAssert.h"
 #include "stl/Vector.h"
 #include "HCComponent.h"
 #include "Literal.h"

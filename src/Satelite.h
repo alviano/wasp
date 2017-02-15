@@ -23,7 +23,7 @@
 #include <queue>
 using namespace std;
 
-#include "util/Assert.h"
+#include "util/WaspAssert.h"
 #include "util/WaspTrace.h"
 #include "util/WaspOptions.h"
 #include "Clause.h"

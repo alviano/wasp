@@ -31,7 +31,7 @@ using namespace std;
 #include "stl/UnorderedSet.h"
 #include "Learning.h"
 #include "outputBuilders/OutputBuilder.h"
-#include "util/Assert.h"
+#include "util/WaspAssert.h"
 #include "Satelite.h"
 #include "Restart.h"
 #include "heuristic/HeuristicStrategy.h"
@@ -2701,17 +2701,11 @@ Solver::getExternalPropagatorForLazyWeakConstraints() const
             if( ret == NULL )
                 ret = externalPropagators[ i ];
             else
-            {
-                cerr << ERRORGENERIC << " Only one file can contain the methods to add weak constraints" << endl;
-                exit( ERRORGENERICCODE );
-            }
+                WaspErrorMessage::errorGeneric( "Only one file can contain the methods to add weak constraints" );            
         }
     
     if( ret == NULL )
-    {
-        cerr << ERRORGENERIC << " No propagator set to add weak constraints" << endl;
-        exit( ERRORGENERICCODE );
-    }
+        WaspErrorMessage::errorGeneric( "No propagator set to add weak constraints" );
     return ret;
 }
 

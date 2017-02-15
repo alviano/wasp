@@ -16,14 +16,14 @@
  *
  */
 
-#ifndef HELP_H
-#define HELP_H
+#ifndef WASP_HELP_H
+#define WASP_HELP_H
 
 #include <iostream>
 using namespace std;
 #include "WaspConstants.h"
 
-class Help
+class WaspHelp
 {
     public:
         static void printHelp()

@@ -46,7 +46,7 @@ Dimacs::parse(
     Istream& input )
 {    
     if( !input.readInfoDimacs( numberOfVariables, numberOfClauses, maxWeight ) )
-        ErrorMessage::errorDuringParsing( "Unexpected symbol." );
+        WaspErrorMessage::errorDuringParsing( "Unexpected symbol." );
 
     maxsat = maxWeight != 0;
     //insertVariables( numberOfVariables );
@@ -97,7 +97,7 @@ Dimacs::readClause(
         return false;
     
     if( !result )
-        ErrorMessage::errorDuringParsing( "Unexpected symbol." );
+        WaspErrorMessage::errorDuringParsing( "Unexpected symbol." );
 
     if( next == 0 )
     {
@@ -134,7 +134,7 @@ Dimacs::readClause(
         //read the next literal
         bool result = readNextLiteral( input, next );
         if( !result )
-            ErrorMessage::errorDuringParsing( "Unexpected symbol." );
+            WaspErrorMessage::errorDuringParsing( "Unexpected symbol." );
     } while( next != 0 );
     
     if( !trivial )
@@ -169,7 +169,7 @@ Dimacs::readWeightedClause(
         return false;
     
     if( !result )
-        ErrorMessage::errorDuringParsing( "Unexpected symbol." );
+        WaspErrorMessage::errorDuringParsing( "Unexpected symbol." );
 
     if( next == 0 )
     {
@@ -185,7 +185,7 @@ Dimacs::readWeightedClause(
     do
     {
         if( static_cast< unsigned int > ( abs( next ) ) > numberOfVariables )
-            ErrorMessage::errorDuringParsing( "Wrong number of variables." );
+            WaspErrorMessage::errorDuringParsing( "Wrong number of variables." );
 
         //insert the current literal in the set
         bool inserted = !tempSet.insert( next ).second;
@@ -203,7 +203,7 @@ Dimacs::readWeightedClause(
         //read the next literal
         bool result = readNextLiteral( input, next );
         if( !result )
-            ErrorMessage::errorDuringParsing( "Unexpected symbol." );
+            WaspErrorMessage::errorDuringParsing( "Unexpected symbol." );
     } while( next != 0 );
 
     if( !trivial )

@@ -17,7 +17,7 @@
  */
 
 #include "QueryInterface.h"
-#include "util/Assert.h"
+#include "util/WaspAssert.h"
 #include "Solver.h"
 #include "util/WaspConstants.h"
 
@@ -66,7 +66,7 @@ QueryInterface::computeCautiousConsequences(
             }   
             break;
         default:
-            ErrorMessage::errorGeneric( "Inserted invalid algorithm for query answering." );
+            WaspErrorMessage::errorGeneric( "Inserted invalid algorithm for query answering." );
     }
         
     solver.printCautiousConsequences( answers );

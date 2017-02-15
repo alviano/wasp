@@ -29,7 +29,7 @@
 #include "GUSData.h"
 #include "util/WaspOptions.h"
 #include "util/WaspTrace.h"
-#include "util/Assert.h"
+#include "util/WaspAssert.h"
 
 class Learning;
 class Solver;

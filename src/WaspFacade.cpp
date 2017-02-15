@@ -41,7 +41,7 @@ WaspFacade::readInput(
     in >> tmp;
 
     if( !in.good() && !in.eof() )
-        ErrorMessage::errorDuringParsing( "Unexpected symbol." );
+        WaspErrorMessage::errorDuringParsing( "Unexpected symbol." );
 
     solver.onStartingParsing();
     in.putback( tmp );

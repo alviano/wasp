@@ -47,7 +47,7 @@ ExternalPropagator::ExternalPropagator(
     else if( interpr == PERL_INTERPRETER )
         interpreter = new MyPerlInterpreter( fn, scriptDirectory );
     else
-        ErrorMessage::errorGeneric( "Unsupported interpreter" );
+        WaspErrorMessage::errorGeneric( "Unsupported interpreter" );
     check_addedVarName = interpreter->checkMethod( method_plugins_addedVarName );
     check_onAtomElimination = interpreter->checkMethod( method_plugins_onVariableElimination );
     check_simplifyAtLevelZero = interpreter->checkMethod( method_plugins_simplifyAtLevelZero );
@@ -174,7 +174,7 @@ ExternalPropagator::checkWellFormed(
     const string& method )
 {
    if( !interpreter->checkMethod( method ) )
-        ErrorMessage::errorGeneric( "Method " + method + " is required." ); 
+        WaspErrorMessage::errorGeneric( "Method " + method + " is required." ); 
 }
 
 void
@@ -185,36 +185,36 @@ ExternalPropagator::checkWellFormed()
 //    checkWellFormed( method_plugins_getVariablesToFreeze );
 //    checkWellFormed( method_plugins_onLiteralsUndefined );
     if( check_addWeakConstraints && !check_checkAnswerSet )
-        ErrorMessage::errorGeneric( "If " + string( method_plugins_addWeakConstraints ) + " is used then method " + string( method_plugins_checkAnswerSet ) + " is required." );
+        WaspErrorMessage::errorGeneric( "If " + string( method_plugins_addWeakConstraints ) + " is used then method " + string( method_plugins_checkAnswerSet ) + " is required." );
     
     if( check_addWeakConstraints && !check_addWeightsForWeakConstraints )
-        ErrorMessage::errorGeneric( "If " + string( method_plugins_addWeakConstraints ) + " is used then method " + string( method_plugins_addWeightsForWeakConstraints ) + " is required." );
+        WaspErrorMessage::errorGeneric( "If " + string( method_plugins_addWeakConstraints ) + " is used then method " + string( method_plugins_addWeightsForWeakConstraints ) + " is required." );
     
     if( !check_checkAnswerSet && ( ( check_onLitTrue && check_onLitsTrue ) || ( !check_onLitTrue && !check_onLitsTrue ) ) )
-        ErrorMessage::errorGeneric( "If " + string( method_plugins_checkAnswerSet ) + " is not used then exactly one method between " + string( method_plugins_onLitTrue ) + " and " +  string( method_plugins_onLitsTrue ) + " is required." );
+        WaspErrorMessage::errorGeneric( "If " + string( method_plugins_checkAnswerSet ) + " is not used then exactly one method between " + string( method_plugins_onLitTrue ) + " and " +  string( method_plugins_onLitsTrue ) + " is required." );
     
     if( check_endPropagation && !check_onLitTrue )
-        ErrorMessage::errorGeneric( "If " + string( method_plugins_endPropagation ) + " is used then method " + string( method_plugins_onLitTrue ) + " is required." );    
+        WaspErrorMessage::errorGeneric( "If " + string( method_plugins_endPropagation ) + " is used then method " + string( method_plugins_onLitTrue ) + " is required." );    
     
     if( check_endPropagation && check_onLitsTrue )
-        ErrorMessage::errorGeneric( "If " + string( method_plugins_endPropagation ) + " is used then method " + string( method_plugins_onLitsTrue ) + " cannot be used." );    
+        WaspErrorMessage::errorGeneric( "If " + string( method_plugins_endPropagation ) + " is used then method " + string( method_plugins_onLitsTrue ) + " cannot be used." );    
     
     if( ( check_onLitTrue || check_onLitsTrue ) && 
         ( ( !interpreter->checkMethod( method_plugins_getReason ) && !interpreter->checkMethod( method_plugins_getReasonForLiteral ) ) || !interpreter->checkMethod( method_plugins_getLiterals ) || !interpreter->checkMethod( method_plugins_onLiteralsUndefined ) ) )
-        ErrorMessage::errorGeneric( "If " + string( method_plugins_onLitTrue ) + " or " + string( method_plugins_onLitsTrue ) + " are used then " + 
+        WaspErrorMessage::errorGeneric( "If " + string( method_plugins_onLitTrue ) + " or " + string( method_plugins_onLitsTrue ) + " are used then " + 
                                     string( method_plugins_getReason ) + " (or, alternatively, " + string( method_plugins_getReasonForLiteral ) + ") , " + 
                                     string( method_plugins_getLiterals ) + ", and " + 
                                     string( method_plugins_onLiteralsUndefined ) + " are required." );
     if( interpreter->checkMethod( method_plugins_getReason ) && interpreter->checkMethod( method_plugins_getReasonForLiteral ) )
-        ErrorMessage::errorGeneric( "Exactly one method between " + string( method_plugins_getReason ) + " and " + string( method_plugins_getReasonForLiteral ) + " can be used." );
+        WaspErrorMessage::errorGeneric( "Exactly one method between " + string( method_plugins_getReason ) + " and " + string( method_plugins_getReasonForLiteral ) + " can be used." );
         
     if( ( check_checkAnswerSet && !check_getReasonForCheckFailure ) || ( !check_checkAnswerSet && check_getReasonForCheckFailure ) )
         if( !check_checkPartialInterpretation )
-            ErrorMessage::errorGeneric( "Method " + string( method_plugins_getReasonsForCheckFailure ) + " is required when " +  string( method_plugins_checkAnswerSet ) + " is used." );
+            WaspErrorMessage::errorGeneric( "Method " + string( method_plugins_getReasonsForCheckFailure ) + " is required when " +  string( method_plugins_checkAnswerSet ) + " is used." );
 
     if( ( check_checkPartialInterpretation && !check_getReasonForCheckFailure ) || ( !check_checkPartialInterpretation && check_getReasonForCheckFailure ) )
         if( !check_checkAnswerSet )
-            ErrorMessage::errorGeneric( "Method " + string( method_plugins_getReasonsForCheckFailure ) + " is required when " +  string( method_plugins_checkPartialInterpretation ) + " is used." );        
+            WaspErrorMessage::errorGeneric( "Method " + string( method_plugins_getReasonsForCheckFailure ) + " is required when " +  string( method_plugins_checkPartialInterpretation ) + " is used." );        
 }
 
 Clause*
@@ -237,7 +237,7 @@ ExternalPropagator::getReason(
     if( output.empty() )
     {
         if( solver.getCurrentDecisionLevel() != 0 )
-            ErrorMessage::errorGeneric( "Reason is not well-formed: At least one of the literals in the reason must be inferred at the current decision level." );
+            WaspErrorMessage::errorGeneric( "Reason is not well-formed: At least one of the literals in the reason must be inferred at the current decision level." );
         else
             return NULL;
     }
@@ -250,9 +250,9 @@ ExternalPropagator::getReason(
         checkIdOfLiteral( solver, output[ i ] );
         Literal l = Literal::createLiteralFromInt( output[ i ] );
         if( solver.isUndefined( l ) )
-            ErrorMessage::errorGeneric( "Reason is not well-formed: Literal with id " + to_string( l.getId() ) + " is undefined." );
+            WaspErrorMessage::errorGeneric( "Reason is not well-formed: Literal with id " + to_string( l.getId() ) + " is undefined." );
         if( solver.isTrue( l ) )
-            ErrorMessage::errorGeneric( "Reason is not well-formed: Literal with id " + to_string( l.getId() ) + " is true." );
+            WaspErrorMessage::errorGeneric( "Reason is not well-formed: Literal with id " + to_string( l.getId() ) + " is true." );
         if( solver.getDecisionLevel( l ) == 0 )
             continue;
         clause->addLiteral( l );
@@ -262,7 +262,7 @@ ExternalPropagator::getReason(
     }
     
     if( max < solver.getCurrentDecisionLevel() )
-        ErrorMessage::errorGeneric( "Reason is not well-formed: At least one of the literals in the reason must be inferred at the current decision level." );    
+        WaspErrorMessage::errorGeneric( "Reason is not well-formed: At least one of the literals in the reason must be inferred at the current decision level." );    
     return clause;
 }
 
@@ -274,7 +274,7 @@ ExternalPropagator::getReasonForCheckFailure(
     vector< int > output;
     interpreter->callListMethod( method_plugins_getReasonsForCheckFailure, output );
     if( output.size() <= 2 || output[ 0 ] != 0 || output.back() != 0 )
-        ErrorMessage::errorGeneric( "Reasons must start and terminate with 0." );
+        WaspErrorMessage::errorGeneric( "Reasons must start and terminate with 0." );
     
     vector< Clause* > clauses;
     Clause* clause = new Clause();
@@ -292,9 +292,9 @@ ExternalPropagator::getReasonForCheckFailure(
         checkIdOfLiteral( solver, output[ i ] );
         Literal l = Literal::createLiteralFromInt( output[ i ] );
         if( solver.isUndefined( l ) )
-            ErrorMessage::errorGeneric( "Reason is not well-formed: Literal with id " + to_string( l.getId() ) + " is undefined." );
+            WaspErrorMessage::errorGeneric( "Reason is not well-formed: Literal with id " + to_string( l.getId() ) + " is undefined." );
         if( solver.isTrue( l ) )
-            ErrorMessage::errorGeneric( "Reason is not well-formed: Literal with id " + to_string( l.getId() ) + " is true." );
+            WaspErrorMessage::errorGeneric( "Reason is not well-formed: Literal with id " + to_string( l.getId() ) + " is true." );
         if( solver.getDecisionLevel( l ) > 0 )
             clause->addLiteral( l );
     }
@@ -405,9 +405,9 @@ ExternalPropagator::checkIdOfLiteral(
 {
     Var var = id > 0 ? id : -id;
     if( var == 0 || var > solver.numberOfVariables() )
-        ErrorMessage::errorGeneric( "Variable " + to_string( var ) + " does not exist." );
+        WaspErrorMessage::errorGeneric( "Variable " + to_string( var ) + " does not exist." );
     if( solver.hasBeenEliminated( var ) )
-        ErrorMessage::errorGeneric( "Variable " + to_string( var ) + " has been removed from initial simplifications. Use " + method_plugins_getVariablesToFreeze + " to prevent the elimination of the variables." );
+        WaspErrorMessage::errorGeneric( "Variable " + to_string( var ) + " has been removed from initial simplifications. Use " + method_plugins_getVariablesToFreeze + " to prevent the elimination of the variables." );
 }
 
 void
@@ -622,7 +622,7 @@ ExternalPropagator::addWeakConstraints(
     vector< uint64_t >& weights_ )
 {
     if( weakConstraints.size() < 2 || weakConstraints[ 0 ] != 0 || weakConstraints.back() != 0 )
-        ErrorMessage::errorGeneric( "Weak constraints must start and terminate with 0." );
+        WaspErrorMessage::errorGeneric( "Weak constraints must start and terminate with 0." );
     
     if( weakConstraints.size() > 2 )
     {
@@ -638,9 +638,9 @@ ExternalPropagator::addWeakConstraints(
             checkIdOfLiteral( solver, weakConstraints[ i ] );
             Literal l = Literal::createLiteralFromInt( weakConstraints[ i ] );
             if( solver.isUndefined( l ) )
-                ErrorMessage::errorGeneric( "Weak constraint is not well-formed: Literal with id " + to_string( l.getId() ) + " is undefined." );
+                WaspErrorMessage::errorGeneric( "Weak constraint is not well-formed: Literal with id " + to_string( l.getId() ) + " is undefined." );
             if( solver.isTrue( l ) )
-                ErrorMessage::errorGeneric( "Weak constraint is not well-formed: Literal with id " + to_string( l.getId() ) + " is true." );
+                WaspErrorMessage::errorGeneric( "Weak constraint is not well-formed: Literal with id " + to_string( l.getId() ) + " is true." );
             if( solver.getDecisionLevel( l ) > 0 )
                 clause->addLiteral( l );
         }
@@ -648,7 +648,7 @@ ExternalPropagator::addWeakConstraints(
     }
     
     if( weak.size() != weights.size() )
-        ErrorMessage::errorGeneric( "The numbers of weak constraints and weights are different. ("+ to_string( weak.size() ) + "!=" + to_string( weights.size() ) + ")" );
+        WaspErrorMessage::errorGeneric( "The numbers of weak constraints and weights are different. ("+ to_string( weak.size() ) + "!=" + to_string( weights.size() ) + ")" );
     
     uint64_t cost = 0;
     for( unsigned int i = 0; i < weights.size(); i++ )

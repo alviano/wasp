@@ -19,7 +19,7 @@
 #define	DISJUNCTIONPROPAGATOR_H
 
 #include "Propagator.h"
-#include "util/Assert.h"
+#include "util/WaspAssert.h"
 #include "util/WaspOptions.h"
 #include "util/WaspTrace.h"
 #include "stl/Vector.h"

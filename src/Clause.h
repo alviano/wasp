@@ -28,7 +28,7 @@
 #include "Literal.h"
 #include "Learning.h"
 #include "Reason.h"
-#include "util/Assert.h"
+#include "util/WaspAssert.h"
 
 using namespace std;
 

@@ -16,15 +16,16 @@
  *
  */
 
-#ifndef ERRORMESSAGE_H
-#define ERRORMESSAGE_H
+#ifndef WASP_ERRORMESSAGE_H
+#define WASP_ERRORMESSAGE_H
 
 #include <string>
+#include <cstdlib>
 using namespace std;
 
 #include "WaspConstants.h"
 
-class ErrorMessage
+class WaspErrorMessage
 {
     public:
         static void errorDuringParsing( const string& errorMessage )

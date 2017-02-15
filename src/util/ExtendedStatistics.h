@@ -28,7 +28,7 @@ using namespace std;
 class Solver;
 
 #include "WaspConstants.h"
-#include "ErrorMessage.h"
+#include "WaspErrorMessage.h"
 #include "../Literal.h"
 
 #ifdef ESTATS_ON
@@ -98,7 +98,7 @@ class Solver;
             inline void checkSolver( Solver* s )
             {
                 if( s != &( stats->solver ) )
-                    ErrorMessage::errorGeneric( "Error with statistics." );
+                    WaspErrorMessage::errorGeneric( "Error with statistics." );
             }
             
         private:

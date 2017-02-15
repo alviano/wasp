@@ -19,7 +19,7 @@
 #ifndef DIMACS_H
 #define DIMACS_H
 
-#include "../util/ErrorMessage.h"
+#include "../util/WaspErrorMessage.h"
 #include "../util/Istream.h"
 #include <vector>
 using namespace std;

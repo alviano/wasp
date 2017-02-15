@@ -17,7 +17,7 @@
  */
 
 #include "VariableNames.h"
-#include "Assert.h"
+#include "WaspAssert.h"
 #include <sstream>
 using namespace std;
 vector< string > VariableNames::variables;

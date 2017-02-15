@@ -23,7 +23,7 @@
 
 #include "Literal.h"
 #include "outputBuilders/OutputBuilder.h"
-#include "util/Assert.h"
+#include "util/WaspAssert.h"
 #include "util/VariableNames.h"
 #include "stl/Vector.h"
 #include "ReasonForBinaryClauses.h"

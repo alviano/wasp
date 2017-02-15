@@ -106,7 +106,7 @@ HCComponent::computeReasonForUnfoundedAtom(
         {
             assert_msg( pos < rule->size(), "Trying to access " << pos << " in " << *rule );
             if( pos >= rule->size() )
-                ErrorMessage::errorGeneric( "Error while computing reasons for check failure." );
+                WaspErrorMessage::errorGeneric( "Error while computing reasons for check failure." );
             trace_msg( modelchecker, 4, "The reason is: " << rule->getAt( pos ) );
             learning.onNavigatingLiteralForUnfoundedSetLearning( rule->getAt( pos ).getOppositeLiteral() );
         }

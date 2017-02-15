@@ -29,7 +29,7 @@ using namespace std;
 class Solver;
 
 #include "WaspConstants.h"
-#include "ErrorMessage.h"
+#include "WaspErrorMessage.h"
 
 #ifdef STATS_ON
     #define statistics( solver, METHOD ) Statistics::inst( solver ).METHOD
@@ -264,7 +264,7 @@ class Solver;
 
                 pos = solverToStats[ s ];
                 if( pos >= instances.size() )
-                    ErrorMessage::errorGeneric( "Error with statistics." );
+                    WaspErrorMessage::errorGeneric( "Error with statistics." );
                 return *instances[ pos ];
             }
             

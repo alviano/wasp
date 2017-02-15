@@ -18,8 +18,8 @@
 
 #include "WaspOptions.h"
 
-#include "ErrorMessage.h"
-#include "Help.h"
+#include "WaspErrorMessage.h"
+#include "WaspHelp.h"
 #include "../WaspFacade.h"
 
 #include <getopt.h>
@@ -433,7 +433,7 @@ Options::parse(
                         interpreter = PYTHON_INTERPRETER;
                     else
                     #endif                    
-                        ErrorMessage::errorGeneric( "Unkwown interpreter." );
+                        WaspErrorMessage::errorGeneric( "Unkwown interpreter." );
                 }
                 break;
 
@@ -467,7 +467,7 @@ Options::parse(
                         plugins_interpreter = PYTHON_INTERPRETER;
                     else
                     #endif                    
-                        ErrorMessage::errorGeneric( "Unkwown interpreter." );
+                        WaspErrorMessage::errorGeneric( "Unkwown interpreter." );
                 }
                 break;
                 
@@ -537,10 +537,10 @@ Options::parse(
                     else if( !strcmp( optarg, "unfounded" ) )
                         modelcheckerAlgorithm = UNFOUNDED_BASED;
                     else
-                        ErrorMessage::errorGeneric( "Inserted invalid algorithm for model checker." );
+                        WaspErrorMessage::errorGeneric( "Inserted invalid algorithm for model checker." );
                 }
                 else
-                    ErrorMessage::errorGeneric( "Inserted invalid algorithm for model checker." );
+                    WaspErrorMessage::errorGeneric( "Inserted invalid algorithm for model checker." );
                 break;
                 
             case OPTIONID_modelchecker_compactreasons:
@@ -549,7 +549,7 @@ Options::parse(
                 break;
                 
             case OPTIONID_help:
-                Help::printHelp();
+                WaspHelp::printHelp();
                 exit( 0 );
                 break;
 
@@ -579,7 +579,7 @@ Options::parse(
                 if( optarg )
                     weakConstraintsAlg = getAlgorithm( string( optarg ) );
                 else
-                    ErrorMessage::errorGeneric( "Inserted invalid algorithm for weak constraints." );
+                    WaspErrorMessage::errorGeneric( "Inserted invalid algorithm for weak constraints." );
                 break;
                 
             case OPTIONID_kthreshold:
@@ -587,7 +587,7 @@ Options::parse(
                 {
                     int kthreshold_ = atoi( optarg );
                     if( kthreshold_ < 0 )
-                        ErrorMessage::errorGeneric( "Threshold for k must be >= 0." );
+                        WaspErrorMessage::errorGeneric( "Threshold for k must be >= 0." );
                     kthreshold = kthreshold_;
                 }
                 break;
@@ -596,14 +596,14 @@ Options::parse(
                 if( optarg )
                     shiftStrategy = getShiftStrategy( string( optarg ) );
                 else
-                    ErrorMessage::errorGeneric( "Inserted invalid strategy for shift." );
+                    WaspErrorMessage::errorGeneric( "Inserted invalid strategy for shift." );
                 break;
                 
             case OPTIONID_enumeration:
                 if( optarg )
                     enumerationStrategy = getEnumerationStrategy( string( optarg ) );
                 else 
-                    ErrorMessage::errorGeneric( "Inserted invalid strategy for enumeration." );
+                    WaspErrorMessage::errorGeneric( "Inserted invalid strategy for enumeration." );
                 break;
 
             case OPTIONID_shift_onedef:
@@ -632,7 +632,7 @@ Options::parse(
                 if( optarg )
                     minimizationStrategy = getMinimizationStrategy( string( optarg ) );
                 else
-                    ErrorMessage::errorGeneric( "Inserted invalid strategy for minimization." );                
+                    WaspErrorMessage::errorGeneric( "Inserted invalid strategy for minimization." );                
                 break;
                 
             case OPTIONID_minimizationbudget:
@@ -653,10 +653,10 @@ Options::parse(
                     else if( !strcmp( optarg, "chunk-dynamic" ) )
                         queryAlgorithm = CHUNK_DYNAMIC;
                     else
-                        ErrorMessage::errorGeneric( "Inserted invalid algorithm for query answering." );
+                        WaspErrorMessage::errorGeneric( "Inserted invalid algorithm for query answering." );
                 }
                 else
-                        ErrorMessage::errorGeneric( "Inserted invalid algorithm for query answering." );
+                        WaspErrorMessage::errorGeneric( "Inserted invalid algorithm for query answering." );
                 break;
                 
             case OPTIONID_queryverbosity:
@@ -667,10 +667,10 @@ Options::parse(
                     if( value <= 3 )
                         queryVerbosity = value;
                     else
-                        ErrorMessage::errorGeneric( "Inserted invalid value for query verbosity." );
+                        WaspErrorMessage::errorGeneric( "Inserted invalid value for query verbosity." );
                 }
                 else
-                        ErrorMessage::errorGeneric( "Inserted invalid value for query verbosity." );
+                        WaspErrorMessage::errorGeneric( "Inserted invalid value for query verbosity." );
                 break;
             
             case OPTIONID_querychunksize:
@@ -678,10 +678,10 @@ Options::parse(
                 {
                     chunkSize = atoi( optarg );
                     if( chunkPercentage != UINT_MAX )
-                        ErrorMessage::errorGeneric( "Only one option between chunk percentage and chunk size can be specified." );
+                        WaspErrorMessage::errorGeneric( "Only one option between chunk percentage and chunk size can be specified." );
                 }
                 else
-                    ErrorMessage::errorGeneric( "Only one option between chunk percentage and chunk size can be specified." );
+                    WaspErrorMessage::errorGeneric( "Only one option between chunk percentage and chunk size can be specified." );
                 break;
                 
             case OPTIONID_querychunkpercentage:
@@ -689,16 +689,16 @@ Options::parse(
                 {
                     chunkPercentage = atoi( optarg );
                     if( chunkPercentage == 0 || chunkPercentage > 100 )
-                        ErrorMessage::errorGeneric( "Inserted invalid value for chunk percentage." );
+                        WaspErrorMessage::errorGeneric( "Inserted invalid value for chunk percentage." );
                     if( chunkSize != UINT_MAX )
-                        ErrorMessage::errorGeneric( "Only one option between chunk percentage and chunk size can be specified." );
+                        WaspErrorMessage::errorGeneric( "Only one option between chunk percentage and chunk size can be specified." );
                 }
                 else
-                    ErrorMessage::errorGeneric( "Inserted invalid value for chunk percentage." );
+                    WaspErrorMessage::errorGeneric( "Inserted invalid value for chunk percentage." );
                 break;
                 
             default:
-                ErrorMessage::errorGeneric( "This option is not supported." );
+                WaspErrorMessage::errorGeneric( "This option is not supported." );
                 break;
         }
     } while( code != -1 );
@@ -735,7 +735,7 @@ Options::getAlgorithm(
 {   
     map< string, WEAK_CONSTRAINTS_ALG >::iterator it = stringToWeak.find( s );
     if( it == stringToWeak.end() )
-        ErrorMessage::errorGeneric( "Inserted invalid algorithm for weak constraints." );
+        WaspErrorMessage::errorGeneric( "Inserted invalid algorithm for weak constraints." );
     
     return it->second;    
 }
@@ -746,7 +746,7 @@ Options::getShiftStrategy(
 {   
     map< string, SHIFT_STRATEGY >::iterator it = stringToShift.find( s );
     if( it == stringToShift.end() )
-        ErrorMessage::errorGeneric( "Inserted invalid strategy for shift." );
+        WaspErrorMessage::errorGeneric( "Inserted invalid strategy for shift." );
     
     return it->second;    
 }
@@ -757,7 +757,7 @@ Options::getMinimizationStrategy(
 {   
     map< string, unsigned int >::iterator it = stringToMinimization.find( s );
     if( it == stringToMinimization.end() )
-        ErrorMessage::errorGeneric( "Inserted invalid strategy for minimization." );
+        WaspErrorMessage::errorGeneric( "Inserted invalid strategy for minimization." );
     
     return it->second;    
 }
@@ -770,7 +770,7 @@ Options::getEnumerationStrategy(
         return ENUMERATION_BT;
     else if( s == "bc" )
         return ENUMERATION_BC;
-    ErrorMessage::errorGeneric( "Inserted invalid strategy for enumeration." );
+    WaspErrorMessage::errorGeneric( "Inserted invalid strategy for enumeration." );
     return ENUMERATION_BT;
 }
 
@@ -803,13 +803,13 @@ void
 Options::checkOptions()
 {
     if( compactReasonsForHCC && shiftStrategy == SHIFT_NAIVE )
-        ErrorMessage::errorGeneric( "Compact reasons canno be combined with shift" );
+        WaspErrorMessage::errorGeneric( "Compact reasons canno be combined with shift" );
     
     if( modelcheckerAlgorithm == UNFOUNDED_BASED && heuristicPartialChecks )
-        ErrorMessage::errorGeneric( "Partial checks are not available for the unfounded based approach" );
+        WaspErrorMessage::errorGeneric( "Partial checks are not available for the unfounded based approach" );
     
     if( modelcheckerAlgorithm == UNFOUNDED_BASED && forwardPartialChecks )
-        ErrorMessage::errorGeneric( "Partial checks are not available for the unfounded based approach" );
+        WaspErrorMessage::errorGeneric( "Partial checks are not available for the unfounded based approach" );
 }
 
 };

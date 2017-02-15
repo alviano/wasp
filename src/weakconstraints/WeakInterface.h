@@ -23,7 +23,7 @@
 #include <iostream>
 using namespace std;
 #include "../util/WaspTrace.h"
-#include "../util/Assert.h"
+#include "../util/WaspAssert.h"
 #include "../Literal.h"
 #include "../Solver.h"
 

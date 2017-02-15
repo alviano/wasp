@@ -1,7 +1,7 @@
 #include "GringoNumericFormat.h"
 
 #include "../util/WaspConstants.h"
-#include "../util/ErrorMessage.h"
+#include "../util/WaspErrorMessage.h"
 #include "../Clause.h"
 #include "../Aggregate.h"
 #include "../util/Istream.h"
@@ -81,7 +81,7 @@ GringoNumericFormat::parse(
             break;
 
         default:
-            ErrorMessage::errorDuringParsing( "Unsupported rule type." );
+            WaspErrorMessage::errorDuringParsing( "Unsupported rule type." );
             break;
         }
 
@@ -364,7 +364,7 @@ GringoNumericFormat::readOptimizationRule(
     input.read( negativeSize );    
 
     if( size < negativeSize )
-        ErrorMessage::errorDuringParsing( "Size must be greater than or equal to negative size." );
+        WaspErrorMessage::errorDuringParsing( "Size must be greater than or equal to negative size." );
     
     unsigned int counter = 0;
     WeightConstraint* weightConstraintRule = new WeightConstraint( 0, UINT64_MAX );
@@ -469,7 +469,7 @@ GringoNumericFormat::readBodySize(
     input.read( negativeSize );
 
     if( bodySize < negativeSize )
-        ErrorMessage::errorDuringParsing( "Body size must be greater than or equal to negative size." );
+        WaspErrorMessage::errorDuringParsing( "Body size must be greater than or equal to negative size." );
 }
 
 void
@@ -593,7 +593,7 @@ GringoNumericFormat::readConstraint(
     input.read( negativeSize );
 
     if( bodySize < negativeSize )
-        ErrorMessage::errorDuringParsing( "Body size must be greater than or equal to negative size." );
+        WaspErrorMessage::errorDuringParsing( "Body size must be greater than or equal to negative size." );
 
     Clause* clause = solver.newClause( bodySize );
     while( negativeSize-- > 0 )
@@ -643,7 +643,7 @@ GringoNumericFormat::readCount(
     createStructures( id );
     if( size < negativeSize )
     {
-        ErrorMessage::errorDuringParsing( "Size must be greater than or equal to negative size." );
+        WaspErrorMessage::errorDuringParsing( "Size must be greater than or equal to negative size." );
     }
     
     if( size < bound )
@@ -692,7 +692,7 @@ GringoNumericFormat::readSum(
 
     if( size < negativeSize )
     {
-        ErrorMessage::errorDuringParsing( "Size must be greater than or equal to negative size." );
+        WaspErrorMessage::errorDuringParsing( "Size must be greater than or equal to negative size." );
     }
     
     WeightConstraint* weightConstraintRule = new WeightConstraint( id, bound );
@@ -1097,7 +1097,7 @@ GringoNumericFormat::readErrorNumber(
     if( errorNumber != 1 ) {
         stringstream ss;
         ss << "read error message number " << errorNumber;
-        ErrorMessage::errorDuringParsing( ss.str() );
+        WaspErrorMessage::errorDuringParsing( ss.str() );
         exit( 0 );
     }
 }
@@ -1534,7 +1534,7 @@ GringoNumericFormat::computeSCCsDisjunctive()
                                     createPropagatorForDisjunction( headAtoms, auxVars, addedLit );
                                 break;
                             default:
-                                ErrorMessage::errorDuringParsing( "Unknown shift strategy" );
+                                WaspErrorMessage::errorDuringParsing( "Unknown shift strategy" );
                         }                        
                             
                         assert( headAtoms.size() == auxVars.size() );

@@ -12,7 +12,7 @@ LazyInstantiation::LazyInstantiation(
     ExternalPropagator* ext) : One( s ), externalPropagator( ext )
 {
     if( solver.numberOfLevels() > 1 )
-        ErrorMessage::errorDuringParsing( "Lazy weak constraints cannot be combined with multi-level weak constraints" );
+        WaspErrorMessage::errorDuringParsing( "Lazy weak constraints cannot be combined with multi-level weak constraints" );
     
     if( solver.numberOfLevels() == 0 )
         solver.setLevels( 1 );

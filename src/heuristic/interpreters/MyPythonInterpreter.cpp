@@ -19,7 +19,7 @@
 #include "MyPythonInterpreter.h"
 #include <cstring>
 using namespace std;
-#include "../../util/ErrorMessage.h"
+#include "../../util/WaspErrorMessage.h"
 #include "../../util/WaspOptions.h"
 
 #ifdef ENABLE_PYTHON
@@ -48,7 +48,7 @@ MyPythonInterpreter::MyPythonInterpreter(
         if( PyErr_Occurred() )
             PyErr_Print();
         string message = "Module " + string( filename ) + " does not exist.\n";        
-        ErrorMessage::errorGeneric( message );
+        WaspErrorMessage::errorGeneric( message );
     }
 }
 

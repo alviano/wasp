@@ -18,7 +18,7 @@
 
 #include "ExternalHeuristic.h"
 #include "../util/WaspConstants.h"
-#include "../util/ErrorMessage.h"
+#include "../util/WaspErrorMessage.h"
 #include "../Solver.h"
 #include "interpreters/MyPerlInterpreter.h"
 #include "interpreters/MyPythonInterpreter.h"
@@ -26,26 +26,26 @@
 ExternalHeuristic::ExternalHeuristic( Solver& s, char* filename, unsigned int interpr, string scriptDirectory ) : HeuristicStrategy( s )
 {
     if( filename == NULL )
-        ErrorMessage::errorGeneric( "Please specify the script file" );
+        WaspErrorMessage::errorGeneric( "Please specify the script file" );
 
     if( interpr == PYTHON_INTERPRETER )
         interpreter = new MyPythonInterpreter( filename, scriptDirectory );
     else if( interpr == PERL_INTERPRETER )
         interpreter = new MyPerlInterpreter( filename, scriptDirectory );
     else
-        ErrorMessage::errorGeneric( "Unsupported interpreter" );    
+        WaspErrorMessage::errorGeneric( "Unsupported interpreter" );    
     bool check_choiceVars = interpreter->checkMethod( method_choiceVars );
     bool check_onLastChoiceContradictory = interpreter->checkMethod( method_onChoiceContradictory );
     ignorePolarity = interpreter->checkMethod( method_ignorePolarity );
 
     if( !check_choiceVars )
-        ErrorMessage::errorGeneric( "Method " + string( method_choiceVars ) + " is mandatory." );
+        WaspErrorMessage::errorGeneric( "Method " + string( method_choiceVars ) + " is mandatory." );
     
     if( !check_onLastChoiceContradictory && !ignorePolarity )
-        ErrorMessage::errorGeneric( "Please select exactly one method between " + string( method_onChoiceContradictory ) + " and " + string( method_ignorePolarity ) + "." );
+        WaspErrorMessage::errorGeneric( "Please select exactly one method between " + string( method_onChoiceContradictory ) + " and " + string( method_ignorePolarity ) + "." );
     
     if( check_onLastChoiceContradictory && ignorePolarity )
-        ErrorMessage::errorGeneric( "Please select exactly one method between " + string( method_onChoiceContradictory ) + " and " + string( method_ignorePolarity ) + "." );
+        WaspErrorMessage::errorGeneric( "Please select exactly one method between " + string( method_onChoiceContradictory ) + " and " + string( method_ignorePolarity ) + "." );
     
     minisatHeuristic = NULL;
     bool check_fallback = interpreter->checkMethod( method_fallback );
@@ -103,13 +103,13 @@ void ExternalHeuristic::choiceVars( vector< int >& result, int& status )
     interpreter->callListMethod( method_choiceVars, interpretation, result );
     unsigned int size = result.size();
     if( size == 0 )
-        ErrorMessage::errorGeneric( error_choicevars );
+        WaspErrorMessage::errorGeneric( error_choicevars );
     
     assert( size > 0 );
     if( result[ 0 ] == 0 )
     {
         if( size == 1 )
-            ErrorMessage::errorGeneric( error_choicevars );
+            WaspErrorMessage::errorGeneric( error_choicevars );
         
         status = result[ 1 ];
         switch( status )
@@ -117,15 +117,15 @@ void ExternalHeuristic::choiceVars( vector< int >& result, int& status )
             case DO_RESTART:                
             case TRIGGER_INCOHERENCE:
                 if( size != 2 )
-                    ErrorMessage::errorGeneric( error_choicevars );
+                    WaspErrorMessage::errorGeneric( error_choicevars );
                 break;
             case FALLBACK_HEURISTIC:
             case UNROLL:
                 if( size != 3 )
-                    ErrorMessage::errorGeneric( error_choicevars );
+                    WaspErrorMessage::errorGeneric( error_choicevars );
                 break;
             default:
-                ErrorMessage::errorGeneric( error_choicevars );
+                WaspErrorMessage::errorGeneric( error_choicevars );
         }
         if( status == FALLBACK_HEURISTIC )
             numberOfFallbackSteps = result[ 2 ] <= 0 ? INT_MAX : result[ 2 ];            
@@ -187,7 +187,7 @@ void ExternalHeuristic::onFinishedParsing()
             int lit = output[ i ];
             Var v = lit > 0 ? lit : -lit;
             if( v == 0 || v > solver.numberOfVariables() )
-                ErrorMessage::errorGeneric( "Variable " + to_string( v ) + " does not exist." );
+                WaspErrorMessage::errorGeneric( "Variable " + to_string( v ) + " does not exist." );
             else
                 solver.setFrozen( v );
         }
@@ -227,12 +227,12 @@ void ExternalHeuristic::initFallback()
     vector< int > output;
     interpreter->callListMethod( method_initFallback, output );
     if( output.size() % 2 != 0 )
-        ErrorMessage::errorGeneric( error_initfallback );
+        WaspErrorMessage::errorGeneric( error_initfallback );
     for( unsigned int i = 0; i < output.size() - 1; i = i + 2 )
     {
         int var = output[ i ];
         if( var <= 0 || ( unsigned int ) var > solver.numberOfVariables() )
-            ErrorMessage::errorGeneric( "Variable " + to_string( var ) + " does not exist." );
+            WaspErrorMessage::errorGeneric( "Variable " + to_string( var ) + " does not exist." );
         
         int value = output[ i + 1 ];        
         minisatHeuristic->init( var, value );
@@ -247,12 +247,12 @@ void ExternalHeuristic::factorFallback()
     vector< int > output;
     interpreter->callListMethod( method_factorFallback, output );
     if( output.size() % 2 != 0 )
-        ErrorMessage::errorGeneric( error_factorfallback );
+        WaspErrorMessage::errorGeneric( error_factorfallback );
     for( unsigned int i = 0; i < output.size() - 1; i = i + 2 )
     {
         int var = output[ i ];
         if( var <= 0 || ( unsigned int ) var > solver.numberOfVariables() )
-            ErrorMessage::errorGeneric( "Variable " + to_string( var ) + " does not exist." );
+            WaspErrorMessage::errorGeneric( "Variable " + to_string( var ) + " does not exist." );
         
         int value = output[ i + 1 ];
         minisatHeuristic->setFactor( var, value );
@@ -271,7 +271,7 @@ void ExternalHeuristic::signFallback()
         int lit = output[ i ];
         Var var = lit > 0 ? lit : -lit;
         if( var != 0 && var > solver.numberOfVariables() )
-            ErrorMessage::errorGeneric( "Variable " + to_string( var ) + " does not exist." );
+            WaspErrorMessage::errorGeneric( "Variable " + to_string( var ) + " does not exist." );
         
         minisatHeuristic->setSign( lit );
     }
@@ -460,7 +460,7 @@ Literal ExternalHeuristic::makeAChoiceProtected()
             choices.pop_back();
             Var varChoice = choice > 0 ? choice : -choice;
             if( varChoice == 0 || varChoice > solver.numberOfVariables() )
-                ErrorMessage::errorGeneric( "Variable " + to_string( varChoice ) + " does not exist." );
+                WaspErrorMessage::errorGeneric( "Variable " + to_string( varChoice ) + " does not exist." );
             
             if( solver.hasBeenEliminated( varChoice ) )
                 continue;
@@ -503,7 +503,7 @@ Literal ExternalHeuristic::makeAChoiceProtected()
         if( status == FALLBACK_HEURISTIC )
         {
             if( minisatHeuristic == NULL )
-                ErrorMessage::errorGeneric( "Fallback heuristic has not been initialized. Please, add the fallback method in your script." );
+                WaspErrorMessage::errorGeneric( "Fallback heuristic has not been initialized. Please, add the fallback method in your script." );
             status = CHOICE;
             clearStatus();
             goto init;
@@ -512,7 +512,7 @@ Literal ExternalHeuristic::makeAChoiceProtected()
         if( status == UNROLL )
         {
             if( unrollVariable <= 0 || unrollVariable > solver.numberOfVariables() )
-                ErrorMessage::errorGeneric( "Cannot unroll variable " + to_string( unrollVariable ) + ", it does not exist." );
+                WaspErrorMessage::errorGeneric( "Cannot unroll variable " + to_string( unrollVariable ) + ", it does not exist." );
             
             solver.unrollVariable( unrollVariable );
             unrollVariable = 0;
@@ -527,7 +527,7 @@ Literal ExternalHeuristic::makeAChoiceProtected()
         return minisatHeuristic->makeAChoice();
     }
     
-    ErrorMessage::errorGeneric( "There are no other choices, maybe you want to add a fallback heuristic." );
+    WaspErrorMessage::errorGeneric( "There are no other choices, maybe you want to add a fallback heuristic." );
     //Useless, just to remove the warning.
     return Literal::null;
 }
