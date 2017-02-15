@@ -24,153 +24,192 @@
         <section class="main-content">
             <h1><a id="wasp" class="anchor" href="#wasp" aria-hidden="true"><span class="octicon octicon-link"></span></a>Documentation</h1>
 
-                <table>
-                    <tr><th>Name</th><th>Parameters</th><th>Return</th><th>Description</th><th>Note</th></tr>
-                    <tr>
-                        <td>addedVarName</td>
-                        <td><p>The id of a variable.</p><p>The name associated to the id.</p></td>
-                        <td>-</td>
-                        <td>This method is invoked while reading the name associated to an atom.</td>
-                        <td>Optional. It can be avoided if DLV2 is used. See <a href="https://www.mat.unical.it/DLV2">https://www.mat.unical.it/DLV2</a> for more information.</td>
-                    </tr>
-                    <tr>
-                        <td>getLiterals</td>
-                        <td>A list of literals derived as true during the parsing. The first element of the list is the number of variables used in wasp. Literal 1 is always false.</td>
-                        <td>A list of integers L.</td>
-                        <td>This method returns a list of literals L attached to the propagator, i.e. when a literal in L is derived as true a notification is sent to the propagator using either method onLiteralTrue or method onLiteralsTrue.</td>
-                        <td>Required only if one between onLiteralTrue and onLiteralsTrue is used. Otherwise, it is optional.</td>
-                    </tr>
-                    <tr>
-                        <td>getVariablesToFreeze</td>
-                        <td>-</td>
-                        <td>A list of positive integer A.</td>
-                        <td>This method returns a list of atom ids A that must not be removed by simplifications.</td>
-                        <td>Optional.</td>
-                    </tr>
-                    <tr>
-                        <td>onVariableElimination</td>
-                        <td>A positive integer representing the id of a variable.</td>
-                        <td>-</td>
-                        <td>This method is invoked when the variable is removed by clause rewriting.</td>
-                        <td>Optional.</td>
-                    </tr>
-                    <tr>
-                        <td>simplifyAtLevelZero</td>
-                        <td>-</td>
-                        <td>A list of literals L.</td>
-                        <td>This method is invoked before starting the search and returns a list of literals L to be inferred as deterministic consequence. In order to trigger an incoherence add "1" to L.</td>
-                        <td>Optional.</td>
-                    </tr>
-                    <tr>
-                        <td>onStartingSolver</td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td>This method is invoked when the computation starts. After this point all the simplifications are done.</td>
-                        <td>Optional</td>
-                    </tr>
-                    <tr>
-                        <td>onLiteralTrue</td>
-                        <td><p>A literal whose truth value is true.</p><p>A positive integer representing the decision level of the solver.</p></td>
-                        <td>A list of literals L.</td>
-                        <td>This method is invoked whenever a literal becomes true by propagation or by choice. Returns a list of literals L to infer as true. Afterward, the method getReason (or getReasonForLiteral) is invoked.</td>
-                        <td>Required if checkAnswerSet is not used. Otherwise, it is optional. Exactly one between onLiteralTrue and onLiteralsTrue is required.</td>
-                    </tr>
-                    <tr>
-                        <td>onLiteralsTrue</td>
-                        <td>A list of literals that are true. The first element of the list is the current decision level of the solver.</td>
-                        <td>A list of literals L.</td>
-                        <td>This method is invoked after unit propagation and notifies all literals that become true by propagation and by choice. Returns a list of literals L to infer as true. Afterward, the method getReason (or getReasonForLiteral) is invoked.</td>
-                        <td>Required if checkAnswerSet is not used. Otherwise, it is optional. Exactly one between onLiteralTrue and onLiteralsTrue is required.</td>
-                    </tr>
-                    <tr>
-                        <td>endPropagation</td>
-                        <td>A positive integer representing the current decision level of the solver.</td>
-                        <td>A list of literal L.</td>
-                        <td>This method is invoked after all propagations are done. It can be used to postpone the propagation of some of the literals. Returns a list of literals L to infer as true. Afterward, the method getReason (getReasonForLiteral) is invoked.</td>
-                        <td>It can be used only if onLiteralTrue is used.</td>
-                    </tr>
-                    <tr>
-                        <td>getReason</td>
-                        <td>-</td>
-                        <td>A set of literals S.</td>
-                        <td>Returns a clause modeling the reason for the assignments made by onLiteralTrue (onLiteralsTrue). That is, let P = {p1;...;pm} be the literals returned by onLiteralTrue (onLiteralsTrue), and the reason is of the form l1 ^ ... ^ ln -> p (for each p in P). Then, S={-l1;...;-ln}</td>
-                        <td>Required only if one between onLiteralTrue and onLiteralsTrue is used. Otherwise, it is useless. Exactly one between getReason and getReasonForLiteral is required.</td>
-                    </tr>
-                    <tr>
-                        <td>getReasonForLiteral</td>
-                        <td>One of the literals inferred as true by onLiteralTrue (onLiteralsTrue)</td>
-                        <td>A set of literals S.</td>
-                        <td>Returns a clause modeling the reason for the assignment of one literal. That is, let p be the inferred literal, and the reason is of the form l1 ^ ... ^ ln -> p. Then, S={-l1;...;-ln}</td>
-                        <td>Required only if one between onLiteralTrue and onLiteralsTrue is used. Otherwise, it is useless. Exactly one between getReason and getReasonForLiteral is required.</td>
-                    </tr>
-                    <tr>
-                        <td>onLiteralsUndefined</td>
-                        <td>A list L representing the undefined literals. The first element of L is the current decision level of the solver.</td>
-                        <td>-</td>
-                        <td>This method is invoked when some of the literals notified as true are again undefined (e.g. after an unroll or a restart).</td>
-                        <td>Required only if one between onLiteralTrue and onLiteralsTrue is used. Otherwise, it is optional.</td>
-                    </tr>
-                    <tr>
-                        <td>checkAnswerSet</td>
-                        <td>A list of literals L representing the answer set.</td>
-                        <td>An integer.</td>
-                        <td>This method is invoked after an answer set is found. The role of the method is to check whether the answer set is consistent with the propagator. Returns 0 if the answer set is inconsistent, !=0 otherwise.</td>
-                        <td>Required only if onLiteralTrue and onLiteralsTrue are not used. Otherwise, it is optional.</td>
-                    </tr>
-                    <tr>
-                        <td>checkPartialInterpretation</td>
-                        <td>A list of literals L representing the partial interpretation.</td>
-                        <td>An integer.</td>
-                        <td>This method is invoked after each propagation. The role of the method is to check whether the interpretation is consistent with the propagator. Returns 0 if the interpretation is inconsistent, !=0 otherwise.</td>
-                        <td>Optional.</td>
-                    </tr>
-                    <tr>
-                        <td>getReasonsForCheckFailure</td>
-                        <td>-</td>
-                        <td>A list of clauses.</td>
-                        <td>This method is invoked after a failure of checkAnswerSet or checkPartialInterpretation. It returns a list of clauses modeling the reasons for the failure. Each clause is a set of literals S={l1;...;ln} interpreted as l1 v ... v ln.
+            <hr/>
+            <p><b>Method</b>: addedVarName(id, name) - <b>Return</b>: -
+            <ul>
+                <li><i>id:</i> an integer representation of a variable</li>
+                <li><i>name:</i> the name associated to the id</li>
+            </ul>
+            This method is invoked while reading the name associated to an atom. <br/> <br/>
+
+            <b>Note:</b> Optional. Try <a href="https://www.mat.unical.it/DLV2">DLV2</a> for a convenient way to avoid this method.
+            </p>
+            <hr/>
+
+            <p><b>Method</b>: getLiterals(*lits) - <b>Return</b>: L
+            <ul>
+                <li><i>lits:</i> a list of literals derived as true during the parsing. The first element of the list is the number of variables used in wasp. Literal 1 is always false.</li>
+                <li><i>L: </i> a list of integers</li>
+            </ul>
+            This method returns a list of literals L attached to the propagator, i.e. when a literal in L is derived as true a notification is sent to the propagator using either method onLiteralTrue or method onLiteralsTrue.<br/> <br/>
+
+            <b>Note:</b> Required only if one between onLiteralTrue and onLiteralsTrue is used. Otherwise, it is optional.
+            </p>
+            <hr/>
+
+            <p><b>Method</b>: onVariableElimination(var)  - <b>Return</b>: -
+            <ul>
+                <li><i>var:</i> a positive integer representing the id of a variable.</li>
+            </ul>            
+            This method is invoked when the variable is removed by clause rewriting. <br/> <br/>
+            <b>Note: </b>  Optional.
+            </p>
+            <hr/>
+
+            <p><b>Method</b>: simplifyAtLevelZero() - <b>Return</b>: L
+            <ul>
+                <li><i>L:</i> a list of literals.</li>
+            </ul>            
+            This method is invoked before starting the search and returns a list of literals L to be inferred as deterministic consequence. In order to trigger an incoherence add "1" to L. <br/> <br/>
+            <b>Note:</b>  Optional.
+            </p>
+            <hr/>
+
+            <p><b>Method</b>: onStartingSolver() <b>Return</b>: - <br/><br/>
+            This method is invoked when the computation starts. After this point all the simplifications are done.<br/> <br/>
+
+            <b>Note:</b> Optional.
+            </p>
+            <hr/>
+
+            <p><b>Method</b>: onLiteralTrue(lit, dl) - <b>Return</b>: L
+            <ul>
+                <li><i>lit:</i> a literal whose truth value is true.</li>
+                <li><i>dl:</i> a positive integer representing the decision level of the solver.</li>
+                <li><i>L:</i> a list of literals.</li>
+            </ul>
+            This method is invoked whenever a literal becomes true by propagation or by choice. Returns a list of literals L to infer as true. Afterward, the method getReason (or getReasonForLiteral) is invoked. <br/> <br/>
+
+            <b>Note:</b> Required if checkAnswerSet is not used. Otherwise, it is optional. Exactly one between onLiteralTrue and onLiteralsTrue is required.
+            </p>
+            <hr/>
+
+            <p><b>Method</b>: onLiteralsTrue(*lits)  - <b>Return</b>: L
+            <ul>
+                <li><i>lits:</i> a list of literals that are true. The first element of the list is the current decision level of the solver.</li>
+                <li><i>L:</i> a list of literals.</li>
+            </ul>
+            This method is invoked after unit propagation and notifies all literals that become true by propagation and by choice. Returns a list of literals L to infer as true. Afterward, the method getReason (or getReasonForLiteral) is invoked.<br/> <br/>
+
+            <b>Note:</b> Required if checkAnswerSet is not used. Otherwise, it is optional. Exactly one between onLiteralTrue and onLiteralsTrue is required.
+            </p>
+            <hr/>
+
+            <p><b>Method</b>: endPropagation(dl) - <b>Return</b>: L
+            <ul>
+                <li><i>dl:</i> a positive integer representing the current decision level of the solver.</li>
+                <li><i>L:</i> a list of literals.</li>
+            </ul>
+            This method is invoked after all propagations are done. It can be used to postpone the propagation of some of the literals. Returns a list of literals L to infer as true. Afterward, the method getReason (getReasonForLiteral) is invoked. <br/> <br/>
+
+            <b>Note:</b> It can be used only if onLiteralTrue is used.
+            </p>
+            <hr/>
+
+            <p><b>Method</b>: getReason() - <b>Return</b>: S
+            <ul>
+                <li><i>S:</i> a set of literals.</li>
+            </ul>
+            This method returns a clause modeling the reason for the assignments made by onLiteralTrue (onLiteralsTrue). That is, let P = {p1;...;pm} be the literals returned by onLiteralTrue (onLiteralsTrue), and the reason is of the form l1 ^ ... ^ ln -> p (for each p in P). Then, S={-l1;...;-ln}<br/> <br/>
+
+            <b>Note:</b> Required only if one between onLiteralTrue and onLiteralsTrue is used. Otherwise, it is useless. Exactly one between getReason and getReasonForLiteral is required.
+            </p>
+            <hr/>
+
+            <p><b>Method</b>: getReasonForLiteral(lit)  - <b>Return</b>: S
+            <ul>
+                <li><i>lit:</i> one of the literals inferred as true by onLiteralTrue (onLiteralsTrue)</li>
+                <li><i>S: </i> a set of literals.</li>
+            </ul>
+            This method returns a clause modeling the reason for the assignment of one literal. That is, if the reason is of the form l1 ^ ... ^ ln -> lit. Then, S={-l1;...;-ln}<br/> <br/>
+
+            <b>Note:</b> Required only if one between onLiteralTrue and onLiteralsTrue is used. Otherwise, it is useless. Exactly one between getReason and getReasonForLiteral is required.
+            </p>
+            <hr/>
+
+            <p><b>Method</b>: onLiteralsUndefined(*lits)  - <b>Return</b>: -
+            <ul>
+                <li><i>lits:</i> a list representing the undefined literals. The first element of lits is the current decision level of the solver.</li>
+            </ul>
+            This method is invoked when some of the literals notified as true are again undefined (e.g. after an unroll or a restart). <br/> <br/>
+
+            <b>Note:</b> Required only if one between onLiteralTrue and onLiteralsTrue is used. Otherwise, it is optional.
+            </p>
+            <hr/>
+
+            <p><b>Method</b>: checkAnswerSet(*lits) - <b>Return</b>: i
+            <ul>
+                <li><i>lits:</i> a list of literals representing the answer set.</li>
+                <li><i>i: </i> an integer</li>
+            </ul>
+            This method is invoked after an answer set is found. The role of the method is to check whether the answer set is consistent with the propagator. Returns 0 if the answer set is inconsistent, !=0 otherwise.<br/> <br/>
+
+            <b>Note:</b> Required only if onLiteralTrue and onLiteralsTrue are not used. Otherwise, it is optional.
+            </p>
+            <hr/>
+
+            <p><b>Method</b>: checkPartialInterpretation(*lits) - <b>Return</b>: i
+            <ul>
+                <li><i>lits:</i> a list of literals representing the partial interpretation.</li>
+                <li><i>i: </i> an integer</li>
+            </ul>
+            This method is invoked after each propagation. The role of the method is to check whether the interpretation is consistent with the propagator. Returns 0 if the interpretation is inconsistent, !=0 otherwise. <br/> <br/>
+
+            <b>Note:</b> Optional.
+            </p>
+            <hr/>
+
+            <p><b>Method</b>: getReasonsForCheckFailure()  - <b>Return</b>: L
+            <ul>
+                <li><i>L:</i> a list of clauses.</li>
+            </ul>
+            This method is invoked after a failure of checkAnswerSet or checkPartialInterpretation. It returns a list of clauses modeling the reasons for the failure. Each clause is a set of literals S={l1;...;ln} interpreted as l1 v ... v ln.
 The clauses must be separated by 0. Note that the first and the last element of the list are expected to be equal to 0.
-If you import the library wasp.py you can simply use wasp.createReasonsForCheckFailure(clauses). See running examples for more details.</td>
-                        <td>Required only if checkAnswerSet or checkPartialInterpretation are used.</td>
-                    </tr>
-                    <tr>
-                        <td>onAnswerSet</td>
-                        <td>A list of literals representing the answer set.</td>
-                        <td>-</td>
-                        <td>This method is invoked when a new answer set is found. In this case, no check is needed. This method can be used for statistics.</td>
-                        <td>Optional.</td>
-                    </tr>
-                    <tr>
-                        <td>onNewLowerBound</td>
-                        <td>A positive integer representing the lower bound.</td>
-                        <td>-</td>
-                        <td>This method is invoked only on optimization problems whenever a new lower bound of the optimum solution is found.</td>
-                        <td>Optional.</td>
-                    </tr>
-                    <tr>
-                        <td>onNewUpperBound</td>
-                        <td>A positive integer representing the upper bound.</td>
-                        <td>-</td>
-                        <td>This method is invoked only on optimization problems whenever a new upper bound of the optimum solution is found.</td>
-                        <td>Optional.</td>
-                    </tr>
-                    <tr>
-                        <td>addWeakConstraints</td>
-                        <td>-</td>
-                        <td>A list of soft clauses.</td>
-                        <td>This method is used to lazily add weak constraints (you have to enable the option --lazy-weakconstraints). The method is invoked after an answer set is found (checkAnswerSet must be enabled) and it returns a list of soft clauses modeling the weak constraints to add. Each soft clause is a set of literals S={l1;...;ln} interpreted as l1 v ... v ln.
+If you import the library wasp.py you can simply use wasp.createReasonsForCheckFailure(clauses). See running examples for more details.<br/><br/>
+
+            <b>Note:</b> Required only if checkAnswerSet or checkPartialInterpretation are used.
+            </p>
+            <hr/>
+
+            <p><b>Method</b>: onNewLowerBound(lb) - <b>Return</b>: -
+            <ul>
+                <li><i>lb:</i> a positive integer representing the lower bound.</li>
+            </ul>
+            This method is invoked only on optimization problems whenever a new lower bound of the optimum solution is found.<br/> <br/>
+
+            <b>Note:</b> Optional.
+            </p>
+            <hr/>
+
+            <p><b>Method</b>: onNewUpperBound(ub) - <b>Return</b>: -
+            <ul>
+                <li><i>ub:</i> a positive integer representing the upper bound.</li>
+            </ul>
+            This method is invoked only on optimization problems whenever a new upper bound of the optimum solution is found.<br/> <br/>
+
+            <b>Note:</b> Optional.
+            </p>
+            <hr/>
+
+            <p><b>Method</b>: addWeakConstraints()  - <b>Return</b>: L
+            <ul>
+                <li><i>L:</i> a list of soft clauses.</li>
+            </ul>
+            This method is used to lazily add weak constraints (you have to enable the option --lazy-weakconstraints). The method is invoked after an answer set is found (checkAnswerSet must be enabled) and it returns a list of soft clauses modeling the weak constraints to add. Each soft clause is a set of literals S={l1;...;ln} interpreted as l1 v ... v ln.
 The soft clauses must be separated by 0. Note that the first and the last element of the list are expected to be equal to 0.
-If you import the library wasp.py you can simply use wasp.createWeakConstraints(softClauses). See running examples for more details.</td>
-                        <td>Optional.</td>
-                    </tr>
-                    <tr>
-                        <td>addWeightsForWeakConstraints</td>
-                        <td>-</td>
-                        <td>A list of weights associated to each soft clause.</td>
-                        <td>This method is invoked after addWeakConstraints and returns a list of positive weights associated to each soft clause. Note that the i-th soft clause is associated with the i-th weight</td>
-                        <td>Required if addWeakConstraints is used. Otherwise, it is optional.</td>
-                    </tr>
-                </table>
+If you import the library wasp.py you can simply use wasp.createWeakConstraints(softClauses). See running examples for more details.<br/> <br/>
+            <b>Note:</b> Optional.
+
+            <p><b>Method</b>: addWeightsForWeakConstraints()  - <b>Return</b>: L
+            <ul>
+                <li><i>L:</i> a list of weights associated to each soft clause.</li>
+            </ul>
+            This method is invoked after addWeakConstraints and returns a list of positive weights associated to each soft clause. Note that the i-th soft clause is associated with the i-th weight.<br/> <br/>
+
+            <b>Note:</b> Required if addWeakConstraints is used. Otherwise, it is optional.
+            </p>
+            <hr/>
+            
 
             <h1><a id="wasp" class="anchor" href="#wasp" aria-hidden="true"><span class="octicon octicon-link"></span></a>Running examples</h1>
 
@@ -179,7 +218,7 @@ If you import the library wasp.py you can simply use wasp.createWeakConstraints(
 <code>{a;b;c;d}.</code>
             </pre>
 
-            <p>We want to keep answer sets where exactly two atoms among a, b, c, and d must be true. In the following we present two different python implementations of the propagator.</p>
+            <p>We want to keep answer sets where exactly two atoms among a, b, c, and d must be true. In the following we present two different python implementations.</p>
 
 
 <p>Solution 1</p>
