@@ -19,7 +19,7 @@
 #include "MyPythonInterpreter.h"
 #include <cstring>
 using namespace std;
-#include "../../util/WaspErrorMessage.h"
+#include "../util/WaspErrorMessage.h"
 
 #ifdef ENABLE_PYTHON
 

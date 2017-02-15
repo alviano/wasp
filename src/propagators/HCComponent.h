@@ -20,10 +20,10 @@
 #define	WASP_HCCOMPONENT_H
 
 #include "PostPropagator.h"
-#include "Literal.h"
-#include "Solver.h"
-#include "outputBuilders/OutputBuilder.h"
-#include "outputBuilders/NoopOutputBuilder.h"
+#include "../Literal.h"
+#include "../Solver.h"
+#include "../outputBuilders/OutputBuilder.h"
+#include "../outputBuilders/NoopOutputBuilder.h"
 
 #include <iostream>
 using namespace std;

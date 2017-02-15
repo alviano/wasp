@@ -1,8 +1,8 @@
 #include "UnfoundedBasedCheck.h"
-#include "Solver.h"
-#include "util/WaspTrace.h"
-#include "util/WaspOptions.h"
-#include "input/Rule.h"
+#include "../Solver.h"
+#include "../util/WaspTrace.h"
+#include "../util/WaspOptions.h"
+#include "../input/Rule.h"
 
 UnfoundedBasedCheck::UnfoundedBasedCheck(
     vector< GUSData* >& gusData_,

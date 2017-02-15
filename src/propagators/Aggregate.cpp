@@ -17,10 +17,10 @@
 */
 
 #include "Aggregate.h"
-#include "Solver.h"
-#include "util/WaspOptions.h"
-#include "Learning.h"
-#include "Clause.h"
+#include "../Solver.h"
+#include "../util/WaspOptions.h"
+#include "../Learning.h"
+#include "../Clause.h"
 
 void
 Aggregate::reset(

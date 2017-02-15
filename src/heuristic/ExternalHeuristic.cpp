@@ -21,8 +21,8 @@
 #include "../util/WaspErrorMessage.h"
 #include "../util/WaspOptions.h"
 #include "../Solver.h"
-#include "interpreters/MyPerlInterpreter.h"
-#include "interpreters/MyPythonInterpreter.h"
+#include "../interpreters/MyPerlInterpreter.h"
+#include "../interpreters/MyPythonInterpreter.h"
 
 ExternalHeuristic::ExternalHeuristic( Solver& s, char* filename, unsigned int interpr, string scriptDirectory ) : HeuristicStrategy( s )
 {

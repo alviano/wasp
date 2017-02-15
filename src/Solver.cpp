@@ -18,9 +18,9 @@
 
 #include "Solver.h"
 #include "input/Dimacs.h"
-#include "HCComponent.h"
-#include "ReductBasedCheck.h"
-#include "UnfoundedBasedCheck.h"
+#include "propagators/HCComponent.h"
+#include "propagators/ReductBasedCheck.h"
+#include "propagators/UnfoundedBasedCheck.h"
 #include "weakconstraints/WeakInterface.h"
 #include <algorithm>
 #include <stdint.h>

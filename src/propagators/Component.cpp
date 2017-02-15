@@ -17,12 +17,12 @@
 */
 
 #include "Component.h"
-#include "Literal.h"
-#include "util/WaspOptions.h"
-#include "Learning.h"
-#include "Clause.h"
-#include "Solver.h"
-#include "outputBuilders/CompetitionOutputBuilder.h"
+#include "../Literal.h"
+#include "../util/WaspOptions.h"
+#include "../Learning.h"
+#include "../Clause.h"
+#include "../Solver.h"
+#include "../outputBuilders/CompetitionOutputBuilder.h"
 
 Component::~Component()
 {

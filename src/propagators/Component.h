@@ -23,13 +23,13 @@
 #include <cassert>
 #include <iostream>
 
-#include "stl/Vector.h"
+#include "../stl/Vector.h"
 #include "PostPropagator.h"
-#include "Literal.h"
-#include "GUSData.h"
-#include "util/WaspOptions.h"
-#include "util/WaspTrace.h"
-#include "util/WaspAssert.h"
+#include "../Literal.h"
+#include "../GUSData.h"
+#include "../util/WaspOptions.h"
+#include "../util/WaspTrace.h"
+#include "../util/WaspAssert.h"
 
 class Learning;
 class Solver;

@@ -1,13 +1,9 @@
 #include "ReductBasedCheck.h"
-#include "Solver.h"
-#include "input/Dimacs.h"
-#include "outputBuilders/DimacsOutputBuilder.h"
-#include "outputBuilders/WaspOutputBuilder.h"
-#include "util/WaspTrace.h"
-#include "util/WaspOptions.h"
+#include "../Solver.h"
+#include "../util/WaspTrace.h"
+#include "../util/WaspOptions.h"
 
 #include <vector>
-#include "util/WaspOptions.h"
 
 ReductBasedCheck::ReductBasedCheck(
     vector< GUSData* >& gusData_,

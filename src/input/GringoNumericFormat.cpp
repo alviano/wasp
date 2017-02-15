@@ -3,10 +3,10 @@
 #include "../util/WaspConstants.h"
 #include "../util/WaspErrorMessage.h"
 #include "../Clause.h"
-#include "../Aggregate.h"
+#include "../propagators/Aggregate.h"
 #include "../util/Istream.h"
-#include "../HCComponent.h"
-#include "../ExternalPropagator.h"
+#include "../propagators/HCComponent.h"
+#include "../propagators/ExternalPropagator.h"
 
 #include <cassert>
 #include <iostream>

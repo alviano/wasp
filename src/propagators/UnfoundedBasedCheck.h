@@ -20,11 +20,11 @@
 #define	WASP_UNFOUNDEDBASEDCHECK_H
 
 #include <vector>
-#include "util/WaspAssert.h"
-#include "stl/Vector.h"
+#include "../util/WaspAssert.h"
+#include "../stl/Vector.h"
 #include "HCComponent.h"
-#include "Literal.h"
-#include "Solver.h"
+#include "../Literal.h"
+#include "../Solver.h"
 using namespace std;
 
 class Clause;

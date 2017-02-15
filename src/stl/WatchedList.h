@@ -20,7 +20,7 @@
 #define WASP_WATCHEDLIST_H
 
 #include <cassert>
-#include "stl/Vector.h"
+#include "Vector.h"
 using namespace std;
 
 template< class T >

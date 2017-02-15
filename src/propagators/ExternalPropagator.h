@@ -20,7 +20,7 @@
 #define WASP_EXTERNALPROPAGATOR_H
 
 #include "Propagator.h"
-#include "./stl/Vector.h"
+#include "../stl/Vector.h"
 class Clause;
 class Interpreter;
 

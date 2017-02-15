@@ -23,12 +23,12 @@
 #include <iostream>
 
 #include "Propagator.h"
-#include "Clause.h"
-#include "Learning.h"
-#include "Literal.h"
-#include "stl/Vector.h"
-#include "util/WaspOptions.h"
-#include "util/WaspTrace.h"
+#include "../Clause.h"
+#include "../Learning.h"
+#include "../Literal.h"
+#include "../stl/Vector.h"
+#include "../util/WaspOptions.h"
+#include "../util/WaspTrace.h"
 
 class Solver;
 using namespace std;

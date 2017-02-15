@@ -17,10 +17,10 @@
 */
 
 #include "CardinalityConstraint.h"
-#include "Solver.h"
-#include "util/WaspOptions.h"
-#include "Learning.h"
-#include "Clause.h"
+#include "../Solver.h"
+#include "../util/WaspOptions.h"
+#include "../Learning.h"
+#include "../Clause.h"
 
 void
 CardinalityConstraint::reset(

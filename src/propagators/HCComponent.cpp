@@ -18,9 +18,9 @@
 
 #include "HCComponent.h"
 
-#include "Learning.h"
-#include "Clause.h"
-#include "input/Rule.h"
+#include "../Learning.h"
+#include "../Clause.h"
+#include "../input/Rule.h"
 #include <iostream>
 using namespace std;
 

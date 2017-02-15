@@ -19,13 +19,13 @@
 #define	WASP_DISJUNCTIONPROPAGATOR_H
 
 #include "Propagator.h"
-#include "util/WaspAssert.h"
-#include "util/WaspOptions.h"
-#include "util/WaspTrace.h"
-#include "stl/Vector.h"
-#include "Literal.h"
-#include "ReasonForBinaryClauses.h"
-#include "Clause.h"
+#include "../util/WaspAssert.h"
+#include "../util/WaspOptions.h"
+#include "../util/WaspTrace.h"
+#include "../stl/Vector.h"
+#include "../Literal.h"
+#include "../ReasonForBinaryClauses.h"
+#include "../Clause.h"
 
 class DisjunctionPropagator : public Propagator
 {

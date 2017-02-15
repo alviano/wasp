@@ -17,7 +17,7 @@
  */
 
 #include "DisjunctionPropagator.h"
-#include "Solver.h"
+#include "../Solver.h"
 
 DisjunctionPropagator::~DisjunctionPropagator()
 {

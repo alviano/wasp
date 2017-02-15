@@ -17,14 +17,14 @@
  */
 
 #include "ExternalPropagator.h"
-#include "heuristic/interpreters/Interpreter.h"
-#include "Literal.h"
-#include "stl/Vector.h"
-#include "Solver.h"
-#include "Clause.h"
-#include "heuristic/interpreters/MyPerlInterpreter.h"
-#include "heuristic/interpreters/MyPythonInterpreter.h"
-#include "util/WaspOptions.h"
+#include "../interpreters/Interpreter.h"
+#include "../Literal.h"
+#include "../stl/Vector.h"
+#include "../Solver.h"
+#include "../Clause.h"
+#include "../interpreters/MyPerlInterpreter.h"
+#include "../interpreters/MyPythonInterpreter.h"
+#include "../util/WaspOptions.h"
 
 ExternalPropagator::~ExternalPropagator()
 {

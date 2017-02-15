@@ -65,7 +65,7 @@
 #define error_initfallback "Method " method_initFallback " is not well-formed: see the documentation for more information"
 #define error_factorfallback "Method " method_factorFallback " is not well-formed: see the documentation for more information"
 
-#include "interpreters/Interpreter.h"
+#include "../interpreters/Interpreter.h"
 #include "HeuristicStrategy.h"
 #include "MinisatHeuristic.h"
 class ExternalHeuristic : public HeuristicStrategy

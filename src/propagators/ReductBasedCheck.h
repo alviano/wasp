@@ -20,11 +20,11 @@
 #define	WASP_REDUCTBASEDCHECK_H
 
 #include <vector>
-#include "util/WaspAssert.h"
-#include "stl/Vector.h"
+#include "../util/WaspAssert.h"
+#include "../stl/Vector.h"
 #include "HCComponent.h"
-#include "Literal.h"
-#include "input/Rule.h"
+#include "../Literal.h"
+#include "../input/Rule.h"
 using namespace std;
 
 class Clause;
