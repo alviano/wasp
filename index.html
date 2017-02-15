@@ -13,10 +13,12 @@
     <section class="page-header">
       <h1 class="project-name">Wasp</h1>
       <h2 class="project-tagline"></h2>
+      <a href="index.html" class="btn">Home</a>
       <a href="https://github.com/alviano/wasp" class="btn">View on GitHub</a>
       <a href="https://github.com/alviano/wasp/zipball/master" class="btn">Download .zip</a>
       <a href="https://github.com/alviano/wasp/tarball/master" class="btn">Download .tar.gz</a>
-      <a href="#publications" class="btn">Publications</a>
+      <a href="index.html#publications" class="btn">Publications</a>
+      <a href="plugins-documentation.html" class="btn">Documentation</a>
     </section>
 
     <section class="main-content">
@@ -43,12 +45,24 @@
 
 <ul>
 <li>
-<code>make BUILD=stats</code> enables the usage of statistics</li>
+<code>BUILD=stats</code> enables the usage of statistics</li>
 <li>
-<code>make BUILD=trace</code> enables the possibility to trace the internal behavior of wasp</li>
+<code>BUILD=estats</code> enables more statistics (this may have deteriorate the performance)</li>
 <li>
-<code>make BUILD=debug</code> compiles wasp for debugging</li>
+<code>BUILD=trace</code> enables the possibility to trace the internal behavior of wasp</li>
+<li>
+<code>BUILD=debug</code> compiles wasp for debugging</li>
+<li>
+<code>SCRIPT=python</code> enables python2.7 interface</li>
+<li>
+<code>SCRIPT=python3</code> enables python3 interface</li>
+<li>
+<code>SCRIPT=perl</code> enables perl interface</li>
+<li>
+<code>SCRIPT=all</code> enables python2.7 and perl interfaces</li>
 </ul>
+
+
 
 <h1>
 <a id="usage" class="anchor" href="#usage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Usage</h1>
@@ -78,6 +92,9 @@
 <li><i>M. Alviano, C. Dodaro, and Francesco Ricca:</i> <b>Comparing Alternative Solutions for Unfounded Set Propagation in ASP.</b> Proceedings of AI*IA (2013). <a href="http://link.springer.com/chapter/10.1007%2F978-3-319-03524-6_1">Download</a> <a href="aiiaus.bib">Reference</a> </li>
 </ul>
 
+<h1>
+<a id="team" class="anchor" href="#team" aria-hidden="true"><span class="octicon octicon-link"></span></a>Documentation</h1>
+A preliminary documentation of the python interface is available <a href="plugins-documentation.html">here</a>!
 
 <h1>
 <a id="team" class="anchor" href="#team" aria-hidden="true"><span class="octicon octicon-link"></span></a>Team</h1>

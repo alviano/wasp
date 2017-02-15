@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+    <meta charset="UTF-8">
+    <title>Wasp by alviano</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+    </head>
+    <body>
+        <section class="page-header">
+            <h1 class="project-name">Wasp</h1>
+            <h2 class="project-tagline"></h2>
+            <a href="index.html" class="btn">Home</a>
+            <a href="https://github.com/alviano/wasp" class="btn">View on GitHub</a>
+            <a href="https://github.com/alviano/wasp/zipball/master" class="btn">Download .zip</a>
+            <a href="https://github.com/alviano/wasp/tarball/master" class="btn">Download .tar.gz</a>
+            <a href="index.html#publications" class="btn">Publications</a>
+            <a href="plugins-documentation.html" class="btn">Documentation</a>
+        </section>
+
+        <section class="main-content">
+            <h1><a id="wasp" class="anchor" href="#wasp" aria-hidden="true"><span class="octicon octicon-link"></span></a>Documentation</h1>
+
+                <table>
+                    <tr><th>Name</th><th>Parameters</th><th>Return</th><th>Description</th><th>Note</th></tr>
+                    <tr>
+                        <td>addedVarName</td>
+                        <td><p>The id of a variable.</p><p>The name associated to the id.</p></td>
+                        <td>-</td>
+                        <td>This method is invoked while reading the name associated to an atom.</td>
+                        <td>Optional. It can be avoided if DLV2 is used. See <a href="https://www.mat.unical.it/DLV2">https://www.mat.unical.it/DLV2</a> for more information.</td>
+                    </tr>
+                    <tr>
+                        <td>getLiterals</td>
+                        <td>A list of literals derived as true during the parsing. The first element of the list is the number of variables used in wasp. Literal 1 is always false.</td>
+                        <td>A list of integers L.</td>
+                        <td>This method returns a list of literals L attached to the propagator, i.e. when a literal in L is derived as true a notification is sent to the propagator using either method onLiteralTrue or method onLiteralsTrue.</td>
+                        <td>Required only if one between onLiteralTrue and onLiteralsTrue is used. Otherwise, it is optional.</td>
+                    </tr>
+                    <tr>
+                        <td>getVariablesToFreeze</td>
+                        <td>-</td>
+                        <td>A list of positive integer A.</td>
+                        <td>This method returns a list of atom ids A that must not be removed by simplifications.</td>
+                        <td>Optional.</td>
+                    </tr>
+                    <tr>
+                        <td>onVariableElimination</td>
+                        <td>A positive integer representing the id of a variable.</td>
+                        <td>-</td>
+                        <td>This method is invoked when the variable is removed by clause rewriting.</td>
+                        <td>Optional.</td>
+                    </tr>
+                    <tr>
+                        <td>simplifyAtLevelZero</td>
+                        <td>-</td>
+                        <td>A list of literals L.</td>
+                        <td>This method is invoked before starting the search and returns a list of literals L to be inferred as deterministic consequence. In order to trigger an incoherence add "1" to L.</td>
+                        <td>Optional.</td>
+                    </tr>
+                    <tr>
+                        <td>onStartingSolver</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>This method is invoked when the computation starts. After this point all the simplifications are done.</td>
+                        <td>Optional</td>
+                    </tr>
+                    <tr>
+                        <td>onLiteralTrue</td>
+                        <td><p>A literal whose truth value is true.</p><p>A positive integer representing the decision level of the solver.</p></td>
+                        <td>A list of literals L.</td>
+                        <td>This method is invoked whenever a literal becomes true by propagation or by choice. Returns a list of literals L to infer as true. Afterward, the method getReason (or getReasonForLiteral) is invoked.</td>
+                        <td>Required if checkAnswerSet is not used. Otherwise, it is optional. Exactly one between onLiteralTrue and onLiteralsTrue is required.</td>
+                    </tr>
+                    <tr>
+                        <td>onLiteralsTrue</td>
+                        <td>A list of literals that are true. The first element of the list is the current decision level of the solver.</td>
+                        <td>A list of literals L.</td>
+                        <td>This method is invoked after unit propagation and notifies all literals that become true by propagation and by choice. Returns a list of literals L to infer as true. Afterward, the method getReason (or getReasonForLiteral) is invoked.</td>
+                        <td>Required if checkAnswerSet is not used. Otherwise, it is optional. Exactly one between onLiteralTrue and onLiteralsTrue is required.</td>
+                    </tr>
+                    <tr>
+                        <td>endPropagation</td>
+                        <td>A positive integer representing the current decision level of the solver.</td>
+                        <td>A list of literal L.</td>
+                        <td>This method is invoked after all propagations are done. It can be used to postpone the propagation of some of the literals. Returns a list of literals L to infer as true. Afterward, the method getReason (getReasonForLiteral) is invoked.</td>
+                        <td>It can be used only if onLiteralTrue is used.</td>
+                    </tr>
+                    <tr>
+                        <td>getReason</td>
+                        <td>-</td>
+                        <td>A set of literals S.</td>
+                        <td>Returns a clause modeling the reason for the assignments made by onLiteralTrue (onLiteralsTrue). That is, let P = {p1;...;pm} be the literals returned by onLiteralTrue (onLiteralsTrue), and the reason is of the form l1 ^ ... ^ ln -> p (for each p in P). Then, S={-l1;...;-ln}</td>
+                        <td>Required only if one between onLiteralTrue and onLiteralsTrue is used. Otherwise, it is useless. Exactly one between getReason and getReasonForLiteral is required.</td>
+                    </tr>
+                    <tr>
+                        <td>getReasonForLiteral</td>
+                        <td>One of the literals inferred as true by onLiteralTrue (onLiteralsTrue)</td>
+                        <td>A set of literals S.</td>
+                        <td>Returns a clause modeling the reason for the assignment of one literal. That is, let p be the inferred literal, and the reason is of the form l1 ^ ... ^ ln -> p. Then, S={-l1;...;-ln}</td>
+                        <td>Required only if one between onLiteralTrue and onLiteralsTrue is used. Otherwise, it is useless. Exactly one between getReason and getReasonForLiteral is required.</td>
+                    </tr>
+                    <tr>
+                        <td>onLiteralsUndefined</td>
+                        <td>A list L representing the undefined literals. The first element of L is the current decision level of the solver.</td>
+                        <td>-</td>
+                        <td>This method is invoked when some of the literals notified as true are again undefined (e.g. after an unroll or a restart).</td>
+                        <td>Required only if one between onLiteralTrue and onLiteralsTrue is used. Otherwise, it is optional.</td>
+                    </tr>
+                    <tr>
+                        <td>checkAnswerSet</td>
+                        <td>A list of literals L representing the answer set.</td>
+                        <td>An integer.</td>
+                        <td>This method is invoked after an answer set is found. The role of the method is to check whether the answer set is consistent with the propagator. Returns 0 if the answer set is inconsistent, !=0 otherwise.</td>
+                        <td>Required only if onLiteralTrue and onLiteralsTrue are not used. Otherwise, it is optional.</td>
+                    </tr>
+                    <tr>
+                        <td>checkPartialInterpretation</td>
+                        <td>A list of literals L representing the partial interpretation.</td>
+                        <td>An integer.</td>
+                        <td>This method is invoked after each propagation. The role of the method is to check whether the interpretation is consistent with the propagator. Returns 0 if the interpretation is inconsistent, !=0 otherwise.</td>
+                        <td>Optional.</td>
+                    </tr>
+                    <tr>
+                        <td>getReasonsForCheckFailure</td>
+                        <td>-</td>
+                        <td>A list of clauses.</td>
+                        <td>This method is invoked after a failure of checkAnswerSet or checkPartialInterpretation. It returns a list of clauses modeling the reasons for the failure. Each clause is a set of literals S={l1;...;ln} interpreted as l1 v ... v ln.
+The clauses must be separated by 0. Note that the first and the last element of the list are expected to be equal to 0.
+If you import the library wasp.py you can simply use wasp.createReasonsForCheckFailure(clauses). See running examples for more details.</td>
+                        <td>Required only if checkAnswerSet or checkPartialInterpretation are used.</td>
+                    </tr>
+                    <tr>
+                        <td>onAnswerSet</td>
+                        <td>A list of literals representing the answer set.</td>
+                        <td>-</td>
+                        <td>This method is invoked when a new answer set is found. In this case, no check is needed. This method can be used for statistics.</td>
+                        <td>Optional.</td>
+                    </tr>
+                    <tr>
+                        <td>onNewLowerBound</td>
+                        <td>A positive integer representing the lower bound.</td>
+                        <td>-</td>
+                        <td>This method is invoked only on optimization problems whenever a new lower bound of the optimum solution is found.</td>
+                        <td>Optional.</td>
+                    </tr>
+                    <tr>
+                        <td>onNewUpperBound</td>
+                        <td>A positive integer representing the upper bound.</td>
+                        <td>-</td>
+                        <td>This method is invoked only on optimization problems whenever a new upper bound of the optimum solution is found.</td>
+                        <td>Optional.</td>
+                    </tr>
+                    <tr>
+                        <td>addWeakConstraints</td>
+                        <td>-</td>
+                        <td>A list of soft clauses.</td>
+                        <td>This method is used to lazily add weak constraints (you have to enable the option --lazy-weakconstraints). The method is invoked after an answer set is found (checkAnswerSet must be enabled) and it returns a list of soft clauses modeling the weak constraints to add. Each soft clause is a set of literals S={l1;...;ln} interpreted as l1 v ... v ln.
+The soft clauses must be separated by 0. Note that the first and the last element of the list are expected to be equal to 0.
+If you import the library wasp.py you can simply use wasp.createWeakConstraints(softClauses). See running examples for more details.</td>
+                        <td>Optional.</td>
+                    </tr>
+                    <tr>
+                        <td>addWeightsForWeakConstraints</td>
+                        <td>-</td>
+                        <td>A list of weights associated to each soft clause.</td>
+                        <td>This method is invoked after addWeakConstraints and returns a list of positive weights associated to each soft clause. Note that the i-th soft clause is associated with the i-th weight</td>
+                        <td>Required if addWeakConstraints is used. Otherwise, it is optional.</td>
+                    </tr>
+                </table>
+
+            <h1><a id="wasp" class="anchor" href="#wasp" aria-hidden="true"><span class="octicon octicon-link"></span></a>Running examples</h1>
+
+            <p>Consider the following simple encoding</p>
+            <pre>
+<code>{a;b;c;d}.</code>
+            </pre>
+
+            <p>We want to keep answer sets where exactly two atoms among a, b, c, and d must be true. In the following we present two different python implementations of the propagator.</p>
+
+
+<p>Solution 1</p>
+<pre style='color:#000020;background:#f6f8ff;'>interpretation <span style='color:#308080; '>=</span> <span style='color:#308080; '>[</span><span style='color:#308080; '>]</span><span style='color:#308080; '>;</span> atoms<span style='color:#308080; '>=</span><span style='color:#308080; '>[</span><span style='color:#308080; '>]</span>
+<span style='color:#074726; '>TRUE</span> <span style='color:#308080; '>=</span> <span style='color:#008c00; '>1</span><span style='color:#308080; '>;</span> <span style='color:#074726; '>FALSE</span> <span style='color:#308080; '>=</span> <span style='color:#44aadd; '>-</span><span style='color:#008c00; '>1</span><span style='color:#308080; '>;</span> UNDEFINED <span style='color:#308080; '>=</span> <span style='color:#008c00; '>0</span>
+countTrue <span style='color:#308080; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>;</span> countFalse <span style='color:#308080; '>=</span> <span style='color:#008c00; '>0</span>
+
+<span style='color:#200080; font-weight:bold; '>def</span> addedVarName<span style='color:#308080; '>(</span>var<span style='color:#308080; '>,</span> name<span style='color:#308080; '>)</span><span style='color:#308080; '>:</span>
+    <span style='color:#200080; font-weight:bold; '>global</span> atoms
+    atoms<span style='color:#308080; '>.</span>append<span style='color:#308080; '>(</span>var<span style='color:#308080; '>)</span>
+
+<span style='color:#200080; font-weight:bold; '>def</span> getLiterals<span style='color:#308080; '>(</span><span style='color:#44aadd; '>*</span>lits<span style='color:#308080; '>)</span><span style='color:#308080; '>:</span>
+    <span style='color:#200080; font-weight:bold; '>global</span> interpretation
+    <span style='color:#33cc33; '>#The first position of lits contains the number of atoms used in wasp</span>
+    interpretation <span style='color:#308080; '>=</span> <span style='color:#308080; '>[</span>UNDEFINED <span style='color:#200080; font-weight:bold; '>for</span> i <span style='color:#200080; font-weight:bold; '>in</span> <span style='color:#400000; '>range</span><span style='color:#308080; '>(</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>,</span> lits<span style='color:#308080; '>[</span><span style='color:#008c00; '>0</span><span style='color:#308080; '>]</span><span style='color:#44aadd; '>+</span><span style='color:#008c00; '>1</span><span style='color:#308080; '>)</span><span style='color:#308080; '>]</span>
+    <span style='color:#33cc33; '>#Attached to all changes of the truth values</span>
+    l <span style='color:#308080; '>=</span> <span style='color:#308080; '>[</span><span style='color:#44aadd; '>-</span>i <span style='color:#200080; font-weight:bold; '>for</span> i <span style='color:#200080; font-weight:bold; '>in</span> atoms<span style='color:#308080; '>]</span>
+    l<span style='color:#308080; '>.</span>extend<span style='color:#308080; '>(</span>atoms<span style='color:#308080; '>)</span>
+    <span style='color:#200080; font-weight:bold; '>return</span> l
+
+<span style='color:#200080; font-weight:bold; '>def</span> getVariablesToFreeze<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>:</span>
+    <span style='color:#33cc33; '>#Freeze all atoms</span>
+    <span style='color:#200080; font-weight:bold; '>return</span> atoms
+    
+<span style='color:#200080; font-weight:bold; '>def</span> onLiteralTrue<span style='color:#308080; '>(</span>lit<span style='color:#308080; '>,</span> dl<span style='color:#308080; '>)</span><span style='color:#308080; '>:</span>
+    <span style='color:#200080; font-weight:bold; '>global</span> interpretation<span style='color:#308080; '>,</span> countTrue<span style='color:#308080; '>,</span> countFalse
+    <span style='color:#33cc33; '>#Count true and false atoms and propagate if needed.</span>
+    interpretation<span style='color:#308080; '>[</span><span style='color:#400000; '>abs</span><span style='color:#308080; '>(</span>lit<span style='color:#308080; '>)</span><span style='color:#308080; '>]</span> <span style='color:#308080; '>=</span> lit <span style='color:#44aadd; '>/</span> <span style='color:#400000; '>abs</span><span style='color:#308080; '>(</span>lit<span style='color:#308080; '>)</span><span style='color:#308080; '>;</span> <span style='color:#595979; '>#1 TRUE, -1 FALSE    </span>
+    <span style='color:#200080; font-weight:bold; '>if</span> lit <span style='color:#44aadd; '>>=</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>:</span>
+        countTrue <span style='color:#44aadd; '>+</span><span style='color:#308080; '>=</span> <span style='color:#008c00; '>1</span>
+    <span style='color:#200080; font-weight:bold; '>else</span><span style='color:#308080; '>:</span>
+        countFalse <span style='color:#44aadd; '>+</span><span style='color:#308080; '>=</span> <span style='color:#008c00; '>1</span>
+    output <span style='color:#308080; '>=</span> <span style='color:#308080; '>[</span><span style='color:#308080; '>]</span>
+    <span style='color:#200080; font-weight:bold; '>if</span> countTrue <span style='color:#44aadd; '>==</span> <span style='color:#008c00; '>2</span><span style='color:#308080; '>:</span>
+        output <span style='color:#308080; '>=</span> <span style='color:#308080; '>[</span><span style='color:#44aadd; '>-</span>i <span style='color:#200080; font-weight:bold; '>for</span> i <span style='color:#200080; font-weight:bold; '>in</span> atoms <span style='color:#200080; font-weight:bold; '>if</span> interpretation<span style='color:#308080; '>[</span>i<span style='color:#308080; '>]</span><span style='color:#44aadd; '>==</span>UNDEFINED<span style='color:#308080; '>]</span>
+    <span style='color:#200080; font-weight:bold; '>elif</span> countFalse <span style='color:#44aadd; '>==</span> <span style='color:#008c00; '>2</span><span style='color:#308080; '>:</span>
+        output <span style='color:#308080; '>=</span> <span style='color:#308080; '>[</span>i <span style='color:#200080; font-weight:bold; '>for</span> i <span style='color:#200080; font-weight:bold; '>in</span> atoms <span style='color:#200080; font-weight:bold; '>if</span> interpretation<span style='color:#308080; '>[</span>i<span style='color:#308080; '>]</span><span style='color:#44aadd; '>==</span>UNDEFINED<span style='color:#308080; '>]</span>
+    <span style='color:#200080; font-weight:bold; '>return</span> output
+
+<span style='color:#200080; font-weight:bold; '>def</span> getReason<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>:</span>
+    <span style='color:#33cc33; '>#Let T={a,b} be the true atoms, then the reason for the assignment is a ^ b (clause -a v -b).</span>
+    reason<span style='color:#308080; '>=</span><span style='color:#308080; '>[</span><span style='color:#308080; '>]</span>    
+    <span style='color:#200080; font-weight:bold; '>if</span> countTrue <span style='color:#44aadd; '>==</span> <span style='color:#008c00; '>2</span><span style='color:#308080; '>:</span>
+        reason<span style='color:#308080; '>=</span><span style='color:#308080; '>[</span><span style='color:#44aadd; '>-</span>i <span style='color:#200080; font-weight:bold; '>for</span> i <span style='color:#200080; font-weight:bold; '>in</span> atoms <span style='color:#200080; font-weight:bold; '>if</span> interpretation<span style='color:#308080; '>[</span>i<span style='color:#308080; '>]</span><span style='color:#44aadd; '>==</span><span style='color:#074726; '>TRUE</span><span style='color:#308080; '>]</span>
+    <span style='color:#200080; font-weight:bold; '>else</span><span style='color:#308080; '>:</span>
+        reason<span style='color:#308080; '>=</span><span style='color:#308080; '>[</span>i <span style='color:#200080; font-weight:bold; '>for</span> i <span style='color:#200080; font-weight:bold; '>in</span> atoms <span style='color:#200080; font-weight:bold; '>if</span> interpretation<span style='color:#308080; '>[</span>i<span style='color:#308080; '>]</span><span style='color:#44aadd; '>==</span><span style='color:#074726; '>FALSE</span><span style='color:#308080; '>]</span>
+    <span style='color:#200080; font-weight:bold; '>return</span> reason
+
+<span style='color:#200080; font-weight:bold; '>def</span> onLiteralsUndefined<span style='color:#308080; '>(</span><span style='color:#44aadd; '>*</span>lits<span style='color:#308080; '>)</span><span style='color:#308080; '>:</span>
+    <span style='color:#200080; font-weight:bold; '>global</span> interpretation<span style='color:#308080; '>,</span> countTrue<span style='color:#308080; '>,</span> countFalse
+    <span style='color:#33cc33; '>#If a literal is again undefined the interpretation is restored.</span>
+    <span style='color:#200080; font-weight:bold; '>for</span> i<span style='color:#308080; '>,</span> l <span style='color:#200080; font-weight:bold; '>in</span> <span style='color:#400000; '>enumerate</span><span style='color:#308080; '>(</span>lits<span style='color:#308080; '>)</span><span style='color:#308080; '>:</span>
+        <span style='color:#200080; font-weight:bold; '>if</span> i <span style='color:#44aadd; '>==</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>:</span>    <span style='color:#200080; font-weight:bold; '>continue</span>
+        <span style='color:#200080; font-weight:bold; '>if</span> l <span style='color:#44aadd; '>>=</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>:</span>    countTrue <span style='color:#44aadd; '>-</span><span style='color:#308080; '>=</span> <span style='color:#008c00; '>1</span>
+        <span style='color:#200080; font-weight:bold; '>else</span><span style='color:#308080; '>:</span>    countFalse <span style='color:#44aadd; '>-</span><span style='color:#308080; '>=</span> <span style='color:#008c00; '>1</span>
+        interpretation<span style='color:#308080; '>[</span><span style='color:#400000; '>abs</span><span style='color:#308080; '>(</span>l<span style='color:#308080; '>)</span><span style='color:#308080; '>]</span> <span style='color:#308080; '>=</span> UNDEFINED
+    <span style='color:#200080; font-weight:bold; '>return</span>
+</pre>
+
+<p>Solution 2</p>
+
+<pre style='color:#000020;background:#f6f8ff;'><span style='color:#200080; font-weight:bold; '>import</span> wasp
+
+answer <span style='color:#308080; '>=</span> <span style='color:#308080; '>[</span><span style='color:#308080; '>]</span><span style='color:#308080; '>;</span> atoms <span style='color:#308080; '>=</span> <span style='color:#308080; '>[</span><span style='color:#308080; '>]</span>
+
+<span style='color:#200080; font-weight:bold; '>def</span> addedVarName<span style='color:#308080; '>(</span>var<span style='color:#308080; '>,</span> name<span style='color:#308080; '>)</span><span style='color:#308080; '>:</span>
+    <span style='color:#200080; font-weight:bold; '>global</span> atoms
+    atoms<span style='color:#308080; '>.</span>append<span style='color:#308080; '>(</span>var<span style='color:#308080; '>)</span>
+
+<span style='color:#200080; font-weight:bold; '>def</span> checkAnswerSet<span style='color:#308080; '>(</span><span style='color:#44aadd; '>*</span>answer_set<span style='color:#308080; '>)</span><span style='color:#308080; '>:</span>
+    <span style='color:#200080; font-weight:bold; '>global</span> answer
+    <span style='color:#33cc33; '>#Check whether the answer set has exactly two atoms true</span>
+    count <span style='color:#308080; '>=</span> <span style='color:#400000; '>sum</span><span style='color:#308080; '>(</span><span style='color:#308080; '>[</span><span style='color:#008c00; '>1</span> <span style='color:#200080; font-weight:bold; '>for</span> i <span style='color:#200080; font-weight:bold; '>in</span> atoms <span style='color:#200080; font-weight:bold; '>if</span> answer_set<span style='color:#308080; '>[</span>i<span style='color:#308080; '>]</span> <span style='color:#44aadd; '>></span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>]</span><span style='color:#308080; '>)</span>
+    <span style='color:#200080; font-weight:bold; '>if</span> count <span style='color:#44aadd; '>!=</span> <span style='color:#008c00; '>2</span><span style='color:#308080; '>:</span>
+        answer <span style='color:#308080; '>=</span> answer_set
+        <span style='color:#200080; font-weight:bold; '>return</span> wasp<span style='color:#308080; '>.</span>incoherent<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+    <span style='color:#200080; font-weight:bold; '>return</span> wasp<span style='color:#308080; '>.</span>coherent<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span>
+
+<span style='color:#200080; font-weight:bold; '>def</span> getReasonsForCheckFailure<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>:</span>
+    <span style='color:#33cc33; '>#In case of failure compute the clause</span>
+    <span style='color:#200080; font-weight:bold; '>global</span> answer
+    reasons<span style='color:#308080; '>=</span><span style='color:#308080; '>[</span><span style='color:#308080; '>[</span><span style='color:#44aadd; '>-</span>answer<span style='color:#308080; '>[</span>i<span style='color:#308080; '>]</span> <span style='color:#200080; font-weight:bold; '>for</span> i <span style='color:#200080; font-weight:bold; '>in</span> atoms<span style='color:#308080; '>]</span><span style='color:#308080; '>]</span>
+    <span style='color:#200080; font-weight:bold; '>return</span> wasp<span style='color:#308080; '>.</span>createReasonsForCheckFailure<span style='color:#308080; '>(</span>reasons<span style='color:#308080; '>)</span>
+</pre>
+
+</body>
+</html>
+
