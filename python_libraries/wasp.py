@@ -69,3 +69,30 @@ def fromDisjImplLit(lit, disj):
         clauses.append(clause)
     return clauses
 
+def incoherent():
+    return 0
+
+def coherent():
+    return 1
+
+def getTerms(predicateName,atomName):
+    countO = 0
+    countC = 0
+    size=len(predicateName)+1
+    atomName=atomName[:-1][size:] #remove predicateName()
+
+    elements=[]
+    mystring=""
+    for i in range(0,len(atomName)):
+        mystring+=atomName[i]
+        if atomName[i]=="(":
+            countO+=1;
+        elif atomName[i]==")":
+            countC+=1;
+        elif atomName[i]=="," and countO==countC:
+            elements.append(mystring[:-1])
+            mystring=""
+        if (i+1) == len(atomName):
+            elements.append(mystring)
+            mystring=""        
+    return elements

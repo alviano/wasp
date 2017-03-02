@@ -77,3 +77,9 @@ VariableNames::hasToBePrinted(
 {
     return variables[ v ] == "1";
 }
+
+const vector< string >&
+VariableNames::getVariables()
+{
+    return variables;
+}

@@ -63,6 +63,10 @@ linkflags.estats0x = \
  -lm
 ####
 
+LAZY_GROUNDING = off
+lazy.off=
+lazy.on=-DWASP_LAZY_GROUNDING_ON
+
 SCRIPT = no
 scriptsc.perl = -I/usr/local/include -I$(shell perl -MConfig -e 'print $$Config{archlib}')/CORE/
 scriptsld.perl = -L$(shell perl -MConfig -e 'print $$Config{archlib}')/CORE/ -L/usr/local/lib/ -lperl
@@ -99,6 +103,8 @@ LINKFLAGS = $(linkflags.$(BUILD))
 
 SCRIPT_CFLAGS = $(scriptsc.$(SCRIPT))
 SCRIPT_LDFLAGS = $(scriptsld.$(SCRIPT))
+LAZY_FLAGS = $(lazy.$(LAZY_GROUNDING))
+
 CXX_SCRIPTS = $(cxxscripts.$(SCRIPT))
 
 SRCS = $(shell find $(SOURCE_DIR) -name '*.cpp')
@@ -114,24 +120,24 @@ DEPSCC = $(patsubst $(SOURCE_DIR)%.cc,$(BUILD_DIR)%.d, $(SRCSCC))
 all: $(BINARY)
 
 $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp
-	$(CXX) $(CXXFLAGS) $(SCRIPT_CFLAGS) $(SCRIPT_LDFLAGS) $(CXX_SCRIPTS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(LAZY_FLAGS) $(SCRIPT_CFLAGS) $(SCRIPT_LDFLAGS) $(CXX_SCRIPTS) -c $< -o $@
 
 $(BUILD_DIR)/%.d: $(SOURCE_DIR)/%.cpp
 	mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) $(SCRIPT_CFLAGS) $(SCRIPT_LDFLAGS) $(CXX_SCRIPTS) -MM -MT '$(@:.d=.o)' $< -MF $@
+	$(CXX) $(CXXFLAGS) $(LAZY_FLAGS) $(SCRIPT_CFLAGS) $(SCRIPT_LDFLAGS) $(CXX_SCRIPTS) -MM -MT '$(@:.d=.o)' $< -MF $@
 
 $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cc
-	$(CXX) $(CXXFLAGS) $(SCRIPT_CFLAGS) $(SCRIPT_LDFLAGS) $(CXX_SCRIPTS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(LAZY_FLAGS) $(SCRIPT_CFLAGS) $(SCRIPT_LDFLAGS) $(CXX_SCRIPTS) -c $< -o $@
 
 $(BUILD_DIR)/%.d: $(SOURCE_DIR)/%.cc
 	mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) $(SCRIPT_CFLAGS) $(SCRIPT_LDFLAGS) $(CXX_SCRIPTS) -MM -MT '$(@:.d=.o)' $< -MF $@
+	$(CXX) $(CXXFLAGS) $(LAZY_FLAGS) $(SCRIPT_CFLAGS) $(SCRIPT_LDFLAGS) $(CXX_SCRIPTS) -MM -MT '$(@:.d=.o)' $< -MF $@
 	
 $(BINARY): $(OBJS) $(OBJSCC) $(DEPS) $(DEPSCC)
-	$(LINK) $(LINKFLAGS) $(SCRIPT_CFLAGS) $(CXX_SCRIPTS) $(LIBS) $(OBJS) $(OBJSCC) $(SCRIPT_LDFLAGS) -o $(BINARY)
+	$(LINK) $(LINKFLAGS) $(LAZY_FLAGS) $(SCRIPT_CFLAGS) $(CXX_SCRIPTS) $(LIBS) $(OBJS) $(OBJSCC) $(SCRIPT_LDFLAGS) -o $(BINARY)
 
 static: $(OBJS) $(OBJSCC) $(DEPS) $(DEPSCC)
-	$(LINK) $(LINKFLAGS) $(SCRIPT_CFLAGS) $(CXX_SCRIPTS) $(LIBS) $(OBJS) $(OBJSCC) $(SCRIPT_LDFLAGS) -static -o $(BINARY)
+	$(LINK) $(LINKFLAGS) $(LAZY_FLAGS) $(SCRIPT_CFLAGS) $(CXX_SCRIPTS) $(LIBS) $(OBJS) $(OBJSCC) $(SCRIPT_LDFLAGS) -static -o $(BINARY)
 
 $(BUILD_DIR)/wasp.a:
 	ar rcs $@ $(OBJS)

@@ -77,6 +77,8 @@ Solver::~Solver()
         externalPropagators.pop_back();
     }
     
+    delete lazyInstantiator;
+    
     while( !cyclicComponents.empty() )
     {
         delete cyclicComponents.back();
@@ -518,7 +520,7 @@ Solver::solvePropagators(
         #endif
     }
     
-    #if defined(ENABLE_PYTHON) || defined(ENABLE_PERL)
+    #if defined(ENABLE_PYTHON) || defined(ENABLE_PERL) || defined( WASP_LAZY_GROUNDING_ON )
     for( unsigned int i = 0; i < propagatorsAttachedToCheckAnswerSet.size(); i++ )
         if( !propagatorsAttachedToCheckAnswerSet[ i ]->checkAnswerSet( *this ) )
         {

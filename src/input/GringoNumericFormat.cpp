@@ -7,6 +7,7 @@
 #include "../util/Istream.h"
 #include "../propagators/HCComponent.h"
 #include "../propagators/ExternalPropagator.h"
+#include "../propagators/LazyInstantiator.h"
 
 #include <cassert>
 #include <iostream>
@@ -3146,6 +3147,15 @@ GringoNumericFormat::addExternalPropagators()
         ExternalPropagator* prop = new ExternalPropagator( filename.c_str(), wasp::Options::plugins_interpreter, solver, wasp::Options::scriptDirectory );
         solver.addExternalPropagator( prop );
     }
+    
+    #ifdef WASP_LAZY_GROUNDING_ON
+    if( wasp::Options::lazygrounding )
+    {
+        string filename = wasp::Options::lazygroundingFilename;
+        LazyInstantiator* lazy = new LazyInstantiator( filename, solver );
+        solver.setLazyInstantiator( lazy );
+    }
+    #endif
 }
 
 Aggregate*

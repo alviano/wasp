@@ -48,6 +48,7 @@ using namespace std;
 #include "heuristic/MinisatHeuristic.h"
 #include "propagators/ExternalPropagator.h"
 #include "propagators/CardinalityConstraint.h"
+#include "propagators/LazyInstantiator.h"
 
 class HCComponent;
 class WeakInterface;
@@ -258,9 +259,10 @@ class Solver
         
         inline Satelite* getSatelite() { return satelite; }
         
+        inline void setLazyInstantiator( LazyInstantiator* lazy ) { assert( lazy != NULL ); assert( lazyInstantiator == NULL ); lazyInstantiator = lazy; }
         inline void addExternalPropagator( ExternalPropagator* prop ) { assert( prop != NULL ); externalPropagators.push_back( prop ); }
         inline void endPreprocessing();
-        inline bool hasPropagators() const { return ( !tight() || !propagators.empty() || !disjunctionPropagators.empty() || !externalPropagators.empty() ); }                
+        inline bool hasPropagators() const { return ( !tight() || !propagators.empty() || !disjunctionPropagators.empty() || !externalPropagators.empty() || lazyInstantiator != NULL ); }                
         inline void addDisjunctionPropagator( DisjunctionPropagator* disj ) { assert( disj != NULL ); disjunctionPropagators.push_back( disj ); }
         inline void addAggregate( Aggregate* aggr ) { assert( aggr != NULL ); propagators.push_back( aggr ); }
         inline void addCardinalityConstraint ( CardinalityConstraint* cc ) { assert( cc != NULL ); propagators.push_back( cc ); }
@@ -548,6 +550,7 @@ class Solver
         vector< ExternalPropagator* > externalPropagators;
         vector< Propagator* > propagators;
         vector< DisjunctionPropagator* > disjunctionPropagators;
+        LazyInstantiator* lazyInstantiator;
         
 //        Aggregate* optimizationAggregate;
 //        unsigned int numberOfOptimizationLevels;
@@ -710,6 +713,7 @@ Solver::Solver()
     literalsInLearnedClauses( 0 ),
 //    optimizationAggregate( NULL ),
 //    numberOfOptimizationLevels( 0 ),
+    lazyInstantiator( NULL ),
     precomputedCost( 0 ),
     callSimplifications_( true ),
     glucoseHeuristic_( true ),
@@ -1679,6 +1683,8 @@ Solver::endPreprocessing()
 {
     for( unsigned int i = 0; i < externalPropagators.size(); i++ )
         externalPropagators[ i ]->endParsing( *this );
+    if( lazyInstantiator )
+        lazyInstantiator->endParsing( *this );
 }
 
 bool

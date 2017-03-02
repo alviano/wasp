@@ -33,6 +33,27 @@ ExternalPropagator::~ExternalPropagator()
     clearClausesToDelete();
 }
 
+ExternalPropagator::ExternalPropagator()
+{
+    interpreter = NULL;
+    fn = NULL;
+    check_addedVarName = false;
+    check_onAtomElimination = false;
+    check_simplifyAtLevelZero = false;
+    check_onAnswerSet = false;
+    check_checkAnswerSet = false;
+    check_checkPartialInterpretation = false;
+    check_getReasonForLiteral = false;
+    check_getReasonForCheckFailure = false;
+    check_onNewLowerBound = false;
+    check_onNewUpperBound = false;
+    check_onLitsTrue = false;
+    check_onLitTrue = false;
+    check_endPropagation = false;
+    check_addWeakConstraints = false;
+    check_addWeightsForWeakConstraints = false;
+}
+
 ExternalPropagator::ExternalPropagator( 
     const string& filename,
     unsigned int interpr,
@@ -185,14 +206,11 @@ ExternalPropagator::checkWellFormed()
 //    checkWellFormed( method_plugins_getReason );
 //    checkWellFormed( method_plugins_getVariablesToFreeze );
 //    checkWellFormed( method_plugins_onLiteralsUndefined );
-    if( check_addWeakConstraints && !check_checkAnswerSet )
-        WaspErrorMessage::errorGeneric( "If " + string( method_plugins_addWeakConstraints ) + " is used then method " + string( method_plugins_checkAnswerSet ) + " is required." );
-    
     if( check_addWeakConstraints && !check_addWeightsForWeakConstraints )
         WaspErrorMessage::errorGeneric( "If " + string( method_plugins_addWeakConstraints ) + " is used then method " + string( method_plugins_addWeightsForWeakConstraints ) + " is required." );
     
-    if( !check_checkAnswerSet && ( ( check_onLitTrue && check_onLitsTrue ) || ( !check_onLitTrue && !check_onLitsTrue ) ) )
-        WaspErrorMessage::errorGeneric( "If " + string( method_plugins_checkAnswerSet ) + " is not used then exactly one method between " + string( method_plugins_onLitTrue ) + " and " +  string( method_plugins_onLitsTrue ) + " is required." );
+    if( ( !check_checkAnswerSet && !check_checkPartialInterpretation ) && ( ( check_onLitTrue && check_onLitsTrue ) || ( !check_onLitTrue && !check_onLitsTrue ) ) && ( !check_addWeakConstraints ) )
+        WaspErrorMessage::errorGeneric( "If " + string( method_plugins_checkAnswerSet ) + "(or " + string( method_plugins_checkPartialInterpretation ) + "," + string( method_plugins_addWeakConstraints ) + ") is not used then exactly one method between " + string( method_plugins_onLitTrue ) + " and " +  string( method_plugins_onLitsTrue ) + " is required." );
     
     if( check_endPropagation && !check_onLitTrue )
         WaspErrorMessage::errorGeneric( "If " + string( method_plugins_endPropagation ) + " is used then method " + string( method_plugins_onLitTrue ) + " is required." );    
@@ -279,6 +297,7 @@ ExternalPropagator::getReasonForCheckFailure(
     
     vector< Clause* > clauses;
     Clause* clause = new Clause();
+    bool toKeep = false;
     for( unsigned int i = 1; i < output.size(); i++ )
     {
         if( output[ i ] == 0 )
@@ -292,17 +311,18 @@ ExternalPropagator::getReasonForCheckFailure(
         }
         checkIdOfLiteral( solver, output[ i ] );
         Literal l = Literal::createLiteralFromInt( output[ i ] );
-        if( solver.isUndefined( l ) )
-            WaspErrorMessage::errorGeneric( "Reason is not well-formed: Literal with id " + to_string( l.getId() ) + " is undefined." );
-        if( solver.isTrue( l ) )
-            WaspErrorMessage::errorGeneric( "Reason is not well-formed: Literal with id " + to_string( l.getId() ) + " is true." );
-        if( solver.getDecisionLevel( l ) > 0 )
+//        if( solver.isUndefined( l ) )
+//            WaspErrorMessage::errorGeneric( "Reason is not well-formed: Literal with id " + to_string( l.getId() ) + " is undefined." );
+        if( solver.isTrue( l ) || solver.isUndefined( l ) )
+            toKeep = true;
+//            WaspErrorMessage::errorGeneric( "Reason is not well-formed: Literal with id " + to_string( l.getId() ) + " is true." );
+        if( solver.getDecisionLevel( l ) > 0 || solver.isUndefined( l ) )
             clause->addLiteral( l );
     }
     assert( clause->size() == 0 );
     delete clause;
     
-    if( clauses.size() == 1 )
+    if( clauses.size() == 1 && !toKeep )
     {
         if( clauses[ 0 ]->size() >= 2 )
             Learning::sortClause( clauses[ 0 ], solver );
@@ -457,7 +477,7 @@ ExternalPropagator::checkPartialInterpretation(
     if( check_checkPartialInterpretation )
     {
         vector< int > interpretation;
-        interpretation.push_back( 0 );
+        interpretation.push_back( solver.getCurrentDecisionLevel() );
         for( unsigned int i = 1; i <= solver.numberOfVariables(); i++ )
         {
             if( solver.isTrue( i ) )
@@ -603,14 +623,25 @@ ExternalPropagator::onStartingSolver()
 }
 
 bool
-ExternalPropagator::hasWeakConstraintsToAdd()
+ExternalPropagator::hasWeakConstraintsToAdd(
+    const Solver& solver )
 {
     if( !check_addWeakConstraints )
         return false;
-        
+
     weakConstraints.clear();
     weights.clear();
-    interpreter->callListMethod( method_plugins_addWeakConstraints, weakConstraints );    
+    vector< int > answerset;        
+    answerset.push_back( 0 );
+    for( unsigned int i = 1; i <= solver.numberOfVariables(); i++ )
+    {
+        assert( !solver.isUndefined( i ) );
+        if( solver.isTrue( i ) )
+            answerset.push_back( i );
+        else
+            answerset.push_back( -i );
+    }        
+    interpreter->callListMethod( method_plugins_addWeakConstraints, answerset, weakConstraints );    
     interpreter->callListMethod( method_plugins_addWeightsForWeakConstraints, weights );
     
     return !weakConstraints.empty();

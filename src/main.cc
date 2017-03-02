@@ -23,6 +23,7 @@
 #include "util/WaspOptions.h"
 using namespace std;
 
+extern string executablePath;
 int EXIT_CODE = 0;
 
 WaspFacade* waspFacadePointer = NULL;
@@ -38,6 +39,7 @@ void my_handler( int )
 
 int main( int argc, char** argv )
 {
+    executablePath="./";
     wasp::Options::parse( argc, argv );
     waspFacadePointer = new WaspFacade();
     WaspFacade& waspFacade = *waspFacadePointer;

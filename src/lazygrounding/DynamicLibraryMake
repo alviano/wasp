@@ -1,0 +1,28 @@
+COMMON_FLAGS=-std=c++11 -fPIC 
+
+all: executor
+
+executor: Executor.so
+
+Executor.so: Executor.cpp WQi.o RQi.o AuxiliaryMap.o Literal.o ConstantsManager.o Atom.o SharedFunctions.o InputDirector.o AspCore2InstanceBuilder.o
+	g++ $(COMMON_FLAGS) -shared Executor.cpp WQi.o RQi.o AuxiliaryMap.o Literal.o ConstantsManager.o Atom.o SharedFunctions.o InputDirector.o AspCore2InstanceBuilder.o -o Executor.so 
+
+
+WQi.o: WQi.cpp WQi.h
+	g++ $(COMMON_FLAGS) -c WQi.cpp
+RQi.o: RQi.cpp RQi.h
+	g++ $(COMMON_FLAGS) -c RQi.cpp
+AuxiliaryMap.o: AuxiliaryMap.cpp AuxiliaryMap.h
+	g++ $(COMMON_FLAGS) -c AuxiliaryMap.cpp
+Literal.o: Literal.cpp Literal.h
+	g++ $(COMMON_FLAGS) -c Literal.cpp
+ConstantsManager.o: ConstantsManager.cpp ConstantsManager.h
+	g++ $(COMMON_FLAGS) -c ConstantsManager.cpp
+Atom.o: Atom.cpp ConstantsManager.o Atom.h
+	g++ $(COMMON_FLAGS) -c Atom.cpp
+SharedFunctions.o: SharedFunctions.cpp SharedFunctions.h
+	g++ $(COMMON_FLAGS) -c SharedFunctions.cpp
+AspCore2InstanceBuilder.o: AspCore2InstanceBuilder.cpp AspCore2InstanceBuilder.h
+	g++ $(COMMON_FLAGS) -c AspCore2InstanceBuilder.cpp
+InputDirector.o: DLV2libs/input/InputDirector.cpp DLV2libs/input/InputDirector.h
+	g++ $(COMMON_FLAGS) -c DLV2libs/input/InputDirector.cpp

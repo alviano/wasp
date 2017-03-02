@@ -104,6 +104,9 @@ class WaspHelp
             cout << "--script-directory=absolutepath        - Specify a different folder for retrieving the python modules (default is .)" << endl;
             cout << "--lazy-weakconstraints                 - Enable the algorithm to lazily add weak constraints" << endl;
             #endif
+            #ifdef WASP_LAZY_GROUNDING_ON
+            cout << "--lazy-grounding=aspfile               - Enable the lazy instantiation of constraints contained in aspfile" << endl; 
+            #endif
             cout << separator << endl;
 
             cout << "Model Checker options                  " << endl << endl;

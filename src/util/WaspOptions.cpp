@@ -78,6 +78,7 @@ namespace wasp
 #define OPTIONID_heuristic_plugins ( 'z' + 63 )
 #define OPTIONID_heuristic_setscriptdirectory ( 'z' + 64 )
 #define OPTIONID_heuristic_lazyweakconstraints ( 'z' + 65 )
+#define OPTIONID_heuristic_lazygrounding ( 'z' + 66 )
 
 /* INPUT OPTIONS */
 #define OPTIONID_dimacs ( 'z' + 90 )
@@ -164,6 +165,9 @@ unsigned int Options::queryAlgorithm = NO_QUERY;
 unsigned int Options::queryVerbosity = 0;
 
 bool Options::callPyFinalize = true;
+
+bool Options::lazygrounding = false;
+string Options::lazygroundingFilename = "";
 
 map< string, WEAK_CONSTRAINTS_ALG > Options::stringToWeak;
 
@@ -261,7 +265,10 @@ Options::parse(
                 { "plugins-interpreter", required_argument, NULL, OPTIONID_heuristic_pluginsinterpreter },
                 { "plugins-files", required_argument, NULL, OPTIONID_heuristic_plugins },
                 { "script-directory", required_argument, NULL, OPTIONID_heuristic_setscriptdirectory },
-                { "lazy-weakconstraints", no_argument, NULL, OPTIONID_heuristic_lazyweakconstraints },
+                { "lazy-weakconstraints", no_argument, NULL, OPTIONID_heuristic_lazyweakconstraints },                
+                #endif
+                #ifdef WASP_LAZY_GROUNDING_ON
+                { "lazy-grounding", required_argument, NULL, OPTIONID_heuristic_lazygrounding },
                 #endif
                 /* RESTART OPTIONS */                
 //                { "geometric-restarts", optional_argument, NULL, OPTIONID_geometric_restarts },
@@ -484,6 +491,12 @@ Options::parse(
             case OPTIONID_heuristic_lazyweakconstraints:
                 useLazyWeakConstraints = true;
                 weakConstraintsAlg = LAZY;
+                break;
+                
+            case OPTIONID_heuristic_lazygrounding:
+                lazygrounding = true;
+                if( optarg )
+                    lazygroundingFilename = string( optarg );
                 break;
 
             case OPTIONID_sequence_based_restarts:

@@ -52,31 +52,32 @@ using namespace std;
 class ExternalPropagator : public Propagator
 {
     public:
-        ExternalPropagator( const string& filename, unsigned int interpr, Solver& solver, string scriptDirectory );
+        ExternalPropagator( const string& filename, unsigned int interpr, Solver& solver, string scriptDirectory );        
         virtual ~ExternalPropagator();
         
         virtual bool onLiteralFalse( Solver& solver, Literal literal, int );
         virtual void reset( const Solver& solver );
         virtual void simplifyAtLevelZero( Solver& solver );
         
-        void addedVarName( Var var, const string& name );
-        void onAtomElimination( Var var );
-        void endParsing( Solver& solver ) { attachWatches( solver ); }        
-        void onAnswerSet( const Solver& solver );
-        void foundLowerBound( uint64_t lb );
-        void foundUpperBound( uint64_t ub );
-        bool checkAnswerSet( Solver& solver );
-        bool checkPartialInterpretation( Solver& solver );
-        Clause* getReasonForCheckFailure( Solver& solver );        
-        void endUnitPropagation( Solver& solver );
-        void endPropagation( Solver& solver );
-        void onStartingSolver();
+        virtual void addedVarName( Var var, const string& name );
+        virtual void onAtomElimination( Var var );
+        virtual void endParsing( Solver& solver ) { attachWatches( solver ); }        
+        virtual void onAnswerSet( const Solver& solver );
+        virtual void foundLowerBound( uint64_t lb );
+        virtual void foundUpperBound( uint64_t ub );
+        virtual bool checkAnswerSet( Solver& solver );
+        virtual bool checkPartialInterpretation( Solver& solver );
+        virtual Clause* getReasonForCheckFailure( Solver& solver );        
+        virtual void endUnitPropagation( Solver& solver );
+        virtual void endPropagation( Solver& solver );
+        virtual void onStartingSolver();
         
-        bool hasWeakConstraintsToAdd();
-        uint64_t addWeakConstraints( const Solver& solver, vector< Clause* >& weakConstraints, vector< uint64_t >& weights_ );
-        inline bool isForLazyWeakConstraints() const { return check_addWeakConstraints; }
+        virtual bool hasWeakConstraintsToAdd( const Solver& solver );
+        virtual uint64_t addWeakConstraints( const Solver& solver, vector< Clause* >& weakConstraints, vector< uint64_t >& weights_ );
+        virtual bool isForLazyWeakConstraints() const { return check_addWeakConstraints; }
 
-    private:
+    protected:
+        ExternalPropagator();
         inline ExternalPropagator( const ExternalPropagator& orig );
         void checkWellFormed();
         void checkWellFormed( const string& );

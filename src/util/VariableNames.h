@@ -35,8 +35,9 @@ class VariableNames
         static void setToBePrinted( Var v );
         static bool hasToBePrinted( Var v );
         static void addVariable();
+        static const vector< string >& getVariables();
         
-    private:        
+    private:
         static vector< string > variables;
         static bool toBePrinted;
 };

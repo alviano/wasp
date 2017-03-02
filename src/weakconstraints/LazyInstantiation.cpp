@@ -66,7 +66,7 @@ LazyInstantiation::handleAnswerSet()
     
     vector< Clause* > weakConstraints;
     vector< uint64_t > weights;
-    if( externalPropagator->hasWeakConstraintsToAdd() )
+    if( externalPropagator->hasWeakConstraintsToAdd( solver ) )
         cost += externalPropagator->addWeakConstraints( solver, weakConstraints, weights );
     trace_msg( weakconstraints, 2, "Found answer set with cost " << cost  << " - upper bound " << ub() );
     if( cost < ub() )
@@ -84,11 +84,20 @@ LazyInstantiation::handleAnswerSet()
     for( unsigned int i = 0; i < weakConstraints.size(); i++ )
     {
         Clause* clause = weakConstraints[ i ];
-        Var addedVar = addAuxVariable();
-        clause->addLiteral( Literal( addedVar, NEGATIVE ) );
-        solver.addOptimizationLiteral( Literal( addedVar, NEGATIVE ), weights[ i ], 0, false );
-        if( !solver.addClauseRuntime( clause ) )
-            return false;
+        Var addedVar = 0;
+        if( clause->size() > 1 )
+        {
+            addedVar = addAuxVariable();
+            clause->addLiteral( Literal( addedVar, NEGATIVE ) );
+            solver.addOptimizationLiteral( Literal( addedVar, NEGATIVE ), weights[ i ], 0, false );
+            if( !solver.addClauseRuntime( clause ) )
+                return false;
+        }
+        else
+        {
+            solver.addOptimizationLiteral( clause->getAt( 0 ).getOppositeLiteral(), weights[ i ], 0, false );
+            delete clause;
+        }
     }
     
     return !weakConstraints.empty();        
