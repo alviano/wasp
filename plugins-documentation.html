@@ -25,6 +25,18 @@
             <h1><a id="wasp" class="anchor" href="#wasp" aria-hidden="true"><span class="octicon octicon-link"></span></a>Documentation</h1>
 
             <hr/>
+            <p><b>Method</b>: setScriptDirectory(id, dirname) - <b>Return</b>: -
+            <ul>
+                <li><i>id:</i> an integer representing the id of the directory. At the moment this is a (useless) integer equal to 0 since only directory can be specified.</li>
+                <li><i>dirname:</i> the current directory of the script.</li>
+            </ul>
+            This method is invoked before starting and specifies the current directory of the python script.<br/> <br/>
+
+            <b>Note:</b> Optional.
+            </p>
+            <hr/>
+
+            <hr/>
             <p><b>Method</b>: addedVarName(id, name) - <b>Return</b>: -
             <ul>
                 <li><i>id:</i> an integer representation of a variable.</li>
@@ -191,11 +203,12 @@ If you import the library wasp.py you can simply use wasp.createReasonsForCheckF
             </p>
             <hr/>
 
-            <p><b>Method</b>: addWeakConstraints()  - <b>Return</b>: L
+            <p><b>Method</b>: addWeakConstraints(*lits)  - <b>Return</b>: L
             <ul>
+                <li><i>lits:</i> a list of literals representing the answer set.</li>
                 <li><i>L:</i> a list of soft clauses.</li>
             </ul>
-            This method is used to lazily add weak constraints (you have to enable the option --lazy-weakconstraints). The method is invoked after an answer set is found (checkAnswerSet must be enabled) and it returns a list of soft clauses modeling the weak constraints to add. Each soft clause is a set of literals S={l1;...;ln} interpreted as l1 v ... v ln.
+            This method is used to lazily add weak constraints (you have to enable the option --lazy-weakconstraints). The method is invoked after an answer set is found and it returns a list of soft clauses modeling the weak constraints to add. Each soft clause is a set of literals S={l1;...;ln} interpreted as l1 v ... v ln.
 The soft clauses must be separated by 0. Note that the first and the last element of the list are expected to be equal to 0.
 If you import the library wasp.py you can simply use wasp.createWeakConstraints(softClauses). See running examples for more details.<br/> <br/>
             <b>Note:</b> Optional.
@@ -204,7 +217,8 @@ If you import the library wasp.py you can simply use wasp.createWeakConstraints(
             <ul>
                 <li><i>L:</i> a list of weights associated to each soft clause.</li>
             </ul>
-            This method is invoked after addWeakConstraints and returns a list of positive weights associated to each soft clause. Note that the i-th soft clause is associated with the i-th weight.<br/> <br/>
+            This method is invoked after addWeakConstraints and returns a list of positive weights associated to each soft clause. Note that the i-th soft clause is associated with the i-th weight.
+Moreover, the weights must be long, so if you are using python2 you have to explicit add long(e) for each element e in L. If you import the library wasp.py you can simply use wasp.createWeights(weights). See running examples for more details.<br/> <br/>
 
             <b>Note:</b> Required if addWeakConstraints is used. Otherwise, it is optional.
             </p>
@@ -302,6 +316,39 @@ answer <span style='color:#308080; '>=</span> <span style='color:#308080; '>[</s
     <span style='color:#200080; font-weight:bold; '>global</span> answer
     reasons<span style='color:#308080; '>=</span><span style='color:#308080; '>[</span><span style='color:#308080; '>[</span><span style='color:#44aadd; '>-</span>answer<span style='color:#308080; '>[</span>i<span style='color:#308080; '>]</span> <span style='color:#200080; font-weight:bold; '>for</span> i <span style='color:#200080; font-weight:bold; '>in</span> atoms<span style='color:#308080; '>]</span><span style='color:#308080; '>]</span>
     <span style='color:#200080; font-weight:bold; '>return</span> wasp<span style='color:#308080; '>.</span>createReasonsForCheckFailure<span style='color:#308080; '>(</span>reasons<span style='color:#308080; '>)</span>
+</pre>
+
+
+<p>Consider again the following simple encoding</p>
+    <pre><code>{a;b;c;d}.</code> </pre>
+<p>We want to lazily instantiate the following weak constraints</p>
+<pre><code>
+:~ not a. [1@1,a]
+:~ not b. [1@1,b]
+:~ not c. [1@1,c]
+:~ not d. [1@1,d]
+</code></pre>
+</p>
+
+<p>One possible solution is the following</p>
+<pre style='color:#000020;background:#f6f8ff;'><span style='color:#200080; font-weight:bold; '>import</span> wasp
+
+answer <span style='color:#308080; '>=</span> <span style='color:#308080; '>[</span><span style='color:#308080; '>]</span><span style='color:#308080; '>;</span> atoms <span style='color:#308080; '>=</span> <span style='color:#308080; '>[</span><span style='color:#308080; '>]</span>
+
+<span style='color:#200080; font-weight:bold; '>def</span> addedVarName<span style='color:#308080; '>(</span>var<span style='color:#308080; '>,</span> name<span style='color:#308080; '>)</span><span style='color:#308080; '>:</span>
+    <span style='color:#200080; font-weight:bold; '>global</span> atoms
+    atoms<span style='color:#308080; '>.</span>append<span style='color:#308080; '>(</span>var<span style='color:#308080; '>)</span>
+
+<span style='color:#200080; font-weight:bold; '>def</span> addWeakConstraints<span style='color:#308080; '>(</span><span style='color:#44aadd; '>*</span>answer_set<span style='color:#308080; '>)</span><span style='color:#308080; '>:</span>
+    <span style='color:#200080; font-weight:bold; '>global</span> answer
+    answer <span style='color:#308080; '>=</span> answer_set
+    soft <span style='color:#308080; '>=</span> <span style='color:#308080; '>[</span><span style='color:#308080; '>[</span>i<span style='color:#308080; '>]</span> <span style='color:#200080; font-weight:bold; '>for</span> i <span style='color:#200080; font-weight:bold; '>in</span> atoms <span style='color:#200080; font-weight:bold; '>if</span> answer_set<span style='color:#308080; '>[</span>i<span style='color:#308080; '>]</span> <span style='color:#44aadd; '>&lt;</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>]</span>
+    <span style='color:#200080; font-weight:bold; '>return</span> wasp<span style='color:#308080; '>.</span>createWeakConstraints<span style='color:#308080; '>(</span>soft<span style='color:#308080; '>)</span>
+
+<span style='color:#200080; font-weight:bold; '>def</span> addWeightsForWeakConstraints<span style='color:#308080; '>(</span><span style='color:#308080; '>)</span><span style='color:#308080; '>:</span>
+    <span style='color:#200080; font-weight:bold; '>global</span> answer
+    weights<span style='color:#308080; '>=</span><span style='color:#308080; '>[</span><span style='color:#008c00; '>1</span> <span style='color:#200080; font-weight:bold; '>for</span> i <span style='color:#200080; font-weight:bold; '>in</span> atoms <span style='color:#200080; font-weight:bold; '>if</span> answer<span style='color:#308080; '>[</span>i<span style='color:#308080; '>]</span> <span style='color:#44aadd; '>&lt;</span> <span style='color:#008c00; '>0</span><span style='color:#308080; '>]</span>
+    <span style='color:#200080; font-weight:bold; '>return</span> wasp<span style='color:#308080; '>.</span>createWeights<span style='color:#308080; '>(</span>weights<span style='color:#308080; '>)</span>
 </pre>
 
 </body>
