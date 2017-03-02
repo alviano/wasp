@@ -12,6 +12,11 @@ filename="constraint.asp"
 atomsInConstraint=[]
 idAtomsInConstraint=[]
 
+scriptDir=""
+
+def setScriptDirectory(id, directory):
+    scriptDir = directory
+
 def addedVarName(var, name):
     global atom2id, id2atom, atomsInConstraint
     if name.startswith("__atoms_in_constraint("):
@@ -26,7 +31,7 @@ def getVariablesToFreeze():
     return idAtomsInConstraint
 
 def checkAnswerSet(*answer_set):
-    global constraints
+    global constraints, scriptDir
     answer=[]
     for i in idAtomsInConstraint:
         if answer_set[i] > 0:
@@ -36,7 +41,7 @@ def checkAnswerSet(*answer_set):
 
     print("calling grounder")
     sys.stdout.flush()
-    output = grounder.launchGrounder(filename, answer)
+    output = grounder.launchGrounder(scriptDir, filename, answer)
     print("...end! Produced %s constraints" % len(output))
     if len(output) > 0:
         constraints = output

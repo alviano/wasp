@@ -48,6 +48,7 @@ using namespace std;
 #define method_plugins_endPropagation "endPropagation"
 #define method_plugins_addWeakConstraints "addWeakConstraints"
 #define method_plugins_addWeightsForWeakConstraints "addWeightsForWeakConstraints"
+#define method_plugins_scriptdirectory "setScriptDirectory"
 
 class ExternalPropagator : public Propagator
 {

@@ -88,6 +88,9 @@ ExternalPropagator::ExternalPropagator(
     check_addWeightsForWeakConstraints = interpreter->checkMethod( method_plugins_addWeightsForWeakConstraints );
     checkWellFormed();
     
+    if( interpreter->checkMethod( method_plugins_scriptdirectory ) )
+        interpreter->callVoidMethod( method_plugins_scriptdirectory, 0, scriptDirectory );
+    
     if( check_onLitsTrue )
         solver.addPropagatorAfterUnit( this );        
     

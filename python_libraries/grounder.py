@@ -2,11 +2,11 @@ import subprocess
 from shutil import copyfile
 import sys
 
-pathgrounder = "/Users/carmine/tesi/wasp_ext_plugins/wasp/launch.sh"
 encoding = None
 
-def launchGrounder(filename, answer_set):
+def launchGrounder(scriptdir, filename, answer_set):
     global encoding
+    pathgrounder = "%s/launch.sh" % scriptdir
     grounder = subprocess.Popen([pathgrounder], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     if encoding == None:
