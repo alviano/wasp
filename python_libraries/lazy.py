@@ -15,6 +15,7 @@ idAtomsInConstraint=[]
 scriptDir=""
 
 def setScriptDirectory(id, directory):
+    global scriptDir
     scriptDir = directory
 
 def addedVarName(var, name):
