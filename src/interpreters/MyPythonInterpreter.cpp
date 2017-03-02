@@ -155,32 +155,16 @@ void MyPythonInterpreter::callListMethod(
         PyObject* result = PyObject_CallObject( pFunc, pArgs );
         if( result )
         {
-            bool isInt = 
-            #ifdef PYTHON_THREE
-                PyLong_Check( result );
-            #else
-                PyInt_Check( result );
-            #endif
+            bool isInt = PyLong_Check( result );
             if( PyList_Check( result ) )
             {
                 int size = PyList_Size( result );
                 for( int i = size - 1; i >= 0; i-- )
                 {
                     PyObject* item = PyList_GetItem( result, i );
-                    bool isInt = 
-                    #ifdef PYTHON_THREE
-                        PyLong_Check( item );
-                    #else
-                        PyInt_Check( item );
-                    #endif
-                    if( isInt )
+                    if( PyLong_Check( item ) )
                     {
-                        uint64_t value = 
-                        #ifdef PYTHON_THREE
-                            PyLong_AsLong( item );
-                        #else
-                            PyInt_AsLong( item );
-                        #endif
+                        uint64_t value = PyLong_AsUnsignedLongLongMask( item );
                         output.push_back( value );
                     }
                 }

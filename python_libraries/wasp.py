@@ -1,3 +1,5 @@
+import sys
+
 def createReasonsForCheckFailure(clauses):
     output=[]  
     for clause in clauses:
@@ -21,7 +23,12 @@ def createWeakConstraints(weak):
         output.append(0)
     output.append(0)
     return output
-    
+
+def createWeights(weights):
+    if sys.version_info >= (3,0):
+        return [w for w in weights]
+    else:
+        return [long(w) for w in weights]    
 
 def fromNogood(conj):
     clause=[]
