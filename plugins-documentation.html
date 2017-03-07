@@ -23,6 +23,13 @@
 
         <section class="main-content">
             <h1><a id="wasp" class="anchor" href="#wasp" aria-hidden="true"><span class="octicon octicon-link"></span></a>Documentation</h1>
+            <p>
+The communication between wasp and the external propagators follows a synchronous message passing protocol.
+The protocol is implemented by means of method calls. Basically, the propagator must be compliant with a specific interface described below.
+Whenever a specific point of the computation is reached the corresponding method of the propagator is called, e.g. when a literal is true the method onLiteralTrue is called.
+Some of the methods of the interface are allowed to return values that are interpreted by WASP.
+            </p>
+
 
             <hr/>
             <p><b>Method</b>: setScriptDirectory(id, dirname) - <b>Return</b>: -
@@ -34,7 +41,6 @@
 
             <b>Note:</b> Optional.
             </p>
-            <hr/>
 
             <hr/>
             <p><b>Method</b>: addedVarName(id, name) - <b>Return</b>: -
@@ -223,8 +229,99 @@ Moreover, the weights must be long, so if you are using python2 you have to expl
             <b>Note:</b> Required if addWeakConstraints is used. Otherwise, it is optional.
             </p>
             <hr/>
-            
-
+            <h1><a id="wasp" class="anchor" href="#wasp" aria-hidden="true"><span class="octicon octicon-link"></span></a>Description of the module wasp (file wasp.py)</h1>
+The module wasp can be used to simplify the interaction with the solver.
+<hr/>
+            <p><b>Method</b>: createReasonsForCheckFailure(clauses) - <b>Return</b>: L
+            <ul>
+                <li><i>clauses:</i> a list of clauses, where a clause is a list of integers.</li>
+            </ul>
+            This method takes as input a list of clauses and produces a list that can be interpreted by wasp as reasons for the check failure.
+            </p>
+<hr/>
+            <p><b>Method</b>: createWeakConstraints(weak) - <b>Return</b>: L
+            <ul>
+                <li><i>weak:</i> a list of soft clauses, where a soft clause is a list of integers.</li>
+            </ul>
+            This method takes as input a list of soft clauses and produces a list that can be interpreted by wasp as weak constraints.
+            </p>
+<hr/>
+            <p><b>Method</b>: createWeights(weights) - <b>Return</b>: L
+            <ul>
+                <li><i>weights:</i> a list of integers (long) representing the weights of the weak constraints.</li>
+            </ul>
+            This method converts each integer in the list weights in a long. This is useless if python3 is used.
+            </p>    
+<hr/>
+            <p><b>Method</b>: fromNogood(conj) - <b>Return</b>: L
+            <ul>
+                <li><i>conj:</i> a list of integers representing a conjunction.</li>
+            </ul>
+            Converts the conjunction into a disjunction.
+            </p>
+<hr/>
+            <p><b>Method</b>: fromLitImplConj(lit, conj) - <b>Return</b>: L
+            <ul>
+                <li><i>lit:</i> an integer representing a literal.</li>
+                <li><i>conj:</i> a list of integers representing a conjunction.</li>
+            </ul>
+            Takes as input the implication lit &#8594; l<sub><small>1</small></sub> &#8743; ... &#8743; l<sub><small>n</small></sub> (for l<sub><small>1</small></sub>, ... ,l<sub><small>n</small></sub> in conj) and creates a list of clauses
+<p>
+ c<sub><small>1</small></sub> &#8743; ... &#8743; c<sub><small>n</small></sub>, where c<sub><small>i</small></sub> = -lit &#8744; l<sub><small>i</small></sub> (for i = 1, ... ,n).
+</p>
+            </p>
+<hr/>
+            <p><b>Method</b>: fromLitImplDisj(lit, disj) - <b>Return</b>: L
+            <ul>
+                <li><i>lit:</i> an integer representing a literal.</li>
+                <li><i>disj:</i> a list of integers representing a disjunction.</li>
+            </ul>
+            Takes as input the implication lit &#8594; l<sub><small>1</small></sub> &#8744; ... &#8744; l<sub><small>n</small></sub> (for l<sub><small>1</small></sub>, ... ,l<sub><small>n</small></sub> in disj) and creates the clause -lit &#8744; l<sub><small>1</small></sub> &#8744; ... &#8744; l<sub><small>n</small></sub>.
+            </p>
+<hr/>
+            <p><b>Method</b>: fromConjImplLit(lit, conj) - <b>Return</b>: L
+            <ul>
+                <li><i>lit:</i> an integer representing a literal.</li>
+                <li><i>conj:</i> a list of integers representing a conjunction.</li>
+            </ul>
+            Takes as input the implication l<sub><small>1</small></sub> &#8743; ... &#8743; l<sub><small>n</small></sub> &#8594; lit (for l<sub><small>1</small></sub>, ... ,l<sub><small>n</small></sub> in conj) and creates the clause 
+<p>
+-l<sub><small>1</small></sub> &#8744; ... &#8744; -l<sub><small>n</small></sub> &#8744; lit (for l<sub><small>1</small></sub>, ... ,l<sub><small>n</small></sub> in conj).
+</p>            </p>
+<hr/>
+            <p><b>Method</b>: fromDisjImplLit(lit, disj) - <b>Return</b>: L
+            <ul>
+                <li><i>lit:</i> an integer representing a literal.</li>
+                <li><i>disj:</i> a list of integers representing a disjunction.</li>
+            </ul>
+            Takes as input the implication l<sub><small>1</small></sub> &#8744; ... &#8744; l<sub><small>n</small></sub> &#8594; lit (for l<sub><small>1</small></sub>, ... ,l<sub><small>n</small></sub> in disj) and creates a list of clauses
+<p>
+c<sub><small>1</small></sub> &#8743; ... &#8743; c<sub><small>n</small></sub>, where c<sub><small>i</small></sub> = lit &#8744; -l<sub><small>i</small></sub> (for i = 1, ... ,n).
+</p>
+           </p>
+<hr/>
+            <p><b>Method</b>: incoherent() - <b>Return</b>: i
+            <ul>
+            <li><i>i: </i> an integer.</li>
+            </ul>
+            Return 0 to indicate that the answer set candidate is not valid.
+            </p>
+<hr/>
+            <p><b>Method</b>: coherent() - <b>Return</b>: i
+            <ul>
+            <li><i>i: </i> an integer.</li>
+            </ul>
+            Return 1 to indicate that the answer set candidate is valid.
+            </p>
+<hr/>
+            <p><b>Method</b>: getTerms(predicateName,atomName) - <b>Return</b>: L
+            <ul>
+            <li><i>predicateName: </i> a string representing the name of the predicate.</li>
+            <li><i>atomName: </i> a string representing the full name of the atom.</li>
+            </ul>
+            Return a list of string representing the terms. For example, given atomName="pred(1,2,hello)" and predicateName="pred", it returns ["1","2","hello"].
+            </p> 
+<hr/>
             <h1><a id="wasp" class="anchor" href="#wasp" aria-hidden="true"><span class="octicon octicon-link"></span></a>Running examples</h1>
 
             <p>Consider the following simple encoding</p>
