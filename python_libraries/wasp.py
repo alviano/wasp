@@ -26,7 +26,7 @@ def createWeakConstraints(weak):
 
 def createWeights(weights):
     if sys.version_info >= (3,0):
-        return [w for w in weights]
+        return weights
     else:
         return [long(w) for w in weights]    
 
