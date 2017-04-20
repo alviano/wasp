@@ -379,7 +379,6 @@ WeakInterface::minimizeUnsatCoreWithProgression(
     if( result == INCOHERENT )
     {
         resetSolver();
-        cout << "COST (oldCore,newCore)=(" << originalCore->size() << "," << solver.getUnsatCore()->size() << ")" << endl;
         delete originalCore;
         return solver.getUnsatCore();
     }
@@ -424,7 +423,6 @@ WeakInterface::minimizeUnsatCoreWithLinearSearch(
     if( result == INCOHERENT )
     {
         resetSolver();
-        cout << "COST (oldCore,newCore)=(" << originalCore->size() << "," << solver.getUnsatCore()->size() << ")" << endl;
         delete originalCore;
         return solver.getUnsatCore();
     }
