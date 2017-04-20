@@ -18,7 +18,7 @@
 
 #include "MultiOutputBuilder.h"
 #include "../util/VariableNames.h"
-#include "../util/Options.h"
+#include "../util/WaspOptions.h"
 extern int EXIT_CODE;
 
 void

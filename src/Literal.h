@@ -25,7 +25,7 @@
 #include <string>
 using namespace std;
 
-#include "util/Constants.h"
+#include "util/WaspConstants.h"
 class Literal
 {
     friend ostream &operator<<( ostream &, const Literal & );

@@ -20,7 +20,7 @@
 #include <csignal>
 #include <iostream>
 #include "WaspFacade.h"
-#include "util/Options.h"
+#include "util/WaspOptions.h"
 using namespace std;
 
 int EXIT_CODE = 0;

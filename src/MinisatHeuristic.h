@@ -19,7 +19,7 @@
 #ifndef MINISATHEURISTIC_H
 #define MINISATHEURISTIC_H
 
-#include "util/Options.h"
+#include "util/WaspOptions.h"
 #include "util/Trace.h"
 #include "Literal.h"
 #include "stl/Heap.h"

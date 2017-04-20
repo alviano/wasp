@@ -19,7 +19,7 @@
 #ifndef OUTPUTBUILDER_H
 #define OUTPUTBUILDER_H
 
-#include "../util/Constants.h"
+#include "../util/WaspConstants.h"
 #include "../stl/Vector.h"
 
 #include <iostream>

@@ -4,10 +4,10 @@
 #include "outputBuilders/DimacsOutputBuilder.h"
 #include "outputBuilders/WaspOutputBuilder.h"
 #include "util/Trace.h"
-#include "util/Options.h"
+#include "util/WaspOptions.h"
 
 #include <vector>
-#include "util/Options.h"
+#include "util/WaspOptions.h"
 
 ReductBasedCheck::ReductBasedCheck(
     vector< GUSData* >& gusData_,

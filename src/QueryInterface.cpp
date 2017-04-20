@@ -19,7 +19,7 @@
 #include "QueryInterface.h"
 #include "util/Assert.h"
 #include "Solver.h"
-#include "util/Constants.h"
+#include "util/WaspConstants.h"
 
 QueryInterface::QueryInterface(
     Solver& s ) : solver( s )
