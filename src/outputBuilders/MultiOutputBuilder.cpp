@@ -30,6 +30,7 @@ MultiOutputBuilder::foundModelOptimization(
     for( int i = costs.size() - 1; i >= 0; --i )
         modelStream << " " << costs[ i ] << WEIGHT_LEVEL_WEAKCONSTRAINT_SEPARATOR << ( i + 1 );
     lastWeight = modelStream.str();
+    EXIT_CODE = 10;
 }
 
 void
