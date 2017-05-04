@@ -6,61 +6,61 @@ BUILD = release
 cxxflags.debug = \
  -Wall -Wextra -std=c++11
 linkflags.debug = \
- -lm
+ -lm -ldl
 cxxflags.trace = \
  -Wall -Wextra -std=c++11 -DTRACE_ON
 linkflags.trace = \
- -lm
+ -lm -ldl
 cxxflags.tracerelease = \
  -Wall -Wextra -std=c++11 -DTRACE_ON -DNDEBUG -O3
 linkflags.tracerelease = \
- -lm
+ -lm -ldl
 cxxflags.release = \
  -Wall -Wextra -std=c++11 -DNDEBUG -O3
 linkflags.release = \
- -lm
+ -lm -ldl
 cxxflags.gprof = \
  -Wall -Wextra -std=c++11 -DNDEBUG -O3 -g -pg
 linkflags.gprof = \
- -lm -g -pg
+ -lm -g -pg -ldl
 cxxflags.stats = \
  -Wall -Wextra -std=c++11 -DNDEBUG -DSTATS_ON -O3
 linkflags.stats = \
- -lm
+ -lm -ldl
 cxxflags.estats = \
  -Wall -Wextra -std=c++11 -DNDEBUG -DSTATS_ON -DESTATS_ON -O3
 linkflags.estats = \
- -lm
+ -lm -ldl
 
 # for g++ <= 4.6
 cxxflags.debug0x = \
  -Wall -Wextra -std=c++0x
 linkflags.debug0x = \
- -lm
+ -lm -ldl
 cxxflags.trace0x = \
  -Wall -Wextra -std=c++0x -DTRACE_ON
 linkflags.trace = \
- -lm
+ -lm -ldl
 cxxflags.tracerelease0x = \
  -Wall -Wextra -std=c++0x -DTRACE_ON -DNDEBUG -O3
 linkflags.tracerelease0x = \
- -lm
+ -lm -ldl
 cxxflags.release0x = \
  -Wall -Wextra -std=c++0x -DNDEBUG -O3
 linkflags.release0x = \
- -lm
+ -lm -ldl
 cxxflags.gprof0x = \
  -Wall -Wextra -std=c++0x -DNDEBUG -O3 -g -pg 
 linkflags.gprof0x = \
- -lm -g -pg
+ -lm -g -pg -ldl
 cxxflags.stats0x = \
  -Wall -Wextra -std=c++0x -DNDEBUG -DSTATS_ON -O3
 linkflags.stats0x = \
- -lm
+ -lm -ldl
 cxxflags.estats0x = \
  -Wall -Wextra -std=c++0x -DNDEBUG -DSTATS_ON -DESTATS_ON -O3
 linkflags.estats0x = \
- -lm
+ -lm -ldl
 ####
 
 LAZY_GROUNDING = off
