@@ -2410,9 +2410,11 @@ Solver::minimizeUnsatCore(
 {
     unsigned int originalMaxNumberOfChoices = maxNumberOfChoices;
     unsigned int originalMaxNumberOfRestarts = maxNumberOfRestarts;
+    unsigned int originalMaxNumberOfSeconds = maxNumberOfSeconds;
     
     setMaxNumberOfChoices( UINT_MAX );
     setMaxNumberOfRestarts( UINT_MAX );
+    setMaxNumberOfSeconds( UINT_MAX );
     begin:;
 
     assert( unsatCore != NULL );
@@ -2420,6 +2422,7 @@ Solver::minimizeUnsatCore(
     {
         setMaxNumberOfChoices( originalMaxNumberOfChoices );
         setMaxNumberOfRestarts( originalMaxNumberOfRestarts );
+        setMaxNumberOfSeconds( originalMaxNumberOfSeconds );
         return;
     }
     
@@ -2477,6 +2480,7 @@ Solver::minimizeUnsatCore(
     assert( unsatCore->size() == oldSize );
     setMaxNumberOfChoices( originalMaxNumberOfChoices );
     setMaxNumberOfRestarts( originalMaxNumberOfRestarts );
+    setMaxNumberOfSeconds( originalMaxNumberOfSeconds );
 }
 
 //Aggregate*
