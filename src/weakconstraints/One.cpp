@@ -25,10 +25,8 @@ One::~One()
 unsigned int
 One::run()
 {
-    if( disjCoresPreprocessing && !disjointCorePreprocessing() ) {
-        cout << "Failure after disjoint core preprocessing" << endl;
+    if( disjCoresPreprocessing && !disjointCorePreprocessing() )
         return INCOHERENT;
-    }
     
     if( ub() == lb() )
         return OPTIMUM_FOUND;

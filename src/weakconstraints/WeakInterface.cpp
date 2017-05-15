@@ -358,7 +358,6 @@ WeakInterface::minimizeUnsatCoreWithProgression(
     Clause* originalCore = new Clause();
     originalCore->copyLiterals( *unsatCore );    
     
-    cout << "Starting minimization of unsat core using progression. Original size: " << originalCore->size() << endl;
     unsigned int max = 1;    
     unsigned int otherMax = 1;
     begin:;
@@ -381,7 +380,6 @@ WeakInterface::minimizeUnsatCoreWithProgression(
     {
         resetSolver();
         delete originalCore;
-        cout << "New core. Size: " << solver.getUnsatCore()->size() << endl;
         return solver.getUnsatCore();
     }
     else if( result == COHERENT )
