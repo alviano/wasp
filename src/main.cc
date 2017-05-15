@@ -31,7 +31,8 @@ WaspFacade* waspFacadePointer = NULL;
 void my_handler( int )
 {
     cerr << "Killed: Bye!" << endl;
-    EXIT_CODE = 11;
+    if(EXIT_CODE==0)
+        EXIT_CODE = 1;
     waspFacadePointer->onKill();
     delete waspFacadePointer;
     exit( EXIT_CODE );
