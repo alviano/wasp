@@ -206,7 +206,6 @@ One::foundUnsat()
     assert( core != NULL );
     const Clause& unsatCore = *( core );
     
-    cout << "Size of core " << unsatCore.size() << endl;
     //The incoherence does not depend on weak constraints
     if( unsatCore.size() == 0 )
         return false;    
