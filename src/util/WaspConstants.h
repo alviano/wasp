@@ -61,6 +61,7 @@
 #define ITERATIVE_COHERENCE_TESTING 2
 #define CHUNK_STATIC 3
 #define CHUNK_DYNAMIC 4
+#define COREBASED_QUERIES 5
 
 /*
  * Weak constraints

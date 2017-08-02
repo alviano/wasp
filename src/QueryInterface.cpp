@@ -46,6 +46,10 @@ QueryInterface::computeCautiousConsequences(
             overestimateReduction();
             break;
             
+        case COREBASED_QUERIES:
+            coreBasedAlgorithm();
+            break;
+            
         case CHUNK_DYNAMIC:
         case CHUNK_STATIC:
             {
@@ -495,5 +499,89 @@ QueryInterface::chunkStaticAlgorithm(
         #endif
         solver.addClauseRuntime( clausePointer );
         assert( res );
+    }
+}
+
+void
+QueryInterface::coreBasedAlgorithm() {            
+    vector< Literal > assumptions;    
+    reset( assumptions );
+    
+    unsigned int numberOfCalls = 0;
+    vector< unsigned int > inUnsatCore;
+    while( inUnsatCore.size() <= solver.numberOfVariables() )
+        inUnsatCore.push_back( numberOfCalls );
+    solver.setComputeUnsatCores( true );
+    
+    while( !candidates.empty() )
+    {
+        reset( assumptions );
+        for( unsigned int i = 0; i < candidates.size(); i++ ) {
+            assumptions.push_back( Literal( candidates[ i ], NEGATIVE ) );
+        }        
+        
+        while( true ) {
+            unsigned int result = solver.solve( assumptions );
+            if( result == COHERENT ) {
+                reduceCandidates();
+                break;
+            }
+            else {
+                assert( result == INCOHERENT );
+                numberOfCalls++;    
+                processCore( numberOfCalls, inUnsatCore );
+                unsigned int j = 0;
+                
+                vector< Var > core;
+                for( unsigned int i = 0; i < assumptions.size(); i++ ) {
+                    assumptions[ j ] = assumptions[ i ];
+                    Var v = assumptions[ i ].getVariable();
+                    assert( v < inUnsatCore.size() );
+                    if( inUnsatCore[ v ] != numberOfCalls )
+                        j++;
+                    else
+                        core.push_back( v );
+                }
+                assumptions.resize( j );
+            
+                assert( core.size() != 0 );
+                if( core.size() == 1 ) {
+                    addAnswer( core[ 0 ] );
+                    candidates.findAndRemove( core[ 0 ] );
+                }
+                else if( assumptions.size() == 0 ) {
+                    iterativeCoherenceTesting();
+                    return;
+                }
+            }            
+        }
+    }
+}
+
+void
+QueryInterface::reset( vector< Literal >& assumptions )
+{
+    solver.unrollToZero();
+    assert( solver.getCurrentDecisionLevel() == 0 );
+    assert( !solver.conflictDetected() );
+    assumptions.clear();
+}
+
+void
+QueryInterface::processCore(
+    unsigned int numberOfCalls,
+    vector< unsigned int >& inUnsatCore )
+{
+    const Clause* core = solver.getUnsatCore();
+    assert( core != NULL );
+    const Clause& unsatCore = *( core );
+    assert( unsatCore.size() > 0 );    
+    solver.clearConflictStatus();
+    solver.unrollToZero();
+
+    for( unsigned int i = 0; i < unsatCore.size(); i++ ) {
+        Var v = unsatCore[ i ].getVariable();
+        assert( v > 0 && v < inUnsatCore.size() );
+        inUnsatCore[ v ] = numberOfCalls;
     }
 }
