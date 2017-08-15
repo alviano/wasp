@@ -161,7 +161,7 @@ class Solver
         inline void clearConflictStatus();
         inline bool performAssumptions( vector< Literal >& assumptions );
         inline bool chooseLiteral( vector< Literal >& assumptions );
-        inline bool conflictDetected();
+        inline bool conflictDetected() const;
         inline void foundIncoherence();
         inline bool hasUndefinedLiterals();
         inline void printAnswerSet();
@@ -271,6 +271,7 @@ class Solver
 //        inline void setMaxCostOfLevelOfOptimizationRules( vector< uint64_t >& m ) { maxCostOfLevelOfOptimizationRules.swap( m ); }
 //        inline void setNumberOfOptimizationLevels( unsigned int n ) { numberOfOptimizationLevels = n; }        
         inline void addPreferredChoicesFromOptimizationLiterals( unsigned int level );
+        inline void addPrefChoices( const vector<Literal>& lits ) { for(unsigned int i = 0; i < lits.size(); i++) minisatHeuristic->addPreferredChoice(lits[i]); }
         inline void removePrefChoices() { minisatHeuristic->removePrefChoices(); }
         
         inline bool isTrue( Var v ) const { return variables.isTrue( v ); }
@@ -405,7 +406,8 @@ class Solver
         
         void clearAfterSolveUnderAssumptions( const vector< Literal >& assumptions );
         
-        inline void setAssumption( Literal lit, bool isAssumption ) { variables.setAssumption( lit.getVariable(), isAssumption ); }
+        inline void setAssumption( Literal lit, bool isAssumption ) { variables.setAssumption( lit, isAssumption ); }
+        inline bool isAssumption( Literal lit ) const { return variables.isAssumption( lit ); }
         inline bool isAssumption( Var v ) const { return variables.isAssumption( v ); }
         
         inline void computeUnsatCore();
@@ -707,8 +709,22 @@ Solver::solve(
 {
     incremental_ = !assumptions.empty();
     numberOfAssumptions = assumptions.size();
-    for( unsigned int i = 0; i < assumptions.size(); i++ )
-        setAssumption( assumptions[ i ], true );
+    for( unsigned int i = 0; i < assumptions.size(); i++ ) {
+        if( isAssumption( assumptions[ i ].getOppositeLiteral() ) ) {
+            delete unsatCore;
+            unsatCore = NULL;
+            if( computeUnsatCores_ ) {
+                unsatCore = new Clause();
+                unsatCore->setLearned();
+                unsatCore->addLiteralInLearnedClause( assumptions[ i ] );
+                unsatCore->addLiteralInLearnedClause( assumptions[ i ].getOppositeLiteral() );
+            }
+            clearAfterSolveUnderAssumptions( assumptions );
+            clearConflictStatus();
+            return INCOHERENT;
+        }
+        setAssumption( assumptions[ i ], true );        
+    }
         
     delete unsatCore;
     unsatCore = NULL;
@@ -1172,7 +1188,7 @@ Solver::numberOfLearnedClauses() const
 }
 
 bool
-Solver::conflictDetected()
+Solver::conflictDetected() const
 {
     return conflictLiteral != Literal::null;
 }
@@ -2377,7 +2393,7 @@ Solver::modelIsValidUnderAssumptions(
             if( computeUnsatCores_ )
             {
                 assert( unsatCore == NULL );
-                computeUnsatCore();                
+                computeUnsatCore();
             }
             return false;
         }
@@ -2444,18 +2460,16 @@ Solver::minimizeUnsatCore(
     for( unsigned int i = 0; i < unsatCore->size(); i++ )
     {
         Literal lit = unsatCore->getAt( i );        
-        if( !getDataStructure( lit ).isOptLit() /*&& !getDataStructure( lit.getOppositeLiteral() ).isOptLit()*/ )
-            continue;
-                
-        Literal toAdd = lit.getOppositeLiteral();
+//        if( !getDataStructure( lit.getOppositeLiteral() ).isOptLit() /*&& !getDataStructure( lit.getOppositeLiteral() ).isOptLit()*/ )
+//            continue;
 //        if( getDataStructure( lit ).isOptLit() )            
 //            toAdd = lit.getOppositeLiteral();
 //        else if( getDataStructure( lit.getOppositeLiteral() ).isOptLit() )
 //            toAdd = lit;
 //        else
 //            continue;
-        assumptions.push_back( toAdd );
-        setAssumption( toAdd, true );
+        assumptions.push_back( lit );
+        setAssumption( lit, true );
     }
     numberOfAssumptions = assumptions.size();
     

@@ -52,7 +52,7 @@ Opt::createOptimizationAggregate(
     {
         OptimizationLiteralData& optData = solver.getOptimizationLiteral( level(), i );
         if( optData.isAux() )
-            break;
+            continue;
         literals.push_back( optData.lit );
         weights.push_back( optData.weight );        
     }
@@ -80,7 +80,7 @@ Opt::updateOptimizationAggregate(
     resetSolver();        
     if( aggregate == NULL )
     {
-        trace_msg( weakconstraints, 3, "Optimization aggregate has not been created" );
+        trace_msg( weakconstraints, 3, "Optimization aggregate is null: need to be created" );
         createOptimizationAggregate( modelCost );
         return true;
     }    

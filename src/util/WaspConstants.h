@@ -63,6 +63,10 @@
 #define CHUNK_DYNAMIC 4
 #define COREBASED_QUERIES 5
 
+#define BUDGET_CHOICES 0
+#define BUDGET_RESTARTS 1
+#define BUDGET_TIME 2
+
 /*
  * Weak constraints
  */
