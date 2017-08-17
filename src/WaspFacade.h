@@ -97,6 +97,7 @@ class WaspFacade
          * Prints the latest found answer set. If the answer set has not been computed the method is useless.
          */
         inline void printAnswerSet() { if(!solver.conflictDetected() && !solver.hasUndefinedLiterals()) solver.printAnswerSet(); }
+        inline void printIncoherence() { solver.foundIncoherence(); }
         inline bool isTrue(Literal lit) const { return solver.isTrue(lit); }
         inline bool isFalse(Literal lit) const { return solver.isFalse(lit); }
         inline bool isUndefined(Literal lit) const { return solver.isUndefined(lit); }
@@ -170,6 +171,17 @@ class WaspFacade
             }
         }
         
+        /**
+         * Add a new variable to the solver
+         * @param frozen
+         * @return 
+         */
+        inline Var addVariable(bool frozen = false) {
+            runtime_ ? solver.addVariableRuntime() : solver.addVariable();
+            Var id = solver.numberOfVariables();
+            if(frozen) solver.setFrozen(id);
+            return id;
+        }
         inline unsigned int numberOfVariables() const { return solver.numberOfVariables(); }
         
         inline void setPreferredChoices(const vector<Literal>& prefChoices) { solver.removePrefChoices(); solver.addPrefChoices(prefChoices); }
