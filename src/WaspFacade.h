@@ -66,7 +66,7 @@ class WaspFacade
          * @param lits
          * @return 
          */
-        inline bool addClause( vector<Literal>& lits ) {
+        inline bool addClause(vector<Literal>& lits) {
             if(solver.conflictDetected() || !ok_ ) return false;
             solver.unrollToZero();
             if( lits.empty() ) { ok_ = false; return false; }
@@ -86,12 +86,26 @@ class WaspFacade
         }
         
         /**
-         * Adds an aggregate to the DB. The method performs a full restart to the level 0.         
+         * Adds a pseudoBoolean constraint to the DB. The method performs a full restart to the level 0.         
          * @param lits
          * @param weights
          * @return 
          */        
-        bool addAggregate( vector<Literal>& lits, vector<uint64_t>& weights, uint64_t bound );
+        bool addPseudoBooleanConstraint(vector<Literal>& lits, vector<uint64_t>& weights, uint64_t bound);
+        
+        
+        /**
+         * Add a cardinality constraint to the DB. The method performs a full restart to the level 0.
+         * @param lits
+         * @param weights
+         * @param bound
+         * @return 
+         */
+        inline bool addCardinalityConstraint(vector<Literal>& lits, uint64_t bound) {
+            vector<uint64_t> weights;
+            for(unsigned int i = 0; i < lits.size(); i++) weights.push_back(1);
+            return addPseudoBooleanConstraint(lits, weights, bound);
+        }
         
         /**
          * Prints the latest found answer set. If the answer set has not been computed the method is useless.

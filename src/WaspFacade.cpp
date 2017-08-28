@@ -351,7 +351,7 @@ WaspFacade::enumerationBacktracking()
     
     flipLatestChoice( assums, checked );
     if( assums.empty() )
-        return;        
+        return;
     goto begin;
 }
 
@@ -420,7 +420,7 @@ void mergesort(int left,int right,vector<Literal>& literals,vector<uint64_t>& we
 }
 
 bool
-WaspFacade::addAggregate(
+WaspFacade::addPseudoBooleanConstraint(
     vector<Literal>& lits,
     vector<uint64_t>& weights,
     uint64_t bound)
@@ -457,17 +457,19 @@ WaspFacade::addAggregate(
         assert_msg( previousWeight >= weights[i], "Literals must be sorted in increasing order" );
         assert( previousWeight = weights[i] );
     }
-    solver.attachAggregate(*aggregate);
-    solver.addAggregate(aggregate);    
-    if(!aggregate->updateBound(solver, bound)) { ok_ = false; return false; }
-    
-    bool res = true;
-    if(solver.isFalse(aggregateLiteral))
-        res = aggregate->onLiteralFalse( solver, aggregateLiteral, -1 );
-    else if( solver.isTrue( aggregateLiteral ) )
-        res = aggregate->onLiteralFalse( solver, aggregateLiteral.getOppositeLiteral(), 1 );
+    assert( aggregate->size() >= 1 );
+    bool res = solver.addClauseRuntime(aggregateLiteral);
+    if(!res) { ok_ = false; return false; }
+        
+    if( !aggregate->updateBound( solver, bound ) ) { delete aggregate; ok_ = false; return false; }
 
-    if(!res) ok_ = false;
+    solver.attachAggregate( *aggregate );
+    solver.addAggregate( aggregate );
+    
+    assert( solver.isTrue( aggregateLiteral ) );
+    aggregate->onLiteralFalse( solver, aggregateLiteral.getOppositeLiteral(), 1 );
+    
+    if( solver.conflictDetected() ) { ok_ = false; return false; }        
     return ok_;
 }
 
