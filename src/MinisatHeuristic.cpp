@@ -26,13 +26,12 @@ Literal
 MinisatHeuristic::makeAChoice()
 {
     trace_msg( heuristic, 1, "Starting MiniSAT heuristic" );
-    if( !preferredChoices.empty() )
+    while( !preferredChoices.empty() )
     {
-        for( unsigned int i = 0; i < preferredChoices.size(); i++ )
-        {
-            if( solver.isUndefined( preferredChoices[ i ].getVariable() ) )
-                return preferredChoices[ i ];
-        }        
+        Literal lit = preferredChoices.top();
+        preferredChoices.pop();
+        if( solver.isUndefined( lit ) )
+            return lit;
     }
     
     chosenVariable = 0;
@@ -89,18 +88,10 @@ inline int irand( double& seed, int size) { return ( int )( drand( seed ) * size
 void
 MinisatHeuristic::simplifyVariablesAtLevelZero()
 {
-    for( unsigned int i = 0; i < vars.size(); )
+    for( unsigned int i = 1; i < vars.size(); i++ )
     {
-        if( !solver.isUndefined( vars[ i ] ) )
-        {
-            assert_msg( solver.getDecisionLevel( vars[ i ] ) == 0, "Variable " << vars[ i ] << " has not been inferred at level 0.");            
-            vars[ i ] = vars.back();
-            vars.pop_back();
-        }
-        else
-        {       
-            heap.pushNoCheck( vars[ i ] );
-            ++i;
-        }
+        assert_msg( solver.isUndefined( vars[ i ].var() ) || solver.getDecisionLevel( vars[ i ].var() ) == 0, "Variable " << vars[ i ].var() << " has not been inferred at level 0.");        
+        if( solver.isUndefined( i ) )
+            heap.pushNoCheck( i );
     }
 }

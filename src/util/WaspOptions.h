@@ -110,7 +110,9 @@ namespace wasp
             
             static map< string, SHIFT_STRATEGY > stringToShift;
             
-            static map< string, unsigned int > stringToMinimization;            
+            static map< string, unsigned int > stringToMinimization;
+            
+            static map< string, unsigned int > stringToQueryAlgorithms;
             
             static WEAK_CONSTRAINTS_ALG getAlgorithm( const string& s );
             
@@ -119,6 +121,8 @@ namespace wasp
             static unsigned int getMinimizationStrategy( const string& s );
             
             static unsigned int getEnumerationStrategy( const string& s );
+            
+            static unsigned int getQueryAlgorithm( const string& s );
             
             static void initMap();
             

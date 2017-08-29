@@ -41,6 +41,7 @@ class QueryInterface
         void chunkDynamicAlgorithm( unsigned int chunkSize );
         void chunkStaticAlgorithm( unsigned int chunkSize );
         void coreBasedAlgorithm();
+        void preferenceAlgorithm();
         
         void reset( vector< Literal >& assumptions );
         void processCore( unsigned int numberOfCalls, vector< unsigned int >& inUnsatCore );

@@ -180,6 +180,8 @@ map< string, SHIFT_STRATEGY > Options::stringToShift;
 
 map< string, unsigned int > Options::stringToMinimization;
 
+map< string, unsigned int > Options::stringToQueryAlgorithms;
+
 bool Options::simplifications = true;
 
 unsigned Options::silent = 0;
@@ -629,22 +631,9 @@ Options::parse(
             case OPTIONID_queryalgorithm:
                 queryAlgorithm = ITERATIVE_COHERENCE_TESTING;
                 if( optarg )
-                {
-                    if( !strcmp( optarg, "or" ) )
-                        queryAlgorithm = OVERESTIMATE_REDUCTION;
-                    else if( !strcmp( optarg, "ict" ) )
-                        queryAlgorithm = ITERATIVE_COHERENCE_TESTING;
-                    else if( !strcmp( optarg, "cb" ) ) 
-                        queryAlgorithm = COREBASED_QUERIES;
-                    else if( !strcmp( optarg, "chunk-static" ) )
-                        queryAlgorithm = CHUNK_STATIC;
-                    else if( !strcmp( optarg, "chunk-dynamic" ) )
-                        queryAlgorithm = CHUNK_DYNAMIC;
-                    else
-                        ErrorMessage::errorGeneric( "Inserted invalid algorithm for query answering." );
-                }
+                    queryAlgorithm = getQueryAlgorithm( optarg );                    
                 else
-                        ErrorMessage::errorGeneric( "Inserted invalid algorithm for query answering." );
+                    ErrorMessage::errorGeneric( "Inserted invalid algorithm for query answering." );
                 break;
                 
             case OPTIONID_queryverbosity:
@@ -751,6 +740,17 @@ Options::getMinimizationStrategy(
 }
 
 unsigned int
+Options::getQueryAlgorithm(
+    const string& s )
+{
+    map< string, unsigned int >::iterator it = stringToQueryAlgorithms.find( s );
+    if( it == stringToQueryAlgorithms.end() )
+        ErrorMessage::errorGeneric( "Inserted invalid strategy for query algorithm." );
+    
+    return it->second; 
+}
+
+unsigned int
 Options::getEnumerationStrategy(
     const string& s )
 {
@@ -785,6 +785,13 @@ Options::initMap()
     
     stringToMinimization[ "progression" ] = MINIMIZATION_PROGRESSION;
     stringToMinimization[ "linearsearch" ] = MINIMIZATION_LINEARSEARCH;
+    
+    stringToQueryAlgorithms[ "or" ] = OVERESTIMATE_REDUCTION;
+    stringToQueryAlgorithms[ "ict" ] = ITERATIVE_COHERENCE_TESTING;
+    stringToQueryAlgorithms[ "cb" ] = COREBASED_QUERIES;
+    stringToQueryAlgorithms[ "chunk-static" ] = CHUNK_STATIC;
+    stringToQueryAlgorithms[ "chunk-dynamic" ] = CHUNK_DYNAMIC;
+    stringToQueryAlgorithms[ "preferences" ] = PREFERENCE_QUERIES;                    
 }
 
 void

@@ -126,8 +126,9 @@ class Help
             cout << "       =ict                            - Enable iterative coherence testing" << endl;
             cout << "       =or                             - Enable overestimate reduction" << endl;
             cout << "       =cb                             - Enable core-based algorithm" << endl;
-            cout << "       =chunk-static                   - Enable algorithm based on static chunks. (Default size=2)" << endl;
-            cout << "       =chunk-dynamic                  - Enable algorithm based on dynamic chunks. (Default size=2)" << endl;
+            cout << "       =preferences                    - Enable algorithm based on preferences" << endl;
+            cout << "       =chunk-static                   - Enable algorithm based on static chunks (Default size=2)" << endl;
+            cout << "       =chunk-dynamic                  - Enable algorithm based on dynamic chunks (Default size=2)" << endl;
             cout << "--query-verbosity=(0,...,3)            - Enable verbosity of queries algorithms" << endl;
             cout << "--query-chunk-size=n                   - Specify the size of each chunk" << endl;
             cout << "--query-chunk-percentage=(1,...,100)   - The size of each chunk is a percentage of the number of candidates" << endl;

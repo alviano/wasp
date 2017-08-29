@@ -50,6 +50,10 @@ QueryInterface::computeCautiousConsequences(
             coreBasedAlgorithm();
             break;
             
+        case PREFERENCE_QUERIES:
+            preferenceAlgorithm();
+            break;
+            
         case CHUNK_DYNAMIC:
         case CHUNK_STATIC:
             {
@@ -114,7 +118,7 @@ QueryInterface::iterativeCoherenceTesting()
         assert( solver.getCurrentDecisionLevel() == 0 );
         assert( !solver.conflictDetected() );        
         assumptions.clear();
-    }        
+    }
 }
 
 void
@@ -584,4 +588,29 @@ QueryInterface::processCore(
         assert( v > 0 && v < inUnsatCore.size() );
         inUnsatCore[ v ] = numberOfCalls;
     }
+}
+
+void
+QueryInterface::preferenceAlgorithm()
+{
+    unsigned int size = UINT_MAX;
+    while( !candidates.empty() && size != candidates.size() )
+    {
+        solver.unrollToZero();
+        assert( solver.getCurrentDecisionLevel() == 0 );
+        assert( !solver.conflictDetected() );
+        vector< Literal > preferences;
+        for( unsigned int i = 0; i < candidates.size(); i++ )
+            preferences.push_back( Literal( candidates[ i ], NEGATIVE ) );
+        solver.removePrefChoices();        
+        solver.addPrefChoices(preferences);        
+        unsigned int result = solver.solve();
+        assert( result == COHERENT );
+
+        size = candidates.size();        
+        reduceCandidates();
+    }
+
+    for( unsigned int i = 0; i < candidates.size(); i++ )
+        addAnswer( candidates[ i ] );
 }
