@@ -40,7 +40,7 @@ class QueryInterface
         void overestimateReduction();
         void chunkDynamicAlgorithm( unsigned int chunkSize );
         void chunkStaticAlgorithm( unsigned int chunkSize );
-        void coreBasedAlgorithm();
+        void coreBasedAlgorithm( unsigned int chunkSize );
         void preferenceAlgorithm();
         
         void reset( vector< Literal >& assumptions );

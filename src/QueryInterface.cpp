@@ -47,7 +47,14 @@ QueryInterface::computeCautiousConsequences(
             break;
             
         case COREBASED_QUERIES:
-            coreBasedAlgorithm();
+            {
+            unsigned int param = candidates.size();
+            if( wasp::Options::chunkSize != UINT_MAX )
+                param = wasp::Options::chunkSize;
+            else if( wasp::Options::chunkPercentage != UINT_MAX )
+                param = ( candidates.size() * wasp::Options::chunkPercentage ) / 100;
+            coreBasedAlgorithm( param );
+            }
             break;
             
         case PREFERENCE_QUERIES:
@@ -506,7 +513,7 @@ QueryInterface::chunkStaticAlgorithm(
     }
 }
 
-void
+/*void
 QueryInterface::coreBasedAlgorithm() {            
     vector< Literal > assumptions;    
     reset( assumptions );
@@ -560,6 +567,64 @@ QueryInterface::coreBasedAlgorithm() {
             }            
         }
     }
+}*/
+
+void
+QueryInterface::coreBasedAlgorithm(
+    unsigned int chunkSize )
+{
+    vector< Literal > assumptions;    
+    reset( assumptions );
+    
+    unsigned int numberOfCalls = 0;
+    vector< unsigned int > inUnsatCore;
+    while( inUnsatCore.size() <= solver.numberOfVariables() )
+        inUnsatCore.push_back( numberOfCalls );
+    solver.setComputeUnsatCores( true );
+    
+    while( !candidates.empty() )
+    {
+        reset( assumptions );
+        for( unsigned int i = 0; i < chunkSize && i < candidates.size(); i++ )
+            assumptions.push_back( Literal( candidates[ i ], NEGATIVE ) );        
+        
+        while( true ) {
+            unsigned int result = solver.solve( assumptions );
+            if( result == COHERENT ) {
+                reduceCandidates();
+                break;
+            }
+            else {
+                assert( result == INCOHERENT );
+                numberOfCalls++;    
+                processCore( numberOfCalls, inUnsatCore );
+                unsigned int j = 0;
+                
+                vector< Var > core;
+                for( unsigned int i = 0; i < assumptions.size(); i++ ) {
+                    assumptions[ j ] = assumptions[ i ];
+                    Var v = assumptions[ i ].getVariable();
+                    assert( v < inUnsatCore.size() );
+                    if( inUnsatCore[ v ] != numberOfCalls )
+                        j++;
+                    else
+                        core.push_back( v );
+                }
+                assumptions.resize( j );
+            
+                assert( core.size() != 0 );
+                if( core.size() == 1 ) {
+                    addAnswer( core[ 0 ] );
+                    candidates.findAndRemove( core[ 0 ] );
+                }
+                
+                if( assumptions.size() == 0 ) {
+                    iterativeCoherenceTesting();
+                    break;
+                }
+            }            
+        }
+    }
 }
 
 void
@@ -604,7 +669,10 @@ QueryInterface::preferenceAlgorithm()
             preferences.push_back( Literal( candidates[ i ], NEGATIVE ) );
         solver.removePrefChoices();        
         solver.addPrefChoices(preferences);        
-        unsigned int result = solver.solve();
+        #ifndef NDEBUG
+        unsigned int result = 
+        #endif
+        solver.solve();
         assert( result == COHERENT );
 
         size = candidates.size();        
