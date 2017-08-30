@@ -428,8 +428,27 @@ WaspFacade::addPseudoBooleanConstraint(
     if(solver.conflictDetected() || !ok_) return false;
     solver.unrollToZero();
     if(lits.size() != weights.size())
-        ErrorMessage::errorGeneric("error while creating a new aggregate, the size of literals must be equal to the size of weights");
+        ErrorMessage::errorGeneric("The size of literals must be equal to the size of weights in pseudoBoolean constraints.");
 
+    uint64_t sumOfWeights = 0;
+    unsigned int j = 0;
+    for(unsigned int i = 0; i < lits.size(); i++) {
+        lits[i]=lits[j];    weights[i]=weights[j];
+        addVariables(lits[i].getVariable());
+        if(solver.hasBeenEliminated(lits[i].getVariable())) ErrorMessage::errorGeneric("Trying to add a deleted variable to aggregate.");
+        if(solver.isFalse(lits[i])) continue;
+        if(solver.isTrue(lits[i])) {
+            if(bound <= weights[i]) return true;
+            bound -= weights[i];
+            continue;
+        }
+        if(weights[i] > bound) weights[i] = bound;        
+        sumOfWeights += weights[i];
+        j++;
+    }
+    lits.resize(j);    weights.resize(j);
+    if(sumOfWeights < bound) { ok_ = false; return false; }
+    
     mergesort(0, lits.size()-1, lits, weights);
         
     if(runtime_) solver.addVariableRuntime();
@@ -438,29 +457,23 @@ WaspFacade::addPseudoBooleanConstraint(
     solver.setFrozen( aggrId );
     Aggregate* aggregate = new Aggregate();
     Literal aggregateLiteral = solver.getLiteral( aggrId );
-    aggregate->addLiteral(aggregateLiteral.getOppositeLiteral(), 0);
+    aggregate->addLiteral(aggregateLiteral.getOppositeLiteral(), 0);    
     #ifndef NDEBUG
     uint64_t previousWeight = UINT64_MAX;
     #endif    
     for( unsigned int i = 0; i < lits.size(); i++ ) {
-        addVariables(lits[i].getVariable());
-        if(solver.hasBeenEliminated(lits[i].getVariable())) ErrorMessage::errorGeneric("Trying to add a deleted variable to aggregate.");                
-        if(weights[i] > bound) weights[i] = bound;
-        if(solver.isFalse(lits[i])) continue;
-        if(solver.isTrue(lits[i])) {
-            if( bound <= weights[i] ) { delete aggregate; return true; }
-            bound -= weights[i];
-            continue;
-        }
+        assert(lits[i].getVariable() <= solver.numberOfVariables());
+        assert(solver.isUndefined(lits[i].getVariable()));
+        assert(!solver.hasBeenEliminated(lits[i].getVariable()));
         aggregate->addLiteral( lits[i], weights[i] );
         solver.setFrozen( lits[i].getVariable() );
         assert_msg( previousWeight >= weights[i], "Literals must be sorted in increasing order" );
-        assert( previousWeight = weights[i] );
+        assert( previousWeight = weights[i] );        
     }
-    assert( aggregate->size() >= 1 );
+    assert( aggregate->size() >= 1 );    
     bool res = solver.addClauseRuntime(aggregateLiteral);
-    if(!res) { ok_ = false; return false; }
-        
+    if(!res) { ok_ = false; return false; }        
+    
     if( !aggregate->updateBound( solver, bound ) ) { delete aggregate; ok_ = false; return false; }
 
     solver.attachAggregate( *aggregate );
