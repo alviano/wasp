@@ -88,10 +88,30 @@ inline int irand( double& seed, int size) { return ( int )( drand( seed ) * size
 void
 MinisatHeuristic::simplifyVariablesAtLevelZero()
 {
+    //This code is to guarantee the compatibility with the previous heuristic of WASP.
+    Vector< Var > tmp;
     for( unsigned int i = 1; i < vars.size(); i++ )
+        tmp.push_back( vars[ i ].var() );
+        
+    for( unsigned int i = 0; i < tmp.size(); )
     {
-        assert_msg( solver.isUndefined( vars[ i ].var() ) || solver.getDecisionLevel( vars[ i ].var() ) == 0, "Variable " << vars[ i ].var() << " has not been inferred at level 0.");        
-        if( solver.isUndefined( i ) )
-            heap.pushNoCheck( i );
+        if( !solver.isUndefined( tmp[ i ] ) )
+        {
+            assert_msg( solver.getDecisionLevel( tmp[ i ] ) == 0, "Variable " << tmp[ i ] << " has not been inferred at level 0.");
+            tmp[ i ] = tmp.back();
+            tmp.pop_back();
+        }
+        else
+        {       
+            heap.pushNoCheck( tmp[ i ] );
+            ++i;
+        }
     }
+    
+//    for( unsigned int i = 1; i < vars.size(); i++ )
+//    {
+//        assert_msg( solver.isUndefined( vars[ i ].var() ) || solver.getDecisionLevel( vars[ i ].var() ) == 0, "Variable " << vars[ i ].var() << " has not been inferred at level 0.");        
+//        if( solver.isUndefined( i ) )
+//            heap.pushNoCheck( i );
+//    }
 }
