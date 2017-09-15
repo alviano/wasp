@@ -226,7 +226,7 @@ class WaspFacade
             return solver.computeCostOfModel(level);
         }
         
-        inline void setAnswerSetNotifier( AnswerSetNotifier* notifier ) { solver.attachAnswerSetNotifier( notifier ); }
+        inline void setAnswerSetListener( AnswerSetListener* listener ) { solver.attachAnswerSetListener( listener ); }
 
     private:
         Solver solver;

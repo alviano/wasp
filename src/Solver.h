@@ -450,7 +450,7 @@ class Solver
         void getChoicesWithoutAssumptions( vector< Literal >& choices );
         inline unsigned int getMaxLevelOfClause( const Clause* clause ) const;
         
-        inline void attachAnswerSetNotifier( AnswerSetNotifier* notifier ) { answerSetNotifier = notifier; }
+        inline void attachAnswerSetListener( AnswerSetListener* listener ) { answerSetListener = listener; }
         
     private:
         inline unsigned int solve_( vector< Literal >& assumptions );
@@ -630,7 +630,7 @@ class Solver
         unsigned int maxNumberOfSeconds;
         
         bool incremental_;
-        AnswerSetNotifier* answerSetNotifier;
+        AnswerSetListener* answerSetListener;
         
         #ifndef NDEBUG
         bool checkStatusBeforePropagation( Var variable )
@@ -677,7 +677,7 @@ Solver::Solver()
     numberOfRestarts( 0 ),
     maxNumberOfSeconds( UINT_MAX ),
     incremental_( false ),
-    answerSetNotifier( NULL )
+    answerSetListener( NULL )
 {
     dependencyGraph = new DependencyGraph( *this );
     satelite = new Satelite( *this );

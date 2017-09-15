@@ -24,7 +24,7 @@
 #include "../AnswerSetNotifier.h"
 class Solver;
 
-class OptimizationProblemUtils : public AnswerSetNotifier
+class OptimizationProblemUtils : public AnswerSetListener
 {
     public:        
         inline OptimizationProblemUtils( Solver& s ) : solver( s ), lb_( 0 ), ub_( UINT64_MAX ), level_( 0 ) {}        

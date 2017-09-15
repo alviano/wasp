@@ -16,15 +16,15 @@
  *
  */
 
-#ifndef ANSWERSETNOTIFIER_H
-#define	ANSWERSETNOTIFIER_H
+#ifndef ANSWERSETLISTENER_H
+#define	ANSWERSETLISTENER_H
 
-class AnswerSetNotifier
+class AnswerSetListener
 {
     
     public:
         virtual void foundAnswerSet() = 0;
-        virtual ~AnswerSetNotifier() {}
+        virtual ~AnswerSetListener() {}
 };
 
 #endif
