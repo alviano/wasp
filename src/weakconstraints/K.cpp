@@ -57,8 +57,7 @@ K::runUnweighted()
         
     statistics( &solver, enable() );
     statistics( &solver, endSolving() );
-    uint64_t cost = solver.computeCostOfModel( level() );
-    foundAnswerSet( cost );
+    foundAnswerSet();
     assert_msg( lb() == ub(), lb() << " != " << ub() );
     return OPTIMUM_FOUND;
 }
@@ -82,8 +81,7 @@ K::runWeighted()
     {
         if( solver.solve( assumptions ) != INCOHERENT )
         {
-            uint64_t cost = solver.computeCostOfModel( level() );
-            foundAnswerSet( cost );
+            foundAnswerSet();
             solver.unrollToZero();
             solver.clearConflictStatus();
             if( !changeWeight() )
@@ -258,7 +256,7 @@ K::foundUnsat()
 {
     ++numberOfCalls;
     
-    const Clause* core = minimizeUnsatCore();
+    const Clause* core = solver.getUnsatCore();
     assert( core != NULL );
     const Clause& unsatCore = *( core );
     

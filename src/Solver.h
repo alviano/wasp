@@ -45,6 +45,7 @@ using namespace std;
 #include "stl/BoundedQueue.h"
 #include "Component.h"
 #include "CardinalityConstraint.h"
+#include "weakconstraints/OptimizationProblemUtils.h"
 class HCComponent;
 class WeakInterface;
 
@@ -90,7 +91,7 @@ class Solver
         inline void onKill();
         
         inline unsigned int solve();
-        inline unsigned int solve( vector< Literal >& assumptions );
+        inline unsigned int solve( vector< Literal >& assumptions );        
         
         inline void propagate( Var v );
         inline void propagateWithPropagators( Var variable );                
@@ -412,6 +413,9 @@ class Solver
         
         inline void computeUnsatCore();
         inline void minimizeUnsatCore( vector< Literal >& assumptions );
+        inline void shrinkUnsatCore();
+        inline void minimizeUnsatCoreWithProgression();
+        inline void minimizeUnsatCoreWithLinearSearch();
         inline void setMinimizeUnsatCore( bool b ) { minimizeUnsatCore_ = b; }
         inline void setComputeUnsatCores( bool b ) { computeUnsatCores_ = b; }
         inline const Clause* getUnsatCore() const { return unsatCore; }
@@ -447,6 +451,7 @@ class Solver
         inline unsigned int getMaxLevelOfClause( const Clause* clause ) const;
         
     private:
+        inline unsigned int solve_( vector< Literal >& assumptions );
         vector< Literal > choices;
 
         unsigned int solveWithoutPropagators( vector< Literal >& assumptions );
@@ -707,6 +712,16 @@ unsigned int
 Solver::solve(
     vector< Literal >& assumptions )
 {
+    unsigned int result = solve_( assumptions );
+    if( computeUnsatCores_ && result == INCOHERENT )
+        shrinkUnsatCore();
+    return result;
+}
+
+unsigned int
+Solver::solve_(
+    vector< Literal >& assumptions )
+{
     incremental_ = !assumptions.empty();
     numberOfAssumptions = assumptions.size();
     for( unsigned int i = 0; i < assumptions.size(); i++ ) {
@@ -736,12 +751,12 @@ Solver::solve(
         else
         {
             if( minimizeUnsatCore_ )
-                minimizeUnsatCore( assumptions );            
+                minimizeUnsatCore( assumptions );
         }
     }
     clearAfterSolveUnderAssumptions( assumptions );
     clearConflictStatus();
-    return result;    
+    return result; 
 }
 
 void
@@ -2495,6 +2510,118 @@ Solver::minimizeUnsatCore(
     setMaxNumberOfChoices( originalMaxNumberOfChoices );
     setMaxNumberOfRestarts( originalMaxNumberOfRestarts );
     setMaxNumberOfSeconds( originalMaxNumberOfSeconds );
+}
+
+void
+Solver::shrinkUnsatCore()
+{
+    assert( unsatCore != NULL );
+    if( unsatCore->size() <= 1 )
+        return;
+    
+    switch( wasp::Options::minimizationStrategy )
+    {
+        case MINIMIZATION_PROGRESSION:
+            minimizeUnsatCoreWithProgression();
+            return;
+            
+        case MINIMIZATION_LINEARSEARCH:
+            minimizeUnsatCoreWithLinearSearch();
+            return;
+    }
+}
+
+void
+Solver::minimizeUnsatCoreWithProgression()
+{
+    Clause* originalCore = new Clause();
+    originalCore->copyLiterals( *unsatCore );    
+    
+    unsigned int max = 1;    
+    unsigned int otherMax = 1;
+    begin:;
+    vector< Literal > assumptions;    
+    unrollToZero();
+    clearConflictStatus();
+    for( unsigned int i = 0; i < max && i < originalCore->size(); i++ )
+    {
+        Literal lit = originalCore->getAt( i );
+        if( !getDataStructure( lit ).isOptLit() )
+            continue;
+
+        Literal toAdd = lit.getOppositeLiteral();
+        assumptions.push_back( toAdd );
+    }
+
+    setMaxNumberOfSeconds( wasp::Options::minimizationBudget );
+    unsigned int result = solve_( assumptions );
+    setMaxNumberOfSeconds( UINT_MAX );
+    if( result == INCOHERENT )
+    {
+        unrollToZero();
+        clearConflictStatus();
+        delete originalCore;
+        return;
+    }
+    else if( result == COHERENT )
+    {        
+        OptimizationProblemUtils::foundAnswerSet( *this );
+    }
+    if( max + otherMax > originalCore->size() )
+        otherMax = 1;
+    max += otherMax;
+    otherMax = otherMax * 2;
+    if( max >= originalCore->size() ) {
+        delete unsatCore;
+        unsatCore = originalCore;
+        return;
+    }
+    goto begin;
+}
+
+void
+Solver::minimizeUnsatCoreWithLinearSearch()
+{
+    Clause* originalCore = new Clause();
+    originalCore->copyLiterals( *unsatCore );    
+    
+    unsigned int max = 1;    
+    begin:;
+    vector< Literal > assumptions;    
+    unrollToZero();
+    clearConflictStatus();
+    for( unsigned int i = 0; i < max && i < originalCore->size(); i++ )
+    {
+        Literal lit = originalCore->getAt( i );
+        if( !getDataStructure( lit ).isOptLit() )
+            continue;
+
+        Literal toAdd = lit.getOppositeLiteral();
+        assumptions.push_back( toAdd );
+    }
+
+    setMaxNumberOfSeconds( wasp::Options::minimizationBudget );
+    unsigned int result = solve_( assumptions );
+    setMaxNumberOfSeconds( UINT_MAX );
+    if( result == INCOHERENT )
+    {
+        unrollToZero();
+        clearConflictStatus();
+        delete originalCore;
+        return;
+    }
+    else if( result == COHERENT )
+    {
+        OptimizationProblemUtils::foundAnswerSet( *this );
+    }
+    max++;
+    if( max >= originalCore->size() )
+    {
+        delete unsatCore;
+        unsatCore = originalCore;
+        return;
+    }
+    goto begin;
 }
 
 //Aggregate*

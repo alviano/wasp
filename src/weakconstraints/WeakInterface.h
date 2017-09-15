@@ -26,6 +26,7 @@ using namespace std;
 #include "../util/Assert.h"
 #include "../Literal.h"
 #include "../Solver.h"
+#include "OptimizationProblemUtils.h"
 
 class WeakInterface
 {
@@ -34,8 +35,7 @@ class WeakInterface
         virtual ~WeakInterface() {}
         unsigned int solve();        
         
-        inline void setDisjCoresPreprocessing( bool value ) { disjCoresPreprocessing = value; }
-        inline void setLowerBound( unsigned int value ) { lb_ = value; }        
+        inline void setDisjCoresPreprocessing( bool value ) { disjCoresPreprocessing = value; }               
         inline void setMixedApproach() { mixedApproach = true; }
         
     protected:
@@ -58,10 +58,9 @@ class WeakInterface
         inline void preprocessingWeights();
         inline void computeAssumptionsStratified();
         inline bool changeWeight();
-        bool hardening();
-        const Clause* minimizeUnsatCore();
+        bool hardening();        
         
-        virtual void foundAnswerSet( uint64_t cost );        
+        virtual uint64_t foundAnswerSet() { return OptimizationProblemUtils::foundAnswerSet( solver ); }      
         virtual bool foundUnsat() { return true; }
 
         Solver& solver;
@@ -69,22 +68,18 @@ class WeakInterface
         unsigned int numberOfCalls;
         vector< Literal > assumptions;                
         
-        bool disjCoresPreprocessing;
-        
-        inline static void incrementLb( uint64_t value ) { lb_ += value; }
-        inline static uint64_t lb() { return lb_; }
-        inline static uint64_t ub() { return ub_; }
-        inline static unsigned int level() { return level_; }
-        
+        bool disjCoresPreprocessing;                
         bool mixedApproach;
-
+        
+        inline void incrementLb( uint64_t value ) { OptimizationProblemUtils::incrementLb( value ); }
+        inline uint64_t lb() { return OptimizationProblemUtils::lb(); }
+        inline uint64_t ub() { return OptimizationProblemUtils::ub(); }
+        inline unsigned int level() { return OptimizationProblemUtils::level(); }
+        inline void setLowerBound( unsigned int value ) { OptimizationProblemUtils::setLowerBound( value ); }        
+        
     private:
         vector< uint64_t > weights;        
-        uint64_t weight;        
-        
-        static uint64_t lb_;
-        static uint64_t ub_;
-        static unsigned int level_;        
+        uint64_t weight;                
         
         inline void clearAssumptions() { assumptions.clear(); }
         inline void computeAssumptionsOnlyOriginal( unsigned int originalNumberOfOptLiterals );
@@ -194,7 +189,7 @@ WeakInterface::changeWeight()
             continue;
         
         uint64_t currentWeight = solver.getOptimizationLiteral( level(), i ).weight;
-        if( currentWeight < weight && currentWeight <= ub_ && currentWeight > max )
+        if( currentWeight < weight && currentWeight <= ub() && currentWeight > max )
             max = currentWeight;        
     }
 

@@ -342,6 +342,9 @@ WaspFacade::enumerationBacktracking()
         }
         else
         {
+//            assert( !assums.empty() );
+//            assert_msg( solver.getDecisionLevel( assums.back() ) <= bl, solver.getDecisionLevel( assums.back() ) << " != " << bl );
+            //TO CHECK: probably this is useless code.
             while( !assums.empty() && solver.getDecisionLevel( assums.back() ) > bl )
                 assums.pop_back();
         }
