@@ -216,10 +216,6 @@ WeakInterface::disjointCorePreprocessing()
         unsigned int result = solver.solve( assumptions );
         if( result != INCOHERENT )
         {
-            if( result == COHERENT )
-            {
-                foundAnswerSet();
-            }
             solver.clearConflictStatus();
             solver.unrollToZero();
             assumptions.clear();            
@@ -239,6 +235,7 @@ WeakInterface::disjointCorePreprocessing()
 unsigned int
 WeakInterface::solve()
 {    
+    solver.attachAnswerSetNotifier( utils );
     if( wasp::Options::computeFirstModel )
     {
         solver.setMaxNumberOfSeconds( wasp::Options::budget );
@@ -246,8 +243,6 @@ WeakInterface::solve()
         solver.setMaxNumberOfSeconds( UINT_MAX );
         if( result == INCOHERENT )
             return result;        
-        if( result != INTERRUPTED )
-            foundAnswerSet();
         solver.unrollToZero();
         solver.clearConflictStatus();
     }
@@ -255,9 +250,9 @@ WeakInterface::solve()
     unsigned int res = OPTIMUM_FOUND;
     for( int i = solver.numberOfLevels() - 1; i >= 0; i-- )
     {
-        OptimizationProblemUtils::setLevel( i );
-        OptimizationProblemUtils::setLowerBound( solver.simplifyOptimizationLiterals( level() ) );
-        OptimizationProblemUtils::setUpperBound( UINT64_MAX );
+        utils->setLevel( i );
+        utils->setLowerBound( solver.simplifyOptimizationLiterals( level() ) );
+        utils->setUpperBound( UINT64_MAX );
         trace_msg( weakconstraints, 1, "Solving level " << level() << ": lb=" << lb() << ", ub=" << ub() );                
         
         res = run();

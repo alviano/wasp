@@ -450,6 +450,8 @@ class Solver
         void getChoicesWithoutAssumptions( vector< Literal >& choices );
         inline unsigned int getMaxLevelOfClause( const Clause* clause ) const;
         
+        inline void attachAnswerSetNotifier( AnswerSetNotifier* notifier ) { answerSetNotifier = notifier; }
+        
     private:
         inline unsigned int solve_( vector< Literal >& assumptions );
         vector< Literal > choices;
@@ -628,6 +630,7 @@ class Solver
         unsigned int maxNumberOfSeconds;
         
         bool incremental_;
+        AnswerSetNotifier* answerSetNotifier;
         
         #ifndef NDEBUG
         bool checkStatusBeforePropagation( Var variable )
@@ -673,7 +676,8 @@ Solver::Solver()
     maxNumberOfRestarts( UINT_MAX ),
     numberOfRestarts( 0 ),
     maxNumberOfSeconds( UINT_MAX ),
-    incremental_( false )
+    incremental_( false ),
+    answerSetNotifier( NULL )
 {
     dependencyGraph = new DependencyGraph( *this );
     satelite = new Satelite( *this );
@@ -684,7 +688,7 @@ Solver::Solver()
     variableDataStructures.push_back( NULL );
     variableDataStructures.push_back( NULL );
     fromLevelToPropagators.push_back( 0 );
-    choices.push_back( Literal::null );    
+    choices.push_back( Literal::null );
     if( wasp::Options::heuristicPartialChecks )
         wasp::Options::forwardPartialChecks = true;
 }
@@ -2563,10 +2567,7 @@ Solver::minimizeUnsatCoreWithProgression()
         delete originalCore;
         return;
     }
-    else if( result == COHERENT )
-    {        
-        OptimizationProblemUtils::foundAnswerSet( *this );
-    }
+    
     if( max + otherMax > originalCore->size() )
         otherMax = 1;
     max += otherMax;
@@ -2610,10 +2611,7 @@ Solver::minimizeUnsatCoreWithLinearSearch()
         delete originalCore;
         return;
     }
-    else if( result == COHERENT )
-    {
-        OptimizationProblemUtils::foundAnswerSet( *this );
-    }
+    
     max++;
     if( max >= originalCore->size() )
     {

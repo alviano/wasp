@@ -129,8 +129,7 @@ bool
 Opt::foundModel()
 {
     numberOfModels++;
-    uint64_t modelCost = foundAnswerSet();
-    assert( modelCost < ub() );    
+    uint64_t modelCost = solver.computeCostOfModel( level() );
     
     trace_msg( weakconstraints, 2, "Decision level of solver: " << solver.getCurrentDecisionLevel() );
     if( modelCost == 0 )
@@ -178,7 +177,7 @@ Opt::basic()
     while( solver.solve( assumptions ) == COHERENT )
     {
         numberOfModels++;
-        uint64_t modelCost = foundAnswerSet();
+        uint64_t modelCost = solver.computeCostOfModel( level() );
 //        solver.printOptimizationValue( modelCost );
         trace_msg( weakconstraints, 2, "Decision level of solver: " << solver.getCurrentDecisionLevel() );
         if( modelCost == 0 || solver.getCurrentDecisionLevel() == 0 )

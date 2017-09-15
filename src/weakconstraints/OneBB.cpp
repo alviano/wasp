@@ -74,7 +74,7 @@ OneBB::bb()
     while( res == COHERENT )
     {
         numberOfModels++;
-        uint64_t modelCost = foundAnswerSet();
+        uint64_t modelCost = solver.computeCostOfModel( level() );
         trace_msg( weakconstraints, 2, "Decision level of solver: " << solver.getCurrentDecisionLevel() );
         if( ub() == lb() || ub() == 0 || solver.getCurrentDecisionLevel() == 0 )
             break;
@@ -118,7 +118,6 @@ OneBB::one()
     
     if( res == INTERRUPTED )
         return res;
-    foundAnswerSet();
     assert_msg( lb() == ub(), lb() << " != " << ub() );
     numberOfModels++;
     return OPTIMUM_FOUND;    

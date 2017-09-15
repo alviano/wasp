@@ -27,8 +27,7 @@ Mgd::run()
     while( solver.solve( assumptions ) == COHERENT )
     {
         numberOfModels++;
-        foundAnswerSet();
-
+        
         assert( ub() >= solver.getPrecomputedCost( level() ) );
         uint64_t modelCost = ub() - solver.getPrecomputedCost( level() );
         if( modelCost == 0 || solver.getCurrentDecisionLevel() == 0 )

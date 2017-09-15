@@ -213,7 +213,20 @@ class WaspFacade
         inline void setDisjCoresPreprocessing( bool value ) { disjCoresPreprocessing = value; }
         inline void setMinimizeUnsatCore( bool value ) { solver.setMinimizeUnsatCore( value ); }        
         
-        inline void setQueryAlgorithm( unsigned int value ) { queryAlgorithm = value; }                               
+        inline void setQueryAlgorithm( unsigned int value ) { queryAlgorithm = value; }   
+        
+        
+        /**
+         * Return the cost of the answer set for a specific level
+         * @param level
+         * @return UINT64_MAX if the program is known to be incoherent or if the interpretation is partial.
+         */
+        inline uint64_t computeCostOfAnswerSet( unsigned int level ) {
+            if(solver.conflictDetected() || solver.hasUndefinedLiterals()) return UINT64_MAX;
+            return solver.computeCostOfModel(level);
+        }
+        
+        inline void setAnswerSetNotifier( AnswerSetNotifier* notifier ) { solver.attachAnswerSetNotifier( notifier ); }
 
     private:
         Solver solver;

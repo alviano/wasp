@@ -44,12 +44,8 @@ PMRes::runUnweighted()
         assumptions.clear();
         computeAssumptions();
     }
-
-    #ifndef NDEBUG
-    uint64_t cost =
-    #endif
-    foundAnswerSet();    
-    assert_msg( lb() == cost, lb() << " != " << cost );    
+      
+    assert_msg( lb() == ub(), lb() << " != " << ub() );    
     return OPTIMUM_FOUND;
 }
 
@@ -72,7 +68,6 @@ PMRes::runWeighted()
     {
         if( solver.solve( assumptions ) != INCOHERENT )
         {
-            foundAnswerSet();
             solver.unrollToZero();
             solver.clearConflictStatus();
             if( !changeWeight() )

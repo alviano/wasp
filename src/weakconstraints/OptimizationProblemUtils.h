@@ -21,25 +21,29 @@
 
 #include <climits>
 #include <cstdint>
+#include "../AnswerSetNotifier.h"
 class Solver;
 
-class OptimizationProblemUtils
+class OptimizationProblemUtils : public AnswerSetNotifier
 {
-    public:
-        inline static void incrementLb( uint64_t value ) { lb_ += value; }
-        inline static uint64_t lb() { return lb_; }
-        inline static uint64_t ub() { return ub_; }
-        inline static unsigned int level() { return level_; }
-        inline static void setLowerBound( uint64_t value ) { lb_ = value; }
-        inline static void setUpperBound( uint64_t value ) { ub_ = value; }
-        inline static void setLevel( unsigned int value ) { level_ = value; }
-        inline static void initLevel( unsigned int value ) { level_ = value; lb_ = 0; ub_ = UINT64_MAX; }
-        static uint64_t foundAnswerSet( Solver& solver );
+    public:        
+        inline OptimizationProblemUtils( Solver& s ) : solver( s ), lb_( 0 ), ub_( UINT64_MAX ), level_( 0 ) {}        
+        inline void incrementLb( uint64_t value ) { lb_ += value; }
+        inline uint64_t lb() { return lb_; }
+        inline uint64_t ub() { return ub_; }
+        inline unsigned int level() { return level_; }
+        inline void setLowerBound( uint64_t value ) { lb_ = value; }
+        inline void setUpperBound( uint64_t value ) { ub_ = value; }
+        inline void setLevel( unsigned int value ) { level_ = value; }
+        inline void initLevel( unsigned int value ) { level_ = value; lb_ = 0; ub_ = UINT64_MAX; }
+        
+        virtual void foundAnswerSet();
 
     private:
-        static uint64_t lb_;
-        static uint64_t ub_;
-        static unsigned int level_;
+        Solver& solver;
+        uint64_t lb_;
+        uint64_t ub_;
+        unsigned int level_;        
 };
 
 #endif

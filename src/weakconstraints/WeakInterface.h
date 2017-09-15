@@ -31,8 +31,11 @@ using namespace std;
 class WeakInterface
 {
     public:
-        WeakInterface( Solver& s ) : solver( s ), numberOfCalls( 0 ), disjCoresPreprocessing( false ), mixedApproach( false ), weight( UINT64_MAX ) {}
-        virtual ~WeakInterface() {}
+        WeakInterface( Solver& s ) : solver( s ), numberOfCalls( 0 ), disjCoresPreprocessing( false ), mixedApproach( false ), weight( UINT64_MAX ) 
+        {
+            utils = new OptimizationProblemUtils( s );
+        }
+        virtual ~WeakInterface() { delete utils; }
         unsigned int solve();        
         
         inline void setDisjCoresPreprocessing( bool value ) { disjCoresPreprocessing = value; }               
@@ -60,7 +63,6 @@ class WeakInterface
         inline bool changeWeight();
         bool hardening();        
         
-        virtual uint64_t foundAnswerSet() { return OptimizationProblemUtils::foundAnswerSet( solver ); }      
         virtual bool foundUnsat() { return true; }
 
         Solver& solver;
@@ -71,11 +73,11 @@ class WeakInterface
         bool disjCoresPreprocessing;                
         bool mixedApproach;
         
-        inline void incrementLb( uint64_t value ) { OptimizationProblemUtils::incrementLb( value ); }
-        inline uint64_t lb() { return OptimizationProblemUtils::lb(); }
-        inline uint64_t ub() { return OptimizationProblemUtils::ub(); }
-        inline unsigned int level() { return OptimizationProblemUtils::level(); }
-        inline void setLowerBound( unsigned int value ) { OptimizationProblemUtils::setLowerBound( value ); }        
+        inline void incrementLb( uint64_t value ) { utils->incrementLb( value ); }
+        inline uint64_t lb() { return utils->lb(); }
+        inline uint64_t ub() { return utils->ub(); }
+        inline unsigned int level() { return utils->level(); }
+        inline void setLowerBound( unsigned int value ) { utils->setLowerBound( value ); }        
         
     private:
         vector< uint64_t > weights;        
@@ -85,6 +87,8 @@ class WeakInterface
         inline void computeAssumptionsOnlyOriginal( unsigned int originalNumberOfOptLiterals );
         const Clause* minimizeUnsatCoreWithProgression( const Clause* );        
         const Clause* minimizeUnsatCoreWithLinearSearch( const Clause* );
+        
+        OptimizationProblemUtils* utils;
 };
 
 void

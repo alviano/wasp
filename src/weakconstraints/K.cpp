@@ -57,7 +57,6 @@ K::runUnweighted()
         
     statistics( &solver, enable() );
     statistics( &solver, endSolving() );
-    foundAnswerSet();
     assert_msg( lb() == ub(), lb() << " != " << ub() );
     return OPTIMUM_FOUND;
 }
@@ -81,7 +80,6 @@ K::runWeighted()
     {
         if( solver.solve( assumptions ) != INCOHERENT )
         {
-            foundAnswerSet();
             solver.unrollToZero();
             solver.clearConflictStatus();
             if( !changeWeight() )

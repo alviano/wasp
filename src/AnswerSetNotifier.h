@@ -15,23 +15,16 @@
  *  limitations under the License.
  *
  */
-#include "OptimizationProblemUtils.h"
-#include <climits>
-#include "../Solver.h"
 
-void
-OptimizationProblemUtils::foundAnswerSet()
+#ifndef ANSWERSETNOTIFIER_H
+#define	ANSWERSETNOTIFIER_H
+
+class AnswerSetNotifier
 {
-    uint64_t cost = solver.computeCostOfModel( level_ );
-    trace_msg( weakconstraints, 2, "Found answer set with cost " << cost  << " - upper bound " << ub_ );
-    if( cost >= ub_ )
-        return;
+    
+    public:
+        virtual void foundAnswerSet() = 0;
+        virtual ~AnswerSetNotifier() {}
+};
 
-    ub_ = cost;
-    solver.printAnswerSet();
-    solver.foundUpperBound( ub_ );
-    Vector< uint64_t > costs;
-    solver.computeCostOfModel( costs );
-    solver.printOptimizationValue( costs );
-    return;
-}
+#endif
