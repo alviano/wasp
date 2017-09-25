@@ -21,7 +21,7 @@
 
 #include <climits>
 #include <cstdint>
-#include "../AnswerSetNotifier.h"
+#include "../AnswerSetListener.h"
 class Solver;
 
 class OptimizationProblemUtils : public AnswerSetListener

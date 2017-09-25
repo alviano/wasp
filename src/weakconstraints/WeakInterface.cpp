@@ -235,7 +235,7 @@ WeakInterface::disjointCorePreprocessing()
 unsigned int
 WeakInterface::solve()
 {    
-    solver.attachAnswerSetNotifier( utils );
+    solver.attachAnswerSetListener( utils );
     if( wasp::Options::computeFirstModel )
     {
         solver.setMaxNumberOfSeconds( wasp::Options::budget );
