@@ -51,7 +51,7 @@ Opt::createOptimizationAggregate(
     {
         OptimizationLiteralData& optData = solver.getOptimizationLiteral( level(), i );
         if( optData.isAux() )
-            break;
+            continue;
         literals.push_back( optData.lit );
         weights.push_back( optData.weight );        
     }
@@ -79,7 +79,7 @@ Opt::updateOptimizationAggregate(
     resetSolver();        
     if( aggregate == NULL )
     {
-        trace_msg( weakconstraints, 3, "Optimization aggregate has not been created" );
+        trace_msg( weakconstraints, 3, "Optimization aggregate is null: need to be created" );
         createOptimizationAggregate( modelCost );
         return true;
     }    
@@ -129,8 +129,6 @@ Opt::foundModel()
 {
     numberOfModels++;
     uint64_t modelCost = solver.computeCostOfModel( level() );
-    assert( modelCost < ub() );    
-    foundAnswerSet( modelCost );
     
     trace_msg( weakconstraints, 2, "Decision level of solver: " << solver.getCurrentDecisionLevel() );
     if( modelCost == 0 )
@@ -179,7 +177,6 @@ Opt::basic()
     {
         numberOfModels++;
         uint64_t modelCost = solver.computeCostOfModel( level() );
-        foundAnswerSet( modelCost );        
 //        solver.printOptimizationValue( modelCost );
         trace_msg( weakconstraints, 2, "Decision level of solver: " << solver.getCurrentDecisionLevel() );
         if( modelCost == 0 || solver.getCurrentDecisionLevel() == 0 )

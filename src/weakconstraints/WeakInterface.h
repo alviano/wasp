@@ -26,16 +26,19 @@ using namespace std;
 #include "../util/WaspAssert.h"
 #include "../Literal.h"
 #include "../Solver.h"
+#include "OptimizationProblemUtils.h"
 
 class WeakInterface
 {
     public:
-        WeakInterface( Solver& s ) : solver( s ), numberOfCalls( 0 ), disjCoresPreprocessing( false ), mixedApproach( false ), weight( UINT64_MAX ) {}
-        virtual ~WeakInterface() {}
+        WeakInterface( Solver& s ) : solver( s ), numberOfCalls( 0 ), disjCoresPreprocessing( false ), mixedApproach( false ), weight( UINT64_MAX ) 
+        {
+            utils = new OptimizationProblemUtils( s );
+        }
+        virtual ~WeakInterface() { delete utils; }
         unsigned int solve();        
         
-        inline void setDisjCoresPreprocessing( bool value ) { disjCoresPreprocessing = value; }
-        inline void setLowerBound( unsigned int value ) { lb_ = value; }        
+        inline void setDisjCoresPreprocessing( bool value ) { disjCoresPreprocessing = value; }               
         inline void setMixedApproach() { mixedApproach = true; }
         
     protected:
@@ -58,10 +61,8 @@ class WeakInterface
         inline void preprocessingWeights();
         inline void computeAssumptionsStratified();
         inline bool changeWeight();
-        bool hardening();
-        const Clause* minimizeUnsatCore();
+        bool hardening();        
         
-        virtual void foundAnswerSet( uint64_t cost );        
         virtual bool foundUnsat() { return true; }
 
         Solver& solver;
@@ -69,28 +70,26 @@ class WeakInterface
         unsigned int numberOfCalls;
         vector< Literal > assumptions;                
         
-        bool disjCoresPreprocessing;
-        
-        inline static void incrementLb( uint64_t value ) { lb_ += value; }
-        inline static void setUb( uint64_t value ) { ub_ = value; }
-        inline static uint64_t lb() { return lb_; }
-        inline static uint64_t ub() { return ub_; }
-        inline static unsigned int level() { return level_; }
-        
+        bool disjCoresPreprocessing;                
         bool mixedApproach;
-
+        
+        inline void incrementLb( uint64_t value ) { utils->incrementLb( value ); }
+        inline uint64_t lb() { return utils->lb(); }
+        inline uint64_t ub() { return utils->ub(); }
+        inline unsigned int level() { return utils->level(); }
+        inline void setLowerBound( unsigned int value ) { utils->setLowerBound( value ); }
+        inline void setUpperBound( uint64_t value ) { utils->setUpperBound( value ); }
+        
     private:
         vector< uint64_t > weights;        
-        uint64_t weight;        
-        
-        static uint64_t lb_;
-        static uint64_t ub_;
-        static unsigned int level_;        
+        uint64_t weight;                
         
         inline void clearAssumptions() { assumptions.clear(); }
         inline void computeAssumptionsOnlyOriginal( unsigned int originalNumberOfOptLiterals );
         const Clause* minimizeUnsatCoreWithProgression( const Clause* );        
         const Clause* minimizeUnsatCoreWithLinearSearch( const Clause* );
+        
+        OptimizationProblemUtils* utils;
 };
 
 void
@@ -195,7 +194,7 @@ WeakInterface::changeWeight()
             continue;
         
         uint64_t currentWeight = solver.getOptimizationLiteral( level(), i ).weight;
-        if( currentWeight < weight && currentWeight <= ub_ && currentWeight > max )
+        if( currentWeight < weight && currentWeight <= ub() && currentWeight > max )
             max = currentWeight;        
     }
 

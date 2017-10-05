@@ -44,10 +44,8 @@ PMRes::runUnweighted()
         assumptions.clear();
         computeAssumptions();
     }
-
-    uint64_t cost = solver.computeCostOfModel( level() );
-    foundAnswerSet( cost );    
-    assert_msg( lb() == cost, lb() << " != " << cost );    
+      
+    assert_msg( lb() == ub(), lb() << " != " << ub() );    
     return OPTIMUM_FOUND;
 }
 
@@ -70,8 +68,6 @@ PMRes::runWeighted()
     {
         if( solver.solve( assumptions ) != INCOHERENT )
         {
-            uint64_t cost = solver.computeCostOfModel( level() );
-            foundAnswerSet( cost );
             solver.unrollToZero();
             solver.clearConflictStatus();
             if( !changeWeight() )

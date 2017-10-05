@@ -578,7 +578,7 @@ Learning::analyzeFinal(
     learnedClause->setLearned();
 
     assert( solver.isAssumption( lit.getVariable() ) );
-    learnedClause->addLiteralInLearnedClause( solver.createFromAssignedVariable( lit.getVariable() ) );
+    learnedClause->addLiteralInLearnedClause( lit );
     if( solver.getCurrentDecisionLevel() == 0 )
     {
         trace_msg( weakconstraints, 2, "Conflict at level 0. Unsat core " << *learnedClause );
@@ -614,7 +614,12 @@ Learning::analyzeFinal(
             assert( solver.isAssumption( nextVar ) );
             assert( solver.getDecisionLevel( nextVar ) > 0 );
             trace_msg( weakconstraints, 4, "it was a choice: added" );
-            learnedClause->addLiteralInLearnedClause( next );
+            if( solver.isAssumption( next ) )
+                learnedClause->addLiteralInLearnedClause( next );
+            else {
+                assert( solver.isAssumption( next.getOppositeLiteral() ) );
+                learnedClause->addLiteralInLearnedClause( next.getOppositeLiteral() );
+            }
         }
         else
         {

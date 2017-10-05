@@ -9,15 +9,16 @@
 
 LazyInstantiation::LazyInstantiation(
     Solver& s,
-    ExternalPropagator* ext) : One( s ), externalPropagator( ext )
+    ExternalPropagator* ext ) : One( s ), externalPropagator( ext )
 {
     if( solver.numberOfLevels() > 1 )
         WaspErrorMessage::errorDuringParsing( "Lazy weak constraints cannot be combined with multi-level weak constraints" );
     
     if( solver.numberOfLevels() == 0 )
         solver.setLevels( 1 );
+    
+    solver.attachAnswerSetListener( this );
 }
-
 
 unsigned int
 LazyInstantiation::run()
@@ -72,7 +73,7 @@ LazyInstantiation::handleAnswerSet()
     if( cost < ub() )
     {
         solver.printAnswerSet();
-        setUb( cost );
+        setUpperBound( cost );
         solver.foundUpperBound( cost );
         Vector< uint64_t > costs;
         costs.push_back( cost );

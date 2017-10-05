@@ -20,6 +20,7 @@
 #define	WASP_QUERYINTERFACE_H
 
 #include "stl/Vector.h"
+#include "Literal.h"
 
 class Clause;
 class Solver;
@@ -39,6 +40,11 @@ class QueryInterface
         void overestimateReduction();
         void chunkDynamicAlgorithm( unsigned int chunkSize );
         void chunkStaticAlgorithm( unsigned int chunkSize );
+        void coreBasedAlgorithm( unsigned int chunkSize );
+        void preferenceAlgorithm();
+        
+        void reset( vector< Literal >& assumptions );
+        void processCore( unsigned int numberOfCalls, vector< unsigned int >& inUnsatCore );
         
         void computeCandidates();
         void reduceCandidates();

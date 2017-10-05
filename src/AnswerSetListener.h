@@ -16,29 +16,15 @@
  *
  */
 
-#ifndef WASP_LAZYINSTANTIATION_H
-#define	WASP_LAZYINSTANTIATION_H
+#ifndef ANSWERSETLISTENER_H
+#define	ANSWERSETLISTENER_H
 
-#include "WeakInterface.h"
-#include "One.h"
-#include "../AnswerSetListener.h"
-using namespace std;
-
-class Solver;
-
-class LazyInstantiation : public One, public AnswerSetListener
+class AnswerSetListener
 {
+    
     public:
-        LazyInstantiation( Solver& s, ExternalPropagator* ext );
-        virtual ~LazyInstantiation() {}
-        
-        virtual void foundAnswerSet() {}
-        unsigned int run();
-    private:
-        inline LazyInstantiation( const LazyInstantiation& );
-        ExternalPropagator* externalPropagator;
-        bool handleAnswerSet();        
+        virtual void foundAnswerSet() = 0;
+        virtual ~AnswerSetListener() {}
 };
 
 #endif
-

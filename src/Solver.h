@@ -49,6 +49,7 @@ using namespace std;
 #include "propagators/ExternalPropagator.h"
 #include "propagators/CardinalityConstraint.h"
 #include "propagators/LazyInstantiator.h"
+#include "weakconstraints/OptimizationProblemUtils.h"
 
 class HCComponent;
 class WeakInterface;
@@ -95,7 +96,7 @@ class Solver
         inline void onKill();
         
         inline unsigned int solve();
-        inline unsigned int solve( vector< Literal >& assumptions );
+        inline unsigned int solve( vector< Literal >& assumptions );        
         
         inline void propagate( Var v );
         inline void propagateWithPropagators( Var variable );                
@@ -168,7 +169,7 @@ class Solver
         inline void clearConflictStatus();
         inline bool performAssumptions( vector< Literal >& assumptions );
         inline bool chooseLiteral( vector< Literal >& assumptions );
-        inline bool conflictDetected();
+        inline bool conflictDetected() const;
         inline void foundIncoherence();
         inline bool hasUndefinedLiterals();
         inline void printAnswerSet();
@@ -283,6 +284,7 @@ class Solver
 //        inline void setNumberOfOptimizationLevels( unsigned int n ) { numberOfOptimizationLevels = n; }        
         inline void addPreferredChoicesFromOptimizationLiterals( unsigned int level );
         inline void removePrefChoices() { choiceHeuristic->removePrefChoices(); }
+        inline void addPrefChoices( const vector<Literal>& lits ) { for(unsigned int i = 0; i < lits.size(); i++) choiceHeuristic->addPreferredChoice(lits[i]); }
         
         inline bool isTrue( Var v ) const { return variables.isTrue( v ); }
         inline bool isFalse( Var v ) const { return variables.isFalse( v ); }        
@@ -416,11 +418,15 @@ class Solver
         
         void clearAfterSolveUnderAssumptions( const vector< Literal >& assumptions );
         
-        inline void setAssumption( Literal lit, bool isAssumption ) { variables.setAssumption( lit.getVariable(), isAssumption ); }
+        inline void setAssumption( Literal lit, bool isAssumption ) { variables.setAssumption( lit, isAssumption ); }
+        inline bool isAssumption( Literal lit ) const { return variables.isAssumption( lit ); }
         inline bool isAssumption( Var v ) const { return variables.isAssumption( v ); }
         
         inline void computeUnsatCore();
         inline void minimizeUnsatCore( vector< Literal >& assumptions );
+        inline void shrinkUnsatCore();
+        inline void minimizeUnsatCoreWithProgression();
+        inline void minimizeUnsatCoreWithLinearSearch();
         inline void setMinimizeUnsatCore( bool b ) { minimizeUnsatCore_ = b; }
         inline void setComputeUnsatCores( bool b ) { computeUnsatCores_ = b; }
         inline const Clause* getUnsatCore() const { return unsatCore; }
@@ -489,7 +495,10 @@ class Solver
         inline void addPropagatorAttachedToPartialChecks( ExternalPropagator* externalPropagator ) { assert( externalPropagator ); propagatorsAttachedToPartialChecks.push_back( externalPropagator ); }
         
         inline ExternalPropagator* getExternalPropagatorForLazyWeakConstraints() const;
+        inline void attachAnswerSetListener( AnswerSetListener* listener ) { answerSetListener = listener; }
+
     private:
+        inline unsigned int solve_( vector< Literal >& assumptions );
         vector< Literal > choices;
 
         unsigned int solveWithoutPropagators( vector< Literal >& assumptions );
@@ -675,6 +684,7 @@ class Solver
         unsigned int maxNumberOfSeconds;
         
         bool incremental_;
+        AnswerSetListener* answerSetListener;
         
         #ifndef NDEBUG
         bool checkStatusBeforePropagation( Var variable )
@@ -730,7 +740,8 @@ Solver::Solver()
     maxNumberOfRestarts( UINT_MAX ),
     numberOfRestarts( 0 ),
     maxNumberOfSeconds( UINT_MAX ),
-    incremental_( false )
+    incremental_( false ),
+    answerSetListener( NULL )
 {
     dependencyGraph = new DependencyGraph( *this );
     satelite = new Satelite( *this );
@@ -742,7 +753,7 @@ Solver::Solver()
     variableDataStructures.push_back( NULL );
     variableDataStructures.push_back( NULL );
     fromLevelToPropagators.push_back( 0 );
-    choices.push_back( Literal::null );    
+    choices.push_back( Literal::null );
     if( wasp::Options::heuristicPartialChecks )
         wasp::Options::forwardPartialChecks = true;
 }
@@ -794,10 +805,34 @@ unsigned int
 Solver::solve(
     vector< Literal >& assumptions )
 {
+    unsigned int result = solve_( assumptions );
+    if( computeUnsatCores_ && result == INCOHERENT )
+        shrinkUnsatCore();
+    return result;
+}
+
+unsigned int
+Solver::solve_(
+    vector< Literal >& assumptions )
+{
     incremental_ = !assumptions.empty();
     numberOfAssumptions = assumptions.size();
-    for( unsigned int i = 0; i < assumptions.size(); i++ )
-        setAssumption( assumptions[ i ], true );
+    for( unsigned int i = 0; i < assumptions.size(); i++ ) {
+        if( isAssumption( assumptions[ i ].getOppositeLiteral() ) ) {
+            delete unsatCore;
+            unsatCore = NULL;
+            if( computeUnsatCores_ ) {
+                unsatCore = new Clause();
+                unsatCore->setLearned();
+                unsatCore->addLiteralInLearnedClause( assumptions[ i ] );
+                unsatCore->addLiteralInLearnedClause( assumptions[ i ].getOppositeLiteral() );
+            }
+            clearAfterSolveUnderAssumptions( assumptions );
+            clearConflictStatus();
+            return INCOHERENT;
+        }
+        setAssumption( assumptions[ i ], true );        
+    }
         
     delete unsatCore;
     unsatCore = NULL;
@@ -809,12 +844,12 @@ Solver::solve(
         else
         {
             if( minimizeUnsatCore_ )
-                minimizeUnsatCore( assumptions );            
+                minimizeUnsatCore( assumptions );
         }
     }
     clearAfterSolveUnderAssumptions( assumptions );
     clearConflictStatus();
-    return result;    
+    return result; 
 }
 
 void
@@ -1278,7 +1313,7 @@ Solver::numberOfLearnedClauses() const
 }
 
 bool
-Solver::conflictDetected()
+Solver::conflictDetected() const
 {
     return conflictLiteral != Literal::null;
 }
@@ -2514,7 +2549,7 @@ Solver::modelIsValidUnderAssumptions(
             if( computeUnsatCores_ )
             {
                 assert( unsatCore == NULL );
-                computeUnsatCore();                
+                computeUnsatCore();
             }
             return false;
         }
@@ -2581,18 +2616,16 @@ Solver::minimizeUnsatCore(
     for( unsigned int i = 0; i < unsatCore->size(); i++ )
     {
         Literal lit = unsatCore->getAt( i );        
-        if( !getDataStructure( lit ).isOptLit() /*&& !getDataStructure( lit.getOppositeLiteral() ).isOptLit()*/ )
-            continue;
-                
-        Literal toAdd = lit.getOppositeLiteral();
+//        if( !getDataStructure( lit.getOppositeLiteral() ).isOptLit() /*&& !getDataStructure( lit.getOppositeLiteral() ).isOptLit()*/ )
+//            continue;
 //        if( getDataStructure( lit ).isOptLit() )            
 //            toAdd = lit.getOppositeLiteral();
 //        else if( getDataStructure( lit.getOppositeLiteral() ).isOptLit() )
 //            toAdd = lit;
 //        else
 //            continue;
-        assumptions.push_back( toAdd );
-        setAssumption( toAdd, true );
+        assumptions.push_back( lit );
+        setAssumption( lit, true );
     }
     numberOfAssumptions = assumptions.size();
     
@@ -2618,6 +2651,112 @@ Solver::minimizeUnsatCore(
     setMaxNumberOfChoices( originalMaxNumberOfChoices );
     setMaxNumberOfRestarts( originalMaxNumberOfRestarts );
     setMaxNumberOfSeconds( originalMaxNumberOfSeconds );
+}
+
+void
+Solver::shrinkUnsatCore()
+{
+    assert( unsatCore != NULL );
+    if( unsatCore->size() <= 1 )
+        return;
+    
+    switch( wasp::Options::minimizationStrategy )
+    {
+        case MINIMIZATION_PROGRESSION:
+            minimizeUnsatCoreWithProgression();
+            return;
+            
+        case MINIMIZATION_LINEARSEARCH:
+            minimizeUnsatCoreWithLinearSearch();
+            return;
+    }
+}
+
+void
+Solver::minimizeUnsatCoreWithProgression()
+{
+    Clause* originalCore = new Clause();
+    originalCore->copyLiterals( *unsatCore );    
+    
+    unsigned int max = 1;    
+    unsigned int otherMax = 1;
+    begin:;
+    vector< Literal > assumptions;    
+    unrollToZero();
+    clearConflictStatus();
+    for( unsigned int i = 0; i < max && i < originalCore->size(); i++ )
+    {
+        Literal lit = originalCore->getAt( i );
+        if( !getDataStructure( lit ).isOptLit() )
+            continue;
+
+        Literal toAdd = lit.getOppositeLiteral();
+        assumptions.push_back( toAdd );
+    }
+
+    setMaxNumberOfSeconds( wasp::Options::minimizationBudget );
+    unsigned int result = solve_( assumptions );
+    setMaxNumberOfSeconds( UINT_MAX );
+    if( result == INCOHERENT )
+    {
+        unrollToZero();
+        clearConflictStatus();
+        delete originalCore;
+        return;
+    }
+    
+    if( max + otherMax > originalCore->size() )
+        otherMax = 1;
+    max += otherMax;
+    otherMax = otherMax * 2;
+    if( max >= originalCore->size() ) {
+        delete unsatCore;
+        unsatCore = originalCore;
+        return;
+    }
+    goto begin;
+}
+
+void
+Solver::minimizeUnsatCoreWithLinearSearch()
+{
+    Clause* originalCore = new Clause();
+    originalCore->copyLiterals( *unsatCore );    
+    
+    unsigned int max = 1;    
+    begin:;
+    vector< Literal > assumptions;    
+    unrollToZero();
+    clearConflictStatus();
+    for( unsigned int i = 0; i < max && i < originalCore->size(); i++ )
+    {
+        Literal lit = originalCore->getAt( i );
+        if( !getDataStructure( lit ).isOptLit() )
+            continue;
+
+        Literal toAdd = lit.getOppositeLiteral();
+        assumptions.push_back( toAdd );
+    }
+
+    setMaxNumberOfSeconds( wasp::Options::minimizationBudget );
+    unsigned int result = solve_( assumptions );
+    setMaxNumberOfSeconds( UINT_MAX );
+    if( result == INCOHERENT )
+    {
+        unrollToZero();
+        clearConflictStatus();
+        delete originalCore;
+        return;
+    }
+    
+    max++;
+    if( max >= originalCore->size() )
+    {
+        delete unsatCore;
+        unsatCore = originalCore;
+        return;
+    }
+    goto begin;
 }
 
 //Aggregate*

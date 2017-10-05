@@ -84,6 +84,7 @@ WaspFacade::solve()
     
     if( solver.preprocessing() )
     {
+        runtime_ = true;
         if( printDimacs )
         {
             solver.printDimacs();
@@ -130,6 +131,7 @@ WaspFacade::solve()
                         solver.clearConflictStatus();
                         if( wasp::Options::printOnlyOptimum )
                             solver.setOutputBuilder( outputBuilder );
+                        solver.setMinimizeUnsatCore(false);
                         enumerateModels();
                         if( wasp::Options::printOnlyOptimum )
                             tmp->print();
@@ -291,6 +293,9 @@ WaspFacade::enumerationBacktracking()
         }
         else
         {
+//            assert( !assums.empty() );
+//            assert_msg( solver.getDecisionLevel( assums.back() ) <= bl, solver.getDecisionLevel( assums.back() ) << " != " << bl );
+            //TO CHECK: probably this is useless code.
             while( !assums.empty() && solver.getDecisionLevel( assums.back() ) > bl )
                 assums.pop_back();
         }
@@ -300,7 +305,7 @@ WaspFacade::enumerationBacktracking()
     
     flipLatestChoice( assums, checked );
     if( assums.empty() )
-        return;        
+        return;
     goto begin;
 }
 
@@ -340,4 +345,130 @@ WaspFacade::foundModel(
     }    
     solver.getChoicesWithoutAssumptions( assums );
     return true;
+}
+
+void merge(int left,int center,int right,vector<Literal>& literals,vector<uint64_t>& weights)
+{
+    Literal* auxLiterals = new Literal[right+1];
+    uint64_t* auxWeights = new uint64_t[right+1];
+
+    int i, j;
+    for(i=center+1; i>left; i--) { auxLiterals[i-1]=literals[i-1]; auxWeights[i-1]=weights[i-1]; }
+    for(j=center; j<right; j++) { auxLiterals[right+center-j]=literals[j+1]; auxWeights[right+center-j]=weights[j+1]; }
+    for( int k = left; k <= right; k++ ) {
+        if(auxWeights[j]>auxWeights[i]) { literals[k]=auxLiterals[j]; weights[k]=auxWeights[j--]; }
+        else { literals[k]=auxLiterals[i]; weights[k]=auxWeights[i++]; }
+    }
+
+    delete [] auxWeights; delete [] auxLiterals;
+}
+
+void mergesort(int left,int right,vector<Literal>& literals,vector<uint64_t>& weights )
+{
+    if( left < right ) {
+        int center = (left+right)/2;
+        mergesort(left,center,literals,weights);
+        mergesort(center+1,right,literals,weights);
+        merge(left,center,right,literals,weights);
+    }
+}
+
+bool
+WaspFacade::addPseudoBooleanConstraint(
+    vector<Literal>& lits,
+    vector<uint64_t>& weights,
+    uint64_t bound)
+{
+    if(solver.conflictDetected() || !ok_) return false;
+    solver.unrollToZero();
+    if(lits.size() != weights.size())
+        WaspErrorMessage::errorGeneric("The size of literals must be equal to the size of weights in pseudoBoolean constraints.");
+
+    uint64_t sumOfWeights = 0;
+    unsigned int j = 0;
+    for(unsigned int i = 0; i < lits.size(); i++) {
+        lits[i]=lits[j];    weights[i]=weights[j];
+        addVariables(lits[i].getVariable());
+        if(solver.hasBeenEliminated(lits[i].getVariable())) WaspErrorMessage::errorGeneric("Trying to add a deleted variable to aggregate.");
+        if(solver.isFalse(lits[i])) continue;
+        if(solver.isTrue(lits[i])) {
+            if(bound <= weights[i]) return true;
+            bound -= weights[i];
+            continue;
+        }
+        if(weights[i] > bound) weights[i] = bound;        
+        sumOfWeights += weights[i];
+        j++;
+    }
+    lits.resize(j);    weights.resize(j);
+    if(sumOfWeights < bound) { ok_ = false; return false; }
+    
+    mergesort(0, lits.size()-1, lits, weights);
+        
+    if(runtime_) solver.addVariableRuntime();
+    else solver.addVariable();
+    Var aggrId = solver.numberOfVariables();
+    solver.setFrozen( aggrId );
+    Aggregate* aggregate = new Aggregate();
+    Literal aggregateLiteral = solver.getLiteral( aggrId );
+    aggregate->addLiteral(aggregateLiteral.getOppositeLiteral(), 0);    
+    #ifndef NDEBUG
+    uint64_t previousWeight = UINT64_MAX;
+    #endif    
+    for( unsigned int i = 0; i < lits.size(); i++ ) {
+        assert(lits[i].getVariable() <= solver.numberOfVariables());
+        assert(solver.isUndefined(lits[i].getVariable()));
+        assert(!solver.hasBeenEliminated(lits[i].getVariable()));
+        aggregate->addLiteral( lits[i], weights[i] );
+        solver.setFrozen( lits[i].getVariable() );
+        assert_msg( previousWeight >= weights[i], "Literals must be sorted in increasing order" );
+        assert( previousWeight = weights[i] );        
+    }
+    assert( aggregate->size() >= 1 );    
+    bool res = solver.addClauseRuntime(aggregateLiteral);
+    if(!res) { ok_ = false; return false; }        
+    
+    if( !aggregate->updateBound( solver, bound ) ) { delete aggregate; ok_ = false; return false; }
+
+    solver.attachAggregate( *aggregate );
+    solver.addAggregate( aggregate );
+    
+    assert( solver.isTrue( aggregateLiteral ) );
+    aggregate->onLiteralFalse( solver, aggregateLiteral.getOppositeLiteral(), 1 );
+    
+    if( solver.conflictDetected() ) { ok_ = false; return false; }        
+    return ok_;
+}
+
+unsigned int
+WaspFacade::solve(const vector<Literal>& assumptions, vector<Literal>& conflict)
+{
+    if(!ok_) { return INCOHERENT; }
+    //First call
+    if(!runtime_) {
+        runtime_ = true;
+        if(!solver.preprocessing()) { ok_ = false; return INCOHERENT; }
+        solver.turnOffSimplifications();
+        solver.setComputeUnsatCores(true);
+    }
+    conflict.clear();
+    solver.unrollToZero();
+    vector<Literal> assumptions_;
+    for(unsigned int i = 0; i < assumptions.size(); i++) {
+        if(solver.hasBeenEliminated(assumptions[i].getVariable())) WaspErrorMessage::errorGeneric("Assumption literal has been eliminated. (Assumptions must be frozen).");
+        assumptions_.push_back(assumptions[i]);
+    }
+    
+    unsigned int res = solver.solve(assumptions_);
+    if( res == INCOHERENT )
+    {
+        assert(solver.getUnsatCore() != NULL);
+        const Clause& core = *solver.getUnsatCore();
+        for( unsigned int i = 0; i < core.size(); i++ )
+            conflict.push_back(core.getAt(i));
+        if(core.size() == 0) ok_ = false;
+        solver.unrollToZero();
+        solver.clearConflictStatus();    
+    }
+    return res;
 }

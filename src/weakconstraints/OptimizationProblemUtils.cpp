@@ -15,30 +15,23 @@
  *  limitations under the License.
  *
  */
+#include "OptimizationProblemUtils.h"
+#include <climits>
+#include "../Solver.h"
 
-#ifndef WASP_LAZYINSTANTIATION_H
-#define	WASP_LAZYINSTANTIATION_H
-
-#include "WeakInterface.h"
-#include "One.h"
-#include "../AnswerSetListener.h"
-using namespace std;
-
-class Solver;
-
-class LazyInstantiation : public One, public AnswerSetListener
+void
+OptimizationProblemUtils::foundAnswerSet()
 {
-    public:
-        LazyInstantiation( Solver& s, ExternalPropagator* ext );
-        virtual ~LazyInstantiation() {}
-        
-        virtual void foundAnswerSet() {}
-        unsigned int run();
-    private:
-        inline LazyInstantiation( const LazyInstantiation& );
-        ExternalPropagator* externalPropagator;
-        bool handleAnswerSet();        
-};
+    uint64_t cost = solver.computeCostOfModel( level_ );
+    trace_msg( weakconstraints, 2, "Found answer set with cost " << cost  << " - upper bound " << ub_ );
+    if( cost >= ub_ )
+        return;
 
-#endif
-
+    ub_ = cost;
+    solver.printAnswerSet();
+    solver.foundUpperBound( ub_ );
+    Vector< uint64_t > costs;
+    solver.computeCostOfModel( costs );
+    solver.printOptimizationValue( costs );
+    return;
+}

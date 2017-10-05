@@ -42,8 +42,8 @@ struct VariableData
     ReasonForBinaryClauses* reasonForBinaryClauses;
     
     unsigned int decisionLevel : 27;
-    unsigned int isAssumptionAND : 1;
-    unsigned int isAssumptionOR : 1;
+    unsigned int isAssumptionPositive : 1;
+    unsigned int isAssumptionNegative : 1;
     unsigned int frozen : 1;
     unsigned int signOfEliminatedVariable : 2;
 };
@@ -138,10 +138,15 @@ class Variables
         inline void setFrozen( Var v ) { variablesData[ v ].frozen = 1; }
         inline void printInterpretation() const;
         
-        inline void setAssumption( Var v, bool isAssumption ) { variablesData[ v ].isAssumptionAND = isAssumption ? 1 : 0; }
-        inline void setAssumptionOR( Var v, bool isAssumption ) { variablesData[ v ].isAssumptionOR = isAssumption ? 1 : 0; }        
-        inline bool isAssumption( Var v ) const { return variablesData[ v ].isAssumptionAND; }
-        inline bool isAssumptionOR( Var v ) const { return variablesData[ v ].isAssumptionOR; }        
+        inline void setAssumption( Literal lit, bool isAssumption ) {
+            Var v = lit.getVariable();
+            if( lit.isPositive() )
+                variablesData[ v ].isAssumptionPositive = isAssumption;
+            else
+                variablesData[ v ].isAssumptionNegative = isAssumption;
+        }
+        inline bool isAssumption( Var v ) const { return variablesData[ v ].isAssumptionPositive || variablesData[ v ].isAssumptionNegative; }   
+        inline bool isAssumption( Literal lit ) const { return lit.isPositive() ? variablesData[ lit.getVariable() ].isAssumptionPositive : variablesData[ lit.getVariable() ].isAssumptionNegative; }
         
     private:
         vector< Var > assignedVariables;
@@ -192,8 +197,8 @@ Variables::push_back()
     vd.component = NULL;
     vd.signOfEliminatedVariable = NOT_ELIMINATED;
     vd.frozen = 0;
-    vd.isAssumptionAND = 0;
-    vd.isAssumptionOR = 0;    
+    vd.isAssumptionPositive = 0;
+    vd.isAssumptionNegative = 0;    
     vd.reasonForBinaryClauses = new ReasonForBinaryClauses( variablesData.size() - 1 );
     
     assigns.push_back( UNDEFINED );

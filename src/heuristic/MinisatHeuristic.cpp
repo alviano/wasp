@@ -25,7 +25,7 @@
 Literal
 MinisatHeuristic::makeAChoiceProtected()
 {
-    trace_msg( heuristic, 1, "Starting MiniSAT heuristic" );
+    trace_msg( heuristic, 1, "Starting MiniSAT heuristic" );    
     chosenVariable = 0;
     //randomChoice();
     
@@ -87,7 +87,7 @@ MinisatHeuristic::simplifyVariablesAtLevelZero()
     {
         if( !solver.isUndefined( vars[ i ] ) )
         {
-            assert_msg( solver.getDecisionLevel( vars[ i ] ) == 0, "Variable " << vars[ i ] << " has not been inferred at level 0.");            
+            assert_msg( solver.getDecisionLevel( vars[ i ] ) == 0, "Variable " << vars[ i ] << " has not been inferred at level 0.");
             vars[ i ] = vars.back();
             vars.pop_back();
         }
