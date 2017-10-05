@@ -21,7 +21,7 @@
 
 #include <iostream>
 using namespace std;
-#include "util/Constants.h"
+#include "util/WaspConstants.h"
 
 #include "Reason.h"
 

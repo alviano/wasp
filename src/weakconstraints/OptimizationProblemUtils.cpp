@@ -15,30 +15,23 @@
  *  limitations under the License.
  *
  */
+#include "OptimizationProblemUtils.h"
+#include <climits>
+#include "../Solver.h"
 
-#ifndef VARIABLENAMES_H
-#define VARIABLENAMES_H
-
-#include <cassert>
-#include <iostream>
-#include <vector>
-#include "WaspConstants.h"
-using namespace std;
-
-class VariableNames
+void
+OptimizationProblemUtils::foundAnswerSet()
 {
-    public:
+    uint64_t cost = solver.computeCostOfModel( level_ );
+    trace_msg( weakconstraints, 2, "Found answer set with cost " << cost  << " - upper bound " << ub_ );
+    if( cost >= ub_ )
+        return;
 
-        static bool isHidden( Var v );
-        static const string& getName( Var v );
-        static void setName( Var v, string name );
-        static void setToBePrinted( Var v );
-        static bool hasToBePrinted( Var v );
-        static void addVariable();
-        
-    private:        
-        static vector< string > variables;
-        static bool toBePrinted;
-};
-
-#endif
+    ub_ = cost;
+    solver.printAnswerSet();
+    solver.foundUpperBound( ub_ );
+    Vector< uint64_t > costs;
+    solver.computeCostOfModel( costs );
+    solver.printOptimizationValue( costs );
+    return;
+}

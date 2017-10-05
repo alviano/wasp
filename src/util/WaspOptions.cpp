@@ -16,7 +16,7 @@
  *
  */
 
-#include "Options.h"
+#include "WaspOptions.h"
 
 #include "ErrorMessage.h"
 #include "Help.h"
@@ -200,6 +200,8 @@ bool Options::oneDefShift = false;
 map< string, SHIFT_STRATEGY > Options::stringToShift;
 
 map< string, unsigned int > Options::stringToMinimization;
+
+map< string, unsigned int > Options::stringToQueryAlgorithms;
 
 bool Options::simplifications = true;
 
@@ -662,20 +664,9 @@ Options::parse(
             case OPTIONID_queryalgorithm:
                 queryAlgorithm = ITERATIVE_COHERENCE_TESTING;
                 if( optarg )
-                {
-                    if( !strcmp( optarg, "or" ) )
-                        queryAlgorithm = OVERESTIMATE_REDUCTION;
-                    else if( !strcmp( optarg, "ict" ) )
-                        queryAlgorithm = ITERATIVE_COHERENCE_TESTING;
-                    else if( !strcmp( optarg, "chunk-static" ) )
-                        queryAlgorithm = CHUNK_STATIC;
-                    else if( !strcmp( optarg, "chunk-dynamic" ) )
-                        queryAlgorithm = CHUNK_DYNAMIC;
-                    else
-                        ErrorMessage::errorGeneric( "Inserted invalid algorithm for query answering." );
-                }
+                    queryAlgorithm = getQueryAlgorithm( optarg );                    
                 else
-                        ErrorMessage::errorGeneric( "Inserted invalid algorithm for query answering." );
+                    ErrorMessage::errorGeneric( "Inserted invalid algorithm for query answering." );
                 break;
                 
             case OPTIONID_queryverbosity:
@@ -805,6 +796,17 @@ Options::getMinimizationStrategy(
 }
 
 unsigned int
+Options::getQueryAlgorithm(
+    const string& s )
+{
+    map< string, unsigned int >::iterator it = stringToQueryAlgorithms.find( s );
+    if( it == stringToQueryAlgorithms.end() )
+        ErrorMessage::errorGeneric( "Inserted invalid strategy for query algorithm." );
+    
+    return it->second; 
+}
+
+unsigned int
 Options::getEnumerationStrategy(
     const string& s )
 {
@@ -845,6 +847,13 @@ Options::initMap()
     stringToPredMinimization[ "guess-check-minimize" ] = PREDMIN_GUESS_AND_CHECK_AND_MINIMIZE;
     stringToPredMinimization[ "guess-check-split" ] = PREDMIN_GUESS_AND_CHECK_AND_SPLIT;
     stringToPredMinimization[ "preferences" ] = PREDMIN_PREFERENCES;
+
+    stringToQueryAlgorithms[ "or" ] = OVERESTIMATE_REDUCTION;
+    stringToQueryAlgorithms[ "ict" ] = ITERATIVE_COHERENCE_TESTING;
+    stringToQueryAlgorithms[ "cb" ] = COREBASED_QUERIES;
+    stringToQueryAlgorithms[ "chunk-static" ] = CHUNK_STATIC;
+    stringToQueryAlgorithms[ "chunk-dynamic" ] = CHUNK_DYNAMIC;
+    stringToQueryAlgorithms[ "preferences" ] = PREFERENCE_QUERIES;
 }
 
 void

@@ -20,9 +20,9 @@
 
 #include "../Solver.h"
 #include "../Clause.h"
-#include "../util/Constants.h"
+#include "../util/WaspConstants.h"
 #include "../util/Trace.h"
-#include "../util/Options.h"
+#include "../util/WaspOptions.h"
 
 #include <cassert>
 #include <sstream>

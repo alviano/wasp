@@ -64,9 +64,9 @@ OneBB::run()
 unsigned int
 OneBB::bb()
 {
-    trace_msg( weakconstraints, 3, "Starting BB" );
+    setTraceLevel( weakconstraints, 10 );
+    trace_msg( weakconstraints, 1, "Starting BB" );
     solver.unrollToZero();
-    solver.clearConflictStatus();
     assumptions.clear();
     addOptimizationLiteralInAssumptions();
     solver.setComputeUnsatCores( false );    
@@ -75,19 +75,18 @@ OneBB::bb()
     {
         numberOfModels++;
         uint64_t modelCost = solver.computeCostOfModel( level() );
-        foundAnswerSet( modelCost );
-        trace_msg( weakconstraints, 4, "Decision level of solver: " << solver.getCurrentDecisionLevel() );
+        trace_msg( weakconstraints, 2, "Decision level of solver: " << solver.getCurrentDecisionLevel() );
         if( ub() == lb() || ub() == 0 || solver.getCurrentDecisionLevel() == 0 )
             break;
         
-        trace_msg( weakconstraints, 4, "Updating bound of optimization aggregate. Model cost: " << ub() );        
+        trace_msg( weakconstraints, 2, "Updating bound of optimization aggregate. Model cost: " << ub() );        
         if( !strategyModelGuided->updateOptimizationAggregate( modelCost ) )
         {
-            trace_msg( weakconstraints, 5, "Failed updating of optimization aggregate: return" );
+            trace_msg( weakconstraints, 3, "Failed updating of optimization aggregate: return" );
             break;        
         }                
         
-        trace_msg( weakconstraints, 4, "Calling solver..." );
+        trace_msg( weakconstraints, 3, "Calling solver..." );
         res = solver.solve( assumptions );
     }
     if( res == INTERRUPTED )
@@ -98,11 +97,9 @@ OneBB::bb()
 unsigned int
 OneBB::one()
 {
-    trace_msg( weakconstraints, 3, "Starting ONE" );
+    trace_msg( weakconstraints, 1, "Starting ONE" );
     solver.unrollToZero();
-    solver.clearConflictStatus();
     assumptions.clear();
-    solver.setComputeUnsatCores( true );
     computeAssumptions();
     
     initInUnsatCore();    
@@ -118,10 +115,9 @@ OneBB::one()
         computeAssumptions();
         res = solver.solve( assumptions ); 
     }
-        
+    
     if( res == INTERRUPTED )
         return res;
-    foundAnswerSet( solver.computeCostOfModel( level() ) );
     assert_msg( lb() == ub(), lb() << " != " << ub() );
     numberOfModels++;
     return OPTIMUM_FOUND;    

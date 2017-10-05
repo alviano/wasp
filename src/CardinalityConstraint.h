@@ -27,7 +27,7 @@
 #include "Learning.h"
 #include "Literal.h"
 #include "stl/Vector.h"
-#include "util/Options.h"
+#include "util/WaspOptions.h"
 #include "util/Trace.h"
 
 class Solver;

@@ -16,13 +16,13 @@
  *
  */
 
-#ifndef OPTIONS_H
-#define OPTIONS_H
+#ifndef WASPOPTIONS_H
+#define WASPOPTIONS_H
 
 #include <vector>
 #include <map>
 #include <set>
-#include "Constants.h"
+#include "WaspConstants.h"
 #include "Trace.h"
 using namespace std;
 
@@ -85,8 +85,6 @@ namespace wasp
             
             static bool compactReasonsForHCC;
             
-        private:
-
             static DELETION_POLICY deletionPolicy;
 
             static unsigned int deletionThreshold;
@@ -120,6 +118,8 @@ namespace wasp
             
             static map< string, unsigned int > stringToMinimization;
             
+            static map< string, unsigned int > stringToQueryAlgorithms;
+            
             static map< string, unsigned int > stringToPredMinimization;
                         
             static WEAK_CONSTRAINTS_ALG getAlgorithm( const string& s );
@@ -130,10 +130,12 @@ namespace wasp
             
             static unsigned int getEnumerationStrategy( const string& s );
             
+            static unsigned int getQueryAlgorithm( const string& s );
+            
             static void initMap();
             
             static void checkOptions();
     };
 }
 
-#endif /* OPTIONS_H */
+#endif

@@ -300,7 +300,13 @@ Solver::solveWithoutPropagators(
     assert_msg( getNumberOfUndefined() == 0, "Found a model with " << getNumberOfUndefined() << " undefined variables." );
     assert_msg( allClausesSatisfied(), "The model found is not correct." );        
     
-    return modelIsValidUnderAssumptions( assumptions ) ? COHERENT : INCOHERENT;
+    if( modelIsValidUnderAssumptions( assumptions ) )
+    {
+        if( answerSetListener )
+            answerSetListener->foundAnswerSet();
+        return COHERENT;
+    }    
+    return INCOHERENT;
 }
 
 unsigned int 
@@ -439,7 +445,13 @@ Solver::solvePropagators(
     assert_msg( getNumberOfUndefined() == 0, "Found a model with " << getNumberOfUndefined() << " undefined variables." );
     assert_msg( allClausesSatisfied(), "The model found is not correct." );
     
-    return modelIsValidUnderAssumptions( assumptions ) ? COHERENT : INCOHERENT;
+    if( modelIsValidUnderAssumptions( assumptions ) )
+    {
+        if( answerSetListener )
+            answerSetListener->foundAnswerSet();
+        return COHERENT;
+    }    
+    return INCOHERENT;
 }
 
 void

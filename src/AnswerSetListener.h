@@ -16,29 +16,15 @@
  *
  */
 
-#ifndef VARIABLENAMES_H
-#define VARIABLENAMES_H
+#ifndef ANSWERSETLISTENER_H
+#define	ANSWERSETLISTENER_H
 
-#include <cassert>
-#include <iostream>
-#include <vector>
-#include "WaspConstants.h"
-using namespace std;
-
-class VariableNames
+class AnswerSetListener
 {
+    
     public:
-
-        static bool isHidden( Var v );
-        static const string& getName( Var v );
-        static void setName( Var v, string name );
-        static void setToBePrinted( Var v );
-        static bool hasToBePrinted( Var v );
-        static void addVariable();
-        
-    private:        
-        static vector< string > variables;
-        static bool toBePrinted;
+        virtual void foundAnswerSet() = 0;
+        virtual ~AnswerSetListener() {}
 };
 
 #endif

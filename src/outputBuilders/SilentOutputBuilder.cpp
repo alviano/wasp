@@ -17,7 +17,7 @@
  */
 
 #include "SilentOutputBuilder.h"
-#include "../util/Options.h"
+#include "../util/WaspOptions.h"
 //void
 //SilentOutputBuilder::onProgramIncoherent()
 //{

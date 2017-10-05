@@ -1,7 +1,7 @@
 #include "UnfoundedBasedCheck.h"
 #include "Solver.h"
 #include "util/Trace.h"
-#include "util/Options.h"
+#include "util/WaspOptions.h"
 #include "input/Rule.h"
 
 UnfoundedBasedCheck::UnfoundedBasedCheck(

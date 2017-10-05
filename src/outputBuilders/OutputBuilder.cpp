@@ -17,7 +17,7 @@
  */
 
 #include "OutputBuilder.h"
-#include "../util/Options.h"
+#include "../util/WaspOptions.h"
 extern int EXIT_CODE;
 
 void
@@ -28,6 +28,7 @@ OutputBuilder::foundModelOptimization(
     for( int i = costs.size() - 1; i >= 0; --i )
         cout << " " << costs[ i ] << WEIGHT_LEVEL_WEAKCONSTRAINT_SEPARATOR << ( i + 1 );
     cout << endl;    
+    EXIT_CODE = 10;
 }
 
 void

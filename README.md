@@ -22,11 +22,15 @@ Other compiling options are also available:
 
 Usage
 ===
-In order to use wasp you need the grounder GRINGO (http://potassco.sourceforge.net/).
+In order to use wasp you need a grounder. You can use either GRINGO (http://potassco.sourceforge.net/) or I-DLV (https://github.com/DeMaCS-UNICAL/I-DLV/wiki).
 
-If gringo has been downloaded just type:
+If the grounder has been downloaded just type:
 ```
 ./gringo filename | ./wasp
+
+or
+
+./i-dlv filename | ./wasp
 ```
 
 Team

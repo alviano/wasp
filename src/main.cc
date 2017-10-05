@@ -18,9 +18,9 @@
 
 #include <cstdlib>
 #include <csignal>
-
+#include <iostream>
 #include "WaspFacade.h"
-#include "util/Options.h"
+#include "util/WaspOptions.h"
 using namespace std;
 
 int EXIT_CODE = 0;
@@ -30,7 +30,8 @@ WaspFacade* waspFacadePointer = NULL;
 void my_handler( int )
 {
     cerr << "Killed: Bye!" << endl;
-    EXIT_CODE = 11;
+    if(EXIT_CODE==0)
+        EXIT_CODE = 1;
     waspFacadePointer->onKill();
     delete waspFacadePointer;
     exit( EXIT_CODE );
@@ -47,7 +48,7 @@ int main( int argc, char** argv )
     signal( SIGTERM, my_handler );
     signal( SIGXCPU, my_handler );
     
-    waspFacade.readInput();
+    waspFacade.readInput( cin );
     waspFacade.solve();
     waspFacade.onFinish();
     delete waspFacadePointer; 

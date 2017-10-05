@@ -1,6 +1,6 @@
 #include "GringoNumericFormat.h"
 
-#include "../util/Constants.h"
+#include "../util/WaspConstants.h"
 #include "../util/ErrorMessage.h"
 #include "../Clause.h"
 #include "../Aggregate.h"
@@ -15,9 +15,9 @@
 using namespace std;
 
 void
-GringoNumericFormat::parse()
+GringoNumericFormat::parse( istream& i )
 {
-    Istream input( cin );
+    Istream input( i );
     this->parse( input );
 }
 

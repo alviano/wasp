@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef CONSTANTS_H
-#define CONSTANTS_H
+#ifndef WASPCONSTANTS_H
+#define WASPCONSTANTS_H
 
 #include <climits>
 //enum TruthValue { UNDEFINED = 0, FALSE = 1, TRUE = 2 };
@@ -61,6 +61,12 @@
 #define ITERATIVE_COHERENCE_TESTING 2
 #define CHUNK_STATIC 3
 #define CHUNK_DYNAMIC 4
+#define COREBASED_QUERIES 5
+#define PREFERENCE_QUERIES 6
+
+#define BUDGET_CHOICES 0
+#define BUDGET_RESTARTS 1
+#define BUDGET_TIME 2
 
 #define NO_PREDMINIMIZATION 0
 #define PREDMIN_GUESS_AND_CHECK 1

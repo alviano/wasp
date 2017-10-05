@@ -26,13 +26,12 @@ Literal
 MinisatHeuristic::makeAChoice()
 {
     trace_msg( heuristic, 1, "Starting MiniSAT heuristic" );
-    if( !preferredChoices.empty() )
+    while( !preferredChoices.empty() )
     {
-        for( unsigned int i = 0; i < preferredChoices.size(); i++ )
-        {
-            if( solver.isUndefined( preferredChoices[ i ].getVariable() ) )
-                return preferredChoices[ i ];
-        }        
+        Literal lit = preferredChoices.top();
+        preferredChoices.pop();
+        if( solver.isUndefined( lit ) )
+            return lit;
     }
     
     chosenVariable = 0;
@@ -89,18 +88,30 @@ inline int irand( double& seed, int size) { return ( int )( drand( seed ) * size
 void
 MinisatHeuristic::simplifyVariablesAtLevelZero()
 {
-    for( unsigned int i = 0; i < vars.size(); )
+    //This code is to guarantee the compatibility with the previous heuristic of WASP.
+    Vector< Var > tmp;
+    for( unsigned int i = 1; i < vars.size(); i++ )
+        tmp.push_back( vars[ i ].var() );
+        
+    for( unsigned int i = 0; i < tmp.size(); )
     {
-        if( !solver.isUndefined( vars[ i ] ) )
+        if( !solver.isUndefined( tmp[ i ] ) )
         {
-            assert_msg( solver.getDecisionLevel( vars[ i ] ) == 0, "Variable " << vars[ i ] << " has not been inferred at level 0.");            
-            vars[ i ] = vars.back();
-            vars.pop_back();
+            assert_msg( solver.getDecisionLevel( tmp[ i ] ) == 0, "Variable " << tmp[ i ] << " has not been inferred at level 0.");
+            tmp[ i ] = tmp.back();
+            tmp.pop_back();
         }
         else
         {       
-            heap.pushNoCheck( vars[ i ] );
+            heap.pushNoCheck( tmp[ i ] );
             ++i;
         }
     }
+    
+//    for( unsigned int i = 1; i < vars.size(); i++ )
+//    {
+//        assert_msg( solver.isUndefined( vars[ i ].var() ) || solver.getDecisionLevel( vars[ i ].var() ) == 0, "Variable " << vars[ i ].var() << " has not been inferred at level 0.");        
+//        if( solver.isUndefined( i ) )
+//            heap.pushNoCheck( i );
+//    }
 }

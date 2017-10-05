@@ -27,7 +27,7 @@
 #include "PostPropagator.h"
 #include "Literal.h"
 #include "GUSData.h"
-#include "util/Options.h"
+#include "util/WaspOptions.h"
 #include "util/Trace.h"
 #include "util/Assert.h"
 

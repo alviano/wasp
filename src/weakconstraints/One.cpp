@@ -57,8 +57,6 @@ One::runUnweighted()
         
     statistics( &solver, enable() );
     statistics( &solver, endSolving() );
-    uint64_t cost = solver.computeCostOfModel( level() );
-    foundAnswerSet( cost );
     assert_msg( lb() == ub(), lb() << " != " << ub() );
     return OPTIMUM_FOUND;
 }
@@ -82,8 +80,6 @@ One::runWeighted()
     {
         if( solver.solve( assumptions ) != INCOHERENT )
         {
-            uint64_t cost = solver.computeCostOfModel( level() );
-            foundAnswerSet( cost );
             solver.unrollToZero();
             solver.clearConflictStatus();
             if( !changeWeight() )
@@ -202,7 +198,7 @@ One::foundUnsat()
 {
     ++numberOfCalls;
     
-    const Clause* core = minimizeUnsatCore();
+    const Clause* core = solver.getUnsatCore();
     assert( core != NULL );
     const Clause& unsatCore = *( core );
     
