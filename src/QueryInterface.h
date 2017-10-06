@@ -21,6 +21,8 @@
 
 #include "stl/Vector.h"
 #include "Literal.h"
+#include <vector>
+using namespace std;
 
 class Clause;
 class Solver;
