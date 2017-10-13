@@ -227,6 +227,7 @@ class WaspFacade
         }
         
         inline void setAnswerSetListener( AnswerSetListener* listener ) { solver.attachAnswerSetListener( listener ); }
+        inline void removeAnswerSetListener() { solver.removeAnswerSetListener(); }
 
     private:
         Solver solver;
