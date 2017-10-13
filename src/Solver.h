@@ -451,6 +451,7 @@ class Solver
         inline unsigned int getMaxLevelOfClause( const Clause* clause ) const;
         
         inline void attachAnswerSetListener( AnswerSetListener* listener ) { answerSetListener = listener; }
+        inline void removeAnswerSetListener() { answerSetListener = NULL; }
         
     private:
         inline unsigned int solve_( vector< Literal >& assumptions );
