@@ -450,8 +450,16 @@ class Solver
         void getChoicesWithoutAssumptions( vector< Literal >& choices );
         inline unsigned int getMaxLevelOfClause( const Clause* clause ) const;
         
-        inline void attachAnswerSetListener( AnswerSetListener* listener ) { answerSetListener = listener; }
-        inline void removeAnswerSetListener() { answerSetListener = NULL; }
+        inline void attachAnswerSetListener( AnswerSetListener* listener ) { assert( listener != NULL ); answerSetListeners.push_back( listener ); }
+        inline void removeAnswerSetListener( AnswerSetListener* listener ) {
+            unsigned int j = 0;
+            for( unsigned int i = 0; i < answerSetListeners.size(); i++ ) {
+                answerSetListeners[ j ] = answerSetListeners[ i ];
+                if( answerSetListeners[ i ] != listener )
+                    j++;
+            }
+            answerSetListeners.resize( j );
+        }
         
     private:
         inline unsigned int solve_( vector< Literal >& assumptions );
@@ -474,6 +482,7 @@ class Solver
             assert( "The copy constructor has been disabled." && 0 );
         }
 
+        inline void notifyAnswerSet();
         unsigned int currentDecisionLevel;
         Variables variables;
         
@@ -631,7 +640,7 @@ class Solver
         unsigned int maxNumberOfSeconds;
         
         bool incremental_;
-        AnswerSetListener* answerSetListener;
+        vector< AnswerSetListener* > answerSetListeners;
         
         #ifndef NDEBUG
         bool checkStatusBeforePropagation( Var variable )
@@ -677,8 +686,7 @@ Solver::Solver()
     maxNumberOfRestarts( UINT_MAX ),
     numberOfRestarts( 0 ),
     maxNumberOfSeconds( UINT_MAX ),
-    incremental_( false ),
-    answerSetListener( NULL )
+    incremental_( false )
 {
     dependencyGraph = new DependencyGraph( *this );
     satelite = new Satelite( *this );
@@ -2711,6 +2719,13 @@ Solver::getMaxLevelOfClause(
 //    for( unsigned int l = 0; l < optimizationLiterals.size(); l++ )
 //        precomputedCost += simplifyOptimizationLiterals( l );    
 //}
+
+void
+Solver::notifyAnswerSet()
+{
+    for( unsigned int i = 0; i < answerSetListeners.size(); i++ )
+        answerSetListeners[ i ]->foundAnswerSet();
+}
 
 #endif
 

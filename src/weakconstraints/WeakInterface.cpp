@@ -268,7 +268,7 @@ WeakInterface::solve()
             return res;
     }
     
-    solver.removeAnswerSetListener();
+    solver.removeAnswerSetListener( utils );
     return res;
 }
 

@@ -302,8 +302,7 @@ Solver::solveWithoutPropagators(
     
     if( modelIsValidUnderAssumptions( assumptions ) )
     {
-        if( answerSetListener )
-            answerSetListener->foundAnswerSet();
+        notifyAnswerSet();
         return COHERENT;
     }    
     return INCOHERENT;
@@ -447,8 +446,7 @@ Solver::solvePropagators(
     
     if( modelIsValidUnderAssumptions( assumptions ) )
     {
-        if( answerSetListener )
-            answerSetListener->foundAnswerSet();
+        notifyAnswerSet();
         return COHERENT;
     }    
     return INCOHERENT;
