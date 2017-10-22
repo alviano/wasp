@@ -16,15 +16,15 @@
  *
  */
 
-#ifndef SATELITE_H
-#define SATELITE_H
+#ifndef WASP_SATELITE_H
+#define WASP_SATELITE_H
 
 #include <iostream>
 #include <queue>
 using namespace std;
 
-#include "util/Assert.h"
-#include "util/Trace.h"
+#include "util/WaspAssert.h"
+#include "util/WaspTrace.h"
 #include "util/WaspOptions.h"
 #include "Clause.h"
 #include "stl/UnorderedSet.h"

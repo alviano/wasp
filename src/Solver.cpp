@@ -18,9 +18,9 @@
 
 #include "Solver.h"
 #include "input/Dimacs.h"
-#include "HCComponent.h"
-#include "ReductBasedCheck.h"
-#include "UnfoundedBasedCheck.h"
+#include "propagators/HCComponent.h"
+#include "propagators/ReductBasedCheck.h"
+#include "propagators/UnfoundedBasedCheck.h"
 #include "weakconstraints/WeakInterface.h"
 #include <algorithm>
 #include <stdint.h>
@@ -70,6 +70,13 @@ Solver::~Solver()
         disjunctionPropagators.pop_back();
     }
     
+    while( !externalPropagators.empty() )
+    {
+        assert( externalPropagators.back() );
+        delete externalPropagators.back();
+        externalPropagators.pop_back();
+    }
+    
     while( !cyclicComponents.empty() )
     {
         delete cyclicComponents.back();
@@ -93,7 +100,7 @@ Solver::~Solver()
         variableDataStructures.pop_back();
     }
     
-    delete minisatHeuristic;
+    delete choiceHeuristic;
     
     for( unsigned int i = 1; i <= variables.numberOfVariables(); i++ )
     {        
@@ -287,7 +294,7 @@ Solver::solveWithoutPropagators(
                     trace_msg( solving, 1, "INCONSISTENT" );
                     return INCOHERENT;
                 }
-                minisatHeuristic->variableDecayActivity();
+                choiceHeuristic->onConflict();
                 assert_msg( hasNextVariableToPropagate() || getCurrentDecisionLevel() == numberOfAssumptions || getCurrentDecisionLevel() == 0, getCurrentDecisionLevel() << " != " << numberOfAssumptions );
             }
         }
@@ -306,6 +313,52 @@ Solver::solveWithoutPropagators(
         return COHERENT;
     }    
     return INCOHERENT;
+}
+
+bool
+Solver::handlePropagatorFailure(
+    ExternalPropagator* propagator )
+{
+    Clause* clausePointer = propagator->getReasonForCheckFailure( *this );
+    if( clausePointer == NULL )
+    {
+        assert( getCurrentDecisionLevel() == 0 );
+        return !conflictDetected();
+    }
+    
+    Clause& clause = *clausePointer;
+    unsigned int size = clause.size();
+    statistics( this, onLearningFromPropagators( size ) );
+    assert( !conflictDetected() );
+    if( size == 0 )
+    {
+        delete clausePointer;
+        return false;
+    }
+    else if( size == 1 )
+    {
+        unrollToZero();
+        assignLiteral( clause[ 0 ] );
+        delete clausePointer;
+    }
+    else
+    {
+        assert( !isUndefined( clause[ 1 ] ) );
+        unsigned int dl = getDecisionLevel( clause[ 1 ] );
+        if( dl < getCurrentDecisionLevel() )
+        {
+            trace( solving, 2, "Learned clause from check failure and backjumping to level %d.\n", dl );
+            unroll( dl );
+        }
+
+        addLearnedClause( clausePointer, false );
+        onLearning( clausePointer );
+
+        assert( !isUndefined( clause[ 1 ] ) );
+        assert( !isTrue( clause[ 0 ] ) );
+        assignLiteral( clausePointer );        
+    }
+    return true;
 }
 
 unsigned int 
@@ -356,12 +409,23 @@ Solver::solvePropagators(
                     trace_msg( solving, 1, "Failure occurs during the computation of the clause" );
                     return INCOHERENT;
                 }
-                minisatHeuristic->variableDecayActivity();
+                choiceHeuristic->onConflict();
                 assert_msg( hasNextVariableToPropagate() || getCurrentDecisionLevel() == numberOfAssumptions || getCurrentDecisionLevel() == 0, getCurrentDecisionLevel() << " != " << numberOfAssumptions );
             }
         }
         
-        postPropagationLabel:;        
+        #if defined(ENABLE_PYTHON) || defined(ENABLE_PERL)
+        for( unsigned int i = 0; i < propagatorsAfterUnit.size(); i++ )
+        {
+            propagatorsAfterUnit[ i ]->endUnitPropagation( *this );
+            if( conflictDetected() )
+                goto conflict;
+            else if( hasNextVariableToPropagate() )
+                goto propagationLabel;
+        }
+        #endif    
+        
+        postPropagationLabel:;
         while( !postPropagators.empty() )
         {
             PostPropagator* postPropagator = postPropagators.back();
@@ -370,12 +434,7 @@ Solver::solvePropagators(
             {
                 
                 assert( !conflictDetected() );
-                assert( !hasNextVariableToPropagate() );
-//                if( conflictDetected() )
-//                    goto conflict;
-//                else if( hasNextVariableToPropagate() )
-//                    goto propagationLabel;
-                
+                assert( !hasNextVariableToPropagate() );                
                 postPropagators.pop_back();
                 postPropagator->onRemoving();
             }
@@ -434,12 +493,48 @@ Solver::solvePropagators(
                 else
                     goto propagationLabel;
             }
+        }                
+        
+        #if defined(ENABLE_PYTHON) || defined(ENABLE_PERL)
+        for( unsigned int i = 0; i < propagatorsAttachedToEndPropagation.size(); i++ )
+        {
+            propagatorsAttachedToEndPropagation[ i ]->endPropagation( *this );
+            if( conflictDetected() )
+                goto conflict;
+            else if( hasNextVariableToPropagate() )
+                goto propagationLabel;
         }
+        #endif
         
         if( !restartIfNecessary() )
             return INCOHERENT;
+
+        #if defined(ENABLE_PYTHON) || defined(ENABLE_PERL)
+        for( unsigned int i = 0; i < propagatorsAttachedToPartialChecks.size(); i++ )
+            if( !propagatorsAttachedToPartialChecks[ i ]->checkPartialInterpretation( *this ) )
+            {
+                if( !handlePropagatorFailure( propagatorsAttachedToPartialChecks[ i ] ) )
+                    return INCOHERENT;
+                if( conflictDetected() )
+                    goto conflict;
+                else
+                    goto propagationLabel;
+            }
+        #endif
     }
     
+    #if defined(ENABLE_PYTHON) || defined(ENABLE_PERL)
+    for( unsigned int i = 0; i < propagatorsAttachedToCheckAnswerSet.size(); i++ )
+        if( !propagatorsAttachedToCheckAnswerSet[ i ]->checkAnswerSet( *this ) )
+        {
+            if( !handlePropagatorFailure( propagatorsAttachedToCheckAnswerSet[ i ] ) )
+                return INCOHERENT;
+            if( conflictDetected() )
+                goto conflict;
+            else
+                goto propagationLabel;
+        }
+    #endif    
     completeModel();
     assert_msg( getNumberOfUndefined() == 0, "Found a model with " << getNumberOfUndefined() << " undefined variables." );
     assert_msg( allClausesSatisfied(), "The model found is not correct." );

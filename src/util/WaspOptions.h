@@ -16,13 +16,13 @@
  *
  */
 
-#ifndef WASPOPTIONS_H
-#define WASPOPTIONS_H
+#ifndef WASP_OPTIONS_H
+#define WASP_OPTIONS_H
 
 #include <vector>
 #include <map>
 #include "WaspConstants.h"
-#include "Trace.h"
+#include "WaspTrace.h"
 using namespace std;
 
 class WaspFacade;
@@ -55,7 +55,11 @@ namespace wasp
             static bool printAtomTable;
             static bool stratification;
             
+            static unsigned int interpreter;
+            static char* heuristic_scriptname;
+            static vector< string > pluginsFilenames;
             static SHIFT_STRATEGY shiftStrategy;
+            static string scriptDirectory;
             
             static bool oneDefShift;
             
@@ -72,6 +76,8 @@ namespace wasp
             static unsigned int silent;
             static bool printOnlyOptimum;
             
+            static bool useLazyWeakConstraints;
+            
             static unsigned int chunkPercentage;
             static unsigned int chunkSize;
             
@@ -80,21 +86,18 @@ namespace wasp
             static bool compactReasonsForHCC;
             
             static DELETION_POLICY deletionPolicy;
-
             static unsigned int deletionThreshold;
             
-            static DECISION_POLICY decisionPolicy;
+            static vector< const char* > inputFiles;            
 
-            static vector< const char* > inputFiles;
-
-            static unsigned int decisionThreshold;
-            
             static unsigned int maxModels;
 
             static OUTPUT_POLICY outputPolicy;
 
             static bool printProgram;
             static bool printDimacs;
+            
+            static bool minisatPolicy;
 
             static RESTARTS_POLICY restartsPolicy;
             
@@ -104,7 +107,24 @@ namespace wasp
             
             static bool disjCoresPreprocessing;
             
-            static bool minimizeUnsatCore;                                                                  
+            static bool minimizeUnsatCore;     
+            
+            static bool callPyFinalize;
+            
+            static double sizeLBDQueue;
+            static double sizeTrailQueue;
+            static double K;
+            static double R;
+            
+            static int nbclausesBeforeReduce;
+            static int incReduceDB;
+            static int specialIncReduceDB;
+            static unsigned int lbLBDFrozenClause;
+            
+            static unsigned int lbLBDMinimizingClause;
+                        
+            static double initVariableIncrement;
+            static double initVariableDecay;
             
             static map< string, WEAK_CONSTRAINTS_ALG > stringToWeak;
             

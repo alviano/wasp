@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef ABSTRACTRULE_H
-#define ABSTRACTRULE_H
+#ifndef WASP_ABSTRACTRULE_H
+#define WASP_ABSTRACTRULE_H
 
 class AbstractRule
 {

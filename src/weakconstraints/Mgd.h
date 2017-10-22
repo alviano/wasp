@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef MGD_H
-#define MGD_H
+#ifndef WASP_MGD_H
+#define WASP_MGD_H
 
 #include "WeakInterface.h"
 

@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef _DEPENDENCYGRAPH_H
-#define _DEPENDENCYGRAPH_H
+#ifndef WASP_DEPENDENCYGRAPH_H
+#define WASP_DEPENDENCYGRAPH_H
 
 #include <vector>
 #include <cassert>

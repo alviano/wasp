@@ -20,7 +20,8 @@
 #include "Clause.h"
 #include "Literal.h"
 #include "Solver.h"
-#include "HCComponent.h"
+#include "propagators/HCComponent.h"
+#include "util/ExtendedStatistics.h"
 
 #include <cassert>
 
@@ -55,7 +56,7 @@ Learning::onConflict(
 
     trace_msg( learning, 2, "Starting First UIP Learning Strategy. Current Level: " << decisionLevel );
     trace_msg( learning, 2, "Conflict literal: " << conflictLiteral << " - Conflict implicant: " << *conflictClause << ( conflictClause->isLearned() ? " (learned)" : " (original)" ) );    
-    
+    estatistics( &solver, onNewConflictLiteral( conflictLiteral ) );
     //Increment heuristic activity
     if( conflictClause->isLearned() ) 
         solver.learnedClauseUsedForConflict( ( Clause* ) conflictClause );
@@ -140,12 +141,11 @@ Learning::onConflict(
                 {
                     Clause* c = ( Clause* ) implicant;
                     if( c->lbd() < lbd )
-                        solver.bumpActivity( v );
+                        solver.onLitInImportantClause( Literal( v, POSITIVE ) );
                 }
             }        
         }
     }
-    
     trace_msg( learning, 1, "Learned Clause: " << *learnedClause );    
     
     return learnedClause;
@@ -191,6 +191,7 @@ Learning::addLiteralInLearnedClause(
             maxPosition = learnedClause->size();
         }
         learnedClause->addLiteralInLearnedClause( literal );
+        estatistics( &solver, onLiteralAddInLearnedClause( literal ) );
     }
 }
 
@@ -201,6 +202,7 @@ Learning::addLiteralToNavigate(
     Var v = literal.getVariable();
     if( !isVisited( v, numberOfCalls ) )
     {
+        estatistics( &solver, onLiteralUsedInConflictResolution( literal ) );
         setVisited( v, numberOfCalls );
         ++pendingVisitedVariables;
     }
@@ -212,7 +214,7 @@ Learning::onNavigatingLiteral(
 {
     assert( literal != Literal::null );    
     assert( solver.getDecisionLevel( literal ) > 0 );    
-    solver.onLiteralInvolvedInConflict( literal );
+    solver.onLitInvolvedInConflict( literal );
  
     if( solver.getDecisionLevel( literal ) == decisionLevel )    
         addLiteralToNavigate( literal );    
@@ -443,7 +445,7 @@ Learning::learnClausesFromDisjunctiveUnfoundedSet(
         simplifyLearnedClause( learnedClause );
 
     if( learnedClause->size() >= 2 )
-        sortClause( learnedClause );
+        Learning::sortClause( learnedClause, solver );
     
     if( solver.glucoseHeuristic() )
         learnedClause->setLbd( solver.computeLBD( *learnedClause ) );
@@ -479,7 +481,8 @@ Learning::computeMaxDecisionLevel(
 
 void
 Learning::sortClause(
-    Clause* clause )
+    Clause* clause,
+    const Solver& solver )
 {
     assert( clause->size() > 1 );
     unsigned int max1 = ( solver.isUndefined( clause->getAt( 0 ) ) ) ? UINT_MAX : solver.getDecisionLevel( clause->getAt( 0 ) );

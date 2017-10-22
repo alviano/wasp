@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef _GUSDATA
-#define _GUSDATA
+#ifndef WASP_GUSDATA
+#define WASP_GUSDATA
 
 #include "Literal.h"
 #include <vector>

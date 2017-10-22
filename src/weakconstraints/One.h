@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef ONE_H
-#define ONE_H
+#ifndef WASP_ONE_H
+#define WASP_ONE_H
 
 #include "WeakInterface.h"
 

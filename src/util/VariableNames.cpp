@@ -17,7 +17,9 @@
  */
 
 #include "VariableNames.h"
-#include "Assert.h"
+#include "WaspAssert.h"
+#include <sstream>
+using namespace std;
 vector< string > VariableNames::variables;
 bool VariableNames::toBePrinted = false;
 
@@ -74,4 +76,10 @@ VariableNames::hasToBePrinted(
     Var v )
 {
     return variables[ v ] == "1";
+}
+
+const vector< string >&
+VariableNames::getVariables()
+{
+    return variables;
 }

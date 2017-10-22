@@ -1,5 +1,5 @@
-#ifndef W_VECTOR_H
-#define W_VECTOR_H
+#ifndef WASP_VECTOR_H
+#define WASP_VECTOR_H
 
 #include <cassert>
 #include <cstdio>

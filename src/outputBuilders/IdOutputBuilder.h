@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef IDOUTPUTBUILDER_H
-#define IDOUTPUTBUILDER_H
+#ifndef WASP_IDOUTPUTBUILDER_H
+#define WASP_IDOUTPUTBUILDER_H
 
 #include "OutputBuilder.h"
 

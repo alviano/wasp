@@ -234,8 +234,10 @@ WeakInterface::disjointCorePreprocessing()
 
 unsigned int
 WeakInterface::solve()
-{    
-    solver.attachAnswerSetListener( utils );
+{   
+    if( !wasp::Options::useLazyWeakConstraints )
+        solver.attachAnswerSetListener( utils );
+        
     if( wasp::Options::computeFirstModel )
     {
         solver.setMaxNumberOfSeconds( wasp::Options::budget );

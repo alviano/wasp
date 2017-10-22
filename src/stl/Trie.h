@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef _TRIE_H
-#define _TRIE_H
+#ifndef WASP_TRIE_H
+#define WASP_TRIE_H
 
 #include <cassert>
 #include <climits>

@@ -28,7 +28,6 @@
 #include "outputBuilders/CompetitionOutputBuilder.h"
 #include "outputBuilders/DimacsOutputBuilder.h"
 
-#include "MinisatHeuristic.h"
 #include "outputBuilders/MultiOutputBuilder.h"
 #include "QueryInterface.h"
 #include "outputBuilders/IdOutputBuilder.h"
@@ -42,9 +41,7 @@ WaspFacade::readInput(
     in >> tmp;
 
     if( !in.good() && !in.eof() )
-    {   
-        ErrorMessage::errorDuringParsing( "Unexpected symbol." );
-    }    
+        WaspErrorMessage::errorDuringParsing( "Unexpected symbol." );
 
     in.putback( tmp );
     switch ( tmp )
@@ -98,18 +95,20 @@ WaspFacade::solve()
             QueryInterface queryInterface( solver );
             queryInterface.computeCautiousConsequences( queryAlgorithm );
             statistics( &solver, endSolving() );
+            estatistics( &solver, endSolving() );
             return;
-        }        
-        
-        if( !solver.isOptimizationProblem() )
+        }
+        solver.onStartingSolver();
+
+        if( !solver.isOptimizationProblem() && !wasp::Options::useLazyWeakConstraints )
         {            
             enumerateModels();
-        }
+        }        
         else
         {
             NoopOutputBuilder* tmp = new NoopOutputBuilder();
             if( wasp::Options::printOnlyOptimum && maxModels > 1 )
-                solver.setOutputBuilder( tmp );            
+                solver.setOutputBuilder( tmp );
             unsigned int result = solveWithWeakConstraints();
             switch( result )
             {
@@ -143,6 +142,7 @@ WaspFacade::solve()
             }
             delete tmp;
             statistics( &solver, endSolving() );
+            estatistics( &solver, endSolving() );
             return;
         }
     }
@@ -153,65 +153,15 @@ WaspFacade::solve()
         solver.foundIncoherence();
     }
     statistics( &solver, endSolving() );
+    estatistics( &solver, endSolving() );
     
 //    solver.printLearnedClauses();
 }
 
 void
-WaspFacade::setDeletionPolicy(
-    DELETION_POLICY deletionPolicy,
-    unsigned int /*deletionThreshold*/ )
+WaspFacade::setMinisatPolicy()
 {
-    switch( deletionPolicy )
-    {
-//        case RESTARTS_BASED_DELETION_POLICY:
-//            heuristic->setDeletionStrategy( new RestartsBasedDeletionStrategy( solver ) );
-//            break;
-//            
-//        case MINISAT_DELETION_POLICY:
-//            heuristic->setDeletionStrategy( new MinisatDeletionStrategy( solver ) );
-//            break;
-//            
-//        case GLUCOSE_DELETION_POLICY:
-//            heuristic->setDeletionStrategy( new GlueBasedDeletionStrategy( solver, deletionThreshold ) );
-//            break;
-//
-//        case AGGRESSIVE_DELETION_POLICY:
-//        default:
-//            heuristic->setDeletionStrategy( new AggressiveDeletionStrategy( solver ) );
-//            break;
-    }
-}
-
-void
-WaspFacade::setDecisionPolicy(
-    DECISION_POLICY decisionPolicy,
-    unsigned int /*threshold*/ )
-{
-    switch( decisionPolicy )
-    {
-//        case HEURISTIC_BERKMIN:
-//            assert( threshold > 0 );
-//            heuristic->setDecisionStrategy( new BerkminHeuristic( solver, threshold ) );
-//            break;
-//            
-//        case HEURISTIC_BERKMIN_CACHE:
-//            assert( threshold > 0 );
-//            heuristic->setDecisionStrategy( new BerkminHeuristicWithCache( solver, threshold ) );            
-//            break;
-//        
-//        case HEURISTIC_FIRST_UNDEFINED:
-//            heuristic->setDecisionStrategy( new FirstUndefinedHeuristic( solver ) );
-//            break;
-//            
-        case HEURISTIC_MINISAT:
-            solver.setMinisatHeuristic();
-            break;
-//    
-//        default:
-//            heuristic->setDecisionStrategy( new BerkminHeuristic( solver, 512 ) );
-//            break;
-    }
+    solver.setMinisatHeuristic();
 }
 
 void
@@ -431,14 +381,14 @@ WaspFacade::addPseudoBooleanConstraint(
     if(solver.conflictDetected() || !ok_) return false;
     solver.unrollToZero();
     if(lits.size() != weights.size())
-        ErrorMessage::errorGeneric("The size of literals must be equal to the size of weights in pseudoBoolean constraints.");
+        WaspErrorMessage::errorGeneric("The size of literals must be equal to the size of weights in pseudoBoolean constraints.");
 
     uint64_t sumOfWeights = 0;
     unsigned int j = 0;
     for(unsigned int i = 0; i < lits.size(); i++) {
         lits[i]=lits[j];    weights[i]=weights[j];
         addVariables(lits[i].getVariable());
-        if(solver.hasBeenEliminated(lits[i].getVariable())) ErrorMessage::errorGeneric("Trying to add a deleted variable to aggregate.");
+        if(solver.hasBeenEliminated(lits[i].getVariable())) WaspErrorMessage::errorGeneric("Trying to add a deleted variable to aggregate.");
         if(solver.isFalse(lits[i])) continue;
         if(solver.isTrue(lits[i])) {
             if(bound <= weights[i]) return true;
@@ -504,7 +454,7 @@ WaspFacade::solve(const vector<Literal>& assumptions, vector<Literal>& conflict)
     solver.unrollToZero();
     vector<Literal> assumptions_;
     for(unsigned int i = 0; i < assumptions.size(); i++) {
-        if(solver.hasBeenEliminated(assumptions[i].getVariable())) ErrorMessage::errorGeneric("Assumption literal has been eliminated. (Assumptions must be frozen).");
+        if(solver.hasBeenEliminated(assumptions[i].getVariable())) WaspErrorMessage::errorGeneric("Assumption literal has been eliminated. (Assumptions must be frozen).");
         assumptions_.push_back(assumptions[i]);
     }
     

@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef REASONFORBINARYCLAUSES_H
-#define REASONFORBINARYCLAUSES_H
+#ifndef WASP_REASONFORBINARYCLAUSES_H
+#define WASP_REASONFORBINARYCLAUSES_H
 
 #include <iostream>
 using namespace std;

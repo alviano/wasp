@@ -25,11 +25,11 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
  * 
  */
 
-#ifndef HEAP_H
-#define HEAP_H
+#ifndef WASP_HEAP_H
+#define WASP_HEAP_H
 
 #include "Vector.h"
-#include "../util/Assert.h"
+#include "../util/WaspAssert.h"
 #include <iostream>
 using namespace std;
 

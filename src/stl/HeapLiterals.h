@@ -29,7 +29,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #define HEAPLITERALS_H
 
 #include "Vector.h"
-#include "../util/Assert.h"
+#include "../util/WaspAssert.h"
 #include <iostream>
 #include "../Literal.h"
 using namespace std;

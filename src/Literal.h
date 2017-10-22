@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef LITERAL_H
-#define LITERAL_H
+#ifndef WASP_LITERAL_H
+#define WASP_LITERAL_H
 
 #include <cstdint>
 #include <cassert>
@@ -34,7 +34,15 @@ class Literal
         static const Literal null;
         static const Literal conflict;
 
-        inline explicit Literal( Var v = 0, unsigned int sign = POSITIVE );        
+        inline explicit Literal( Var v = 0, unsigned int sign = POSITIVE );
+        
+        static Literal createLiteralFromInt( int lit )
+        {
+            assert( lit != 0 );
+            if( lit > 0 ) { Literal l( lit, POSITIVE ); return l; }
+            else { Literal l( -lit, NEGATIVE ); return l; } 
+        }
+        
         inline ~Literal() {}
 
         inline int getId() const { return isPositive() ? getVariable() : -getVariable(); }

@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef LEARNING_H
-#define LEARNING_H
+#ifndef WASP_LEARNING_H
+#define WASP_LEARNING_H
 
 #include <cassert>
 #include <iostream>
@@ -51,6 +51,8 @@ class Learning
         bool isVisited( Var v, unsigned int value ) const { assert( v < visited.size() ); return visited[ v ] == value; }
         void setVisited( Var v, unsigned int value ) { assert( v < visited.size() ); visited[ v ] = value; }        
         Clause* analyzeFinal( Literal lit );
+        
+        static void sortClause( Clause* clause, const Solver& solver );
         
     private:
     
@@ -88,16 +90,14 @@ class Learning
          * This method computes the next literal to navigate in the implication graph.
          * The most recent (in the order of derivation) literal should be processed before.          
          * 
-         * @return the next lStrategyiteral to consider.
+         * @return the next literal to consider.
          */
         Literal getNextLiteralToNavigate();
         
         void simplifyLearnedClause( Clause* lc );
         bool allMarked( Reason* clause, Literal literal );
         
-        void computeMaxDecisionLevel( const Clause& lc );
-        
-        void sortClause( Clause* clause );
+        void computeMaxDecisionLevel( const Clause& lc );                
         
         #ifndef NDEBUG
         /**

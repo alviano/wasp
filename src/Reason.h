@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef REASON_H
-#define REASON_H
+#ifndef WASP_REASON_H
+#define WASP_REASON_H
 
 #include <iostream>
 #include <vector>

@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef WASPFACADE_H
-#define WASPFACADE_H
+#ifndef WASP_WASPFACADE_H
+#define WASP_WASPFACADE_H
 
 #include <cassert>
 #include <vector>
@@ -34,6 +34,8 @@ using namespace std;
 #include "weakconstraints/PMRes.h"
 #include "weakconstraints/OneBB.h"
 #include "weakconstraints/K.h"
+#include "heuristic/ExternalHeuristic.h"
+#include "weakconstraints/LazyInstantiation.h"
 
 class WaspFacade
 {
@@ -73,7 +75,7 @@ class WaspFacade
             Clause* clause = new Clause( lits.size() );
             for(unsigned int i = 0; i < lits.size(); i++) {
                 addVariables(lits[i].getVariable());
-                if(solver.hasBeenEliminated(lits[i].getVariable())) ErrorMessage::errorGeneric("Trying to add a deleted variable to clause.");
+                if(solver.hasBeenEliminated(lits[i].getVariable())) WaspErrorMessage::errorGeneric("Trying to add a deleted variable to clause.");
                 if(solver.isFalse(lits[i])) continue;                  
                 if(solver.isTrue(lits[i])) { delete clause; return true; }
                 clause->addLiteral(lits[i]);
@@ -121,12 +123,11 @@ class WaspFacade
          * Notification of safe termination.
          */
         inline void onFinish() { solver.onFinish(); }
-        
+
         /**
          * Notification of kill.
          */
-        inline void onKill() { solver.onKill(); }
-        
+        inline void onKill() { statistics( &solver, endSolving() ); estatistics( &solver, endSolving() ); solver.onKill(); }        
         inline unsigned int numberOfLevels() const { return solver.numberOfLevels(); }
         
         inline void getOptLiterals(unsigned int level, vector< OptimizationLiteralData >& optLits) {
@@ -180,7 +181,7 @@ class WaspFacade
                     break;
                     
                 default:
-                    ErrorMessage::errorGeneric("Budget can be set on choices, restarts or time.");
+                    WaspErrorMessage::errorGeneric("Budget can be set on choices, restarts or time.");
                     return;
             }
         }
@@ -200,8 +201,7 @@ class WaspFacade
         
         inline void setPreferredChoices(const vector<Literal>& prefChoices) { solver.removePrefChoices(); solver.addPrefChoices(prefChoices); }
         
-        void setDeletionPolicy( DELETION_POLICY, unsigned int deletionThreshold );
-        void setDecisionPolicy( DECISION_POLICY, unsigned int heuristicLimit );
+        void setMinisatPolicy();
         void setOutputPolicy( OUTPUT_POLICY );
         void setRestartsPolicy( RESTARTS_POLICY, unsigned int threshold );
 
@@ -258,11 +258,14 @@ class WaspFacade
 
 WaspFacade::WaspFacade() : runtime_( false ), ok_(true), numberOfModels( 0 ), maxModels( 1 ), printProgram( false ), printDimacs( false ), weakConstraintsAlg( OPT ), disjCoresPreprocessing( false ), outputBuilder( NULL )
 {   
+    if( wasp::Options::interpreter != NO_INTERPRETER && wasp::Options::heuristic_scriptname != NULL )
+        solver.setChoiceHeuristic( new ExternalHeuristic( solver, wasp::Options::heuristic_scriptname, wasp::Options::interpreter, wasp::Options::scriptDirectory ) );
+    estatistics( &solver, checkSolver( &solver ) );
 }
 
 unsigned int
 WaspFacade::solveWithWeakConstraints()
-{    
+{
     WeakInterface* w = NULL;    
     switch( weakConstraintsAlg )
     {
@@ -296,6 +299,10 @@ WaspFacade::solveWithWeakConstraints()
             
         case KALG:
             w = new K( solver );
+            break;
+        
+        case LAZY:
+            w = new LazyInstantiation( solver, solver.getExternalPropagatorForLazyWeakConstraints() );
             break;
             
         case ONE:

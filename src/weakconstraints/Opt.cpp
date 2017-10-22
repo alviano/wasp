@@ -17,7 +17,6 @@
  */
 
 #include "Opt.h"
-#include "../Aggregate.h"
 
 unsigned int
 Opt::run()

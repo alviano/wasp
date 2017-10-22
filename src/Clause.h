@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef CLAUSE_H
-#define CLAUSE_H
+#ifndef WASP_CLAUSE_H
+#define WASP_CLAUSE_H
 
 #include <cassert>
 #include <iostream>
@@ -28,7 +28,7 @@
 #include "Literal.h"
 #include "Learning.h"
 #include "Reason.h"
-#include "util/Assert.h"
+#include "util/WaspAssert.h"
 
 using namespace std;
 

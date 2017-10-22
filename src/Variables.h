@@ -16,14 +16,14 @@
  *
  */
  
-#ifndef VARIABLES_H
-#define VARIABLES_H
+#ifndef WASP_VARIABLES_H
+#define WASP_VARIABLES_H
 
 #include <vector>
 
 #include "Literal.h"
 #include "outputBuilders/OutputBuilder.h"
-#include "util/Assert.h"
+#include "util/WaspAssert.h"
 #include "util/VariableNames.h"
 #include "stl/Vector.h"
 #include "ReasonForBinaryClauses.h"

@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef VARIABLENAMES_H
-#define VARIABLENAMES_H
+#ifndef WASP_VARIABLENAMES_H
+#define WASP_VARIABLENAMES_H
 
 #include <cassert>
 #include <iostream>
@@ -35,8 +35,9 @@ class VariableNames
         static void setToBePrinted( Var v );
         static bool hasToBePrinted( Var v );
         static void addVariable();
+        static const vector< string >& getVariables();
         
-    private:        
+    private:
         static vector< string > variables;
         static bool toBePrinted;
 };

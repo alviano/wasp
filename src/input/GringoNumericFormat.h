@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef GRINGONUMERICFORMAT_H
-#define GRINGONUMERICFORMAT_H
+#ifndef WASP_GRINGONUMERICFORMAT_H
+#define WASP_GRINGONUMERICFORMAT_H
 
 #include "../Solver.h"
 #include "../stl/Trie.h"
@@ -103,8 +103,9 @@ private:
     
     void cleanData();
     
+    void addExternalPropagators();
     Rule* getRule( unsigned int id ) { assert( id < normalRules.size() ); return normalRules[ id ]; }
-    
+
 //    Literal getLiteralForInputVar( unsigned int id, unsigned int sign );
 //    Literal getLiteralForAuxVar( unsigned int id, unsigned int sign );
 

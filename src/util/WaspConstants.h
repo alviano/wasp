@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef WASPCONSTANTS_H
-#define WASPCONSTANTS_H
+#ifndef WASP_CONSTANTS_H
+#define WASP_CONSTANTS_H
 
 #include <climits>
 //enum TruthValue { UNDEFINED = 0, FALSE = 1, TRUE = 2 };
@@ -32,11 +32,6 @@
 #define NEGATIVE 1
 #define ELIMINATED_BY_DISTRIBUTION 2
 #define NOT_ELIMINATED 3
-
-#define AGGRESSIVE_DELETION_POLICY 0
-#define RESTARTS_BASED_DELETION_POLICY 1
-#define MINISAT_DELETION_POLICY 2
-#define GLUCOSE_DELETION_POLICY 3
 
 #define HEURISTIC_BERKMIN 0
 #define HEURISTIC_FIRST_UNDEFINED 1
@@ -80,6 +75,7 @@
 #define ONEBBREST 6
 #define BBBT 7
 #define KALG 8
+#define LAZY 9
 
 #define MINIMIZATION_OFF 0
 #define MINIMIZATION_PROGRESSION 1
@@ -90,6 +86,20 @@
 #define OPTIMUM_FOUND 2
 #define OPTIMUM_FOUND_STOP 3
 #define INTERRUPTED 4
+
+#if defined(ENABLE_PYTHON) && defined(ENABLE_PERL)
+    #define SCRIPT_STRINGS " [scripts: PERL/PYTHON]" 
+#else
+    #if defined(ENABLE_PYTHON)
+        #define SCRIPT_STRINGS " [script: PYTHON]" 
+    #else
+        #if defined(ENABLE_PERL)
+            #define SCRIPT_STRINGS " [script: PERL]" 
+        #else
+            #define SCRIPT_STRINGS "" 
+        #endif
+    #endif
+#endif
 
 #define SHIFT_PROPAGATOR 0
 #define SHIFT_LEFT_RIGHT 1
@@ -110,7 +120,7 @@
 /*
  * Wasp constants
  */
-#define WASP_STRING "WASP " VERSION "\n"
+#define WASP_STRING "WASP " VERSION SCRIPT_STRINGS"\n"
 #define NOMODEL "INCOHERENT"
 #define NOMODEL_COMPETITION_OUTPUT "INCONSISTENT"
 #define ANSWER "ANSWER"
@@ -156,6 +166,13 @@
 #define GRINGO_BMINUS "B-"
 
 /*
+ * Interpreters
+ */
+#define NO_INTERPRETER 0
+#define PYTHON_INTERPRETER 1
+#define PERL_INTERPRETER 2
+
+/*
  * New types
  */
 typedef double Activity;
@@ -167,20 +184,6 @@ typedef unsigned int OUTPUT_POLICY;
 typedef unsigned int RESTARTS_POLICY;
 typedef unsigned int WEAK_CONSTRAINTS_ALG;
 typedef unsigned int SHIFT_STRATEGY;
-
-#ifdef TRACE_ON
-#include <string>
-#include <sstream>
-
-template < class T >
-std::string toString( const T& t )
-{
-    std::stringstream ss;
-    ss << t;
-    return ss.str();
-}
-#endif
-
 
 #endif
 

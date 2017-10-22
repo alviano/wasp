@@ -1,11 +1,12 @@
 #include "GringoNumericFormat.h"
 
 #include "../util/WaspConstants.h"
-#include "../util/ErrorMessage.h"
+#include "../util/WaspErrorMessage.h"
 #include "../Clause.h"
-#include "../Aggregate.h"
+#include "../propagators/Aggregate.h"
 #include "../util/Istream.h"
-#include "../HCComponent.h"
+#include "../propagators/HCComponent.h"
+#include "../propagators/ExternalPropagator.h"
 
 #include <cassert>
 #include <iostream>
@@ -30,6 +31,7 @@ GringoNumericFormat::parse(
 
     uint64_t value = 0;
     statistics( &solver, startParsing() );
+    addExternalPropagators();
     while( loop )
     {
         unsigned int type;
@@ -79,7 +81,7 @@ GringoNumericFormat::parse(
             break;
 
         default:
-            ErrorMessage::errorDuringParsing( "Unsupported rule type." );
+            WaspErrorMessage::errorDuringParsing( "Unsupported rule type." );
             break;
         }
 
@@ -87,15 +89,15 @@ GringoNumericFormat::parse(
             return;
             
         propagate();
-    }
+    }        
 
     readAtomsTable( input );
     readTrueAtoms( input );
     readFalseAtoms( input );
     readErrorNumber( input );
     propagate();
-    
-    simplify();
+
+    simplify();    
     
     bodiesDictionary.clear();
 
@@ -104,8 +106,8 @@ GringoNumericFormat::parse(
         
     if( solver.numberOfClauses() + normalRules.size() > 1000000 )
         solver.turnOffSimplifications();
-
-    statistics( &solver, endParsing() );
+    
+    statistics( &solver, endParsing() );    
     statistics( &solver, startSCCs() );
     if( numberOfDisjunctiveRules == 0 || wasp::Options::shiftStrategy == SHIFT_NAIVE )
         computeSCCs();
@@ -118,10 +120,11 @@ GringoNumericFormat::parse(
         computeGusStructures();        
     addWeightConstraints();
     addOptimizationRules();
-    clearDataStructures();
+    clearDataStructures();    
     statistics( &solver, startCompletion() );
     computeCompletion();    
-    statistics( &solver, endCompletion() );    
+    statistics( &solver, endCompletion() );
+    solver.endPreprocessing();
 }
 
 void
@@ -360,7 +363,7 @@ GringoNumericFormat::readOptimizationRule(
     input.read( negativeSize );    
 
     if( size < negativeSize )
-        ErrorMessage::errorDuringParsing( "Size must be greater than or equal to negative size." );
+        WaspErrorMessage::errorDuringParsing( "Size must be greater than or equal to negative size." );
     
     unsigned int counter = 0;
     WeightConstraint* weightConstraintRule = new WeightConstraint( 0, UINT64_MAX );
@@ -465,7 +468,7 @@ GringoNumericFormat::readBodySize(
     input.read( negativeSize );
 
     if( bodySize < negativeSize )
-        ErrorMessage::errorDuringParsing( "Body size must be greater than or equal to negative size." );
+        WaspErrorMessage::errorDuringParsing( "Body size must be greater than or equal to negative size." );
 }
 
 void
@@ -589,7 +592,7 @@ GringoNumericFormat::readConstraint(
     input.read( negativeSize );
 
     if( bodySize < negativeSize )
-        ErrorMessage::errorDuringParsing( "Body size must be greater than or equal to negative size." );
+        WaspErrorMessage::errorDuringParsing( "Body size must be greater than or equal to negative size." );
 
     Clause* clause = solver.newClause( bodySize );
     while( negativeSize-- > 0 )
@@ -639,7 +642,7 @@ GringoNumericFormat::readCount(
     createStructures( id );
     if( size < negativeSize )
     {
-        ErrorMessage::errorDuringParsing( "Size must be greater than or equal to negative size." );
+        WaspErrorMessage::errorDuringParsing( "Size must be greater than or equal to negative size." );
     }
     
     if( size < bound )
@@ -688,7 +691,7 @@ GringoNumericFormat::readSum(
 
     if( size < negativeSize )
     {
-        ErrorMessage::errorDuringParsing( "Size must be greater than or equal to negative size." );
+        WaspErrorMessage::errorDuringParsing( "Size must be greater than or equal to negative size." );
     }
     
     WeightConstraint* weightConstraintRule = new WeightConstraint( id, bound );
@@ -1001,6 +1004,7 @@ GringoNumericFormat::readAtomsTable(
         createStructures( nextAtom );
         input.getline( name, 1024 );
         VariableNames::setName( nextAtom, name );
+        solver.addedVarName( nextAtom );
         if( wasp::Options::printAtomTable )
             cout << nextAtom << " " << name << endl;
         trace_msg( parser, 6, "Set name " << name << " for atom " << nextAtom );
@@ -1092,7 +1096,7 @@ GringoNumericFormat::readErrorNumber(
     if( errorNumber != 1 ) {
         stringstream ss;
         ss << "read error message number " << errorNumber;
-        ErrorMessage::errorDuringParsing( ss.str() );
+        WaspErrorMessage::errorDuringParsing( ss.str() );
         exit( 0 );
     }
 }
@@ -1529,7 +1533,7 @@ GringoNumericFormat::computeSCCsDisjunctive()
                                     createPropagatorForDisjunction( headAtoms, auxVars, addedLit );
                                 break;
                             default:
-                                ErrorMessage::errorDuringParsing( "Unknown shift strategy" );
+                                WaspErrorMessage::errorDuringParsing( "Unknown shift strategy" );
                         }                        
                             
                         assert( headAtoms.size() == auxVars.size() );
@@ -3130,6 +3134,24 @@ GringoNumericFormat::isSupporting(
             return true;
 
     return false;
+}
+
+void
+GringoNumericFormat::addExternalPropagators()
+{
+    for( unsigned int i = 0; i < wasp::Options::pluginsFilenames.size(); i++ )
+    {
+        string filename = wasp::Options::pluginsFilenames[ i ];        
+        ExternalPropagator* prop = new ExternalPropagator( filename.c_str(), wasp::Options::interpreter, solver, wasp::Options::scriptDirectory );
+        solver.addExternalPropagator( prop );
+    }        
+    
+    if( wasp::Options::heuristic_scriptname != NULL )
+    {
+        string filename = wasp::Options::heuristic_scriptname; 
+        ExternalPropagator* prop = new ExternalPropagator( filename.c_str(), wasp::Options::interpreter, solver, wasp::Options::scriptDirectory );
+        solver.addExternalPropagator( prop );
+    }
 }
 
 Aggregate*

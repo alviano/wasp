@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef SOLVER_H
-#define SOLVER_H
+#ifndef WASP_SOLVER_H
+#define WASP_SOLVER_H
 
 #include <cassert>
 #include <vector>
@@ -27,25 +27,28 @@ using namespace std;
 #include "Variables.h"
 #include "Literal.h"
 #include "util/WaspOptions.h"
-#include "util/Trace.h"
+#include "util/WaspTrace.h"
 #include "stl/UnorderedSet.h"
 #include "Learning.h"
 #include "outputBuilders/OutputBuilder.h"
-#include "util/Assert.h"
+#include "util/WaspAssert.h"
 #include "Satelite.h"
 #include "Restart.h"
-#include "MinisatHeuristic.h"
 #include "util/Statistics.h"
-#include "PostPropagator.h"
+#include "util/ExtendedStatistics.h"
+#include "propagators/PostPropagator.h"
 #include "DependencyGraph.h"
-#include "Aggregate.h"
-#include "DisjunctionPropagator.h"
+#include "propagators/Aggregate.h"
+#include "propagators/DisjunctionPropagator.h"
 #include "util/WaspConstants.h"
-#include "WatchedList.h"
+#include "stl/WatchedList.h"
 #include "stl/BoundedQueue.h"
-#include "Component.h"
-#include "CardinalityConstraint.h"
+#include "propagators/Component.h"
+#include "heuristic/MinisatHeuristic.h"
+#include "propagators/ExternalPropagator.h"
+#include "propagators/CardinalityConstraint.h"
 #include "weakconstraints/OptimizationProblemUtils.h"
+
 class HCComponent;
 class WeakInterface;
 
@@ -123,6 +126,8 @@ class Solver
         void addLearnedClause( Clause* learnedClause, bool optimizeBinary );
         bool addClauseFromModelAndRestart();
         
+        inline void setChoiceHeuristic( MinisatHeuristic* strategy ){ assert( strategy != NULL ); delete choiceHeuristic; choiceHeuristic = strategy; }
+        
         inline Literal getLiteral( int lit );
 //        inline Var getVariable( unsigned int var );
         
@@ -173,6 +178,7 @@ class Solver
         void unroll( unsigned int level );
         inline void unrollOne();
         inline void unrollLastVariable();
+        inline bool unrollVariable( Var v );
         
         /* OPTIONS */
         inline void setOutputBuilder( OutputBuilder* value );        
@@ -204,7 +210,7 @@ class Solver
         inline void deleteLearnedClause( ClauseIterator iterator );
         inline void deleteClause( Clause* clause );
         inline void removeClauseNoDeletion( Clause* clause );
-        inline void deleteClauses() { glucoseHeuristic_ ? glucoseDeletion() : minisatDeletion(); }
+        inline void deleteClauses() { choiceHeuristic->onDeletion(); glucoseHeuristic_ ? glucoseDeletion() : minisatDeletion(); }
         void minisatDeletion();
         void glucoseDeletion();
         inline void decrementActivity(){ deletionCounters.increment *= deletionCounters.decrement; }
@@ -219,7 +225,7 @@ class Solver
         
 //        inline void initClauseData( Clause* clause ) { assert( heuristic != NULL ); heuristic->initClauseData( clause ); }
 //        inline Heuristic* getHeuristic() { return heuristic; }
-        inline void onLiteralInvolvedInConflict( Literal l ) { minisatHeuristic->onLiteralInvolvedInConflict( l ); }
+        inline void onLitInvolvedInConflict( Literal l ) { choiceHeuristic->onLitInvolvedInConflict( l ); }
         inline void finalizeDeletion( unsigned int newVectorSize ) { learnedClauses.resize( newVectorSize ); }        
         
         inline void setRestart( Restart* r );
@@ -251,11 +257,13 @@ class Solver
         inline void onStrengtheningClause( Clause* clause ) { satelite->onStrengtheningClause( clause ); }
         
         inline Satelite* getSatelite() { return satelite; }
-        
+               
+        inline void addExternalPropagator( ExternalPropagator* prop ) { assert( prop != NULL ); externalPropagators.push_back( prop ); }
+        inline void endPreprocessing();
+        inline bool hasPropagators() const { return ( !tight() || !propagators.empty() || !disjunctionPropagators.empty() || !externalPropagators.empty() ); }                
         inline void addDisjunctionPropagator( DisjunctionPropagator* disj ) { assert( disj != NULL ); disjunctionPropagators.push_back( disj ); }
         inline void addAggregate( Aggregate* aggr ) { assert( aggr != NULL ); propagators.push_back( aggr ); }
         inline void addCardinalityConstraint ( CardinalityConstraint* cc ) { assert( cc != NULL ); propagators.push_back( cc ); }
-        inline bool hasPropagators() const { return ( !tight() || !propagators.empty() || !disjunctionPropagators.empty() ); }
         
         inline void turnOffSimplifications() { callSimplifications_ = false; }
         inline bool callSimplifications() const { return callSimplifications_; }
@@ -272,8 +280,8 @@ class Solver
 //        inline void setMaxCostOfLevelOfOptimizationRules( vector< uint64_t >& m ) { maxCostOfLevelOfOptimizationRules.swap( m ); }
 //        inline void setNumberOfOptimizationLevels( unsigned int n ) { numberOfOptimizationLevels = n; }        
         inline void addPreferredChoicesFromOptimizationLiterals( unsigned int level );
-        inline void addPrefChoices( const vector<Literal>& lits ) { for(unsigned int i = 0; i < lits.size(); i++) minisatHeuristic->addPreferredChoice(lits[i]); }
-        inline void removePrefChoices() { minisatHeuristic->removePrefChoices(); }
+        inline void removePrefChoices() { choiceHeuristic->removePrefChoices(); }
+        inline void addPrefChoices( const vector<Literal>& lits ) { for(unsigned int i = 0; i < lits.size(); i++) choiceHeuristic->addPreferredChoice(lits[i]); }
         
         inline bool isTrue( Var v ) const { return variables.isTrue( v ); }
         inline bool isFalse( Var v ) const { return variables.isFalse( v ); }        
@@ -374,7 +382,7 @@ class Solver
         inline void learnedClauseUsedForConflict( Clause* clause );
         inline unsigned int computeLBD( const Clause& clause );
         
-        inline void bumpActivity( Var v ) { minisatHeuristic->bumpActivity( v ); }
+        inline void onLitInImportantClause( Literal lit ) { choiceHeuristic->onLitInImportantClause( lit ); }
         
         inline bool glucoseHeuristic() const { return glucoseHeuristic_; }
         inline void disableGlucoseHeuristic() { glucoseHeuristic_ = false; }
@@ -436,8 +444,18 @@ class Solver
         inline uint64_t getPrecomputedCost( unsigned int level ) const { assert( level < precomputedCosts.size() ); return precomputedCosts[ level ]; }
 //        inline uint64_t getPrecomputedCost() const { return precomputedCost; }                
         
-        inline void foundLowerBound( uint64_t lb ) { outputBuilder->foundLowerBound( lb ); }
-        inline void foundUpperBound( uint64_t ub ) { outputBuilder->foundUpperBound( ub ); }
+        inline void foundLowerBound( uint64_t lb )
+        {
+            outputBuilder->foundLowerBound( lb );
+            for( unsigned int i = 0; i < propagatorsAttachedToBounds.size(); i++ )
+                propagatorsAttachedToBounds[ i ]->foundLowerBound( lb );
+        }
+        inline void foundUpperBound( uint64_t ub )
+        {
+            outputBuilder->foundUpperBound( ub );
+            for( unsigned int i = 0; i < propagatorsAttachedToBounds.size(); i++ )
+                propagatorsAttachedToBounds[ i ]->foundUpperBound( ub );
+        }
         inline bool incremental() const { return incremental_; }
         
         inline bool isOptimizationProblem() const { return !optimizationLiterals.empty(); }
@@ -445,6 +463,19 @@ class Solver
         inline bool propagateFixpoint();
         
         inline uint64_t simplifyOptimizationLiterals( unsigned int level );
+//        inline void simplifyOptimizationLiterals();
+        
+        inline void addedVarName( Var var );
+        inline void onStartingSolver()
+        {
+            for( unsigned int i = 0; i < externalPropagators.size(); i++ )
+                externalPropagators[ i ]->onStartingSolver();
+        }        
+//        inline void addedLiteralInLearnedClause( Literal lit ) { choiceHeuristic->onLitInLearntClause( lit ); }
+        
+        inline void onUnfoundedSet( const Vector< Var >& unfoundedSet ) { choiceHeuristic->onUnfoundedSet( unfoundedSet ); }
+        inline void onLoopFormula( const Clause* clause ) { choiceHeuristic->onLoopFormula( clause ); }
+               
 //        inline void simplifyOptimizationLiterals();               
 
         void getChoicesWithoutAssumptions( vector< Literal >& choices );
@@ -460,7 +491,14 @@ class Solver
             }
             answerSetListeners.resize( j );
         }
+        inline void addPropagatorAttachedToBounds( ExternalPropagator* externalPropagator ) { assert( externalPropagator ); propagatorsAttachedToBounds.push_back( externalPropagator ); }
+        inline void addPropagatorAfterUnit( ExternalPropagator* externalPropagator ) { assert( externalPropagator ); propagatorsAfterUnit.push_back( externalPropagator ); }
+        inline void addPropagatorAttachedToCheckAnswerSet( ExternalPropagator* externalPropagator ) { assert( externalPropagator ); propagatorsAttachedToCheckAnswerSet.push_back( externalPropagator ); }
+        inline void addPropagatorAttachedToEndPropagation( ExternalPropagator* externalPropagator ) { assert( externalPropagator ); propagatorsAttachedToEndPropagation.push_back( externalPropagator ); }
+        inline void addPropagatorAttachedToPartialChecks( ExternalPropagator* externalPropagator ) { assert( externalPropagator ); propagatorsAttachedToPartialChecks.push_back( externalPropagator ); }
         
+        inline ExternalPropagator* getExternalPropagatorForLazyWeakConstraints() const;        
+
     private:
         inline unsigned int solve_( vector< Literal >& assumptions );
         vector< Literal > choices;
@@ -497,7 +535,7 @@ class Solver
         Learning learning;
         OutputBuilder* outputBuilder;        
         
-        MinisatHeuristic* minisatHeuristic;
+        MinisatHeuristic* choiceHeuristic;
         Restart* restart;
         Satelite* satelite;                
         
@@ -521,8 +559,9 @@ class Solver
         inline void addInPropagatorsForUnroll( Propagator* prop );
         
         vector< GUSData* > gusDataVector;
+        vector< ExternalPropagator* > externalPropagators;
         vector< Propagator* > propagators;
-        vector< DisjunctionPropagator* > disjunctionPropagators;
+        vector< DisjunctionPropagator* > disjunctionPropagators;        
         
 //        Aggregate* optimizationAggregate;
 //        unsigned int numberOfOptimizationLevels;
@@ -576,7 +615,6 @@ class Solver
             unsigned int lbLBDFrozenClause;
             
             //constants for reducing clause
-            int lbSizeMinimizingClause;
             unsigned int lbLBDMinimizingClause;
             
             float sumLBD;
@@ -592,17 +630,16 @@ class Solver
             
             void init()
             {
-                sizeLBDQueue = 50;
-                sizeTrailQueue = 5000;
-                K = 0.8;
-                R = 1.4;
-                nbclausesBeforeReduce = 2000;
-                incReduceDB = 300;
-                specialIncReduceDB = 1000;
-                lbLBDFrozenClause = 30;
+                sizeLBDQueue = wasp::Options::sizeLBDQueue;
+                sizeTrailQueue = wasp::Options::sizeTrailQueue;
+                K = wasp::Options::K;
+                R = wasp::Options::R;
+                nbclausesBeforeReduce = wasp::Options::nbclausesBeforeReduce;
+                incReduceDB = wasp::Options::incReduceDB;
+                specialIncReduceDB = wasp::Options::specialIncReduceDB;
+                lbLBDFrozenClause = wasp::Options::lbLBDFrozenClause;
                 
-                lbSizeMinimizingClause = 30;
-                lbLBDMinimizingClause = 6;
+                lbLBDMinimizingClause = wasp::Options::lbLBDMinimizingClause;
                 
                 sumLBD = 0.0;
                 currRestart = 1;
@@ -619,6 +656,13 @@ class Solver
         } glucoseData;
         
         vector< vector< OptimizationLiteralData* > > optimizationLiterals;
+        vector< ExternalPropagator* > propagatorsAttachedToBounds;
+        vector< ExternalPropagator* > propagatorsAttachedToCheckAnswerSet;
+        vector< ExternalPropagator* > propagatorsAfterUnit;
+        vector< ExternalPropagator* > propagatorsAttachedToEndPropagation;
+        vector< ExternalPropagator* > propagatorsAttachedToPartialChecks;
+        bool handlePropagatorFailure( ExternalPropagator* propagator );
+
         vector< bool > weighted_;
 //        vector< uint64_t > maxCostOfLevelOfOptimizationRules;        
         
@@ -652,6 +696,15 @@ class Solver
             assert( FALSE == 1 && TRUE == 2 );
             
             return true;
+        }
+        
+        string getTruthValue( Literal lit )
+        {
+            if( isTrue( lit ) )
+                return "true";
+            if( isFalse( lit ) )
+                return "false";
+            return "undefined";            
         }
         #endif
 };
@@ -690,7 +743,8 @@ Solver::Solver()
 {
     dependencyGraph = new DependencyGraph( *this );
     satelite = new Satelite( *this );
-    minisatHeuristic = new MinisatHeuristic( *this );
+    
+    choiceHeuristic = new MinisatHeuristic( *this );
     deletionCounters.init();
     glucoseData.init();
     VariableNames::addVariable();
@@ -706,7 +760,15 @@ void
 Solver::onKill()
 {
     if( outputBuilder )
-        outputBuilder->onKill();    
+        outputBuilder->onKill();
+}
+
+void
+Solver::addedVarName(
+    Var var )
+{
+    for( unsigned int i = 0; i < externalPropagators.size(); i++ )
+        externalPropagators[ i ]->addedVarName( var, VariableNames::getName( var ) );
 }
 
 unsigned int
@@ -785,13 +847,13 @@ Solver::addVariableInternal()
 {
     VariableNames::addVariable();
     variables.push_back();    
-    minisatHeuristic->onNewVariable( variables.numberOfVariables() );
+    choiceHeuristic->onNewVariable( variables.numberOfVariables() );
     learning.onNewVariable();
     glucoseData.onNewVariable();
     
     variableDataStructures.push_back( new DataStructures() );
     variableDataStructures.push_back( new DataStructures() );
-
+    estatistics( this, onNewVar( variables.numberOfVariables() ) );
 //    return variables.numberOfVariables();
 }
 
@@ -813,7 +875,7 @@ void
 Solver::addVariableRuntime()
 {
     addVariableInternal();
-    minisatHeuristic->onNewVariableRuntime( numberOfVariables() );
+    choiceHeuristic->onNewVariableRuntime( numberOfVariables() );
 }
 
 Literal
@@ -863,8 +925,6 @@ Solver::assignLiteral(
     Literal lit,
     Reason* implicant )
 {
-    assert( implicant != NULL );
-    
     assert( !conflictDetected() );
     if( !variables.assign( currentDecisionLevel, lit, implicant ) )
     {
@@ -927,6 +987,7 @@ Solver::addClause(
 {    
     if( !callSimplifications() )
     {
+        choiceHeuristic->onNewBinaryClause( lit1, lit2 );
         addBinaryClause( lit1, lit2 );
     }
     else
@@ -1131,7 +1192,7 @@ Solver::incrementCurrentDecisionLevel()
 void
 Solver::unrollLastVariable()
 {    
-    minisatHeuristic->onUnrollingVariable( variables.unrollLastVariable() );
+    choiceHeuristic->onUnrollingVariable( variables.unrollLastVariable() );
 }
 
 void
@@ -1141,12 +1202,27 @@ Solver::unrollOne()
 }
 
 bool
+Solver::unrollVariable(
+    Var v )
+{
+    assert( v >= 1 && v <= numberOfVariables() );
+    if( getDecisionLevel( v ) == 0 || getDecisionLevel( v ) <= numberOfAssumptions )
+        return false;
+    
+    while( currentDecisionLevel > 0 && currentDecisionLevel > numberOfAssumptions && !isUndefined( v ) )
+        unrollOne();
+    
+    return isUndefined( v );
+}
+
+bool
 Solver::doRestart()
 {
     assert( currentDecisionLevel != 0 );
     trace( solving, 2, "Performing restart.\n" );
     numberOfRestarts++;
     restart->onRestart();
+    choiceHeuristic->onRestart();
     
     assert( incremental_ || numberOfAssumptions == 0 );
     if( currentDecisionLevel > numberOfAssumptions )
@@ -1231,6 +1307,8 @@ void
 Solver::printAnswerSet()
 {
     variables.printAnswerSet( outputBuilder );
+    for( unsigned int i = 0; i < externalPropagators.size(); i++ )
+        externalPropagators[ i ]->onAnswerSet( *this );
 }
 
 void
@@ -1294,12 +1372,15 @@ Solver::chooseLiteral(
     
     if( choice != Literal::null )
         goto end;    
-    choice = minisatHeuristic->makeAChoice();    
+    choice = choiceHeuristic->makeAChoice();
+    if( choice == Literal::null )
+        return false;
     
     end:;
     trace_msg( solving, 1, "Choice: " << choice );
     setAChoice( choice );    
     statistics( this, onChoice() );    
+    estatistics( this, onLiteralUsedAsChoice( choice ) );    
     return true;
 }
 
@@ -1332,10 +1413,10 @@ Solver::analyzeConflict()
         unrollToZero();
         clearConflictStatus();
         Literal tmpLit = learnedClause->getAt( 0 );
+        choiceHeuristic->onLearningClause( 1, learnedClause );
         releaseClause( learnedClause );
         if( !addClauseRuntime( tmpLit ) )
-            return false;
-            
+            return false;        
 //        assignLiteral( learnedClause->getAt( 0 ) );
 //        assert( isTrue( learnedClause->getAt( 0 ) ) );
 //        assert( !conflictDetected() );
@@ -1375,13 +1456,13 @@ Solver::analyzeConflict()
         assert_msg( unrollLevel < currentDecisionLevel, "Trying to backjump from level " << unrollLevel << " to level " << currentDecisionLevel );
         trace_msg( solving, 2, "Learned clause and backjumping to level " << unrollLevel );
         addLearnedClause( learnedClause, true );        
-
+        choiceHeuristic->onLearningClause( learnedClause->lbd(), learnedClause );
         unroll( unrollLevel );
         clearConflictStatus();                        
         if( size != 2 )
         {
             assignLiteral( learnedClause );
-            onLearning( learnedClause );  // FIXME: this should be moved outside
+            onLearning( learnedClause );
         }
         else
         {
@@ -1579,6 +1660,7 @@ Solver::attachWatches()
         }
         else
         {
+            choiceHeuristic->onNewClause( currentPointer );
             statistics( this, onAddingClauseAfterSatelite( current.size() ) );            
             if( current.size() == 2 )
             {     
@@ -1609,6 +1691,13 @@ Solver::clearComponents()
     cyclicComponents.resize( j );
 }
 
+void
+Solver::endPreprocessing()
+{
+    for( unsigned int i = 0; i < externalPropagators.size(); i++ )
+        externalPropagators[ i ]->endParsing( *this );    
+}
+
 bool
 Solver::preprocessing()
 {
@@ -1620,11 +1709,22 @@ Solver::preprocessing()
 
     statistics( this, beforePreprocessing( numberOfVariables(), numberOfAssignedLiterals(), numberOfClauses() ) );
     assert( satelite != NULL );
-    assert( checkVariablesState() );    
+    assert( checkVariablesState() );   
     if( callSimplifications() && !satelite->simplify() )
         return false;
 
-    minisatHeuristic->simplifyVariablesAtLevelZero();
+    choiceHeuristic->onFinishedSimplifications();
+    
+    for( unsigned int i = 0; i < externalPropagators.size(); i++ )
+    {
+        externalPropagators[ i ]->simplifyAtLevelZero( *this );
+        if( conflictDetected() )
+        {
+            trace( solving, 1, "Conflict at level 0 detected by external propagators.\n" );
+            return false;
+        }    
+    }
+        
     clearVariableOccurrences();
     attachWatches();
     clearComponents();
@@ -1666,6 +1766,8 @@ Solver::onEliminatingVariable(
     variables.onEliminatingVariable( variable );
     eliminatedVariables.push_back( variable );
     setEliminated( variable, sign, definition );
+    for( unsigned int i = 0; i < externalPropagators.size(); i++ )
+        externalPropagators[ i ]->onAtomElimination( variable );    
 }
 
 void
@@ -1829,12 +1931,12 @@ Solver::computeCostOfModel(
     uint64_t cost = getPrecomputedCost( level );
     for( unsigned int i = 0; i < numberOfOptimizationLiterals( level ); i++ )
     {        
-        assert( getOptimizationLiteral( level, i ).lit != Literal::null );        
+        assert( getOptimizationLiteral( level, i ).lit != Literal::null );
         //This is the first aux
         if( getOptimizationLiteral( level, i ).isAux() )
             continue;
         if( isTrue( getOptimizationLiteral( level, i ).lit ) )
-            cost += getOptimizationLiteral( level, i ).weight;        
+            cost += getOptimizationLiteral( level, i ).weight;
     }
     return cost;
 }
@@ -1909,7 +2011,7 @@ Solver::addPreferredChoicesFromOptimizationLiterals(
     for( unsigned int i = 0; i < numberOfOptimizationLiterals( level ); i++ )
     {
         if( isUndefined( getOptimizationLiteral( level, i ).lit ) )
-            minisatHeuristic->addPreferredChoice( getOptimizationLiteral( level, i ).lit.getOppositeLiteral() );
+            choiceHeuristic->addPreferredChoice( getOptimizationLiteral( level, i ).lit.getOppositeLiteral() );
     }
 }
 
@@ -2710,6 +2812,24 @@ Solver::getMaxLevelOfClause(
             max = dl;
     }
     return max;
+}
+
+ExternalPropagator*
+Solver::getExternalPropagatorForLazyWeakConstraints() const
+{
+    ExternalPropagator* ret = NULL;
+    for( unsigned int i = 0; i < externalPropagators.size(); i++ )
+        if( externalPropagators[ i ]->isForLazyWeakConstraints() )
+        {
+            if( ret == NULL )
+                ret = externalPropagators[ i ];
+            else
+                WaspErrorMessage::errorGeneric( "Only one file can contain the methods to add weak constraints" );            
+        }
+    
+    if( ret == NULL )
+        WaspErrorMessage::errorGeneric( "No propagator set to add weak constraints" );
+    return ret;
 }
 
 //void

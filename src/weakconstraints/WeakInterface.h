@@ -16,14 +16,14 @@
  *
  */
 
-#ifndef WEAKINTERFACE_H
-#define WEAKINTERFACE_H
+#ifndef WASP_WEAKINTERFACE_H
+#define WASP_WEAKINTERFACE_H
 
 #include <vector>
 #include <iostream>
 using namespace std;
-#include "../util/Trace.h"
-#include "../util/Assert.h"
+#include "../util/WaspTrace.h"
+#include "../util/WaspAssert.h"
 #include "../Literal.h"
 #include "../Solver.h"
 #include "OptimizationProblemUtils.h"
@@ -77,7 +77,8 @@ class WeakInterface
         inline uint64_t lb() { return utils->lb(); }
         inline uint64_t ub() { return utils->ub(); }
         inline unsigned int level() { return utils->level(); }
-        inline void setLowerBound( unsigned int value ) { utils->setLowerBound( value ); }        
+        inline void setLowerBound( unsigned int value ) { utils->setLowerBound( value ); }
+        inline void setUpperBound( uint64_t value ) { utils->setUpperBound( value ); }
         
     private:
         vector< uint64_t > weights;        

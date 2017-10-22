@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef OPT_H
-#define OPT_H
+#ifndef WASP_OPT_H
+#define WASP_OPT_H
 
 #include "WeakInterface.h"
 
