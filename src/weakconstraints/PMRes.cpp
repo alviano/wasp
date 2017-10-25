@@ -52,7 +52,6 @@ PMRes::runUnweighted()
 unsigned int
 PMRes::runWeighted()
 {
-    statistics( &solver, disable() );
     trace_msg( weakconstraints, 1, "Starting algorithm PMRes" );    
     
     preprocessingWeights();
@@ -87,8 +86,6 @@ PMRes::runWeighted()
             break;
     }
 
-    statistics( &solver, enable() );
-    statistics( &solver, endSolving() );    
     assert_msg( lb() == ub(), lb() << " != " << ub() );    
     
     return OPTIMUM_FOUND;

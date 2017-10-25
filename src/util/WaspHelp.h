@@ -175,7 +175,8 @@ class WaspHelp
             
             cout << separator << endl;
             cout << "General options                        " << endl << endl;
-            cout << "-n                                     - Specify the answers to compute " << endl;
+            cout << "--stats                                - Print statistics" << endl;
+            cout << "-n                                     - Specify the answers to compute" << endl;
             cout << "       <=0                             - To compute all answers" << endl;
             cout << "       =k                              - To compute at most k answers" << endl;
             cout << "--dimacs                               - Enable dimacs format as input and outputs" << endl;

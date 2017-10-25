@@ -17,7 +17,14 @@
  */
 #include "Statistics.h"
 
-#ifdef STATS_ON
-    vector< Statistics* > Statistics::instances;
-    unordered_map< Solver*, unsigned int > Statistics::solverToStats;
-#endif
+vector< Statistics* > Statistics::instances;
+unordered_map< Solver*, unsigned int > Statistics::solverToStats;
+
+void Statistics::clean()
+{
+    while( !instances.empty() )
+    {
+        delete instances.back();
+        instances.pop_back();
+    }
+}

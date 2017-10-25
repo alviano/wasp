@@ -126,6 +126,8 @@ namespace wasp
             static double initVariableIncrement;
             static double initVariableDecay;
             
+            static bool stats;
+            
             static map< string, WEAK_CONSTRAINTS_ALG > stringToWeak;
             
             static map< string, SHIFT_STRATEGY > stringToShift;

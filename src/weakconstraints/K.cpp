@@ -39,7 +39,6 @@ K::run()
 unsigned int
 K::runUnweighted()
 {    
-    statistics( &solver, disable() );    
     trace_msg( weakconstraints, 1, "Starting algorithm K" );
     computeAssumptions();        
     
@@ -55,8 +54,6 @@ K::runUnweighted()
         computeAssumptions();        
     }
         
-    statistics( &solver, enable() );
-    statistics( &solver, endSolving() );
     assert_msg( lb() == ub(), lb() << " != " << ub() );
     return OPTIMUM_FOUND;
 }
@@ -64,7 +61,6 @@ K::runUnweighted()
 unsigned int
 K::runWeighted()
 {    
-    statistics( &solver, disable() );
     trace_msg( weakconstraints, 1, "Starting algorithm K" );
     
     preprocessingWeights();
@@ -94,8 +90,6 @@ K::runWeighted()
             break;
     }
 
-    statistics( &solver, enable() );
-    statistics( &solver, endSolving() );    
     assert_msg( lb() == ub(), lb() << " != " << ub() );    
     
     return OPTIMUM_FOUND;

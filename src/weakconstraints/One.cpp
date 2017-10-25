@@ -39,7 +39,6 @@ One::run()
 unsigned int
 One::runUnweighted()
 {    
-    statistics( &solver, disable() );    
     trace_msg( weakconstraints, 1, "Starting algorithm ONE" );
     computeAssumptions();        
     
@@ -55,8 +54,6 @@ One::runUnweighted()
         computeAssumptions();        
     }
         
-    statistics( &solver, enable() );
-    statistics( &solver, endSolving() );
     assert_msg( lb() == ub(), lb() << " != " << ub() );
     return OPTIMUM_FOUND;
 }
@@ -64,7 +61,6 @@ One::runUnweighted()
 unsigned int
 One::runWeighted()
 {    
-    statistics( &solver, disable() );
     trace_msg( weakconstraints, 1, "Starting algorithm ONE" );
     
     preprocessingWeights();
@@ -94,8 +90,6 @@ One::runWeighted()
             break;
     }
 
-    statistics( &solver, enable() );
-    statistics( &solver, endSolving() );    
     assert_msg( lb() == ub(), lb() << " != " << ub() );    
     
     return OPTIMUM_FOUND;

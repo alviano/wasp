@@ -23,7 +23,6 @@ LazyInstantiation::LazyInstantiation(
 unsigned int
 LazyInstantiation::run()
 {   
-    statistics( &solver, disable() );    
     trace_msg( weakconstraints, 1, "Starting algorithm One with lazy instantiation" );
     computeAssumptions();    
     initInUnsatCore();
@@ -53,8 +52,6 @@ LazyInstantiation::run()
         resetSolver();
     }    
         
-    statistics( &solver, enable() );
-    statistics( &solver, endSolving() );
     assert_msg( lb() == ub(), lb() << " != " << ub() );
     return OPTIMUM_FOUND;
 }

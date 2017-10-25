@@ -62,6 +62,7 @@ namespace wasp
 #define OPTIONID_printatomtable ( 'z' + 28 )
 #define OPTIONID_idOutput ( 'z' + 29 )
 #define OPTIONID_onlyOptimum ( 'z' + 30 )
+#define OPTIONID_stats ( 'z' + 31 )
 
 #define OPTIONID_minisatheuristic ( 'z' + 40 )
 #define OPTIONID_initVariableIncrement ( 'z' + 41 )
@@ -233,6 +234,8 @@ unsigned int Options::lbLBDMinimizingClause = 6;
 double Options::initVariableIncrement = 1.0;
 double Options::initVariableDecay = ( 1 / 0.95 );
 
+bool Options::stats = false;
+
 void
 Options::parse(
     int argc,
@@ -278,7 +281,8 @@ Options::parse(
                 { "printonlyoptimum", no_argument, NULL, OPTIONID_onlyOptimum },
                 { "printbounds", no_argument, NULL, OPTIONID_printbounds },
                 { "printatomstable", no_argument, NULL, OPTIONID_printatomtable },
-                { "id-output", no_argument, NULL, OPTIONID_idOutput },                
+                { "id-output", no_argument, NULL, OPTIONID_idOutput },
+                { "stats", no_argument, NULL, OPTIONID_stats },
 
                 /* MINISAT POLICY */
                 { "minisat-policy", no_argument, NULL, OPTIONID_minisatheuristic },
@@ -446,6 +450,10 @@ Options::parse(
                 
             case OPTIONID_onlyOptimum:
                 printOnlyOptimum = true;
+                break;
+                
+            case OPTIONID_stats:
+                stats = true;
                 break;
                 
             case OPTIONID_multi:

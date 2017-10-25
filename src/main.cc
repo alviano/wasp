@@ -34,6 +34,7 @@ void my_handler( int )
         EXIT_CODE = 1;
     waspFacadePointer->onKill();
     delete waspFacadePointer;
+    Statistics::clean();
     exit( EXIT_CODE );
 }
 
@@ -51,6 +52,7 @@ int main( int argc, char** argv )
     waspFacade.readInput( cin );
     waspFacade.solve();
     waspFacade.onFinish();
-    delete waspFacadePointer; 
+    delete waspFacadePointer;
+    Statistics::clean();
     return EXIT_CODE;
 }

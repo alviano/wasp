@@ -127,7 +127,7 @@ class WaspFacade
         /**
          * Notification of kill.
          */
-        inline void onKill() { statistics( &solver, endSolving() ); estatistics( &solver, endSolving() ); solver.onKill(); }        
+        inline void onKill() { statistics( &solver, endSolving() ); estatistics( &solver, endSolving() ); statistics( &solver, printTime() ); solver.onKill(); }        
         inline unsigned int numberOfLevels() const { return solver.numberOfLevels(); }
         
         inline void getOptLiterals(unsigned int level, vector< OptimizationLiteralData >& optLits) {

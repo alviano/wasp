@@ -3,64 +3,32 @@
 #   $ make BUILD=release 
 # to compile different binaries
 BUILD = release
-cxxflags.debug = \
- -Wall -Wextra -std=c++11
-linkflags.debug = \
- -lm -ldl
-cxxflags.trace = \
- -Wall -Wextra -std=c++11 -DTRACE_ON
-linkflags.trace = \
- -lm -ldl
-cxxflags.tracerelease = \
- -Wall -Wextra -std=c++11 -DTRACE_ON -DNDEBUG -O3
-linkflags.tracerelease = \
- -lm -ldl
-cxxflags.release = \
- -Wall -Wextra -std=c++11 -DNDEBUG -O3
-linkflags.release = \
- -lm -ldl
-cxxflags.gprof = \
- -Wall -Wextra -std=c++11 -DNDEBUG -O3 -g -pg
-linkflags.gprof = \
- -lm -g -pg -ldl
-cxxflags.stats = \
- -Wall -Wextra -std=c++11 -DNDEBUG -DSTATS_ON -O3
-linkflags.stats = \
- -lm -ldl
-cxxflags.estats = \
- -Wall -Wextra -std=c++11 -DNDEBUG -DSTATS_ON -DESTATS_ON -O3
-linkflags.estats = \
- -lm -ldl
+cxxflags.debug = -Wall -Wextra -std=c++11
+linkflags.debug = -lm -ldl
+cxxflags.trace = -Wall -Wextra -std=c++11 -DTRACE_ON
+linkflags.trace = -lm -ldl
+cxxflags.tracerelease = -Wall -Wextra -std=c++11 -DTRACE_ON -DNDEBUG -O3
+linkflags.tracerelease = -lm -ldl
+cxxflags.release = -Wall -Wextra -std=c++11 -DNDEBUG -O3
+linkflags.release = -lm -ldl
+cxxflags.gprof = -Wall -Wextra -std=c++11 -DNDEBUG -O3 -g -pg
+linkflags.gprof = -lm -g -pg -ldl
+cxxflags.estats = -Wall -Wextra -std=c++11 -DNDEBUG -DSTATS_ON -DESTATS_ON -O3
+linkflags.estats = -lm -ldl
 
 # for g++ <= 4.6
-cxxflags.debug0x = \
- -Wall -Wextra -std=c++0x
-linkflags.debug0x = \
- -lm -ldl
-cxxflags.trace0x = \
- -Wall -Wextra -std=c++0x -DTRACE_ON
-linkflags.trace = \
- -lm -ldl
-cxxflags.tracerelease0x = \
- -Wall -Wextra -std=c++0x -DTRACE_ON -DNDEBUG -O3
-linkflags.tracerelease0x = \
- -lm -ldl
-cxxflags.release0x = \
- -Wall -Wextra -std=c++0x -DNDEBUG -O3
-linkflags.release0x = \
- -lm -ldl
-cxxflags.gprof0x = \
- -Wall -Wextra -std=c++0x -DNDEBUG -O3 -g -pg 
-linkflags.gprof0x = \
- -lm -g -pg -ldl
-cxxflags.stats0x = \
- -Wall -Wextra -std=c++0x -DNDEBUG -DSTATS_ON -O3
-linkflags.stats0x = \
- -lm -ldl
-cxxflags.estats0x = \
- -Wall -Wextra -std=c++0x -DNDEBUG -DSTATS_ON -DESTATS_ON -O3
-linkflags.estats0x = \
- -lm -ldl
+cxxflags.debug0x = -Wall -Wextra -std=c++0x
+linkflags.debug0x = -lm -ldl
+cxxflags.trace0x = -Wall -Wextra -std=c++0x -DTRACE_ON
+linkflags.trace = -lm -ldl
+cxxflags.tracerelease0x = -Wall -Wextra -std=c++0x -DTRACE_ON -DNDEBUG -O3
+linkflags.tracerelease0x = -lm -ldl
+cxxflags.release0x = -Wall -Wextra -std=c++0x -DNDEBUG -O3
+linkflags.release0x = -lm -ldl
+cxxflags.gprof0x = -Wall -Wextra -std=c++0x -DNDEBUG -O3 -g -pg 
+linkflags.gprof0x = -lm -g -pg -ldl
+cxxflags.estats0x = -Wall -Wextra -std=c++0x -DNDEBUG -DSTATS_ON -DESTATS_ON -O3
+linkflags.estats0x = -lm -ldl
 ####
 
 SCRIPT = no

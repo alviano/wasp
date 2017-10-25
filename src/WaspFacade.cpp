@@ -90,14 +90,16 @@ WaspFacade::solve()
             return;
         }
         
+        statistics( &solver, startSolving() );
         if( queryAlgorithm != NO_QUERY )
         {
             QueryInterface queryInterface( solver );
             queryInterface.computeCautiousConsequences( queryAlgorithm );
             statistics( &solver, endSolving() );
             estatistics( &solver, endSolving() );
+            statistics( &solver, printTime() );
             return;
-        }
+        }        
         solver.onStartingSolver();
 
         if( !solver.isOptimizationProblem() && !wasp::Options::useLazyWeakConstraints )
@@ -143,6 +145,7 @@ WaspFacade::solve()
             delete tmp;
             statistics( &solver, endSolving() );
             estatistics( &solver, endSolving() );
+            statistics( &solver, printTime() );
             return;
         }
     }
@@ -154,6 +157,7 @@ WaspFacade::solve()
     }
     statistics( &solver, endSolving() );
     estatistics( &solver, endSolving() );
+    statistics( &solver, printTime() );
     
 //    solver.printLearnedClauses();
 }

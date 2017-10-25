@@ -774,6 +774,7 @@ Solver::addedVarName(
 unsigned int
 Solver::solve()
 {
+    statistics( this, calledSolver() );
     incremental_ = false;
     numberOfAssumptions = 0;    
     vector< Literal > assumptions;
@@ -787,6 +788,7 @@ unsigned int
 Solver::solve(
     vector< Literal >& assumptions )
 {
+    statistics( this, calledSolver() );
     unsigned int result = solve_( assumptions );
     if( computeUnsatCores_ && result == INCOHERENT )
         shrinkUnsatCore();
