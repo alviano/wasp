@@ -50,6 +50,8 @@ using namespace std;
 #define method_plugins_addWeightsForWeakConstraints "addWeightsForWeakConstraints"
 #define method_plugins_scriptdirectory "setScriptDirectory"
 
+#define attribute_plugins_atomNames "atomNames"
+
 class ExternalPropagator : public Propagator
 {
     public:
@@ -109,6 +111,8 @@ class ExternalPropagator : public Propagator
         bool check_endPropagation;
         bool check_addWeakConstraints;
         bool check_addWeightsForWeakConstraints;
+        
+        bool check_attribute_atomNames;
         
         vector< int > weakConstraints;
         vector< uint64_t > weights;

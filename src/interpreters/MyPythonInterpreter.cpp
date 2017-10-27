@@ -255,4 +255,51 @@ bool MyPythonInterpreter::checkMethod(
     return res;
 }
 
+void MyPythonInterpreter::addElementInMap(
+    const string& map_name,
+    const string& key,
+    unsigned int value )
+{
+    PyObject* pFunc = PyObject_GetAttrString( pModule, map_name.c_str() );
+    if( pFunc )
+    {
+        PyObject* value_python = 
+        #ifdef PYTHON_THREE
+            PyLong_FromSize_t( value );
+        #else
+            PyInt_FromSize_t( value );
+        #endif
+
+        char *cstr = new char[key.length() + 1];
+        strcpy(cstr, key.c_str());        
+        int res = PyMapping_SetItemString(pFunc, cstr, value_python);
+        if( res == -1 || PyErr_Occurred() )
+            PyErr_Print();
+        delete [] cstr;
+    }
+    else
+    {
+        if( PyErr_Occurred() )
+            PyErr_Print();
+        printf( "Element %s not found\n", map_name.c_str() );
+    }
+    Py_XDECREF( pFunc );
+}
+
+bool MyPythonInterpreter::checkAttribute(
+    const string& map_name ) const
+{
+    bool res = false;
+    if( pModule == NULL )
+        return res;
+    PyObject* pFunc = PyObject_GetAttrString( pModule, map_name.c_str() );
+    if( pFunc )
+       res = true;
+    else if( PyErr_Occurred() )
+        PyErr_Clear();
+        
+    Py_XDECREF( pFunc );
+    return res;
+}
+
 #endif

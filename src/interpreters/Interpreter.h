@@ -30,6 +30,10 @@ class Interpreter
         virtual void callListMethod( const string& method_name, int param1, int param2, int param3, vector< uint64_t >& output );
         virtual void callListMethod( const string& method_name, const vector< int >& parameters, vector< uint64_t >& output ) = 0;
         virtual bool checkMethod( const string& method_name ) const = 0;
+        
+        //Method supported only by python
+        virtual void addElementInMap( const string&, const string&, unsigned int ) {}
+        virtual bool checkAttribute( const string& ) const { return false; }
 };
 
 #endif

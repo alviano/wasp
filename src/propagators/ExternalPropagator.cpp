@@ -105,6 +105,8 @@ ExternalPropagator::ExternalPropagator(
     
     if( check_checkPartialInterpretation )
         solver.addPropagatorAttachedToPartialChecks( this );
+    
+    check_attribute_atomNames = interpreter->checkAttribute( attribute_plugins_atomNames );
 }
 
 bool
@@ -366,6 +368,8 @@ ExternalPropagator::addedVarName(
     Var var,
     const string& name )
 {
+    if( check_attribute_atomNames )
+        interpreter->addElementInMap( attribute_plugins_atomNames, name, var );    
     if( check_addedVarName )
         interpreter->callVoidMethod( method_plugins_addedVarName, var, name );
 }
