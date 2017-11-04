@@ -23,13 +23,40 @@ class Literal;
 class Solver;
 #include "../util/WaspConstants.h"
 
+class PropagatorData
+{
+    public:
+        inline PropagatorData() : position_( 0 ), isPositive_( false ), isId_( false ) {}
+        
+        inline PropagatorData( int pos )
+        {
+            if( pos > 0 ) { position_ = pos; isPositive_ = true; }
+            else { position_ = -pos; isPositive_ = false; }
+        }
+        
+        inline PropagatorData( int pos, bool isId )
+        {
+            if( pos > 0 ) { position_ = pos; isPositive_ = true; }
+            else { position_ = -pos; isPositive_ = false; }
+            isId_ = isId;
+        }
+        
+        int position() const { return isPositive_ ? position_ : -position_; }        
+        bool isId() const { return isId_; }
+    
+    private:
+        unsigned int position_ : 30;
+        unsigned int isPositive_ : 1;
+        unsigned int isId_ : 1;
+};
+
 class Propagator
 {
     public:
         inline Propagator() : inVectorOfUnroll( UINT_MAX ) {}
         virtual ~Propagator(){}
 
-        virtual bool onLiteralFalse( Solver& solver, Literal literal, int pos ) = 0;
+        virtual bool onLiteralFalse( Solver& solver, Literal literal, PropagatorData propData ) = 0;
         virtual void reset( const Solver& solver ) = 0;
         virtual void simplifyAtLevelZero( Solver& solver ) = 0;
         

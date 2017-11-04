@@ -33,7 +33,7 @@ class DisjunctionPropagator : public Propagator
         inline DisjunctionPropagator( Literal bodyLiteral );        
         virtual ~DisjunctionPropagator();
         
-        virtual bool onLiteralFalse( Solver& solver, Literal literal, int pos );        
+        virtual bool onLiteralFalse( Solver& solver, Literal literal, PropagatorData p );        
         virtual void reset( const Solver& ) { assert( 0 ); }        
         virtual void simplifyAtLevelZero( Solver& ) {}        
 

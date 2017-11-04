@@ -58,8 +58,8 @@ class MyPythonInterpreter : public Interpreter
         void callListMethod( const string&, const vector< int >&, vector< uint64_t >& ) {}
         void callVoidMethod( const string&, int, const string& ) {}
         bool checkMethod( const string& ) const { return false; }
-        void addElementInMap( const string& map_name, const string& key, unsigned int value ) {}
-        bool checkAttribute( const string& map_name ) const {}
+        void addElementInMap( const string&, const string&, unsigned int ) {}
+        bool checkAttribute( const string& ) const { return false; }
 };
 
 #endif

@@ -46,8 +46,10 @@ bool
 CardinalityConstraint::onLiteralFalse(
     Solver& solver,
     Literal,
-    int pos )
+    PropagatorData p )
 {
+    int pos = p.position();
+    assert( pos > 0 );
     trace_msg( aggregates, 10, "CardinalityConstraint: " << *this << ". Literal " << literals[ pos ] << "is false" ); 
     assert_msg( maxFalse > 0, *this );
     trail.push_back( pos );

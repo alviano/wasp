@@ -136,10 +136,7 @@ Learning::clearDataStructures()
     learnedClause = NULL;    
     maxDecisionLevel = 0;
     pendingVisitedVariables = 0;
-    if( numberOfCalls == 0 )
-    {
-        resetVariablesNumberOfCalls();
-    }
+    if( numberOfCalls == 0 ) resetVariablesNumberOfCalls();
     lastDecisionLevel.clear();
 }
 

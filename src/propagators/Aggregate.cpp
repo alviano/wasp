@@ -64,8 +64,9 @@ bool
 Aggregate::onLiteralFalse(
     Solver& solver,
     Literal currentLiteral,
-    int position )
+    PropagatorData p )
 {
+    int position = p.position();
     assert_msg( abs( position ) > 0 && abs( position ) < static_cast< int >( literals.size() ), abs( position ) << " >= " << literals.size() );
     assert_msg( currentLiteral == ( position < 0 ? literals[ -position ].getOppositeLiteral() : literals[ position ] ), currentLiteral << " != " << ( position < 0 ? literals[ -position ].getOppositeLiteral() : literals[ position ] ) );
     trace_msg( aggregates, 10, "Aggregate: " << *this << ". Literal: " << currentLiteral.getOppositeLiteral() << " is true. Position: " << position );

@@ -113,7 +113,7 @@ bool
 ExternalPropagator::onLiteralFalse(
     Solver& solver,
     Literal literal,
-    int )
+    PropagatorData )
 {
     assert( solver.isFalse( literal ) );
     assert( !solver.conflictDetected() );

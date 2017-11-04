@@ -65,10 +65,10 @@ Learning::onConflict(
     pendingVisitedVariables++;
 
     //Compute implicants of the conflicting literal   
-    conflictClause->onLearning( solver, this, conflictLiteral );
+    conflictClause->onLearning( solver, this, conflictLiteral.getOppositeLiteral() );
 
     if( solver.getImplicant( conflictLiteral.getVariable() ) != NULL  )
-        solver.getImplicant( conflictLiteral.getVariable() )->onLearning( solver, this, conflictLiteral.getOppositeLiteral() );
+        solver.getImplicant( conflictLiteral.getVariable() )->onLearning( solver, this, conflictLiteral );
     
     addLiteralToNavigate( conflictLiteral );
     assert( isVisited( conflictLiteral.getVariable(), numberOfCalls ) );
@@ -234,8 +234,7 @@ Learning::onNavigatingLiteralForUnfoundedSetLearning(
 void
 Learning::simplifyLearnedClause(
     Clause* lc )
-{    
-//    return;
+{
     assert( lc != NULL );
     assert( lc->size() > 1 );
 
@@ -283,81 +282,27 @@ Learning::simplifyLearnedClause(
     statistics( &solver, endShrinkingLearnedClause( lc->size() + 1 ) );
 }
 
-//bool
-//Learning::allMarked(
-//    const Clause* clause )
-//{
-//    if( clause == NULL )
-//    {
-//        trace_msg( learning, 5, "All marked on NULL clause" );
-//        return false;
-//    }
-//    trace_msg( learning, 5, "All marked on clause " << *clause );
-//    
-//    for( unsigned int i = 1; i < clause->size(); i++ )
-//    {
-//        trace_msg( learning, 5, "Considering literal " << clause->getAt( i ) << " in position " << i );
-//
-//        if( clause->getAt( i ).getVariable()->visited() != numberOfCalls )
-//        {
-//            if( allMarked( clause->getAt( i ).getVariable()->getImplicant() ) )
-//            {
-//                trace_msg( learning, 5, "Literal " << clause->getAt( i ) << " set as visited" );
-//                clause->getAt( i ).getVariable()->visited() = numberOfCalls;
-//            }
-//            else
-//            {
-//                return false;
-//            }
-//        }
-//        else
-//        {
-//            trace_msg( learning, 5, "Literal " << clause->getAt( i ) << " has been visited." );
-//        }
-//    }
-//    
-//    return true;
-//}
-
 bool
 Learning::allMarked(
     Reason* clause,
     Literal literal )
 {    
-    if( clause == NULL || solver.isUndefined( literal ) || solver.getDecisionLevel( literal ) == 0 )
-    {
-        trace_msg( learning, 5, "All marked on NULL clause" );
-        return false;
-    }
+    if( clause == NULL || solver.isUndefined( literal ) || solver.getDecisionLevel( literal ) == 0 ) { trace_msg( learning, 5, "All marked on NULL clause" ); return false; }
     trace_msg( learning, 5, "All marked on clause " << *clause );
- 
-    if( !clause->onNavigatingLiteralForAllMarked( solver, this, literal ) )
-        return false;
-    
-    return true;
+    Literal lit = solver.createFromAssignedVariable( literal.getVariable() );
+    return( clause->onNavigatingLiteralForAllMarked( solver, this, lit.getOppositeLiteral() ) );    
 }
 
 bool
 Learning::onNavigatingLiteralForAllMarked(
     Literal literal )
 {
-    if( !isVisited( literal.getVariable(), numberOfCalls ) )
-    {
-        if( allMarked( solver.getImplicant( literal.getVariable() ), literal ) )
-        {
-            trace_msg( learning, 5, "Literal " << literal << " set as visited" );
-            setVisited( literal.getVariable(), numberOfCalls );
-        }
-        else
-        {
-            return false;
-        }
-    }
-    else
-    {
-        trace_msg( learning, 5, "Literal " << literal << " has been visited." );
-    }
-    
+    if( isVisited( literal.getVariable(), numberOfCalls ) ) { trace_msg( learning, 5, "Literal " << literal << " has been visited." ); return true; }
+    trace_msg( learning, 5, "Navigating " << literal << " for all marked" );
+    if( !allMarked( solver.getImplicant( literal.getVariable() ), literal  ) ) return false;
+        
+    trace_msg( learning, 5, "Literal " << literal << " set as visited" );
+    setVisited( literal.getVariable(), numberOfCalls );        
     return true;
 }
 
@@ -365,9 +310,7 @@ void
 Learning::resetVariablesNumberOfCalls()
 {
     for( unsigned i = 1; i < visited.size(); ++i )
-    {
-        setVisited( i, 0 );
-    }
+        setVisited( i, 0 );    
 }
 
 Clause*
@@ -624,7 +567,7 @@ Learning::analyzeFinal(
         else
         {
             trace_msg( weakconstraints, 4, "its reason is " << *reason );
-            reason->onNavigatingForUnsatCore( solver, visited, numberOfCalls, lit );            
+            reason->onNavigatingForUnsatCore( solver, visited, numberOfCalls, next );            
         }        
     }
     

@@ -114,7 +114,7 @@ Solver::~Solver()
             Vector< Clause* >& allNegOccs = getDataStructure( pos.getOppositeLiteral() ).variableAllOccurrences;
             for( unsigned int j = 0; j < allNegOccs.size(); j++ )
                 delete allNegOccs[ j ];
-        }
+        }       
     }
     
     for( unsigned int j = 0; j < optimizationLiterals.size(); j++ )
@@ -620,7 +620,7 @@ Solver::propagation(
     Literal complement = variables.createOppositeLiteralFromAssignedVariable( variable );
 
 //    Vector< pair< Propagator*, int > >& wl = variablePropagators[ ( getTruthValue( variable ) >> 1 ) ];
-    Vector< pair< Propagator*, int > >& wl = getDataStructure( complement ).variablePropagators;
+    Vector< pair< Propagator*, PropagatorData > >& wl = getDataStructure( complement ).variablePropagators;
     for( unsigned i = 0; i < wl.size(); ++i )
     {
         if( conflictDetected() )

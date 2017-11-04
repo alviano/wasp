@@ -29,9 +29,10 @@ bool
 DisjunctionPropagator::onLiteralFalse(
     Solver& solver,
     Literal literal,
-    int pos )
+    PropagatorData p )
 {
-    trace_msg( disjunction, 1, "Literal " << literal.getOppositeLiteral() << " in position " << pos << " is true" );
+    int pos = p.position();
+    trace_msg( disjunction, 1, "Literal " << literal.getOppositeLiteral() << " in position " << pos << " is true" );    
     if( pos >= 0 )
         origIsTrue( solver, literal.getOppositeLiteral(), pos );
     else
@@ -133,12 +134,12 @@ DisjunctionPropagator::finalize(
     assert_msg( origLiterals.size() > 2, origLiterals.size() << "<= 2" );
     assert_msg( origLiterals.size() == auxLiterals.size(), origLiterals.size() << "!=" << auxLiterals.size() );    
     if( origLiterals[ 0 ] != Literal::null )
-        solver.addPropagator( origLiterals[ 0 ].getOppositeLiteral(), this, 0 );
+        solver.addPropagator( origLiterals[ 0 ].getOppositeLiteral(), this, PropagatorData( 0 ) );
 
     for( unsigned int i = 1; i < origLiterals.size(); i++ )
     {
-        solver.addPropagator( origLiterals[ i ].getOppositeLiteral(), this, i );
-        solver.addPropagator( auxLiterals[ i ].getOppositeLiteral(), this, -i );
+        solver.addPropagator( origLiterals[ i ].getOppositeLiteral(), this, PropagatorData( i ) );
+        solver.addPropagator( auxLiterals[ i ].getOppositeLiteral(), this, PropagatorData( -i ) );
     }
     
     assert_msg( firstReason, "First reason is null" );

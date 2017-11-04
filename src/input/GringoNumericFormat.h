@@ -158,7 +158,7 @@ private:
     Clause* normalRuleToClause( Rule* );
     
     Aggregate* createPseudoBooleanConstraint( Vector< Literal >& literals, Vector< uint64_t > & weights, uint64_t bound );
-    Aggregate* createAggregate( Vector< Literal >& literals, Vector< uint64_t > & weights, uint64_t bound, Literal aggregateLiteral );
+    Aggregate* createAggregate( Vector< Literal >& literals, Vector< uint64_t > & weights, uint64_t bound, Literal aggregateLiteral );    
 
     Vector< Rule* > normalRules;    
     Vector< WeightConstraint* > weightConstraintRules;
@@ -173,6 +173,9 @@ private:
     Vector< unsigned > atomsWithSupportInference;
     Vector< unsigned > facts;
     unordered_map< Var, unordered_set< PostPropagator* > > literalsPostPropagator[ 2 ];
+    
+    vector< pair< Literal, Literal > > equivalences;
+    vector< MultiAggregate* > multiAggregates;    
     
     bool usedDictionary;
     unsigned int numberOfDisjunctiveRules;

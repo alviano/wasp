@@ -48,6 +48,7 @@ using namespace std;
 #include "propagators/ExternalPropagator.h"
 #include "propagators/CardinalityConstraint.h"
 #include "weakconstraints/OptimizationProblemUtils.h"
+#include "propagators/MultiAggregate.h"
 
 class HCComponent;
 class WeakInterface;
@@ -58,7 +59,7 @@ class DataStructures
         WatchedList< Clause* > variableWatchedLists;
         Vector< Clause* > variableAllOccurrences;
         Vector< PostPropagator* > variablePostPropagators;
-        Vector< pair< Propagator*, int > > variablePropagators;
+        Vector< pair< Propagator*, PropagatorData > > variablePropagators;
         Vector< Literal > variableBinaryClauses;
 
         DataStructures() : isOptimizationLiteral_( false ) {}
@@ -263,6 +264,7 @@ class Solver
         inline bool hasPropagators() const { return ( !tight() || !propagators.empty() || !disjunctionPropagators.empty() || !externalPropagators.empty() ); }                
         inline void addDisjunctionPropagator( DisjunctionPropagator* disj ) { assert( disj != NULL ); disjunctionPropagators.push_back( disj ); }
         inline void addAggregate( Aggregate* aggr ) { assert( aggr != NULL ); propagators.push_back( aggr ); }
+        inline void addMultiAggregate( MultiAggregate* aggr ) { assert( aggr != NULL ); propagators.push_back( aggr ); }
         inline void addCardinalityConstraint ( CardinalityConstraint* cc ) { assert( cc != NULL ); propagators.push_back( cc ); }
         
         inline void turnOffSimplifications() { callSimplifications_ = false; }
@@ -302,6 +304,8 @@ class Solver
         inline void setImplicant( Var v, Reason* clause ) { variables.setImplicant( v, clause ); }
         inline Reason* getImplicant( Var v ) { return variables.getImplicant( v ); }
 
+        inline unsigned getPositionInTrail( Var v ) const { return variables.getPositionInTrail( v ); }
+        
         inline unsigned int getDecisionLevel( Var v ) const { return variables.getDecisionLevel( v ); }
         inline unsigned int getDecisionLevel( Literal lit ) const { return getDecisionLevel( lit.getVariable() ); }
         inline void setDecisionLevel( Var v, unsigned int decisionLevel ) { variables.setDecisionLevel( v, decisionLevel ); }
@@ -334,7 +338,7 @@ class Solver
         inline void setHCComponent( Var v, HCComponent* c ){ variables.setHCComponent( v, c ); }
         inline HCComponent* getHCComponent( Var v ) { return variables.getHCComponent( v ); }
         
-        inline void addPropagator( Literal lit, Propagator* p, int position ) { getDataStructure( lit ).variablePropagators.push_back( pair< Propagator*, int >( p, position ) ); }
+        inline void addPropagator( Literal lit, Propagator* p, PropagatorData propData ) { getDataStructure( lit ).variablePropagators.push_back( pair< Propagator*, PropagatorData >( p, propData ) ); }
         inline void addPostPropagator( Literal lit, PostPropagator* p ) { getDataStructure( lit ).variablePostPropagators.push_back( p ); }
                 
         bool isFrozen( Var v ) const { return variables.isFrozen( v ); }
@@ -360,6 +364,7 @@ class Solver
         
         inline void attachAggregate( Aggregate& );
         inline void attachCardinalityConstraint( CardinalityConstraint& );
+        inline void attachMultiAggregate( MultiAggregate& );
         
         inline bool isSatisfied( const Clause& clause ) const;
         inline bool allUndefined( const Clause& clause ) const;
@@ -2129,16 +2134,23 @@ Solver::attachAggregate(
 {    
     assert( aggregate.size() > 0 );
     Literal aggregateLiteral = aggregate[ 1 ].getOppositeLiteral();
-    addPropagator( aggregateLiteral, &aggregate, -1 );
-    addPropagator( aggregateLiteral.getOppositeLiteral(), &aggregate, 1 );    
+    addPropagator( aggregateLiteral, &aggregate, PropagatorData( -1 ) );
+    addPropagator( aggregateLiteral.getOppositeLiteral(), &aggregate, PropagatorData( 1 ) );    
     for( unsigned int j = 2; j <= aggregate.size(); j++ )
     {
         Literal lit = aggregate[ j ];
         if( !isTrue( aggregateLiteral ) )
-            addPropagator( lit.getOppositeLiteral(), &aggregate, -j );
+            addPropagator( lit.getOppositeLiteral(), &aggregate, PropagatorData( -j ) );
         if( !isFalse( aggregateLiteral ) )
-            addPropagator( lit, &aggregate, j );
+            addPropagator( lit, &aggregate, PropagatorData( j ) );
     }
+}
+
+void
+Solver::attachMultiAggregate(
+    MultiAggregate& multiAggregate )
+{
+    multiAggregate.attach( *this );
 }
 
 void
@@ -2146,7 +2158,7 @@ Solver::attachCardinalityConstraint(
     CardinalityConstraint& constraint )
 {    
     for( unsigned int i = 0; i < constraint.size(); i++ )
-        addPropagator( constraint[ i ], &constraint, i );    
+        addPropagator( constraint[ i ], &constraint, PropagatorData( i ) );    
 }
 
 bool

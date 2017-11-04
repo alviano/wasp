@@ -45,7 +45,9 @@ struct VariableData
     unsigned int isAssumptionPositive : 1;
     unsigned int isAssumptionNegative : 1;
     unsigned int frozen : 1;
-    unsigned int signOfEliminatedVariable : 2;
+    unsigned int signOfEliminatedVariable : 2;        
+    
+    unsigned int positionInTrail;
 };
 
 class Variables
@@ -73,6 +75,7 @@ class Variables
         inline unsigned numberOfVariables() const { assert( numOfVariables > 0 ); return numOfVariables - 1; }
         
         inline Var getAssignedVariable( unsigned idx ) { assert( idx < assignedVariables.size() ); return assignedVariables[ idx ]; }        
+        inline unsigned getPositionInTrail( Var variable ) const { assert( variable < variablesData.size() ); return variablesData[ variable ].positionInTrail; }
         
         inline void printAnswerSet( OutputBuilder* outputBuilder ) const;
         
@@ -200,6 +203,7 @@ Variables::push_back()
     vd.isAssumptionPositive = 0;
     vd.isAssumptionNegative = 0;    
     vd.reasonForBinaryClauses = new ReasonForBinaryClauses( variablesData.size() - 1 );
+    vd.positionInTrail = UINT_MAX;
     
     assigns.push_back( UNDEFINED );
 }
@@ -286,6 +290,7 @@ Variables::assign(
     if( setTrue( literal ) )
     {
         assert_msg( !checkVariableHasBeenAssigned( variable ), "The variable " << variable << " has been already assigned." );
+        variablesData[ variable ].positionInTrail = assignedVariablesSize;
         assignedVariables[ assignedVariablesSize++ ] = variable;        
         setDecisionLevel( variable, level );
         setImplicant( variable, implicant );
@@ -301,6 +306,7 @@ Variables::onEliminatingVariable(
     assert( variable != 0 );
     assert( assignedVariablesSize < numOfVariables );
     assert_msg( !checkVariableHasBeenAssigned( variable ), "The variable " << variable << " has been already assigned." );
+    variablesData[ variable ].positionInTrail = assignedVariablesSize;
     assignedVariables[ assignedVariablesSize++ ] = variable;        
 }
 
@@ -370,6 +376,7 @@ Variables::setUndefined(
     assert( ( ( assigns[ v ] & ~UNROLL_MASK ) & UNROLL_MASK ) == UNDEFINED );
     assert( getTruthValue( v ) == TRUE ? ( assigns[ v ] & ~UNROLL_MASK ) == CACHE_TRUE : ( assigns[ v ] & ~UNROLL_MASK ) == CACHE_FALSE );
     assigns[ v ] &= ~UNROLL_MASK;
+    variablesData[ v ].positionInTrail = UINT_MAX;
 }
 
 bool

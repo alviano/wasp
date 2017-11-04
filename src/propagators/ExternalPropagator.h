@@ -58,7 +58,7 @@ class ExternalPropagator : public Propagator
         ExternalPropagator( const string& filename, unsigned int interpr, Solver& solver, string scriptDirectory );        
         virtual ~ExternalPropagator();
         
-        virtual bool onLiteralFalse( Solver& solver, Literal literal, int );
+        virtual bool onLiteralFalse( Solver& solver, Literal literal, PropagatorData );
         virtual void reset( const Solver& solver );
         virtual void simplifyAtLevelZero( Solver& solver );
         

@@ -49,6 +49,7 @@ namespace wasp
 #define OPTIONID_trace_aggregates ( 'z' + 9 )
 #define OPTIONID_trace_weakconstraints ( 'z' + 10 )
 #define OPTIONID_trace_disjunction ( 'z' + 11 )
+#define OPTIONID_trace_multiaggregates ( 'z' + 12 )
 
 /* OUTPUT OPTIONS */
 #define OPTIONID_silent ( 'z' + 20 )
@@ -269,6 +270,7 @@ Options::parse(
                 { "trace-aggregates", required_argument, NULL, OPTIONID_trace_aggregates },
                 { "trace-weakconstraints", required_argument, NULL, OPTIONID_trace_weakconstraints },
                 { "trace-disjunction", required_argument, NULL, OPTIONID_trace_disjunction },
+                { "trace-multiaggregates", required_argument, NULL, OPTIONID_trace_multiaggregates },
 
                 /* OUTPUT OPTIONS */
                 { "competition-output", no_argument, NULL, OPTIONID_competition_output },
@@ -420,6 +422,10 @@ Options::parse(
                 setTraceLevel( disjunction, atoi( optarg ) );
                 break;
 
+            case OPTIONID_trace_multiaggregates:
+                setTraceLevel( multiaggregates, atoi( optarg ) );
+                break;    
+                
             case OPTIONID_competition_output:
                 outputPolicy = COMPETITION_OUTPUT;
                 break;

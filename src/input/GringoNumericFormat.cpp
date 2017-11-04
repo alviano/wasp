@@ -125,6 +125,15 @@ GringoNumericFormat::parse(
     computeCompletion();    
     statistics( &solver, endCompletion() );
     solver.endPreprocessing();
+    for( unsigned int i = 0; i < multiAggregates.size(); i++ )
+        multiAggregates[ i ]->finalize( solver );   
+    for( unsigned int i = 0; i < multiAggregates.size(); i++ )
+        solver.attachMultiAggregate( *multiAggregates[ i ] );
+    for( unsigned int i = 0; i < equivalences.size(); i++ )
+    {
+        trace_msg( parser, 1, "Adding equivalence " << equivalences[ i ].first << " <=> " << equivalences[ i ].second );
+        addEquivalence( equivalences[ i ].first, equivalences[ i ].second );
+    }        
 }
 
 void
@@ -655,7 +664,7 @@ GringoNumericFormat::readCount(
         solver.addClause( Literal( id, NEGATIVE ) );
         return;
     }
-    assert( size >= bound );
+    assert( size >= bound );        
 
     WeightConstraint* weightConstraintRule = new WeightConstraint( id, bound );    
     while( negativeSize-- > 0 )
@@ -674,6 +683,10 @@ GringoNumericFormat::readCount(
     
     assert( weightConstraintRule->sameSizeOfInternalVectors() );
     add( weightConstraintRule );
+    if( solver.isTrue( id ) )
+        weightConstraintIsTrue( weightConstraintRule );
+    else if( solver.isFalse( id ) )
+        weightConstraintIsFalse( weightConstraintRule );
     statistics( &solver, readCount() );
 }
 
@@ -742,6 +755,10 @@ GringoNumericFormat::readSum(
   
     assert( weightConstraintRule->sameSizeOfInternalVectors() );
     add( weightConstraintRule );
+    if( solver.isTrue( id ) )
+        weightConstraintIsTrue( weightConstraintRule );
+    else if( solver.isFalse( id ) )
+        weightConstraintIsFalse( weightConstraintRule );
     statistics( &solver, readSum() );
 }
 
@@ -759,6 +776,7 @@ GringoNumericFormat::propagate()
                 propagateTrue( var );
             else
                 propagateFalse( var );
+            if( solver.conflictDetected() ) return;
         }
         while( !facts.empty() )
         {
@@ -766,6 +784,7 @@ GringoNumericFormat::propagate()
             Var var = facts.back();
             facts.pop_back();
             propagateFact( var );
+            if( solver.conflictDetected() ) return;
         }
     }while( repeat );
 }
@@ -2388,7 +2407,7 @@ GringoNumericFormat::onShrinkingHead(
     else if( rule->size() == 1 )
     {
         assert( !rule->literals.back().isHeadAtom() );
-        solver.addClause( rule->literals.back() );
+        solver.addClause( rule->literals.back() );        
     }
     else
     {
@@ -2856,6 +2875,8 @@ GringoNumericFormat::weightConstraintToAggregate(
 void
 GringoNumericFormat::addWeightConstraints()
 {
+    unordered_map< unsigned int, unsigned int > used;
+    Trie aggregatesTrie;
     trace_msg( parser, 1, "Adding weight constraints (if any)" );
     for( unsigned int i = 0; i < weightConstraintRules.size(); i++ )
     {
@@ -2879,10 +2900,62 @@ GringoNumericFormat::addWeightConstraints()
         
         cleanWeightConstraint( weightConstraintRule );
         
-        Aggregate* aggregate = weightConstraintToAggregate( weightConstraintRule );
+        aggregatesTrie.startInsertion();
+        for( unsigned int j = 0; j < weightConstraintRule->size(); j++ )
+        {
+            aggregatesTrie.addElement( weightConstraintRule->getLiteral( j ) );
+            aggregatesTrie.addElement( weightConstraintRule->getWeight( j ) );
+        }
+        
+        unsigned int id = aggregatesTrie.endInsertionGetId();
+        if( id != UINT_MAX )
+        {
+            assert_msg( ( id - 1 ) < multiAggregates.size(), ( id - 1 ) << " >= " << multiAggregates.size() );
+            MultiAggregate* multi = multiAggregates[ id - 1 ];
+            unsigned int pos = multi->hasBound( weightConstraintRule->getBound() );
+            if( pos == UINT_MAX )
+            {
+                multi->addBound( solver.getLiteral( weightConstraintRule->getId() ), weightConstraintRule->getBound() );
+                used[ id - 1 ] = UINT_MAX;
+            }
+            else
+            {
+                //addEquivalence( solver.getLiteral( weightConstraintRule->getId() ), multi->getId( pos ) );
+                equivalences.push_back( pair< Literal, Literal >( solver.getLiteral( weightConstraintRule->getId() ), multi->getId( pos ) ) );
+                weightConstraintRule->remove();
+            }
+        }
+        else
+        {
+            MultiAggregate* multi = new MultiAggregate();
+            for( unsigned int j = 0; j < weightConstraintRule->size(); j++ )
+                multi->addLiteral( solver.getLiteral( weightConstraintRule->getLiteral( j ) ), weightConstraintRule->getWeight( j ) );
+            multi->addBound( solver.getLiteral( weightConstraintRule->getId() ), weightConstraintRule->getBound() );
+            used[ multiAggregates.size() ] = i;
+            multiAggregates.push_back( multi );
+        }
+    }    
+    
+    unsigned int j = 0;
+    for( unsigned int i = 0; i < multiAggregates.size(); i++ )
+    {
+        multiAggregates[ j ] = multiAggregates[ i ];
+        unsigned int pos = used[ i ];
+        if( pos == UINT_MAX )
+        {
+            trace_msg( parser, 2, "Adding multi aggregate " << *multiAggregates[ i ] );
+            solver.addMultiAggregate( multiAggregates[ i ] );
+            j++;
+            continue;
+        }
+        delete multiAggregates[ i ];
+        assert( pos < weightConstraintRules.size() );
+        if( weightConstraintRules[ pos ]->isRemoved() ) continue;
+        Aggregate* aggregate = weightConstraintToAggregate( weightConstraintRules[ pos ] );
         solver.addAggregate( aggregate );
-        trace_msg( parser, 2, "Adding aggregate " << *aggregate );
+        trace_msg( parser, 2, "Adding aggregate " << *aggregate );        
     }
+    multiAggregates.resize( j );
 }
 
 void
@@ -2895,13 +2968,16 @@ GringoNumericFormat::cleanWeightConstraint(
         weightConstraintRule->overwrite( j, i );
         Literal lit = solver.getLiteral( weightConstraintRule->getLiteral( i ) );
 
-        assert( weightConstraintRule->getWeight( i ) <= weightConstraintRule->getBound() );
+        if( weightConstraintRule->getWeight( i ) > weightConstraintRule->getBound() )
+            weightConstraintRule->setWeight( i, weightConstraintRule->getBound() );
+        assert_msg( weightConstraintRule->getWeight( i ) <= weightConstraintRule->getBound(), weightConstraintRule->getWeight( i ) << " > " << weightConstraintRule->getBound() );
         if( solver.isTrue( lit ) )
             weightConstraintRule->decrementBound( weightConstraintRule->getWeight( i ) );
         else if( !solver.isFalse( lit ) )
             ++j;        
     }    
     weightConstraintRule->resize( j );
+    trace_msg( parser, 3, "...after clean: " << *weightConstraintRule );
 }
 
 void

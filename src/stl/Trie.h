@@ -96,6 +96,7 @@ class Trie {
         }
         inline void addElement( int );        
         inline bool endInsertion();
+        inline unsigned int endInsertionGetId();        
 
 //        inline unsigned int addElements( const vector< int >& );
     private:
@@ -147,6 +148,23 @@ Trie::endInsertion()
 //    
 //    current = NULL;
 //    return value;
+}
+
+unsigned int
+Trie::endInsertionGetId()
+{
+    if( disabled )
+        return UINT_MAX;
+
+    assert( current != NULL );
+    
+    unsigned int value = UINT_MAX;
+    if( !current->hasLabel() )
+        current->setLabel( ++numberOfLabels );
+    else
+        value = current->getLabel();
+    current = NULL;
+    return value;
 }
 
 //unsigned int

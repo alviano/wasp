@@ -42,7 +42,7 @@ class CardinalityConstraint : public Propagator, public Reason
         
         inline ~CardinalityConstraint() {}
         
-        virtual bool onLiteralFalse( Solver& solver, Literal lit, int pos );
+        virtual bool onLiteralFalse( Solver& solver, Literal lit, PropagatorData pos );
         virtual void simplifyAtLevelZero( Solver& ) {}
         
         inline unsigned int size() const { return literals.size(); }

@@ -43,7 +43,7 @@ class Aggregate : public Propagator, public Reason
         inline Aggregate();
         inline ~Aggregate() {}
         
-        virtual bool onLiteralFalse( Solver& solver, Literal lit, int pos );
+        virtual bool onLiteralFalse( Solver& solver, Literal lit, PropagatorData p );
         virtual void simplifyAtLevelZero( Solver& ) {}
 
         

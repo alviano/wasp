@@ -37,6 +37,7 @@ class WaspHelp
             #ifdef TRACE_ON
             cout << "Trace options                          " << endl << endl;
             cout << "--trace-aggregates=<verbosity>         - Trace aggregates propagation." << endl;
+            cout << "--trace-multiaggregates=<verbosity>    - Trace multi aggregates propagation." << endl;
             cout << "--trace-disjunction=<verbosity>        - Trace disjunction propagator." << endl;
             cout << "--trace-enumeration=<verbosity>        - Trace enumeration." << endl;
             cout << "--trace-heuristic=<verbosity>          - Trace heuristic." << endl;
