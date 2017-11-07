@@ -60,23 +60,24 @@ class ExternalHeuristic : public MinisatHeuristic
         void onLitInImportantClauseProtected( Literal lit );
         void onLitInvolvedInConflictProtected( Literal lit );
         void onLoopFormula( const Clause* clause );
-        void onNewBinaryClause( Literal lit1, Literal lit2 );
+        void onNewBinaryClauseProtected( Literal lit1, Literal lit2 );
         void onNewClause( const Clause* clause );
         void onRestart();        
-        void onUnfoundedSet( const Vector< Var >& unfoundedSet );
-        
-        void initFallback();
-        void factorFallback();
-        void signFallback();        
+        void onUnfoundedSet( const Vector< Var >& unfoundedSet );                
         
     protected:
         virtual Literal makeAChoiceProtected();   
+        virtual void onFinishedSimplificationsProtected() { initFallback(); factorFallback(); signFallback(); }
     
     private:
         const static unsigned int CHOICE = 0;
         const static unsigned int DO_RESTART = 1;
         const static unsigned int FALLBACK_HEURISTIC = 2;
         const static unsigned int UNROLL = 3;
+        
+        void initFallback();
+        void factorFallback();
+        void signFallback();
         
         void selectLiteral();
         

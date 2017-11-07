@@ -502,7 +502,9 @@ class Solver
         inline void addPropagatorAttachedToEndPropagation( ExternalPropagator* externalPropagator ) { assert( externalPropagator ); propagatorsAttachedToEndPropagation.push_back( externalPropagator ); }
         inline void addPropagatorAttachedToPartialChecks( ExternalPropagator* externalPropagator ) { assert( externalPropagator ); propagatorsAttachedToPartialChecks.push_back( externalPropagator ); }
         
-        inline ExternalPropagator* getExternalPropagatorForLazyWeakConstraints() const;        
+        inline ExternalPropagator* getExternalPropagatorForLazyWeakConstraints() const;
+        
+        unsigned int estimateBinaryPropagation( Literal lit );
 
     private:
         inline unsigned int solve_( vector< Literal >& assumptions );
@@ -1351,7 +1353,7 @@ bool
 Solver::chooseLiteral(
     vector< Literal >& assumptions )
 {        
-    Literal choice = Literal::null;
+    Literal choice = Literal::null;    
     for( unsigned int i = currentDecisionLevel; i < assumptions.size(); i++ )
     {
         if( isUndefined( assumptions[ i ] ) )
@@ -1720,8 +1722,6 @@ Solver::preprocessing()
     if( callSimplifications() && !satelite->simplify() )
         return false;
 
-    choiceHeuristic->onFinishedSimplifications();
-    
     for( unsigned int i = 0; i < externalPropagators.size(); i++ )
     {
         externalPropagators[ i ]->simplifyAtLevelZero( *this );
@@ -1736,6 +1736,7 @@ Solver::preprocessing()
     attachWatches();
     clearComponents();
     
+    choiceHeuristic->onFinishedSimplifications();       
     assignedVariablesAtLevelZero = numberOfAssignedLiterals();
     
     deletionCounters.maxLearned = numberOfClauses() * deletionCounters.learnedSizeFactor;

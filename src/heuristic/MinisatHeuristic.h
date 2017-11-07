@@ -83,7 +83,7 @@ class MinisatHeuristic
 
         inline void onNewVariable( Var v );
         inline void onNewVariableRuntime( Var v );
-        inline void onFinishedSimplifications() { simplifyVariablesAtLevelZero(); }
+        inline void onFinishedSimplifications() { simplifyVariablesAtLevelZero(); onFinishedSimplificationsProtected(); }
         inline void onUnrollingVariable( Var v );
         
         inline void onLitInvolvedInConflict( Literal lit ) { variableBumpActivity( lit.getVariable() ); onLitInvolvedInConflictProtected( lit ); }
@@ -94,7 +94,7 @@ class MinisatHeuristic
         virtual void onLearningClause( unsigned int, const Clause* ) {}
         virtual void onLitInLearntClause( Literal ) {}
         virtual void onLoopFormula( const Clause* ) {}
-        virtual void onNewBinaryClause( Literal, Literal ) {}
+        void onNewBinaryClause( Literal l1, Literal l2 ) { chosenVariable = 1; onNewBinaryClauseProtected( l1, l2 ); }
         virtual void onNewClause( const Clause* ) {}
         virtual void onRestart() {}
         virtual void onUnfoundedSet( const Vector< Var >& ) {}
@@ -107,13 +107,15 @@ class MinisatHeuristic
     protected:
         Solver& solver;        
         virtual Literal makeAChoiceProtected();
-        inline void init( Var v, unsigned int value );
+        inline void init( Var v, double value );
         inline void setFactor( Var v, unsigned int factor );
         inline void setSign( int lit );        
         
         virtual void onLitInvolvedInConflictProtected( Literal ) {}
         virtual void onConflictProtected() {}
         virtual void onLitInImportantClauseProtected( Literal ) {}
+        virtual void onFinishedSimplificationsProtected() {}
+        virtual void onNewBinaryClauseProtected( Literal, Literal ) {}
         
     private:        
         inline void rescaleActivity();
@@ -123,6 +125,16 @@ class MinisatHeuristic
         void simplifyVariablesAtLevelZero();
         inline bool bumpActivity( Var var ){ assert( var < act.size() ); return ( ( act[ var ] += variableIncrement ) > 1e100 ); }
 
+        
+        void computeScore( Var v, unsigned int& score );
+        void initMinisatMoms( Var v, unsigned int& score );
+        void initMinisatBinary( Var v, unsigned int& score );
+        void initMinisatWatches( Var v, unsigned int& score );
+        void initMinisatPropagators( Var v, unsigned int& score );
+        void initMinisatVisibleAtoms( Var v, unsigned int& score );
+        void initMinisatHiddenAtoms( Var v, unsigned int& score );
+        void initMinisatCombination( Var v, unsigned int& score );
+        
         Activity variableIncrement;
         Activity variableDecay;
         
@@ -131,7 +143,7 @@ class MinisatHeuristic
 
         Var chosenVariable;
         Heap< ActivityComparator > heap;
-        HeapLiterals< LiteralActivityComparator > preferredChoices;
+        HeapLiterals< LiteralActivityComparator > preferredChoices;                
 };
 
 MinisatHeuristic::MinisatHeuristic( Solver& s ) :
@@ -144,12 +156,15 @@ MinisatHeuristic::MinisatHeuristic( Solver& s ) :
 void
 MinisatHeuristic::init(
     Var v,
-    unsigned int value )
+    double value )
 {
     assert( v < act.size() );
-    act[ v ] = value;
+    act[ v ] += value;
     if( heap.inHeap( v ) )
         heap.decrease( v );
+    
+    if( vars[ v ].isPreference() && preferredChoices.inHeap( v ) )
+        preferredChoices.decrease( v );
 }
 
 void
@@ -172,7 +187,7 @@ MinisatHeuristic::setSign(
 {
     Var v = lit > 0 ? lit : -lit;
     assert( v < vars.size() );
-    vars[ v ].setSign( lit > 0 );    
+    vars[ v ].setSign( lit > 0 );
 }
 
 void

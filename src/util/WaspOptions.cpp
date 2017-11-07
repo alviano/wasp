@@ -67,7 +67,10 @@ namespace wasp
 
 #define OPTIONID_minisatheuristic ( 'z' + 40 )
 #define OPTIONID_initVariableIncrement ( 'z' + 41 )
-#define OPTIONID_initVariableDecay ( 'z' + 42 )    
+#define OPTIONID_initVariableDecay ( 'z' + 42 )
+#define OPTIONID_initStrategy ( 'z' + 43 )
+#define OPTIONID_initValue ( 'z' + 44 )
+#define OPTIONID_initSign ( 'z' + 45 )    
 
 /* RESTART OPTIONS */
 #define OPTIONID_geometric_restarts ( 'z' + 50 )
@@ -202,6 +205,8 @@ map< string, unsigned int > Options::stringToMinimization;
 
 map< string, unsigned int > Options::stringToQueryAlgorithms;
 
+map< string, unsigned int > Options::stringToInitMinisatHeuristic;
+
 bool Options::simplifications = true;
 
 unsigned Options::silent = 0;
@@ -236,6 +241,10 @@ double Options::initVariableIncrement = 1.0;
 double Options::initVariableDecay = ( 1 / 0.95 );
 
 bool Options::stats = false;
+
+unsigned int Options::initMinisatHeuristic = INIT_MINISAT_ALL_EQUALS;
+unsigned int Options::initValue = 0;
+unsigned int Options::initSign = INIT_SIGN_MINISAT_ALLFALSE;
 
 void
 Options::parse(
@@ -289,7 +298,10 @@ Options::parse(
                 /* MINISAT POLICY */
                 { "minisat-policy", no_argument, NULL, OPTIONID_minisatheuristic },
                 { "init-varinc", required_argument, NULL, OPTIONID_initVariableIncrement },
-                { "init-vardecay", required_argument, NULL, OPTIONID_initVariableDecay },                
+                { "init-vardecay", required_argument, NULL, OPTIONID_initVariableDecay },
+                { "init-strategy", required_argument, NULL, OPTIONID_initStrategy },
+                { "init-value", required_argument, NULL, OPTIONID_initValue },
+                { "init-sign", required_argument, NULL, OPTIONID_initSign },
                 
                 #if defined(ENABLE_PYTHON) || defined(ENABLE_PERL)
                 /* HEURISTIC */
@@ -656,10 +668,32 @@ Options::parse(
                 break;
                 
             case OPTIONID_initVariableDecay:
-                if( optarg )
-                    initVariableDecay = atof( optarg );
+                if( optarg )                    
+                    initVariableDecay = 1 / ( double ) ( atoi( optarg ) / 100 );                
                 break;
                 
+            case OPTIONID_initStrategy:
+                if( optarg )
+                    initMinisatHeuristic = getInitMinisatHeuristic( optarg );
+                break;
+                
+            case OPTIONID_initValue:
+                if( optarg )
+                    initValue = atoi( optarg );
+                break;
+                
+            case OPTIONID_initSign:
+                if( optarg )
+                {
+                    if( !strcmp( optarg, "false" ) )
+                        initValue = INIT_SIGN_MINISAT_ALLFALSE;
+                    else if( !strcmp( optarg, "true" ) )
+                        initValue = INIT_SIGN_MINISAT_ALLTRUE;
+                    else if( !strcmp( optarg, "mixed" ) )
+                        initValue = INIT_SIGN_MINISAT_MIXED;
+                }
+                break;
+    
             case OPTIONID_forward_partialchecks:
                 forwardPartialChecks = true;
                 break;
@@ -856,6 +890,17 @@ Options::getQueryAlgorithm(
 }
 
 unsigned int
+Options::getInitMinisatHeuristic(
+    const string& s )
+{
+    map< string, unsigned int >::iterator it = stringToInitMinisatHeuristic.find( s );
+    if( it == stringToInitMinisatHeuristic.end() )
+        WaspErrorMessage::errorGeneric( "Inserted invalid strategy for initialization of minisat heuristic." );
+    
+    return it->second; 
+}
+
+unsigned int
 Options::getEnumerationStrategy(
     const string& s )
 {
@@ -896,7 +941,16 @@ Options::initMap()
     stringToQueryAlgorithms[ "cb" ] = COREBASED_QUERIES;
     stringToQueryAlgorithms[ "chunk-static" ] = CHUNK_STATIC;
     stringToQueryAlgorithms[ "chunk-dynamic" ] = CHUNK_DYNAMIC;
-    stringToQueryAlgorithms[ "preferences" ] = PREFERENCE_QUERIES;                    
+    stringToQueryAlgorithms[ "preferences" ] = PREFERENCE_QUERIES;
+    
+    stringToInitMinisatHeuristic[ "all-equals" ] = INIT_MINISAT_ALL_EQUALS;
+    stringToInitMinisatHeuristic[ "moms" ] = INIT_MINISAT_MOMS;
+    stringToInitMinisatHeuristic[ "binary" ] = INIT_MINISAT_BINARY;
+    stringToInitMinisatHeuristic[ "watches" ] = INIT_MINISAT_WATCHES;
+    stringToInitMinisatHeuristic[ "propagators" ] = INIT_MINISAT_PROPAGATORS;
+    stringToInitMinisatHeuristic[ "visible-atoms" ] = INIT_MINISAT_VISIBLE_ATOMS;
+    stringToInitMinisatHeuristic[ "hidden-atoms" ] = INIT_MINISAT_HIDDEN_ATOMS;
+    stringToInitMinisatHeuristic[ "combination" ] = INIT_MINISAT_COMBINATION;                    
 }
 
 void

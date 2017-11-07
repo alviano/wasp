@@ -121,12 +121,15 @@ namespace wasp
             static int specialIncReduceDB;
             static unsigned int lbLBDFrozenClause;
             
-            static unsigned int lbLBDMinimizingClause;
-                        
-            static double initVariableIncrement;
-            static double initVariableDecay;
+            static unsigned int lbLBDMinimizingClause;                                    
             
             static bool stats;
+            
+            static double initVariableIncrement;
+            static double initVariableDecay;
+            static unsigned int initValue;
+            static unsigned int initMinisatHeuristic;
+            static unsigned int initSign;
             
             static map< string, WEAK_CONSTRAINTS_ALG > stringToWeak;
             
@@ -135,6 +138,8 @@ namespace wasp
             static map< string, unsigned int > stringToMinimization;
             
             static map< string, unsigned int > stringToQueryAlgorithms;
+            
+            static map< string, unsigned int > stringToInitMinisatHeuristic;
             
             static WEAK_CONSTRAINTS_ALG getAlgorithm( const string& s );
             
@@ -145,6 +150,8 @@ namespace wasp
             static unsigned int getEnumerationStrategy( const string& s );
             
             static unsigned int getQueryAlgorithm( const string& s );
+            
+            static unsigned int getInitMinisatHeuristic( const string& s );
             
             static void initMap();
             

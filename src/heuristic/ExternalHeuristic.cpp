@@ -110,6 +110,8 @@ void ExternalHeuristic::initFallback()
     interpreter->callListMethod( method_initFallback, output );
     if( output.size() % 2 != 0 )
         WaspErrorMessage::errorGeneric( error_initfallback );
+    if( output.empty() )
+        return;    
     for( unsigned int i = 0; i < output.size() - 1; i = i + 2 )
     {
         int var = output[ i ];
@@ -125,10 +127,12 @@ void ExternalHeuristic::factorFallback()
 {
     if( !check_factorFallback )
         return;
-    vector< int > output;
+    vector< int > output;    
     interpreter->callListMethod( method_factorFallback, output );
     if( output.size() % 2 != 0 )
         WaspErrorMessage::errorGeneric( error_factorfallback );
+    if( output.empty() )
+        return;
     for( unsigned int i = 0; i < output.size() - 1; i = i + 2 )
     {
         int var = output[ i ];
@@ -169,7 +173,7 @@ void ExternalHeuristic::onNewClause( const Clause* clause )
     }
 }
 
-void ExternalHeuristic::onNewBinaryClause( Literal lit1, Literal lit2 )
+void ExternalHeuristic::onNewBinaryClauseProtected( Literal lit1, Literal lit2 )
 {
     if( check_onNewClause )
     {

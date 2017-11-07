@@ -326,8 +326,53 @@ MultiAggregate::print( ostream& out ) const
 }
 
 void
+MultiAggregate::clean( Solver& solver )
+{
+    //Do not need to clean for count
+    if( weights.size() == 0 || getWeight( 1 ) == 1 )
+        return;
+    
+    unordered_set< uint64_t > sumsSet;
+    vector< uint64_t > possibleSums;
+    possibleSums.push_back( 0 );
+    for( unsigned int i = 1;  i < weights.size(); i++ )
+    {
+        unsigned size = possibleSums.size();
+        for(unsigned int j = 0; j < size; j++)
+        {
+            uint64_t sum = possibleSums[ j ] + getWeight( i );
+            if( sumsSet.insert( sum ).second )
+                possibleSums.push_back( sum );
+        }
+    }
+    unsigned int j = 1;
+    for( unsigned int i = 1; i < bounds.size(); i++ )
+    {
+        bounds[ j ] = bounds[ i ];
+        ids[ j ] = ids[ i ];
+        
+        //Adding ids[ i ] -> ids[ i + 1 ] ( ids[ i + 1 ] -> ids[ i ] has been already added )
+        if( sumsSet.find( bounds[ i ] ) == sumsSet.end() )
+        {
+            Clause* clause = new Clause( 2 );
+            clause->addLiteral( ids[ i ].getOppositeLiteral() );
+            clause->addLiteral( ids[ i + 1 ] );
+            solver.cleanAndAddClause( clause );
+        }
+        else
+            j++;
+    }
+    bounds[ j ] = bounds[ bounds.size() - 1 ];
+    ids[ j ] = ids[ ids.size() - 1 ];
+    j++;
+    bounds.resize( j );
+    ids.resize( j );    
+}
+
+void
 MultiAggregate::attach( Solver& solver )
-{    
+{
+    clean( solver );
     computeWatches( solver );
     trace_msg( multiaggregates, 1, "Attaching aggregate " << *this );
     for( unsigned int i = 1; i < literals.size(); i++ )

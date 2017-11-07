@@ -103,6 +103,17 @@ def getTerms(predicateName,atomName):
             elements.append(mystring)
             mystring=""        
     return elements
+   
+def initFallback(elements):
+    output = []
+    for i in elements:
+        (a,b) = i        
+        output.append(b)
+        output.append(a)
+    return output
+
+def factorFallback(elements):
+    return initFallback(elements)
     
 def choice(l):
     return [l, 0, 0]

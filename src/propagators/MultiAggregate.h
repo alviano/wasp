@@ -30,6 +30,7 @@ class Solver;
 
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 #include <cstdlib>
 #include <numeric>
 using namespace std;
@@ -117,7 +118,9 @@ class MultiAggregate : public Propagator, public Reason
         
         void computeInferences( vector< Literal >& inferences, Literal lit );
         void computeInferences( vector< Literal >& inferences, unsigned int position, bool isId, int type );                
-                
+              
+        void clean( Solver& solver );
+        
         inline Literal getLiteralFromTrailElement( TrailElement te )
         {
             int pos = te.position();

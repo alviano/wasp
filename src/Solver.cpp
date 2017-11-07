@@ -547,12 +547,27 @@ Solver::solvePropagators(
     return INCOHERENT;
 }
 
+unsigned int
+Solver::estimateBinaryPropagation(
+    Literal lit )
+{
+    assert( !conflictDetected() );    
+    setTrue( lit );
+    Var variable = lit.getVariable();
+    unsigned int orig = numberOfAssignedLiterals();
+    shortPropagation( variable );
+    unsigned int value = numberOfAssignedLiterals() - orig;
+    if( conflictDetected() ) { conflictLiteral = Literal::null; conflictClause = NULL; }
+    while( numberOfAssignedLiterals() != value ) variables.unrollLastVariable();
+    return value;
+}
+
 void
 Solver::shortPropagation(
     Var variable )
 {
     assert( !conflictDetected() );
-            
+    
     Literal complement = variables.createOppositeLiteralFromAssignedVariable( variable );    
 //    Vector< Literal >& binary = variableBinaryClauses[ ( getTruthValue( variable ) >> 1 ) ];    
     Vector< Literal >& binary = getDataStructure( complement ).variableBinaryClauses;

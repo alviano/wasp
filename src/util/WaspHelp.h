@@ -84,9 +84,22 @@ class WaspHelp
             
             cout << "Heuristics options                     " << endl << endl;
             cout << "--minisat-policy                       - Enable minisat policy for deletion" << endl;
-            cout << "--init-varinc                          - Initial value of variable increment [default: 1.0]" << endl;
-            cout << "--init-vardecay                        - Initial value of variable decay [default: 1/0.95]" << endl;
-            
+            cout << "--init-varinc=N                        - Initial value of variable increment [default: 1.0]" << endl;
+            cout << "--init-vardecay=N                      - Initial value of variable decay 1/0.N [default: 95]" << endl;
+            cout << "--init-strategy                        - Set the strategy to initialize minisat variable activities. N is the value specified by option --init-value" << endl;
+            cout << "       =all-equals                     - All activities are equal to N" << endl;
+            cout << "       =moms                           - Use moms (N is added to computed values)" << endl;
+            cout << "       =binary                         - Use binary clauses (N is added to computed values)" << endl;
+            cout << "       =watches                        - Use watches (N is added to computed values)" << endl;
+            cout << "       =propagators                    - Use propagators (N is added to computed values)" << endl;
+            cout << "       =visible-atoms                  - The activities of visible atoms are equal to N" << endl;
+            cout << "       =hidden-atoms                   - The activities of hidden atoms are equal to N" << endl;
+            cout << "       =combination                    - Use a combination of moms, watches and propagators (N is added to computed values)" << endl;             
+            cout << "--init-value=N                         - Initial value of init-strategy [default: 0]" << endl;
+            cout << "--init-sign                            - Set the polarity of selected literals" << endl;
+            cout << "       =false                          - Choose always false" << endl;
+            cout << "       =true                           - Choose always true" << endl;
+            cout << "       =mixed                          - Choose always mixed" << endl;
             cout << separator << endl;
             cout << "Glucose options                        " << endl << endl;                        
             cout << "--size-lbdqueue                        - Initial size of LBD queue [default: 50]" << endl;
