@@ -61,7 +61,7 @@ class Statistics {
         minAssums( MAXUNSIGNEDINT ), avgAssums( 0 ), numberOfCalling( 0 ), minTime( MAXUNSIGNEDINT ), 
         maxTime( 0 ), avgTime( 0 ), currentTime( 0 ), numberOfPartialChecks( 0 ), partialCheckWithUS( 0 ),
         clausesAfterSimplifications( 0 ), variablesAfterSimplifications( 0 ), numberOfVars( 0 ), trueAtLevelZero( 0 ),
-        numberOfSolverCalls( 0 )
+        numberOfSolverCalls( 0 ), numberOfMultiAggregates( 0 ), sumOfBoundsMultiAggregates( 0 )
         {
         }
 
@@ -154,6 +154,12 @@ class Statistics {
                 ternaryAfterSatelite++;
             clausesAfterSatelite++;
         }
+        
+        inline void onAddingMultiAggregate( unsigned int nbOfBounds )
+        {
+            numberOfMultiAggregates++;
+            sumOfBoundsMultiAggregates += nbOfBounds;        
+        }
 
         inline void afterPreprocessing( unsigned int vars, unsigned int clauses )
         {
@@ -214,6 +220,9 @@ class Statistics {
             cerr << "      Binary                    : " << numberOfBinaryClauses << " (" << ( ( double ) numberOfBinaryClauses * 100 / ( double )numberOfClauses ) << "%)" << endl;
             cerr << "      Ternary                   : " << numberOfTernaryClauses << " (" << ( double )( numberOfTernaryClauses * 100 / ( double ) numberOfClauses ) << "%)" << endl;
             cerr << "      Left after propagation    : " << clauses << endl;
+            cerr << "    MultiAggregates             : " << numberOfMultiAggregates << endl;
+            cerr << "      Replaced aggregates       : " << numberOfMultiAggregates * sumOfBoundsMultiAggregates << endl;
+            
             cerr << "    Variables                   : " << vars << endl;
             cerr << "      Assigned                  : " << assignedVars << " (" << ( ( double ) assignedVars * 100 / ( double ) numberOfVars ) << "%)" << endl;
 
@@ -431,6 +440,9 @@ class Statistics {
         unsigned int trueAtLevelZero;
         
         unsigned int numberOfSolverCalls;
+        
+        unsigned int numberOfMultiAggregates;
+        unsigned int sumOfBoundsMultiAggregates;
 
         void printStatistics()
         {

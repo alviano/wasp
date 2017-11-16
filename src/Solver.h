@@ -2152,6 +2152,7 @@ Solver::attachMultiAggregate(
     MultiAggregate& multiAggregate )
 {
     multiAggregate.attach( *this );
+    statistics( this, onAddingMultiAggregate( multiAggregate.numberOfBounds() ) );    
 }
 
 void

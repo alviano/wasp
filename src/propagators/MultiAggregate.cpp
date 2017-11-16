@@ -345,28 +345,35 @@ MultiAggregate::clean( Solver& solver )
                 possibleSums.push_back( sum );
         }
     }
-    unsigned int j = 1;
-    for( unsigned int i = 1; i < bounds.size(); i++ )
+    
+    if( bounds.size() > 3 )
     {
-        bounds[ j ] = bounds[ i ];
-        ids[ j ] = ids[ i ];
-        
-        //Adding ids[ i ] -> ids[ i + 1 ] ( ids[ i + 1 ] -> ids[ i ] has been already added )
-        if( sumsSet.find( bounds[ i ] ) == sumsSet.end() )
+        unsigned int j = 1;
+        for( unsigned int i = 1; i < bounds.size() - 2; i++ )
         {
-            Clause* clause = new Clause( 2 );
-            clause->addLiteral( ids[ i ].getOppositeLiteral() );
-            clause->addLiteral( ids[ i + 1 ] );
-            solver.cleanAndAddClause( clause );
+            bounds[ j ] = bounds[ i ];
+            ids[ j ] = ids[ i ];
+
+            //Adding ids[ i ] -> ids[ i + 1 ] ( ids[ i + 1 ] -> ids[ i ] has been already added )
+            if( sumsSet.find( bounds[ i ] ) == sumsSet.end() )
+            {
+                Clause* clause = new Clause( 2 );
+                clause->addLiteral( ids[ i ].getOppositeLiteral() );
+                clause->addLiteral( ids[ i + 1 ] );
+                solver.cleanAndAddClause( clause );
+            }
+            else
+                j++;
         }
-        else
-            j++;
+        bounds[ j ] = bounds[ bounds.size() - 2 ];
+        ids[ j ] = ids[ ids.size() - 2 ];    
+        j++;
+        bounds[ j ] = bounds[ bounds.size() - 1 ];
+        ids[ j ] = ids[ ids.size() - 1 ];
+        j++;
+        bounds.resize( j );
+        ids.resize( j );
     }
-    bounds[ j ] = bounds[ bounds.size() - 1 ];
-    ids[ j ] = ids[ ids.size() - 1 ];
-    j++;
-    bounds.resize( j );
-    ids.resize( j );    
 }
 
 void

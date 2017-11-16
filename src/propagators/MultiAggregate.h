@@ -82,6 +82,8 @@ class MultiAggregate : public Propagator, public Reason
         
         inline void finalize( Solver& solver ) { sort(); addBound( Literal( 1, POSITIVE ), UINT64_MAX ); addBinaryClauses( solver ); assert( checkUndefined( solver ) ); }                        
         
+        inline unsigned int numberOfBounds() const { return bounds.size() - 2; }
+        
     protected:
         virtual ostream& print( ostream& out ) const;
     
@@ -119,7 +121,7 @@ class MultiAggregate : public Propagator, public Reason
         void computeInferences( vector< Literal >& inferences, Literal lit );
         void computeInferences( vector< Literal >& inferences, unsigned int position, bool isId, int type );                
               
-        void clean( Solver& solver );
+        void clean( Solver& solver );                
         
         inline Literal getLiteralFromTrailElement( TrailElement te )
         {
@@ -161,19 +163,22 @@ class MultiAggregate : public Propagator, public Reason
         
         void bubblesort( vector< Literal >& lits, vector< uint64_t >& ws, bool descOrd )
         {
-            assert( lits.size() == ws.size() );            
-            for( int i = lits.size() - 1; i > 1; i-- )
-                for( int j = 1; j < i; j++ )
+            assert( lits.size() == ws.size() );
+            for( int i = lits.size() - 1; i > 1; i-- ) {
+                bool swapped = false;
+                if( descOrd )
                 {
-                    if( descOrd )
-                    {
-                        if( ws[ j ] < ws[ j + 1 ] ) { swap( lits, j ); swap( ws, j ); } 
-                    }
-                    else
-                    {
-                        if( ws[ j ] > ws[ j + 1 ] ) { swap( lits, j ); swap( ws, j ); } 
-                    }
-                }            
+                    for( int j = 1; j < i; j++ )
+                        if( ws[ j ] < ws[ j + 1 ] ) { swap( lits, j ); swap( ws, j ); swapped = true; }                    
+                }
+                else
+                {
+                    for( int j = 1; j < i; j++ )
+                        if( ws[ j ] > ws[ j + 1 ] ) { swap( lits, j ); swap( ws, j ); swapped = true; }                    
+                }
+                if( !swapped )
+                    break;
+            }
         }        
         
         void computeWatches( Solver& solver );
