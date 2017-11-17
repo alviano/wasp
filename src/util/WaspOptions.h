@@ -81,6 +81,8 @@ namespace wasp
             static unsigned int chunkPercentage;
             static unsigned int chunkSize;
             
+            static unsigned int minimizePredicateChunkPercentage;
+            
             static unsigned int modelcheckerAlgorithm;
             
             static bool compactReasonsForHCC;
@@ -131,6 +133,9 @@ namespace wasp
             static unsigned int initMinisatHeuristic;
             static unsigned int initSign;
             
+            static unsigned int predMinimizationAlgorithm;
+            static vector< string > predicatesToMinimize;
+            
             static map< string, WEAK_CONSTRAINTS_ALG > stringToWeak;
             
             static map< string, SHIFT_STRATEGY > stringToShift;
@@ -140,6 +145,8 @@ namespace wasp
             static map< string, unsigned int > stringToQueryAlgorithms;
             
             static map< string, unsigned int > stringToInitMinisatHeuristic;
+            
+            static map< string, unsigned int > stringToPredMinimization;
             
             static WEAK_CONSTRAINTS_ALG getAlgorithm( const string& s );
             

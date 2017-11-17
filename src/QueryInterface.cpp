@@ -53,6 +53,7 @@ QueryInterface::computeCautiousConsequences(
                 param = wasp::Options::chunkSize;
             else if( wasp::Options::chunkPercentage != UINT_MAX )
                 param = ( candidates.size() * wasp::Options::chunkPercentage ) / 100;
+            param = max(param, (unsigned int) 1);
             coreBasedAlgorithm( param );
             }
             break;

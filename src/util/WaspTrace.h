@@ -99,6 +99,7 @@ class TraceLevels
         unsigned weakconstraints() { return 9; }
         unsigned disjunction() { return 10; }
         unsigned multiaggregates() { return 11; }
+        unsigned predmin() { return 12; }
 
     private:
         inline TraceLevels();
@@ -118,6 +119,7 @@ TraceLevels::TraceLevels()
     types.push_back( pair< string, unsigned >( "weakconstraints", 0 ) );
     types.push_back( pair< string, unsigned >( "disjunction", 0 ) );
     types.push_back( pair< string, unsigned >( "multiaggregates", 0 ) );
+    types.push_back( pair< string, unsigned >( "predmin", 0 ) );
 }
 
 };

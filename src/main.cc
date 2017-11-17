@@ -21,6 +21,7 @@
 #include <iostream>
 #include "WaspFacade.h"
 #include "util/WaspOptions.h"
+#include "PredicateMinimization.h"
 using namespace std;
 
 int EXIT_CODE = 0;
@@ -50,7 +51,13 @@ int main( int argc, char** argv )
     signal( SIGXCPU, my_handler );
     
     waspFacade.readInput( cin );
-    waspFacade.solve();
+    if(wasp::Options::predMinimizationAlgorithm != NO_PREDMINIMIZATION)
+    {
+        PredicateMinimization p(waspFacade);
+        p.solve();
+    }
+    else
+        waspFacade.solve();
     waspFacade.onFinish();
     delete waspFacadePointer;
     Statistics::clean();

@@ -50,6 +50,7 @@ namespace wasp
 #define OPTIONID_trace_weakconstraints ( 'z' + 10 )
 #define OPTIONID_trace_disjunction ( 'z' + 11 )
 #define OPTIONID_trace_multiaggregates ( 'z' + 12 )
+#define OPTIONID_trace_predmin ( 'z' + 13 )
 
 /* OUTPUT OPTIONS */
 #define OPTIONID_silent ( 'z' + 20 )
@@ -131,6 +132,11 @@ namespace wasp
 #define OPTIONID_querychunksize ( 'z' + 302 )
 #define OPTIONID_querychunkpercentage ( 'z' + 303 )
     
+/* PREDMIN OPTIONS */
+#define OPTIONID_predminimizationalgorithm ( 'z' + 350 )
+#define OPTIONID_predminimizationpredicate ( 'z' + 351 )
+#define OPTIONID_predminimizationchunkpercentage ( 'z' + 352 )
+    
 #ifdef TRACE_ON
 TraceLevels Options::traceLevels;
 #endif
@@ -188,6 +194,9 @@ vector< string > Options::pluginsFilenames;
 
 string Options::scriptDirectory = "";
 
+unsigned int Options::predMinimizationAlgorithm = NO_PREDMINIMIZATION;
+vector< string > Options::predicatesToMinimize;
+
 void split( const string &s, char delim, vector< string >& output )
 {
     stringstream ss( s );
@@ -207,6 +216,8 @@ map< string, unsigned int > Options::stringToQueryAlgorithms;
 
 map< string, unsigned int > Options::stringToInitMinisatHeuristic;
 
+map< string, unsigned int > Options::stringToPredMinimization;
+
 bool Options::simplifications = true;
 
 unsigned Options::silent = 0;
@@ -222,6 +233,8 @@ unsigned int Options::chunkSize = UINT_MAX;
 unsigned int Options::chunkPercentage = UINT_MAX;
 
 unsigned int Options::modelcheckerAlgorithm = REDUCT_BASED;
+
+unsigned int Options::minimizePredicateChunkPercentage = UINT_MAX;
 
 bool Options::compactReasonsForHCC = false;
 
@@ -280,6 +293,7 @@ Options::parse(
                 { "trace-weakconstraints", required_argument, NULL, OPTIONID_trace_weakconstraints },
                 { "trace-disjunction", required_argument, NULL, OPTIONID_trace_disjunction },
                 { "trace-multiaggregates", required_argument, NULL, OPTIONID_trace_multiaggregates },
+                { "trace-predmin", required_argument, NULL, OPTIONID_trace_predmin },
 
                 /* OUTPUT OPTIONS */
                 { "competition-output", no_argument, NULL, OPTIONID_competition_output },
@@ -302,6 +316,11 @@ Options::parse(
                 { "init-strategy", required_argument, NULL, OPTIONID_initStrategy },
                 { "init-value", required_argument, NULL, OPTIONID_initValue },
                 { "init-sign", required_argument, NULL, OPTIONID_initSign },
+                
+                
+                { "minimize-predicates", required_argument, NULL, OPTIONID_predminimizationpredicate },
+                { "minimization-algorithm", required_argument, NULL, OPTIONID_predminimizationalgorithm },
+                { "min-chunk-percentage", required_argument, NULL, OPTIONID_predminimizationchunkpercentage },
                 
                 #if defined(ENABLE_PYTHON) || defined(ENABLE_PERL)
                 /* HEURISTIC */
@@ -436,6 +455,10 @@ Options::parse(
 
             case OPTIONID_trace_multiaggregates:
                 setTraceLevel( multiaggregates, atoi( optarg ) );
+                break;    
+
+            case OPTIONID_trace_predmin:
+                setTraceLevel( predmin, atoi( optarg ) );
                 break;    
                 
             case OPTIONID_competition_output:
@@ -813,6 +836,34 @@ Options::parse(
                     WaspErrorMessage::errorGeneric( "Inserted invalid value for chunk percentage." );
                 break;
                 
+            case OPTIONID_predminimizationalgorithm:
+                if( optarg )
+                {
+                    map< string, unsigned int >::iterator it = stringToPredMinimization.find( optarg );
+                    if( it == stringToPredMinimization.end() )
+                        WaspErrorMessage::errorGeneric( "Inserted invalid algorithm for pred minimization." );
+
+                    predMinimizationAlgorithm = it->second;    
+                }
+                break;
+            
+            case OPTIONID_predminimizationpredicate:
+                if( optarg )
+                {
+                    string s( optarg );                    
+                    split( s, ';', predicatesToMinimize );                    
+                }
+                break;    
+            
+            case OPTIONID_predminimizationchunkpercentage:
+                if( optarg )
+                {
+                    minimizePredicateChunkPercentage = atoi( optarg );
+                    if( minimizePredicateChunkPercentage == 0 || minimizePredicateChunkPercentage > 100 )
+                        WaspErrorMessage::errorGeneric( "Inserted invalid value for chunk percentage." );
+                }
+                break;                    
+                
             default:
                 WaspErrorMessage::errorGeneric( "This option is not supported." );
                 break;
@@ -942,6 +993,13 @@ Options::initMap()
     stringToQueryAlgorithms[ "chunk-static" ] = CHUNK_STATIC;
     stringToQueryAlgorithms[ "chunk-dynamic" ] = CHUNK_DYNAMIC;
     stringToQueryAlgorithms[ "preferences" ] = PREFERENCE_QUERIES;
+    
+    stringToPredMinimization[ "enumeration" ] = PREDMIN_ENUMERATION;
+    stringToPredMinimization[ "guess-check" ] = PREDMIN_GUESS_AND_CHECK;
+    stringToPredMinimization[ "guess-check-minimize" ] = PREDMIN_GUESS_AND_CHECK_AND_MINIMIZE;
+    stringToPredMinimization[ "guess-check-split" ] = PREDMIN_GUESS_AND_CHECK_AND_SPLIT;
+    stringToPredMinimization[ "preferences" ] = PREDMIN_PREFERENCES;
+    stringToPredMinimization[ "core-based"] = PREDMIN_CORE;
     
     stringToInitMinisatHeuristic[ "all-equals" ] = INIT_MINISAT_ALL_EQUALS;
     stringToInitMinisatHeuristic[ "moms" ] = INIT_MINISAT_MOMS;

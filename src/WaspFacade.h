@@ -36,12 +36,13 @@ using namespace std;
 #include "weakconstraints/K.h"
 #include "heuristic/ExternalHeuristic.h"
 #include "weakconstraints/LazyInstantiation.h"
+#include "outputBuilders/NoopOutputBuilder.h"
 
 class WaspFacade
 {
     public:
         inline WaspFacade();
-        inline ~WaspFacade(){ delete outputBuilder; }
+        inline ~WaspFacade(){ delete outputBuilder; delete tmpOutputBuilder; }
         
         /**
          * Reads the input (gringo or dimacs format).
@@ -80,12 +81,17 @@ class WaspFacade
                 if(solver.isTrue(lits[i])) { delete clause; return true; }
                 clause->addLiteral(lits[i]);
             }
-            //Tautology: do not add.
-            if(clause->removeDuplicatesAndCheckIfTautological()) return true;
+            if( clause->size() == 0 ) { ok_ = false; return false; }
+            if( clause->size() > 1 ) {
+                //Tautology: do not add.
+                if(clause->removeDuplicatesAndCheckIfTautological()) return true;
+            }
             bool res = runtime_ ? solver.addClauseRuntime(clause) : solver.addClause(clause);
             if(!res) ok_ = false;
             return ok_;
         }
+        
+        inline bool addClause(Literal lit) { vector<Literal> lits; lits.push_back(lit); return addClause(lits); }
         
         /**
          * Adds a pseudoBoolean constraint to the DB. The method performs a full restart to the level 0.         
@@ -228,7 +234,11 @@ class WaspFacade
         
         inline void attachAnswerSetListener( AnswerSetListener* listener ) { solver.attachAnswerSetListener( listener ); }
         inline void removeAnswerSetListener( AnswerSetListener* listener ) { solver.removeAnswerSetListener( listener ); }
-
+        
+        inline OutputBuilder* getOutputBuilder() const { return outputBuilder; }
+        inline void enableOutput() { if( tmpOutputBuilder != NULL ) { solver.setOutputBuilder( outputBuilder ); delete tmpOutputBuilder; tmpOutputBuilder = NULL; } }
+        inline void disableOutput() { if( tmpOutputBuilder == NULL ) { tmpOutputBuilder = new NoopOutputBuilder(); solver.setOutputBuilder( tmpOutputBuilder ); } }        
+        
     private:
         Solver solver;
         bool runtime_;
@@ -244,6 +254,7 @@ class WaspFacade
         
         unsigned int queryAlgorithm;
         OutputBuilder* outputBuilder;
+        OutputBuilder* tmpOutputBuilder;
         
         void enumerateModels();
         void enumerationBlockingClause();
@@ -256,7 +267,7 @@ class WaspFacade
         inline void addVariables(Var addedVar);
 };
 
-WaspFacade::WaspFacade() : runtime_( false ), ok_(true), numberOfModels( 0 ), maxModels( 1 ), printProgram( false ), printDimacs( false ), weakConstraintsAlg( OPT ), disjCoresPreprocessing( false ), outputBuilder( NULL )
+WaspFacade::WaspFacade() : runtime_( false ), ok_(true), numberOfModels( 0 ), maxModels( 1 ), printProgram( false ), printDimacs( false ), weakConstraintsAlg( OPT ), disjCoresPreprocessing( false ), outputBuilder( NULL ), tmpOutputBuilder( NULL )
 {   
     if( wasp::Options::interpreter != NO_INTERPRETER && wasp::Options::heuristic_scriptname != NULL )
         solver.setChoiceHeuristic( new ExternalHeuristic( solver, wasp::Options::heuristic_scriptname, wasp::Options::interpreter, wasp::Options::scriptDirectory ) );

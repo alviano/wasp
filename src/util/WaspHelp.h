@@ -48,6 +48,7 @@ class WaspHelp
             cout << "--trace-solver=<verbosity>             - Trace solver." << endl;
             cout << "--trace-unfoundedset=<verbosity>       - Trace computation of unfounded sets." << endl;
             cout << "--trace-weakconstraints=<verbosity>    - Trace weak constraints algorithms." << endl;
+            cout << "--trace-predmin=<verbosity>            - Trace minimization of predicate." << endl;
             cout << separator << endl;
             #endif                
 
@@ -174,6 +175,18 @@ class WaspHelp
             cout << "--query-verbosity=(0,...,3)            - Enable verbosity of queries algorithms" << endl;
             cout << "--query-chunk-size=n                   - Specify the size of each chunk" << endl;
             cout << "--query-chunk-percentage=(1,...,100)   - The size of each chunk is a percentage of the number of candidates" << endl;
+            
+            cout << separator << endl;
+            cout << "Predicates minimization                " << endl << endl;
+            cout << "--minimize-predicates=pred1;...;predn  - Find the answer set subset-minimal w.r.t. atoms over specified predicates" << endl;
+            cout << "--minimization-algorithm               - Specify the algorithm to use for the minimization" << endl;            
+            cout << "       =enumeration                    - Enumerate all answer sets and select the cardinality minimum" << endl;
+            cout << "       =guess-check                    - Guess an answer set and check the minimality" << endl;
+            cout << "       =guess-check-minimize           - Guess an answer set and check the minimality. In case of failure reiterate the check" << endl;
+            cout << "       =guess-check-split              - Guess an answer set and check the minimality of each atom" << endl;
+            cout << "       =preferences                    - Use the always-false heuristic" << endl;
+            cout << "       =core-based                     - Use algorithm based on unsatisfiable cores" << endl;
+            cout << "--min-chunk-percentage=(1,...,100)     - Core based algorithm can use chunks. The size of each chunk is a percentage of the number of candidates" << endl;
 
             cout << separator << endl;
             cout << "Disjunction options                    " << endl << endl;
