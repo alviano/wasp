@@ -1,0 +1,1 @@
+{xsucc(1,2), xsucc(2,3), ysucc(1,2), ysucc(2,3), bottle(1,1,1), bottle(1,2,1), bottle(1,3,1), bottle(1,1,2), bottle(1,3,2), bottle(1,3,3), xvalue(1,0), xvalue(2,2), xvalue(3,1), yvalue(1,1), yvalue(2,0), yvalue(3,2), filled(3,3), filled(3,2), filled(1,2), unfilled(3,1), unfilled(2,1), unfilled(1,1)}

@@ -1,0 +1,1 @@
+{node(1), node(2), node(3), node(4), node(5), link(1,2), link(2,1), link(1,3), link(3,1), link(2,3), link(3,2), link(3,5), link(5,3), link(4,5), link(5,4), colour(red0), colour(green0), colour(blue0)}
