@@ -152,7 +152,7 @@ class Solver
         
         inline void onLearningClause( Literal literalToPropagate, Clause* learnedClause, unsigned int backjumpingLevel );
         inline void onLearningUnaryClause( Literal literalToPropagate, Clause* learnedClause );        
-        inline bool doRestart();
+        inline void doRestart();
         inline void unrollToZero();
         
         inline unsigned int numberOfClauses() const { return clauses.size(); }
@@ -219,7 +219,7 @@ class Solver
         inline void markClauseForDeletion( Clause* clause ){ satelite->onDeletingClause( clause ); clause->markAsDeleted(); }
         
         inline void deleteClausesIfNecessary();
-        inline bool restartIfNecessary();
+        inline void restartIfNecessary();
         
         void printProgram() const;
         void printDimacs() const;
@@ -1224,7 +1224,7 @@ Solver::unrollVariable(
     return isUndefined( v );
 }
 
-bool
+void
 Solver::doRestart()
 {
     assert( currentDecisionLevel != 0 );
@@ -1237,8 +1237,7 @@ Solver::doRestart()
     if( currentDecisionLevel > numberOfAssumptions )
         unroll( numberOfAssumptions );
     else
-        unroll( 0 );            
-    return true;
+        unroll( 0 );
 }
 
 void
@@ -2448,22 +2447,18 @@ Solver::deleteClausesIfNecessary()
     }
 }
 
-bool
+void
 Solver::restartIfNecessary()
 {
-    if( currentDecisionLevel == 0 )
-        return true;
+    if( currentDecisionLevel == 0 ) return;
     bool hasToRestart = glucoseHeuristic_ ? ( glucoseData.lbdQueue.isValid() && ( ( glucoseData.lbdQueue.getAvg() * glucoseData.K ) > ( glucoseData.sumLBD / conflictsRestarts ) ) ) : restart->hasToRestart();
     if( hasToRestart )
     {
         statistics( this, onRestart() );    
         glucoseData.lbdQueue.fastClear();
-        if( !doRestart() )
-            return false;
+        doRestart();
         simplifyOnRestart();
     }
-    
-    return true;
 }
 
 bool
@@ -2562,7 +2557,7 @@ void
 Solver::computeUnsatCore()
 {
     assert( conflictLiteral != Literal::null );
-//    delete unsatCore;
+//    delete unsatCore;    
     unsatCore = learning.analyzeFinal( conflictLiteral );
 }
 

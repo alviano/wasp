@@ -163,6 +163,10 @@ TESTS_DIR_asp_gringo = $(TESTS_DIR)/asp/gringo
 TESTS_SRC_asp_gringo = $(sort $(shell find $(TESTS_DIR_asp_gringo) -name '*.test.py'))
 TESTS_OUT_asp_gringo = $(patsubst %.test.py,%.test.py.text, $(TESTS_SRC_asp_gringo))
 
+TESTS_DIR_asp_cautious = $(TESTS_DIR)/asp/cautious
+TESTS_SRC_asp_cautious = $(sort $(shell find $(TESTS_DIR_asp_cautious) -name '*.test.py'))
+TESTS_OUT_asp_cautious = $(patsubst %.test.py,%.test.py.text, $(TESTS_SRC_asp_cautious))
+
 TESTS_DIR_sat_Models = $(TESTS_DIR)/sat/Models
 TESTS_SRC_sat_Models = $(sort $(shell find $(TESTS_DIR_sat_Models) -name '*.test.py'))
 TESTS_OUT_sat_Models = $(patsubst %.test.py,%.test.py.text, $(TESTS_SRC_sat_Models))
@@ -219,6 +223,7 @@ tests/asp/AllAnswerSets/tight: $(TESTS_OUT_asp_AllAnswerSetsTight)
 tests/asp/AllAnswerSets/nontight: $(TESTS_OUT_asp_AllAnswerSetsNonTight)
 tests/asp/AllAnswerSets/aggregates: $(TESTS_OUT_asp_AllAnswerSetsAggregates)
 tests/asp/weakConstraints: $(TESTS_OUT_asp_WeakConstraints)
+tests/asp/cautious: $(TESTS_OUT_asp_cautious)
 
 tests/asp/AllAnswerSetsIntensive: $(TESTS_OUT_asp_AllAnswerSetsIntensive)
 
@@ -236,6 +241,9 @@ $(TESTS_OUT_asp_AllAnswerSetsIntensive):
 
 $(TESTS_OUT_asp_WeakConstraints):
 	@$(TESTS_TESTER) "$(TESTS_COMMAND_WeakConstraints)" $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_WeakConstraints) $(TESTS_REPORT_text)
+	
+$(TESTS_OUT_asp_cautious):
+	@$(TESTS_TESTER) "$(TESTS_COMMAND_WeakConstraints)" $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_AllAnswerSets) $(TESTS_REPORT_text)	
 
 $(TESTS_OUT_asp_gringo):
 	@$(TESTS_TESTER) "$(TESTS_COMMAND_gringo)" $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_AllAnswerSets) $(TESTS_REPORT_text)

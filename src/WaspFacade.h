@@ -69,7 +69,7 @@ class WaspFacade
          * @param lits
          * @return 
          */
-        inline bool addClause(vector<Literal>& lits) {
+        inline bool addClause(const vector<Literal>& lits) {
             if(solver.conflictDetected() || !ok_ ) return false;
             solver.unrollToZero();
             if( lits.empty() ) { ok_ = false; return false; }
@@ -120,9 +120,15 @@ class WaspFacade
          */
         inline void printAnswerSet() { if(!solver.conflictDetected() && !solver.hasUndefinedLiterals()) solver.printAnswerSet(); }
         inline void printIncoherence() { solver.foundIncoherence(); }
-        inline bool isTrue(Literal lit) const { return solver.isTrue(lit); }
+        inline bool isTrue(Literal lit) const { return solver.isTrue(lit); }        
         inline bool isFalse(Literal lit) const { return solver.isFalse(lit); }
         inline bool isUndefined(Literal lit) const { return solver.isUndefined(lit); }
+        inline unsigned int decisionLevel(Literal lit) const { return solver.getDecisionLevel(lit); }
+        
+        inline bool isTrue(Var v) const { return solver.isTrue(v); }
+        inline bool isFalse(Var v) const { return solver.isFalse(v); }
+        inline bool isUndefined(Var v) const { return solver.isUndefined(v); }
+        inline unsigned int decisionLevel(Var v) const { return solver.getDecisionLevel(v); }
         inline void freeze(Var var) { solver.setFrozen(var); }
         
         /**

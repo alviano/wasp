@@ -463,8 +463,7 @@ WaspFacade::solve(const vector<Literal>& assumptions, vector<Literal>& conflict)
     }
     
     unsigned int res = solver.solve(assumptions_);
-    if( res == INCOHERENT )
-    {
+    if( res == INCOHERENT ) {
         assert(solver.getUnsatCore() != NULL);
         const Clause& core = *solver.getUnsatCore();
         for( unsigned int i = 0; i < core.size(); i++ )

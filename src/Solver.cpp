@@ -299,8 +299,7 @@ Solver::solveWithoutPropagators(
             }
         }
         
-        if( !restartIfNecessary() )
-            return INCOHERENT;
+        restartIfNecessary();
     }
     
     completeModel();
@@ -397,7 +396,7 @@ Solver::solvePropagators(
             if( conflictDetected() )
             {
                 learnedFromConflicts++;
-                trace( solving, 1, "Conflict detected.\n" );
+                trace_msg( solving, 1, "Conflict detected at level " << getCurrentDecisionLevel() );
                 if( getCurrentDecisionLevel() == 0 )
                 {
                     trace( solving, 1, "Conflict at level 0: return. \n");
@@ -461,8 +460,7 @@ Solver::solvePropagators(
                     if( getCurrentDecisionLevel() != 0 )
                     {
                         clearConflictStatus();
-                        if( !doRestart() )
-                            return INCOHERENT;
+                        unrollToZero();
                     }
                     assignLiteral( clauseToPropagate->getAt( 0 ) );
                     delete clauseToPropagate;
@@ -506,8 +504,7 @@ Solver::solvePropagators(
         }
         #endif
         
-        if( !restartIfNecessary() )
-            return INCOHERENT;
+        restartIfNecessary();
 
         #if defined(ENABLE_PYTHON) || defined(ENABLE_PERL)
         for( unsigned int i = 0; i < propagatorsAttachedToPartialChecks.size(); i++ )

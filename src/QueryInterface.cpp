@@ -354,7 +354,7 @@ QueryInterface::chunkDynamicAlgorithm(
         
         if( size > 2 )
         {
-            assert( clausePointer->size() > 2 );
+            assert_msg( clausePointer->size() >= 2, "CLAUSE SIZE " << clausePointer->size() );
             solver.detachClause( *clausePointer );
         }
         #ifndef NDEBUG
