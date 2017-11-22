@@ -22,7 +22,9 @@
 #include "AnswerSetListener.h"
 #include "util/WaspConstants.h"
 #include "Literal.h"
+#include "util/VariableNames.h"
 #include <vector>
+#include <iostream>
 using namespace std;
 
 class WaspFacade;
@@ -46,13 +48,31 @@ class CautiousReasoning : public AnswerSetListener
         bool computeFirstModel();
         
         void iterativeCoherenceTesting();
+        void iterativeCoherenceTestingRestricted(vector<Var>& myCandidates);
         void overestimateReduction();
         
         void minimalAlgorithm();
         void findMinimalModelPreferences();
         void findMinimalModelOne();
+        void chunkDynamic(unsigned int chunkSize);
+        void checkChunk(vector<Var>& myCandidates);
+        void coreBased(unsigned int chunkSize);
+        void checkCoreChunk(vector<Var>& myCandidates);
         void printAnswers();
         
+        #ifdef TRACE_ON
+        inline void printVectorOfVars(const vector<Var>& v, const string& description) {
+            cerr << description;
+            for(unsigned int i = 0; i < v.size(); i++) if(!VariableNames::isHidden(v[i])) cerr << " " << VariableNames::getName(v[i]);
+            cerr << endl;
+        }
+        
+        inline void printVectorOfLiterals(const vector<Literal>& v, const string& description) {
+            cerr << description;
+            for(unsigned int i = 0; i < v.size(); i++) cerr << " " << v[ i ];
+            cerr << endl;
+        }
+        #endif
 
 };
 

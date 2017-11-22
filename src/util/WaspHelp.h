@@ -67,8 +67,6 @@ class WaspHelp
 //            cout << separator << endl;
 
             cout << "Output options                         " << endl << endl;
-            cout << "--printprogram                         - Print the input program and exit" << endl;
-            cout << "--printdimacs                          - Print the input program in the dimacs format and exit" << endl;
             cout << "--silent                               - Set verbosity of output" << endl;
             cout << "       <1                              - Print models with no spaces and lines" << endl;
             cout << "       =1                              - Print only the number of each model" << endl;
@@ -169,9 +167,10 @@ class WaspHelp
             cout << "       =ict                            - Enable iterative coherence testing" << endl;
             cout << "       =or                             - Enable overestimate reduction" << endl;
             cout << "       =cb                             - Enable core-based algorithm (chunk size or percentage can be also specified)" << endl;
-            cout << "       =preferences                    - Enable algorithm based on preferences" << endl;
             cout << "       =chunk-static                   - Enable algorithm based on static chunks (Default size=2)" << endl;
             cout << "       =chunk-dynamic                  - Enable algorithm based on dynamic chunks (Default size=2)" << endl;
+            cout << "       =preferences                    - Enable algorithm based on preferences" << endl;
+            cout << "       =one                            - Enable algorithm based on algorithm one" << endl;
             cout << "--query-verbosity=(0,...,3)            - Enable verbosity of queries algorithms" << endl;
             cout << "--query-chunk-size=n                   - Specify the size of each chunk" << endl;
             cout << "--query-chunk-percentage=(1,...,100)   - The size of each chunk is a percentage of the number of candidates" << endl;

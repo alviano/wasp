@@ -31,7 +31,7 @@ class QueryInterface
 {
     public:
         QueryInterface( Solver& solver );
-        void computeCautiousConsequences( unsigned int ALGORITHM );
+        void solve();
 
     private:
         QueryInterface( const QueryInterface& orig );

@@ -103,7 +103,7 @@ void PredicateMinimization::foundAnswerSet() {
 }
 
 void PredicateMinimization::enumeration() {
-    waspFacade.setMaxModels(UINT_MAX);
+    wasp::Options::maxModels = UINT_MAX;
     waspFacade.solve();
 }
 
@@ -205,13 +205,13 @@ void PredicateMinimization::coreBased( unsigned int chunkSize ) {
     vector<Literal> conflict;
 
     trace_action(predmin, 3, { trace_tag(cerr, predmin, 3); printVectorOfVars(candidates, "Candidates:"); });
-    while( !candidates.empty() ) {
+    while(!candidates.empty()) {
         assumptions.clear();
         for(unsigned int i = 0; i < chunkSize && i < candidates.size(); i++) assumptions.push_back(Literal(candidates[i], NEGATIVE));
         
         while(true) {
             unsigned int result = waspFacade.solve(assumptions, conflict);
-            if( result == COHERENT ) {
+            if(result == COHERENT) {
                 trace_msg(predmin, 2, "Found answer set");
                 vector<Literal> unaryClauses;
                 unsigned int j = 0;

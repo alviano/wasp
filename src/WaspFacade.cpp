@@ -32,6 +32,7 @@
 #include "QueryInterface.h"
 #include "outputBuilders/IdOutputBuilder.h"
 #include "outputBuilders/NoopOutputBuilder.h"
+#include "Enumeration.h"
 
 void
 WaspFacade::readInput(
@@ -75,97 +76,56 @@ WaspFacade::readInput(
 void
 WaspFacade::solve()
 {
-    if( printProgram )
-    {
-        solver.printProgram();
-        return;
-    }
-    
-    if( solver.preprocessing() )
-    {
-        runtime_ = true;
-        if( printDimacs )
-        {
-            solver.printDimacs();
-            return;
-        }
-        
-        statistics( &solver, startSolving() );
-        if( queryAlgorithm != NO_QUERY )
-        {
-            QueryInterface queryInterface( solver );
-            queryInterface.computeCautiousConsequences( queryAlgorithm );
-            statistics( &solver, endSolving() );
-            estatistics( &solver, endSolving() );
-            statistics( &solver, printTime() );
-            return;
-        }        
-        solver.onStartingSolver();
+    if(runtime_) { WaspErrorMessage::errorGeneric("Calling method solve twice."); return; }
+    runtime_ = true;
 
-        if( !solver.isOptimizationProblem() && !wasp::Options::useLazyWeakConstraints )
-        {            
-            enumerateModels();
-        }        
-        else
-        {
-            NoopOutputBuilder* tmp = new NoopOutputBuilder();
-            if( wasp::Options::printOnlyOptimum && maxModels > 1 )
-                solver.setOutputBuilder( tmp );
-            unsigned int result = solveWithWeakConstraints();
-            switch( result )
-            {
-                case COHERENT:
-                    cerr << "ERROR";
-                    break;
-                
-                case INCOHERENT:
-                    if( wasp::Options::printOnlyOptimum && maxModels > 1 )
-                        solver.setOutputBuilder( outputBuilder );
-                    solver.foundIncoherence();
-                    break;
-                    
-                case OPTIMUM_FOUND:
-                default:
-                    if( maxModels > 1 )
-                    {
-                        solver.unrollToZero();
-                        solver.clearConflictStatus();
-                        if( wasp::Options::printOnlyOptimum )
-                            solver.setOutputBuilder( outputBuilder );
-                        solver.setMinimizeUnsatCore(false);
-                        enumerateModels();
-                        if( wasp::Options::printOnlyOptimum )
-                            tmp->print();
-                        solver.optimumFound();                        
-                    }
-                    else
-                        solver.optimumFound();
-                    break;
-            }
-            delete tmp;
-            statistics( &solver, endSolving() );
-            estatistics( &solver, endSolving() );
-            statistics( &solver, printTime() );
-            return;
-        }
-    }
-
-    if( numberOfModels == 0 )
-    {
-        trace_msg( enumeration, 1, "No model found." );
-        solver.foundIncoherence();
-    }
-    statistics( &solver, endSolving() );
-    estatistics( &solver, endSolving() );
-    statistics( &solver, printTime() );
+    if(!solver.preprocessing()) { solver.foundIncoherence(); return; }
     
-//    solver.printLearnedClauses();
+    statistics( &solver, startSolving() );
+    solver.onStartingSolver();
+
+    if(wasp::Options::queryAlgorithm != NO_QUERY) { QueryInterface queryInterface( solver ); queryInterface.solve(); }    
+    else if(!solver.isOptimizationProblem() && !wasp::Options::useLazyWeakConstraints) { Enumeration enumeration(solver); enumeration.solve(); }
+    else handleWeakConstraints();
+    
+    return;
 }
 
-void
-WaspFacade::setMinisatPolicy()
-{
-    solver.setMinisatHeuristic();
+void WaspFacade::handleWeakConstraints() {
+    NoopOutputBuilder* tmp = new NoopOutputBuilder();
+    if( wasp::Options::printOnlyOptimum && wasp::Options::maxModels > 1 )
+        solver.setOutputBuilder( tmp );
+    unsigned int result = solveWithWeakConstraints();
+    switch( result ) {
+        case COHERENT:
+            cerr << "ERROR";
+            break;
+
+        case INCOHERENT:
+            if( wasp::Options::printOnlyOptimum && wasp::Options::maxModels > 1 )
+                solver.setOutputBuilder( outputBuilder );
+            solver.foundIncoherence();
+            break;
+
+        case OPTIMUM_FOUND:
+        default:
+            if( wasp::Options::maxModels > 1 ) {
+                solver.unrollToZero();
+                solver.clearConflictStatus();
+                if( wasp::Options::printOnlyOptimum )
+                    solver.setOutputBuilder( outputBuilder );
+                solver.setMinimizeUnsatCore(false);
+                Enumeration enumeration(solver);
+                enumeration.solve();
+                if( wasp::Options::printOnlyOptimum )
+                    tmp->print();
+                solver.optimumFound();
+            }
+            else
+                solver.optimumFound();
+            break;
+    }
+    delete tmp;
 }
 
 void
@@ -228,128 +188,6 @@ WaspFacade::setRestartsPolicy(
     }
 }
 
-void
-WaspFacade::enumerateModels()
-{
-    assert( wasp::Options::enumerationStrategy == ENUMERATION_BC || wasp::Options::enumerationStrategy == ENUMERATION_BT );
-    if( wasp::Options::enumerationStrategy == ENUMERATION_BC )
-        enumerationBlockingClause();
-    else
-        enumerationBacktracking();    
-}
-
-void
-WaspFacade::enumerationBlockingClause()
-{
-    while( solver.solve() == COHERENT )
-    {
-        solver.printAnswerSet();
-        trace_msg( enumeration, 1, "Model number: " << numberOfModels + 1 );
-        if( ++numberOfModels >= maxModels )
-        {
-            trace_msg( enumeration, 1, "Enumerated " << maxModels << "." );
-            break;
-        }
-        else if( !solver.addClauseFromModelAndRestart() )
-        {
-            trace_msg( enumeration, 1, "All models have been found." );
-            break;
-        }
-    }
-}
-
-void
-WaspFacade::enumerationBacktracking()
-{
-    vector< bool > checked;
-    while( checked.size() <= solver.numberOfVariables() )
-        checked.push_back( false );
-    unsigned int result = solver.solve();
-    if( result == INCOHERENT )
-        return;
-        
-    vector< Literal > assums;
-    if( !foundModel( assums ) )
-        return;
-    
-    flipLatestChoice( assums, checked );
-    if( assums.empty() )
-        return;
-    begin:;
-    if( solver.getDecisionLevel( assums.back() ) - 1 < solver.getCurrentDecisionLevel() )
-        solver.unroll( solver.getDecisionLevel( assums.back() ) - 1 );
-    solver.clearConflictStatus();
-    result = solver.solve( assums );
-    if( result == INCOHERENT )
-    {
-        unsigned int bl = solver.getCurrentDecisionLevel();
-        if( bl == 0 )
-        {
-            unsigned int k = 0;
-            for( unsigned int i = 0; i < assums.size(); i++ )
-            {
-                assums[ k ] = assums[ i ];
-                if( solver.getDecisionLevel( assums[ i ] ) != 0 )
-                    k++;
-            }
-            assums.resize( k );
-        }
-        else
-        {
-//            assert( !assums.empty() );
-//            assert_msg( solver.getDecisionLevel( assums.back() ) <= bl, solver.getDecisionLevel( assums.back() ) << " != " << bl );
-            //TO CHECK: probably this is useless code.
-            while( !assums.empty() && solver.getDecisionLevel( assums.back() ) > bl )
-                assums.pop_back();
-        }
-    }
-    else if( !foundModel( assums ) )
-        return;
-    
-    flipLatestChoice( assums, checked );
-    if( assums.empty() )
-        return;
-    goto begin;
-}
-
-void
-WaspFacade::flipLatestChoice(
-    vector< Literal >& choices,
-    vector< bool >& checked )
-{
-    unsigned int size;
-    while( true )
-    {
-        size = choices.size();
-        if( size == 0 )
-            return;
-        if( checked[ size ] )
-            choices.pop_back();
-        else
-            break;
-    }
-    
-    choices[ size - 1 ] = choices[ size - 1 ].getOppositeLiteral();    
-    checked[ size ] = true;
-    for( unsigned int i = size + 1; i < checked.size(); i++ )
-        checked[ i ] = false;
-}
-
-bool
-WaspFacade::foundModel(
-    vector< Literal >& assums )
-{
-    solver.printAnswerSet();
-    trace_msg( enumeration, 1, "Model number: " << numberOfModels + 1 );
-    if( ++numberOfModels >= maxModels )
-    {
-        trace_msg( enumeration, 1, "Enumerated " << maxModels << "." );
-        return false;
-    }    
-    solver.getChoicesWithoutAssumptions( assums );
-    return true;
-}
-
 void merge(int left,int center,int right,vector<Literal>& literals,vector<uint64_t>& weights)
 {
     Literal* auxLiterals = new Literal[right+1];
@@ -387,24 +225,32 @@ WaspFacade::addPseudoBooleanConstraint(
     if(lits.size() != weights.size())
         WaspErrorMessage::errorGeneric("The size of literals must be equal to the size of weights in pseudoBoolean constraints.");
 
+    if(bound == 0) return true;
+    uint64_t differentWeights = UINT64_MAX;
     uint64_t sumOfWeights = 0;
     unsigned int j = 0;
     for(unsigned int i = 0; i < lits.size(); i++) {
         lits[i]=lits[j];    weights[i]=weights[j];
-        addVariables(lits[i].getVariable());
+        addVariables(lits[i].getVariable());        
         if(solver.hasBeenEliminated(lits[i].getVariable())) WaspErrorMessage::errorGeneric("Trying to add a deleted variable to aggregate.");
-        if(solver.isFalse(lits[i])) continue;
+        if(solver.isFalse(lits[i]) || weights[i] == 0) continue;
         if(solver.isTrue(lits[i])) {
             if(bound <= weights[i]) return true;
             bound -= weights[i];
             continue;
         }
-        if(weights[i] > bound) weights[i] = bound;        
+        
+        if(weights[i] > bound) { weights[i] = bound; }
+        if(differentWeights == UINT64_MAX)
+            differentWeights = weights[i];            
+        else if(differentWeights != weights[i])
+            differentWeights = UINT64_MAX-1;
         sumOfWeights += weights[i];
         j++;
     }
     lits.resize(j);    weights.resize(j);
     if(sumOfWeights < bound) { ok_ = false; return false; }
+    if(differentWeights < UINT64_MAX-1) { return addClause(lits); }
     
     mergesort(0, lits.size()-1, lits, weights);
         
@@ -453,6 +299,7 @@ WaspFacade::solve(const vector<Literal>& assumptions, vector<Literal>& conflict)
         if(!solver.preprocessing()) { ok_ = false; return INCOHERENT; }
         solver.turnOffSimplifications();
         solver.setComputeUnsatCores(true);
+        solver.onStartingSolver();
     }
     conflict.clear();
     solver.unrollToZero();

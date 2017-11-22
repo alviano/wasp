@@ -70,7 +70,7 @@ class WaspFacade
          * @return 
          */
         inline bool addClause(const vector<Literal>& lits) {
-            if(solver.conflictDetected() || !ok_ ) return false;
+            if(solver.conflictDetected() || !ok_) return false;
             solver.unrollToZero();
             if( lits.empty() ) { ok_ = false; return false; }
             Clause* clause = new Clause( lits.size() );
@@ -81,8 +81,8 @@ class WaspFacade
                 if(solver.isTrue(lits[i])) { delete clause; return true; }
                 clause->addLiteral(lits[i]);
             }
-            if( clause->size() == 0 ) { ok_ = false; return false; }
-            if( clause->size() > 1 ) {
+            if(clause->size() == 0) { ok_ = false; return false; }
+            if(clause->size() > 1) {
                 //Tautology: do not add.
                 if(clause->removeDuplicatesAndCheckIfTautological()) return true;
             }
@@ -91,7 +91,9 @@ class WaspFacade
             return ok_;
         }
         
+        
         inline bool addClause(Literal lit) { vector<Literal> lits; lits.push_back(lit); return addClause(lits); }
+        inline bool addClause(Literal l1, Literal l2) { vector<Literal> lits; lits.push_back(l1); lits.push_back(l2); return addClause(lits); }
         
         /**
          * Adds a pseudoBoolean constraint to the DB. The method performs a full restart to the level 0.         
@@ -134,7 +136,7 @@ class WaspFacade
         /**
          * Notification of safe termination.
          */
-        inline void onFinish() { solver.onFinish(); }
+        inline void onFinish() { statistics( &solver, endSolving() ); estatistics( &solver, endSolving() ); statistics( &solver, printTime() ); solver.onFinish(); }
 
         /**
          * Notification of kill.
@@ -213,20 +215,11 @@ class WaspFacade
         
         inline void setPreferredChoices(const vector<Literal>& prefChoices) { solver.removePrefChoices(); solver.addPrefChoices(prefChoices); }
         
-        void setMinisatPolicy();
+        inline void setMinisatPolicy() { solver.setMinisatHeuristic(); }
         void setOutputPolicy( OUTPUT_POLICY );
         void setRestartsPolicy( RESTARTS_POLICY, unsigned int threshold );
 
-        inline void setMaxModels( unsigned int max ) { maxModels = max; }
-        inline void setPrintProgram( bool printProgram ) { this->printProgram = printProgram; }
-        inline void setPrintDimacs( bool printDimacs ) { this->printDimacs = printDimacs; }
-        
-        inline void setWeakConstraintsAlgorithm( WEAK_CONSTRAINTS_ALG alg ) { weakConstraintsAlg = alg; }
-        inline void setDisjCoresPreprocessing( bool value ) { disjCoresPreprocessing = value; }
         inline void setMinimizeUnsatCore( bool value ) { solver.setMinimizeUnsatCore( value ); }        
-        
-        inline void setQueryAlgorithm( unsigned int value ) { queryAlgorithm = value; }   
-        
         
         /**
          * Return the cost of the answer set for a specific level
@@ -250,30 +243,16 @@ class WaspFacade
         bool runtime_;
         bool ok_;
         
-        unsigned int numberOfModels;
-        unsigned int maxModels;
-        bool printProgram;
-        bool printDimacs;        
-
-        WEAK_CONSTRAINTS_ALG weakConstraintsAlg;
-        bool disjCoresPreprocessing;        
-        
-        unsigned int queryAlgorithm;
         OutputBuilder* outputBuilder;
         OutputBuilder* tmpOutputBuilder;
         
-        void enumerateModels();
-        void enumerationBlockingClause();
-        void enumerationBacktracking();
-        void flipLatestChoice( vector< Literal >& choices, vector< bool >& checked );
-        bool foundModel( vector< Literal >& assums );
-        unsigned int getMaxLevelUnsatCore( const Clause* unsatCore );
+        void handleWeakConstraints();
         inline unsigned int solveWithWeakConstraints();
         inline void greetings(){ solver.greetings(); }
         inline void addVariables(Var addedVar);
 };
 
-WaspFacade::WaspFacade() : runtime_( false ), ok_(true), numberOfModels( 0 ), maxModels( 1 ), printProgram( false ), printDimacs( false ), weakConstraintsAlg( OPT ), disjCoresPreprocessing( false ), outputBuilder( NULL ), tmpOutputBuilder( NULL )
+WaspFacade::WaspFacade() : runtime_( false ), ok_(true), outputBuilder( NULL ), tmpOutputBuilder( NULL )
 {   
     if( wasp::Options::interpreter != NO_INTERPRETER && wasp::Options::heuristic_scriptname != NULL )
         solver.setChoiceHeuristic( new ExternalHeuristic( solver, wasp::Options::heuristic_scriptname, wasp::Options::interpreter, wasp::Options::scriptDirectory ) );
@@ -284,7 +263,7 @@ unsigned int
 WaspFacade::solveWithWeakConstraints()
 {
     WeakInterface* w = NULL;    
-    switch( weakConstraintsAlg )
+    switch( wasp::Options::weakConstraintsAlg )
     {
         case MGD:
             w = new Mgd( solver );
@@ -328,9 +307,7 @@ WaspFacade::solveWithWeakConstraints()
             break;
     }
     
-//    if( weakConstraintsAlg != OLLBB && weakConstraintsAlg != OLLBBREST )
-//        solver.simplifyOptimizationLiteralsAndUpdateLowerBound( w );
-    w->setDisjCoresPreprocessing( disjCoresPreprocessing );
+    w->setDisjCoresPreprocessing( wasp::Options::disjCoresPreprocessing );
     unsigned int res = w->solve();    
     delete w;
     return res;

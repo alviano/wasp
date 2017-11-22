@@ -56,8 +56,6 @@ namespace wasp
 #define OPTIONID_silent ( 'z' + 20 )
 #define OPTIONID_competition_output ( 'z' + 21 )
 #define OPTIONID_third_competition_output ( 'z' + 22 )
-#define OPTIONID_printprogram ( 'z' + 23 )
-#define OPTIONID_printdimacs ( 'z' + 24 )
 #define OPTIONID_multi ( 'z' + 25 )
 #define OPTIONID_lastModel ( 'z' + 26 )
 #define OPTIONID_printbounds ( 'z' + 27 )
@@ -145,8 +143,6 @@ vector< const char* > Options::inputFiles;
 
 OUTPUT_POLICY Options::outputPolicy = WASP_OUTPUT;
 
-bool Options::printProgram = false;
-bool Options::printDimacs = false;
 bool Options::printLastModelOnly = false;
 bool Options::printBounds = false;
 bool Options::printAtomTable = false;
@@ -299,8 +295,6 @@ Options::parse(
                 { "competition-output", no_argument, NULL, OPTIONID_competition_output },
                 { "silent", optional_argument, NULL, OPTIONID_silent },                
                 { "third-competition-output", no_argument, NULL, OPTIONID_third_competition_output },
-                { "printprogram", no_argument, NULL, OPTIONID_printprogram },
-                { "printdimacs", no_argument, NULL, OPTIONID_printdimacs },
                 { "multi", no_argument, NULL, OPTIONID_multi },
                 { "printlatestmodel", no_argument, NULL, OPTIONID_lastModel },
                 { "printonlyoptimum", no_argument, NULL, OPTIONID_onlyOptimum },
@@ -481,14 +475,6 @@ Options::parse(
                 outputPolicy = THIRD_COMPETITION_OUTPUT;
                 break;
 
-            case OPTIONID_printprogram:
-                printProgram = true;
-                break;
-
-            case OPTIONID_printdimacs:
-                printDimacs = true;
-                break;
-                
             case OPTIONID_onlyOptimum:
                 printOnlyOptimum = true;
                 break;
@@ -883,17 +869,10 @@ void
 Options::setOptions(
     WaspFacade& waspFacade )
 {
-    if( minisatPolicy )
-        waspFacade.setMinisatPolicy();
+    if( minisatPolicy ) waspFacade.setMinisatPolicy();
     waspFacade.setOutputPolicy( outputPolicy );
-    waspFacade.setRestartsPolicy( restartsPolicy, restartsThreshold );
-    waspFacade.setMaxModels( maxModels );
-    waspFacade.setPrintProgram( printProgram );
-    waspFacade.setPrintDimacs( printDimacs);
-    waspFacade.setWeakConstraintsAlgorithm( weakConstraintsAlg );
-    waspFacade.setDisjCoresPreprocessing( disjCoresPreprocessing );
-    waspFacade.setMinimizeUnsatCore( minimizeUnsatCore );
-    waspFacade.setQueryAlgorithm( queryAlgorithm );
+    waspFacade.setRestartsPolicy( restartsPolicy, restartsThreshold );    
+    waspFacade.setMinimizeUnsatCore( minimizeUnsatCore );    
 }
 
 WEAK_CONSTRAINTS_ALG

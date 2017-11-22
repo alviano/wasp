@@ -27,8 +27,7 @@ QueryInterface::QueryInterface(
 }
 
 void
-QueryInterface::computeCautiousConsequences(
-    unsigned int ALGORITHM )
+QueryInterface::solve()
 {
     if( !computeFirstModel() )
     {
@@ -36,7 +35,7 @@ QueryInterface::computeCautiousConsequences(
         return;
     }
     
-    switch( ALGORITHM )
+    switch( wasp::Options::queryAlgorithm )
     {            
         case ITERATIVE_COHERENCE_TESTING:
             iterativeCoherenceTesting();
@@ -75,9 +74,9 @@ QueryInterface::computeCautiousConsequences(
                 iterativeCoherenceTesting();
             else if( param >= candidates.size() )
                 overestimateReduction();
-            else if( ALGORITHM == CHUNK_STATIC )                    
+            else if( wasp::Options::queryAlgorithm == CHUNK_STATIC )                    
                 chunkStaticAlgorithm( param );
-            else if( ALGORITHM == CHUNK_DYNAMIC )
+            else if( wasp::Options::queryAlgorithm == CHUNK_DYNAMIC )
                 chunkDynamicAlgorithm( param );
             }   
             break;

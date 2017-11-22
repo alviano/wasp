@@ -96,8 +96,6 @@ namespace wasp
 
             static OUTPUT_POLICY outputPolicy;
 
-            static bool printProgram;
-            static bool printDimacs;
             
             static bool minisatPolicy;
 

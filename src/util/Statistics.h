@@ -168,7 +168,7 @@ class Statistics {
             if( disabled || !wasp::Options::stats )
                 return;
 
-            sateliteTime = time( 0 ) - sateliteTime;
+            if(sateliteTime!=0) sateliteTime=time(0)-sateliteTime;
             cerr << endl << "After satelite" << endl;
             cerr << "    Clauses                     : " << clausesAfterSatelite << endl;
             cerr << "      Binary                    : " << binaryAfterSatelite << " (" << ( ( double ) binaryAfterSatelite * 100 / ( double ) clausesAfterSatelite ) << "%)" << endl;
@@ -255,7 +255,7 @@ class Statistics {
         inline void enable() { disabled = false; }  
 
         inline void startParsing() { if( wasp::Options::stats ) { parsingTime = time( 0 ); cerr << "start parsing..." << endl; } }
-        inline void endParsing() { if( wasp::Options::stats ) { parsingTime = time( 0 ) - parsingTime; cerr << "...end parsing" << endl; } }
+        inline void endParsing() { if( wasp::Options::stats ) { if(parsingTime!=0) parsingTime = time( 0 ) - parsingTime; cerr << "...end parsing" << endl; } }
         inline void startSCCs() {}
         inline void endSCCs() {}
         inline void startCompletion() {}
@@ -338,7 +338,9 @@ class Statistics {
         {
             if( disabled || !wasp::Options::stats )
                 return;
-            solvingTime = time( 0 ) - solvingTime;            
+            
+            if(solvingTime!=0)
+                solvingTime = time( 0 ) - solvingTime;
             cerr << "    Parsing time                : " << parsingTime << " s" << endl;
             cerr << "    Satelite time               : " << sateliteTime << " s" << endl;
             cerr << "    Solving time                : " << solvingTime << " s" << endl;

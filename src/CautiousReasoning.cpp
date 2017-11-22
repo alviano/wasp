@@ -26,6 +26,7 @@
 using namespace std;
 
 void CautiousReasoning::solve() {
+    trace_msg(predmin, 1, "Starting solve");
     waspFacade.disableOutput();
     waspFacade.attachAnswerSetListener(this);
     for(unsigned int i = 1; i <= waspFacade.numberOfVariables(); i++) {
@@ -34,10 +35,14 @@ void CautiousReasoning::solve() {
         if(waspFacade.isTrue(i)) { assert( waspFacade.decisionLevel(i) == 0 ); answers.push_back(i); continue; }
         candidates.push_back(i);
         waspFacade.freeze(i);
-    }   
-    if(!computeFirstModel()) { waspFacade.enableOutput(); waspFacade.printIncoherence(); return; }
+    }
+    trace_msg(predmin, 2, "Computing first answer set...");
+    if(!computeFirstModel()) { trace_msg(predmin, 3, "...incoherent: STOP"); waspFacade.enableOutput(); waspFacade.printIncoherence(); return; }
+    trace_msg(predmin, 3, "...coherent");
+    trace_action(predmin, 3, { trace_tag(cerr, predmin, 3); printVectorOfVars(candidates, "Candidates:"); });
     
     minimalAlgorithm();
+//    coreBased(2);
     
     for(unsigned int i = 0; i < candidates.size(); i++) addAnswer(candidates[i]);
     candidates.clear();
@@ -93,7 +98,29 @@ void CautiousReasoning::iterativeCoherenceTesting() {
         assumptions.clear();
         assumptions.push_back(Literal(v, NEGATIVE));
         unsigned int result = waspFacade.solve(assumptions, conflict);
+        if(result == INCOHERENT) { addAnswer(v); waspFacade.addClause(Literal(v, POSITIVE)); }        
+    }
+}
+
+void CautiousReasoning::iterativeCoherenceTestingRestricted(vector<Var>& myCandidates) {
+    vector<Literal> assumptions;
+    vector<Literal> conflict;
+    
+    while(!myCandidates.empty()) {
+        Var v = myCandidates.back();
+        myCandidates.pop_back();
+        assumptions.clear();
+        assumptions.push_back(Literal(v, NEGATIVE));
+        unsigned int result = waspFacade.solve(assumptions, conflict);
         if(result == INCOHERENT) { addAnswer(v); waspFacade.addClause(Literal(v, POSITIVE)); }
+        else {
+            unsigned int j = 0;
+            for(unsigned int i = 0; i < myCandidates.size(); i++) {
+                myCandidates[j] = myCandidates[i];
+                if(waspFacade.isTrue(myCandidates[i])) j++;
+            }
+            myCandidates.resize(j);
+        }
     }
 }
 
@@ -111,6 +138,7 @@ void CautiousReasoning::overestimateReduction() {
 }
 
 void CautiousReasoning::minimalAlgorithm() {
+    trace_msg(predmin, 3, "Starting algorithm based on minimality");
     unsigned int size = UINT_MAX;    
     while(!candidates.empty() && size != candidates.size()) {        
         size = candidates.size();        
@@ -120,6 +148,7 @@ void CautiousReasoning::minimalAlgorithm() {
 }
 
 void CautiousReasoning::findMinimalModelPreferences() {
+    trace_msg(predmin, 4, "...computing minimal model using preferencess");
     vector<Literal> prefs;
     for(unsigned int i = 0; i < candidates.size(); i++)
         prefs.push_back(Literal(candidates[i], NEGATIVE));
@@ -131,48 +160,159 @@ void CautiousReasoning::findMinimalModelPreferences() {
 }
 
 void CautiousReasoning::findMinimalModelOne() {
+    trace_msg(predmin, 4, "...computing minimal model using one");
     vector<Literal> assumptions;
-    vector<Literal> conflict;        
-    for(unsigned int i = 0; i < candidates.size(); i++) {
-        assumptions.push_back(Literal(candidates[i], NEGATIVE));
-        unsigned int res = waspFacade.solve(assumptions, conflict);
-        if(res == COHERENT) return;
+    vector<Literal> conflict;  
+    
+    for(unsigned int i = 0; i < candidates.size(); i++) assumptions.push_back(Literal(candidates[i], NEGATIVE));
         
-        if(conflict.size()==1) {
+    while(true) {
+        trace_action(predmin, 5, { trace_tag(cerr, predmin, 5); printVectorOfLiterals(assumptions, "Assumptions:"); });
+        unsigned int res = waspFacade.solve(assumptions, conflict);
+        trace_action(predmin, 5, { trace_tag(cerr, predmin, 5); printVectorOfLiterals(conflict, "Conflict:"); });
+        if(res == COHERENT) return;
+
+        if(conflict.size() == 1) {
             Literal lit = conflict[0];
             Var v = lit.getVariable();
             if(!VariableNames::isHidden(v)) addAnswer(v);
-            
+
             waspFacade.addClause(lit.getOppositeLiteral());
             for(unsigned int i = 0; i < assumptions.size(); i++)
                 if(assumptions[i] == lit) { assumptions[i] = assumptions.back(); assumptions.pop_back(); break; }
-            
+
             for(unsigned int i = 0; i < candidates.size(); i++)
                 if(candidates[i] == v) { candidates[i] = candidates.back(); candidates.pop_back(); break; }
             continue;
         }
-        assert(conflict.size() >= 2);
+        assert_msg(conflict.size() >= 2, "Conflict size " << conflict.size());
 
         vector<Literal> assums;
-        for(unsigned int i = 0; i < assumptions.size(); i++) {
+        for(unsigned int i=0; i < assumptions.size(); i++) {
             bool found = false;
-            for(unsigned int j = 0; j < conflict.size(); j++)
-                if(assumptions[i] == conflict[j]) { found = true; break; }
+            for(unsigned int j=0; j < conflict.size(); j++)
+                if(assumptions[i] == conflict[j]) { found=true; break; }
             if(!found) assums.push_back(assumptions[i]);
         }
-        assumptions.swap(assums);                
-        
+        assumptions.swap(assums);
+
         unsigned int n = conflict.size();
         unsigned int firstId = waspFacade.numberOfVariables()+1;
-        for(unsigned int i=0; i < n-1; i++) conflict.push_back(Literal(waspFacade.addVariable(true),POSITIVE));        
+        for(unsigned int i=0; i < n-1; i++) { Var v=waspFacade.addVariable(true); conflict.push_back(Literal(v,POSITIVE)); assumptions.push_back(Literal(v, NEGATIVE)); }
 
-        for(unsigned int i = waspFacade.numberOfVariables(); i > firstId; i--) {
+        for(unsigned int i=waspFacade.numberOfVariables(); i > firstId; i--) {
             vector<Literal> clause;
             clause.push_back(Literal(i,NEGATIVE));
             clause.push_back(Literal(i-1,POSITIVE));
-            waspFacade.addClause(clause);
+            trace_action(predmin, 6, { trace_tag(cerr, predmin, 5); printVectorOfLiterals(clause, "Adding clause:"); });
+            waspFacade.addClause(clause);            
         }
-        waspFacade.addCardinalityConstraint(conflict, n+1);
+        trace_action(predmin, 6, { trace_tag(cerr, predmin, 5); printVectorOfLiterals(conflict, "Adding cardinality constraint (bound " + to_string(n-1) + "):"); });
+        waspFacade.addCardinalityConstraint(conflict, n-1);        
+    }
+}
+
+void CautiousReasoning::chunkDynamic(unsigned int chunkSize) {
+    vector<Var> myCandidates;    
+    while(!candidates.empty()) {
+        myCandidates.clear();
+        for(unsigned int i = 0; i < candidates.size() && i < chunkSize; i++) myCandidates.push_back(candidates[i]);        
+        checkChunk(myCandidates);
+        unsigned int j = 0;
+        for(unsigned int i = 0; i < candidates.size(); i++) {
+            Var v = candidates[j] = candidates[i];
+            if(waspFacade.isFalse(v)) continue;
+            
+            if(waspFacade.isTrue(v) && waspFacade.decisionLevel(v) == 0) { addAnswer(v); continue; }            
+            j++;
+        }
+        candidates.resize(j);        
+    }
+}
+
+void CautiousReasoning::checkChunk(vector<Var>& myCandidates) {
+    vector<Literal> assumptions;
+    Var v = waspFacade.addVariable(true);
+    assumptions.push_back(Literal(v,NEGATIVE));
+    vector<Literal> conflict;    
+    while(!myCandidates.empty()) {
+        unsigned int result = waspFacade.solve(assumptions, conflict);
+        if(result == INCOHERENT) break;
+        assert(result == COHERENT);
+        
+        vector<Literal> clause;
+        unsigned int j = 0;
+        for(unsigned int i = 0; i < myCandidates.size(); i++) {
+            myCandidates[j] = myCandidates[i];
+            if(!waspFacade.isTrue(myCandidates[i])) continue;
+
+            clause.push_back(Literal(myCandidates[i],NEGATIVE));
+            j++;
+        }
+        myCandidates.resize(j);
+        clause.push_back(Literal(v,POSITIVE));
+        waspFacade.addClause(clause);
+    }
+    assert(waspFacade.isTrue(Literal(v,POSITIVE)));
+    for(unsigned int i = 0; i < myCandidates.size(); i++)
+        waspFacade.addClause(Literal(myCandidates[i],POSITIVE));
+}
+
+void CautiousReasoning::coreBased(unsigned int chunkSize) {
+    vector<Var> myCandidates;
+    while(!candidates.empty()) {
+        unsigned int i = 0;
+        vector<Var> tmp;
+        for(; i < chunkSize && i < candidates.size(); i++) myCandidates.push_back(candidates[i]);
+        for(unsigned int j = i; j < candidates.size(); j++) tmp.push_back(candidates[j]);
+        candidates.swap(tmp);
+        checkCoreChunk(myCandidates);
+    }
+}
+
+void CautiousReasoning::checkCoreChunk(vector<Var>& myCandidates) {
+    vector<Literal> assumptions;
+    vector<Literal> conflict;
+    while(!myCandidates.empty()) {
+        assumptions.clear();
+        for(unsigned int i=0; i < myCandidates.size(); i++) assumptions.push_back(Literal(myCandidates[i],NEGATIVE));
+
+        while(true) {
+            unsigned int result = waspFacade.solve(assumptions,conflict);
+            if(result == COHERENT) {
+                unsigned int j = 0;
+                for(unsigned int i = 0; i < myCandidates.size(); i++) {
+                    myCandidates[j] = myCandidates[i];
+                    if(waspFacade.isFalse(myCandidates[i])) continue;
+                    assert(waspFacade.isTrue(myCandidates[i]));
+                    if(waspFacade.decisionLevel(myCandidates[i]) == 0) { addAnswer(myCandidates[i]); continue; }
+                    j++;
+                }
+                myCandidates.resize(j);
+                break;
+            }
+            assert(result == INCOHERENT);
+            
+            vector<Literal> assums;
+            for(unsigned int i = 0; i < assumptions.size(); i++) {
+                bool found = false;
+                for(unsigned int j = 0; j < conflict.size(); j++)
+                    if(assumptions[i] == conflict[j]) { found = true; break; }
+                if(!found) assums.push_back(assumptions[i]);
+            }
+            assumptions.swap(assums);
+            
+            assert(!conflict.empty());
+            if(conflict.size() == 1) {
+                Var v = conflict[0].getVariable();
+                addAnswer(v);
+                for(unsigned int i = 0; i < myCandidates.size(); i++)
+                    if(myCandidates[i] == v) { myCandidates[i] = myCandidates.back(); myCandidates.pop_back(); }
+                waspFacade.addClause(Literal(v,POSITIVE));
+            }
+            
+            if(assumptions.empty()) { iterativeCoherenceTestingRestricted(myCandidates); break; }
+        }
     }
 }
 
