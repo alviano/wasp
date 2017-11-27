@@ -131,6 +131,8 @@ namespace wasp
             static unsigned int initMinisatHeuristic;
             static unsigned int initSign;
             
+            static bool multiAggregates;
+            
             static unsigned int predMinimizationAlgorithm;
             static vector< string > predicatesToMinimize;
             

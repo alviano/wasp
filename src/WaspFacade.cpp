@@ -299,6 +299,7 @@ WaspFacade::solve(const vector<Literal>& assumptions, vector<Literal>& conflict)
         if(!solver.preprocessing()) { ok_ = false; return INCOHERENT; }
         solver.turnOffSimplifications();
         solver.setComputeUnsatCores(true);
+        statistics(&solver, startSolving());
         solver.onStartingSolver();
     }
     conflict.clear();

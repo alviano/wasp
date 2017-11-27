@@ -2900,6 +2900,14 @@ GringoNumericFormat::addWeightConstraints()
         
         cleanWeightConstraint( weightConstraintRule );
         
+        if( !wasp::Options::multiAggregates )
+        {
+            Aggregate* aggregate = weightConstraintToAggregate( weightConstraintRule );
+            solver.addAggregate( aggregate );            
+            trace_msg( parser, 2, "Adding aggregate " << *aggregate );  
+            continue;
+        }
+        
         aggregatesTrie.startInsertion();
         for( unsigned int j = 0; j < weightConstraintRule->size(); j++ )
         {

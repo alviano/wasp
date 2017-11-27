@@ -208,6 +208,7 @@ class WaspHelp
             cout << "--dimacs                               - Enable dimacs format as input and outputs" << endl;
             cout << "--help                                 - Print this guide and exit" << endl;
             cout << "--disable-simplifications              - Disable the simplifications of satelite" << endl;
+            cout << "--enable-multiaggregates               - Share aggregate sets if possible" << endl;
             cout << "--enumeration-strategy                 - Select different strategy for enumeration of answer sets" << endl;
             cout << "       =bt                             - Use backtracking for enumeration" << endl;
             cout << "       =bc                             - Use blocking clause" << endl;

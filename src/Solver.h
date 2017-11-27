@@ -1709,13 +1709,13 @@ Solver::endPreprocessing()
 bool
 Solver::preprocessing()
 {
+    statistics( this, beforePreprocessing( numberOfVariables(), numberOfAssignedLiterals(), numberOfClauses() ) );
     if( conflictDetected() )
     {
         trace( solving, 1, "Conflict at level 0.\n" );
         return false;
     }    
-
-    statistics( this, beforePreprocessing( numberOfVariables(), numberOfAssignedLiterals(), numberOfClauses() ) );
+    
     assert( satelite != NULL );
     assert( checkVariablesState() );   
     if( callSimplifications() && !satelite->simplify() )

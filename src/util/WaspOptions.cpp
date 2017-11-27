@@ -112,6 +112,7 @@ namespace wasp
 #define OPTIONID_simplifications ( 'z' + 109 )
 #define OPTIONID_enumeration ( 'z' + 110 )
 #define OPTIONID_modelchecker_compactreasons ( 'z' + 111 )
+#define OPTIONID_multiaggregates ( 'z' + 112 ) 
     
 /* WEAK CONSTRAINTS OPTIONS */
 #define OPTIONID_weakconstraintsalgorithm ( 'z' + 200 )
@@ -192,6 +193,8 @@ string Options::scriptDirectory = "";
 
 unsigned int Options::predMinimizationAlgorithm = NO_PREDMINIMIZATION;
 vector< string > Options::predicatesToMinimize;
+
+bool Options::multiAggregates = false;
 
 void split( const string &s, char delim, vector< string >& output )
 {
@@ -350,7 +353,7 @@ Options::parse(
                 { "time-limit", required_argument, NULL, OPTIONID_time_limit },
                 { "max-cost", required_argument, NULL, OPTIONID_max_cost },
                 { "disable-simplifications", no_argument, NULL, OPTIONID_simplifications },
-                
+                { "enable-multiaggregates", no_argument, NULL, OPTIONID_multiaggregates },
                 { "enumeration-strategy", required_argument, NULL, OPTIONID_enumeration },
                 
                 { "modelchecker-algorithm", required_argument, NULL, OPTIONID_modelchecker_algorithm },  
@@ -605,6 +608,10 @@ Options::parse(
             case OPTIONID_modelchecker_compactreasons:
                 compactReasonsForHCC = true;
                 shiftStrategy = SHIFT_AUTO;
+                break;
+                
+            case OPTIONID_multiaggregates:
+                multiAggregates = true;
                 break;
                 
             case OPTIONID_help:

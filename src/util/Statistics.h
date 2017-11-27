@@ -229,7 +229,7 @@ class Statistics {
             sateliteTime = time( 0 );
         }
 
-        inline void startSolving() { if( wasp::Options::stats ) solvingTime = time( 0 ); }
+        inline void startSolving() { solvingTime=time(0); }
         inline void endSolving() { printStatistics(); }
 
         inline void addCyclicComponent( unsigned int numberOfAtoms ) { cyclicComponents.push_back( pair< unsigned int, bool >( numberOfAtoms, false ) ); }
