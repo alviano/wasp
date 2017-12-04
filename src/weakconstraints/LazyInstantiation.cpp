@@ -91,10 +91,16 @@ LazyInstantiation::handleAnswerSet()
             if( !solver.addClauseRuntime( clause ) )
                 return false;
         }
-        else
+        else if( clause->size() == 1 )
         {
             solver.addOptimizationLiteral( clause->getAt( 0 ).getOppositeLiteral(), weights[ i ], 0, false );
             delete clause;
+        }
+        else
+        {
+            addedVar = addAuxVariable();
+            solver.addClauseRuntime( Literal( addedVar, NEGATIVE ) );
+            solver.addOptimizationLiteral( Literal( addedVar, NEGATIVE ), weights[ i ], 0, false );
         }
     }
     

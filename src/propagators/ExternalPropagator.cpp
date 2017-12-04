@@ -659,7 +659,7 @@ ExternalPropagator::addWeakConstraints(
     
     if( weakConstraints.size() > 2 )
     {
-        Clause* clause = new Clause();    
+        Clause* clause = new Clause();
         for( unsigned int i = 1; i < weakConstraints.size(); i++ )
         {
             if( weakConstraints[ i ] == 0 )
@@ -672,7 +672,11 @@ ExternalPropagator::addWeakConstraints(
             Literal l = Literal::createLiteralFromInt( weakConstraints[ i ] );
             if( solver.isUndefined( l ) )
                 WaspErrorMessage::errorGeneric( "Weak constraint is not well-formed: Literal with id " + to_string( l.getId() ) + " is undefined." );            
-            clause->addLiteral( l );
+            else if( solver.isTrue( l ) )
+                WaspErrorMessage::errorGeneric( "Weak constraint is not well-formed: Literal with id " + to_string( l.getId() ) + " is true." );            
+            assert( solver.isFalse( l ) );
+            if( solver.getDecisionLevel( l ) > 0 )
+                clause->addLiteral( l );
         }
         delete clause;
     }

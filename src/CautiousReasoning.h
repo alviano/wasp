@@ -27,7 +27,11 @@
 #include <iostream>
 using namespace std;
 
-class WaspFacade;
+#include "WaspFacade.h"
+
+#define CAUTIOUS_MULTI_CORE 0
+#define CAUTIOUS_COHERENT_STOP 1
+#define CAUTIOUS_SINGLE_CORE 2
 
 class CautiousReasoning : public AnswerSetListener
 {
@@ -54,11 +58,15 @@ class CautiousReasoning : public AnswerSetListener
         void minimalAlgorithm();
         void findMinimalModelPreferences();
         void findMinimalModelOne();
+        void findMinimalModelK();
+        void findMinimalModelPmres();
         void chunkDynamic(unsigned int chunkSize);
         void checkChunk(vector<Var>& myCandidates);
         void coreBased(unsigned int chunkSize);
         void checkCoreChunk(vector<Var>& myCandidates);
         void printAnswers();
+        
+        unsigned int solveAndProcessCore(vector<Literal>& assumptions, vector<Literal>& conflict);
         
         #ifdef TRACE_ON
         inline void printVectorOfVars(const vector<Var>& v, const string& description) {

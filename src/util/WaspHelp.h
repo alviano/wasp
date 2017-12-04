@@ -171,6 +171,8 @@ class WaspHelp
             cout << "       =chunk-dynamic                  - Enable algorithm based on dynamic chunks (Default size=2)" << endl;
             cout << "       =preferences                    - Enable algorithm based on preferences" << endl;
             cout << "       =one                            - Enable algorithm based on algorithm one" << endl;
+            cout << "       =kdyn                           - Enable algorithm based on algorithm kdyn" << endl;
+            cout << "       =pmres                          - Enable algorithm based on algorithm pmres" << endl;
             cout << "--query-verbosity=(0,...,3)            - Enable verbosity of queries algorithms" << endl;
             cout << "--query-chunk-size=n                   - Specify the size of each chunk" << endl;
             cout << "--query-chunk-percentage=(1,...,100)   - The size of each chunk is a percentage of the number of candidates" << endl;

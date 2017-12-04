@@ -53,7 +53,10 @@ int main( int argc, char** argv )
     
     waspFacade.readInput( cin );
     if( wasp::Options::predMinimizationAlgorithm != NO_PREDMINIMIZATION ) { PredicateMinimization p( waspFacade ); p.solve(); }
-    else if( wasp::Options::queryAlgorithm == ONE_QUERIES ) { CautiousReasoning c( waspFacade ); c.solve(); }
+    else if( wasp::Options::queryAlgorithm == ONE_QUERIES 
+            || wasp::Options::queryAlgorithm == KDYN_QUERIES 
+            || wasp::Options::queryAlgorithm == PREFERENCE_QUERIES
+            || wasp::Options::queryAlgorithm == PMRES_QUERIES ) { CautiousReasoning c( waspFacade ); c.solve(); }
     else waspFacade.solve();
     waspFacade.onFinish();
     delete waspFacadePointer;

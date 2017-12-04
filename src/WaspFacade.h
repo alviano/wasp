@@ -37,6 +37,7 @@ using namespace std;
 #include "heuristic/ExternalHeuristic.h"
 #include "weakconstraints/LazyInstantiation.h"
 #include "outputBuilders/NoopOutputBuilder.h"
+#include "outputBuilders/WaspOutputBuilder.h"
 
 class WaspFacade
 {
@@ -112,6 +113,7 @@ class WaspFacade
          * @return 
          */
         inline bool addCardinalityConstraint(vector<Literal>& lits, uint64_t bound) {
+            if(bound==1) return addClause(lits);            
             vector<uint64_t> weights;
             for(unsigned int i = 0; i < lits.size(); i++) weights.push_back(1);
             return addPseudoBooleanConstraint(lits, weights, bound);
@@ -238,10 +240,13 @@ class WaspFacade
         inline void enableOutput() { if( tmpOutputBuilder != NULL ) { solver.setOutputBuilder( outputBuilder ); delete tmpOutputBuilder; tmpOutputBuilder = NULL; } }
         inline void disableOutput() { if( tmpOutputBuilder == NULL ) { tmpOutputBuilder = new NoopOutputBuilder(); solver.setOutputBuilder( tmpOutputBuilder ); } }        
         
+        inline void disableVariableElimination() { disableVE_ = true; };
+        
     private:
         Solver solver;
         bool runtime_;
         bool ok_;
+        bool disableVE_;
         
         OutputBuilder* outputBuilder;
         OutputBuilder* tmpOutputBuilder;
@@ -252,8 +257,10 @@ class WaspFacade
         inline void addVariables(Var addedVar);
 };
 
-WaspFacade::WaspFacade() : runtime_( false ), ok_(true), outputBuilder( NULL ), tmpOutputBuilder( NULL )
+WaspFacade::WaspFacade() : runtime_(false), ok_(true), disableVE_(false), tmpOutputBuilder(NULL)
 {   
+    outputBuilder = new WaspOutputBuilder();
+    solver.setOutputBuilder(outputBuilder);    
     if( wasp::Options::interpreter != NO_INTERPRETER && wasp::Options::heuristic_scriptname != NULL )
         solver.setChoiceHeuristic( new ExternalHeuristic( solver, wasp::Options::heuristic_scriptname, wasp::Options::interpreter, wasp::Options::scriptDirectory ) );
     estatistics( &solver, checkSolver( &solver ) );
@@ -316,11 +323,11 @@ WaspFacade::solveWithWeakConstraints()
 void
 WaspFacade::addVariables(Var addedVar) {   
     if(runtime_) {
-        while(addedVar >= solver.numberOfVariables())
-            solver.addVariableRuntime();
+        while(addedVar > solver.numberOfVariables())
+            solver.addVariableRuntime();        
     }
     else {
-        while(addedVar >= solver.numberOfVariables())
+        while(addedVar > solver.numberOfVariables())
             solver.addVariable();
     }
 }

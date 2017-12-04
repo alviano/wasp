@@ -980,6 +980,8 @@ Options::initMap()
     stringToQueryAlgorithms[ "chunk-dynamic" ] = CHUNK_DYNAMIC;
     stringToQueryAlgorithms[ "preferences" ] = PREFERENCE_QUERIES;
     stringToQueryAlgorithms[ "one" ] = ONE_QUERIES;
+    stringToQueryAlgorithms[ "kdyn" ] = KDYN_QUERIES;
+    stringToQueryAlgorithms[ "pmres" ] = PMRES_QUERIES;
     
     stringToPredMinimization[ "enumeration" ] = PREDMIN_ENUMERATION;
     stringToPredMinimization[ "guess-check" ] = PREDMIN_GUESS_AND_CHECK;

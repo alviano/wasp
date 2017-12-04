@@ -79,6 +79,7 @@ WaspFacade::solve()
     if(runtime_) { WaspErrorMessage::errorGeneric("Calling method solve twice."); return; }
     runtime_ = true;
 
+    if(disableVE_) solver.disableVariableElimination();
     if(!solver.preprocessing()) { solver.foundIncoherence(); return; }
     
     statistics( &solver, startSolving() );
@@ -132,6 +133,7 @@ void
 WaspFacade::setOutputPolicy(
     OUTPUT_POLICY outputPolicy )
 {
+    delete outputBuilder;
     switch( outputPolicy )
     {
         case COMPETITION_OUTPUT:
@@ -296,6 +298,7 @@ WaspFacade::solve(const vector<Literal>& assumptions, vector<Literal>& conflict)
     //First call
     if(!runtime_) {
         runtime_ = true;
+        if(disableVE_) solver.disableVariableElimination();
         if(!solver.preprocessing()) { ok_ = false; return INCOHERENT; }
         solver.turnOffSimplifications();
         solver.setComputeUnsatCores(true);
