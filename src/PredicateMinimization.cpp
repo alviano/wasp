@@ -113,6 +113,7 @@ void PredicateMinimization::guessAndCheck() {
     vector<Literal> conflict;
     
     while(true) {
+        assumptions.clear();
         trace_msg(predmin, 2, "Computing new answer set");
         unsigned int res = waspFacade.solve(assumptions, conflict);
         if(res == INCOHERENT) break;
