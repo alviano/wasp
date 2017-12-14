@@ -125,6 +125,8 @@ namespace wasp
             
             static bool stats;
             
+            static unsigned int statsVerbosity;
+            
             static double initVariableIncrement;
             static double initVariableDecay;
             static unsigned int initValue;

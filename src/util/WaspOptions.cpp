@@ -254,6 +254,8 @@ double Options::initVariableDecay = ( 1 / 0.95 );
 
 bool Options::stats = false;
 
+unsigned Options::statsVerbosity = 0;
+
 unsigned int Options::initMinisatHeuristic = INIT_MINISAT_ALL_EQUALS;
 unsigned int Options::initValue = 0;
 unsigned int Options::initSign = INIT_SIGN_MINISAT_ALLFALSE;
@@ -304,7 +306,7 @@ Options::parse(
                 { "printbounds", no_argument, NULL, OPTIONID_printbounds },
                 { "printatomstable", no_argument, NULL, OPTIONID_printatomtable },
                 { "id-output", no_argument, NULL, OPTIONID_idOutput },
-                { "stats", no_argument, NULL, OPTIONID_stats },
+                { "stats", optional_argument, NULL, OPTIONID_stats },
 
                 /* MINISAT POLICY */
                 { "minisat-policy", no_argument, NULL, OPTIONID_minisatheuristic },
@@ -484,6 +486,10 @@ Options::parse(
                 
             case OPTIONID_stats:
                 stats = true;
+                if( optarg )
+                {
+                    statsVerbosity = atoi( optarg );
+                }
                 break;
                 
             case OPTIONID_multi:

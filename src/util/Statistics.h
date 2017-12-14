@@ -169,14 +169,20 @@ class Statistics {
                 return;
 
             if(sateliteTime!=0) sateliteTime=time(0)-sateliteTime;
+            if( wasp::Options::statsVerbosity >= 1 )
+            {
             cerr << endl << "After satelite" << endl;
             cerr << "    Clauses                     : " << clausesAfterSatelite << endl;
             cerr << "      Binary                    : " << binaryAfterSatelite << " (" << ( ( double ) binaryAfterSatelite * 100 / ( double ) clausesAfterSatelite ) << "%)" << endl;
             cerr << "      Ternary                   : " << ternaryAfterSatelite << " (" << ( double )( ternaryAfterSatelite * 100 / ( double ) clausesAfterSatelite ) << "%)" << endl;
             cerr << "    Assigned vars               : " << vars << " (" << ( ( double ) vars * 100 / ( double ) numberOfVars ) << "%)" << endl;
-
-            cerr << separator << endl;
+            cerr << separator << endl;            
+            }
+            
             cerr << "Tight                           : " << ( ( cyclicHCComponents.size() + cyclicComponents.size() ) > removedComponents ? "no" : "yes" ) << endl;
+            
+            if( wasp::Options::statsVerbosity >= 2 )
+            {
             if( cyclicComponents.size() > removedComponents )
             {
             cerr << "    Cyclic components           : " << cyclicComponents.size() - removedComponents << endl;
@@ -195,7 +201,7 @@ class Statistics {
             cerr << "        Atoms in component " << ( i + 1 ) << "    : " << cyclicHCComponents[ i ].first << endl;                
             }
             }
-
+            }
             cerr << separator << endl;                
         }
 
@@ -203,7 +209,8 @@ class Statistics {
         {
             numberOfVars = vars;
             if( disabled || !wasp::Options::stats )
-                return;            
+                return;
+            
             cerr << "Parser" << endl << endl;
             cerr << "    Atoms                       : " << numberOfAtoms << endl;
             cerr << "    Constraints                 : " << numberOfConstraints << endl;
@@ -215,6 +222,8 @@ class Statistics {
             cerr << "    Weak constraints            : " << numberOfWeakConstraints << endl;
             cerr << separator << endl;
 
+            if( wasp::Options::statsVerbosity >= 1 )
+            {
             cerr << "Initial structures" << endl << endl;
             cerr << "    Clauses                     : " << numberOfClauses << endl;
             cerr << "      Binary                    : " << numberOfBinaryClauses << " (" << ( ( double ) numberOfBinaryClauses * 100 / ( double )numberOfClauses ) << "%)" << endl;
@@ -225,7 +234,7 @@ class Statistics {
             
             cerr << "    Variables                   : " << vars << endl;
             cerr << "      Assigned                  : " << assignedVars << " (" << ( ( double ) assignedVars * 100 / ( double ) numberOfVars ) << "%)" << endl;
-
+            }
             sateliteTime = time( 0 );
         }
 
@@ -254,8 +263,20 @@ class Statistics {
         inline void disable() { disabled = true; }
         inline void enable() { disabled = false; }  
 
-        inline void startParsing() { if( wasp::Options::stats ) { parsingTime = time( 0 ); cerr << "start parsing..." << endl; } }
-        inline void endParsing() { if( wasp::Options::stats ) { if(parsingTime!=0) parsingTime = time( 0 ) - parsingTime; cerr << "...end parsing" << endl; } }
+        inline void startParsing() { 
+            if( wasp::Options::stats ) {
+                parsingTime = time( 0 ); 
+                if( wasp::Options::statsVerbosity >= 1 )
+                    cerr << "start parsing..." << endl;
+            } 
+        }
+        inline void endParsing() { 
+            if( wasp::Options::stats ) { 
+                if(parsingTime!=0) parsingTime = time( 0 ) - parsingTime;
+                if( wasp::Options::statsVerbosity >= 1 )
+                    cerr << "...end parsing" << endl;
+            } 
+        }
         inline void startSCCs() {}
         inline void endSCCs() {}
         inline void startCompletion() {}
@@ -453,7 +474,7 @@ class Statistics {
             cerr << separator << endl;
             cerr << "Learning" << endl << endl;
             cerr << "    Learned clauses             : " << numberOfLearnedClauses << endl;
-            if( numberOfLearnedClauses > 0 )
+            if( numberOfLearnedClauses > 0 && wasp::Options::statsVerbosity >= 1 )
             {
             cerr << "      Unary                     : " << numberOfLearnedUnaryClauses << endl;
             cerr << "      Binary                    : " << numberOfLearnedBinaryClauses << endl;
@@ -461,10 +482,11 @@ class Statistics {
             cerr << "      AVG Size                  : " << ( ( double ) sumOfSizeLearnedClauses / ( double ) numberOfLearnedClauses ) << endl;
             cerr << "      Min Size                  : " << minLearnedSize << endl;
             cerr << "      Max Size                  : " << maxLearnedSize << endl;                
+            cerr << endl;
             }
-
-            cerr << endl << "    Learned post propagators    : " << numberOfLearnedClausesFromPropagators << endl;
-            if( numberOfLearnedClausesFromPropagators > 0 )
+            
+            cerr << "    Learned post propagators    : " << numberOfLearnedClausesFromPropagators << endl;
+            if( numberOfLearnedClausesFromPropagators > 0 && wasp::Options::statsVerbosity >= 1 )
             {
             cerr << "      Unary                     : " << numberOfLearnedUnaryClausesFromPropagators << endl;
             cerr << "      Binary                    : " << numberOfLearnedBinaryClausesFromPropagators << endl;
@@ -472,14 +494,15 @@ class Statistics {
             cerr << "      AVG Size                  : " << ( ( double ) sumOfSizeLearnedClausesFromPropagators / ( double ) numberOfLearnedClausesFromPropagators ) << endl;
             cerr << "      Min Size                  : " << minLearnedSizeFromPropagators << endl;
             cerr << "      Max Size                  : " << maxLearnedSizeFromPropagators << endl;
+            cerr << endl;
             }
             
-            cerr << endl << "    Deletion calls              : " << numberOfDeletionInvocation << endl;
-            if( numberOfDeletionInvocation > 0 )
+            cerr << "    Deletion calls              : " << numberOfDeletionInvocation << endl;
+            if( numberOfDeletionInvocation > 0 && wasp::Options::statsVerbosity >= 1 )
             {
             cerr << "      Deletion                  : " << numberOfDeletion << endl;
             cerr << "      Min deletion              : " << minDeletion << endl;
-            cerr << "      Max deletion              : " << maxDeletion << endl;
+            cerr << "      Max deletion              : " << maxDeletion << endl;            
             }
 
             cerr << separator << endl;
@@ -495,15 +518,16 @@ class Statistics {
 
         void printPartialStatistics()
         {
-            if( disabled || !wasp::Options::stats )
+            if( disabled || !wasp::Options::stats  || wasp::Options::statsVerbosity < 2 )
                 return;
+            
             cerr << "    Choices: " << numberOfChoices << " - Learned from unit and propagators: " << numberOfLearnedClauses << " - Learned from post propagators: " << numberOfLearnedClausesFromPropagators << " - Deleted: " << numberOfDeletion << " - Restarts: " << numberOfRestarts << endl;
         }
 
         void printCheckerStats( unsigned int i )
         {
-            if( generator || disabled || !wasp::Options::stats )
-                return;
+            if( generator || disabled || !wasp::Options::stats || wasp::Options::statsVerbosity < 2 )
+                return;            
             cerr << endl << endl;
             cerr << separator << endl;
             cerr << "Checker [ " << i << " ]" << endl;

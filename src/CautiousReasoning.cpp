@@ -277,7 +277,7 @@ void CautiousReasoning::findMinimalModelK() {
  * Adapted from aspino: https://github.com/alviano/aspino/
  */
 void CautiousReasoning::findMinimalModelPmres() {
-    trace_msg(predmin, 4, "...computing minimal model using k");
+    trace_msg(predmin, 4, "...computing minimal model using pmres");
     vector<Literal> assumptions;
     vector<Literal> conflict;  
     
