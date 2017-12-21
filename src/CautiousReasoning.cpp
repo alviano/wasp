@@ -66,13 +66,15 @@ void CautiousReasoning::foundAnswerSet() {
 
 void CautiousReasoning::addAnswer(Var v) {
     assert(find(answers.begin(), answers.end(), v) == answers.end());
-    if(wasp::Options::queryVerbosity >= 1) cout << "Certain answer: " << Literal(v,POSITIVE) << endl;
+    if(wasp::Options::queryVerbosity >= 2) cout << "Certain answer: " << Literal(v,POSITIVE) << endl;    
     answers.push_back(v);
+    if(wasp::Options::queryVerbosity >= 1) cout << "["<< answers.size() << "," << candidates.size() << "]" << endl;
 }
 
 void CautiousReasoning::printCandidates() {
-    if(wasp::Options::queryVerbosity < 2) return;
-    if(wasp::Options::queryVerbosity == 2) { cout << "Number of possible answers: " << candidates.size() << endl; return; }
+    if(wasp::Options::queryVerbosity >= 1) cout << "["<< answers.size() << "," << candidates.size() << "]" << endl;
+    if(wasp::Options::queryVerbosity < 3) return;
+    if(wasp::Options::queryVerbosity == 3) { cout << "Number of possible answers: " << candidates.size() << endl; return; }
     cout << "Candidates:";
     for(unsigned int i = 0; i < candidates.size(); i++) cout << " " << Literal(candidates[i],POSITIVE);
     cout << endl;    
@@ -139,7 +141,11 @@ void CautiousReasoning::overestimateReduction() {
 
 void CautiousReasoning::minimalAlgorithm() {
     trace_msg(predmin, 3, "Starting algorithm based on minimality");
-    unsigned int size = UINT_MAX;    
+    if( wasp::Options::queryCoreCache &&
+        ( wasp::Options::queryAlgorithm == ONE_QUERIES || wasp::Options::queryAlgorithm == KDYN_QUERIES || wasp::Options::queryAlgorithm == PMRES_QUERIES ) )
+        coreUtil = new CoreBasedUtil();    
+    
+    unsigned int size = UINT_MAX;
     while(!candidates.empty() && size != candidates.size()) {        
         size = candidates.size();
         switch(wasp::Options::queryAlgorithm) {
@@ -178,18 +184,27 @@ void CautiousReasoning::findMinimalModelOne() {
     vector<Literal> assumptions;
     vector<Literal> conflict;  
     
-    for(unsigned int i = 0; i < candidates.size(); i++) assumptions.push_back(Literal(candidates[i], NEGATIVE));
-        
+    initAssumptions(assumptions);
+    
     while(true) {
         unsigned int res = solveAndProcessCore(assumptions, conflict);
         if(res==CAUTIOUS_COHERENT_STOP) break;
-        if(res==CAUTIOUS_SINGLE_CORE) continue;
+        if(res==CAUTIOUS_SINGLE_CORE || res==CAUTIOUS_ALREDY_FOUND_CORE) continue;
         assert(res==CAUTIOUS_MULTI_CORE);
         assert(conflict.size() >= 2);
+        
+        vector<Literal> core;
+        vector<Literal> auxAtoms;
+        if(coreUtil != NULL) core = conflict;
 
         unsigned int n = conflict.size();
         unsigned int firstId = waspFacade.numberOfVariables()+1;
-        for(unsigned int i=0; i < n-1; i++) { Var v=waspFacade.addVariable(true); conflict.push_back(Literal(v,POSITIVE)); assumptions.push_back(Literal(v, NEGATIVE)); }
+        for(unsigned int i=0; i < n-1; i++) {
+            Var v = waspFacade.addVariable(true);
+            conflict.push_back(Literal(v,POSITIVE));
+            assumptions.push_back(Literal(v, NEGATIVE));
+            if(coreUtil != NULL) auxAtoms.push_back(Literal(v, NEGATIVE));
+        }
 
         for(unsigned int i=waspFacade.numberOfVariables(); i > firstId; i--) {
             vector<Literal> clause;
@@ -199,7 +214,8 @@ void CautiousReasoning::findMinimalModelOne() {
             waspFacade.addClause(clause);            
         }
         trace_action(predmin, 6, { trace_tag(cerr, predmin, 5); printVectorOfLiterals(conflict, "Adding cardinality constraint (bound " + to_string(n-1) + "):"); });
-        waspFacade.addCardinalityConstraint(conflict, n-1);        
+        waspFacade.addCardinalityConstraint(conflict, n-1);
+        if(coreUtil != NULL) coreUtil->addCore(core, auxAtoms);
     }
 }
 
@@ -211,14 +227,21 @@ void CautiousReasoning::findMinimalModelK() {
     vector<Literal> assumptions;
     vector<Literal> conflict;  
     
-    for(unsigned int i = 0; i < candidates.size(); i++) assumptions.push_back(Literal(candidates[i], NEGATIVE));
+    initAssumptions(assumptions);
     
     while(true) {
-        unsigned int res = solveAndProcessCore(assumptions, conflict);
+        unsigned int res = solveAndProcessCore(assumptions, conflict);        
         if(res==CAUTIOUS_COHERENT_STOP) break;
-        if(res==CAUTIOUS_SINGLE_CORE) continue;
+        if(res==CAUTIOUS_SINGLE_CORE || res==CAUTIOUS_ALREDY_FOUND_CORE) continue;
         assert(res==CAUTIOUS_MULTI_CORE);
         assert(conflict.size() >= 2);
+        
+        vector<Literal> core;
+        vector<Literal> auxAtoms;
+        if(coreUtil != NULL) core = conflict;
+
+        //TO UNIFORM WITH ASPINO
+        for(unsigned int i = 0; i < conflict.size(); i++) conflict[i] = conflict[i].getOppositeLiteral();
         
         const int b = conflict.size() <= 2 ? 8 : ceil(log10(conflict.size()) * 16);
         const int m = ceil(2.0 * conflict.size() / (b-2.0));
@@ -230,46 +253,42 @@ void CautiousReasoning::findMinimalModelK() {
                 ) / (m * 2.0)
             );
         // ceil((conflict.size() + m) / static_cast<double>(m));
+        trace_msg(predmin, 5, "At most " << N*2 << " elements in " << m << " new constraints");
 
         Literal prec = Literal::null;
-        vector<Literal> lits;
         for(;;) {
             assert(conflict.size() > 0);
 
+            vector<Literal> cc;
+
             int i = N;
-            if(prec != Literal::null) { lits.push_back(prec); i--; }
+            if(prec != Literal::null) { cc.push_back(prec); i--; }
             for(; i > 0; i--) {
                 if(conflict.size() == 0) break;
-                lits.push_back(conflict.back());
+                cc.push_back(conflict.back().getOppositeLiteral());
                 conflict.pop_back();
             }
-            assert(lits.size() > 0);
-            uint64_t bound = lits.size()-1;
+            assert(cc.size() > 0);
+            unsigned int bound = cc.size()-1;
 
             if(conflict.size() > 0) bound++;
 
-            for(unsigned i = 0; i < bound; i++) {
-                Var v = waspFacade.addVariable(true);
-                trace_msg(predmin, 6, "Adding var: " << v); 
-                lits.push_back(Literal(v, NEGATIVE));
-                if(i != 0) { 
-                    trace_msg(predmin, 6, "Adding clause: [" << Literal(v-1, NEGATIVE) << "," << Literal(v, POSITIVE) << "]"); 
-                    waspFacade.addClause(Literal(v-1, NEGATIVE), Literal(v, POSITIVE)); // symmetry breaker
-                }
-                if(i == 0 && conflict.size() > 0) { 
-                    prec = Literal(v, POSITIVE);
-                }
-                else {
-                    assumptions.push_back(Literal(v, POSITIVE));
-                }
+            for(unsigned int i = 0; i < bound; i++) {
+                Var v = waspFacade.addVariable(true);                
+                cc.push_back(Literal(v, NEGATIVE));
+                if(i != 0) waspFacade.addClause(Literal(v-1,NEGATIVE), Literal(v,POSITIVE)); // symmetry breaker
+                if(i == 0 && conflict.size() > 0) prec = Literal(v, POSITIVE);                
+                else { assumptions.push_back(Literal(v,POSITIVE)); if(coreUtil != NULL) auxAtoms.push_back(Literal(v, POSITIVE)); }
             }
 
-            trace_action(predmin, 6, { trace_tag(cerr, predmin, 5); printVectorOfLiterals(lits, "Adding cardinality constraint (bound " + to_string(bound) + "):"); });
-            waspFacade.addCardinalityConstraint(lits, bound);        
+            trace_msg(predmin, 6, "Add cardinality constraint of size " << cc.size());
+            waspFacade.addCardinalityConstraint(cc, bound);
+
             if(conflict.size() == 0) break;
         }
 
-        assert(conflict.size() == 0);        
+        assert(conflict.size() == 0);
+        if(coreUtil != NULL) coreUtil->addCore(core, auxAtoms);
     }
 }
 
@@ -281,17 +300,22 @@ void CautiousReasoning::findMinimalModelPmres() {
     vector<Literal> assumptions;
     vector<Literal> conflict;  
     
-    for(unsigned int i = 0; i < candidates.size(); i++) assumptions.push_back(Literal(candidates[i], NEGATIVE));
+    initAssumptions(assumptions);
     
     while(true) {
         unsigned int res = solveAndProcessCore(assumptions, conflict);
         if(res==CAUTIOUS_COHERENT_STOP) break;
-        if(res==CAUTIOUS_SINGLE_CORE) continue;
+        if(res==CAUTIOUS_SINGLE_CORE || res==CAUTIOUS_ALREDY_FOUND_CORE) continue;
         assert(res==CAUTIOUS_MULTI_CORE);
         assert(conflict.size() >= 2);
     
         Literal prec = Literal::null;
         vector<Literal> lits;
+        
+        vector<Literal> core;
+        vector<Literal> auxAtoms;
+        if(coreUtil != NULL) core = conflict;
+        
         //TO UNIFORM WITH ASPINO
         for(unsigned int i = 0; i < conflict.size(); i++) conflict[i] = conflict[i].getOppositeLiteral();
         
@@ -300,6 +324,7 @@ void CautiousReasoning::findMinimalModelPmres() {
             else {
                 // disjunction
                 Var v = waspFacade.addVariable(true);
+                if(coreUtil != NULL) auxAtoms.push_back(Literal(v, POSITIVE));
                 assumptions.push_back(Literal(v, POSITIVE));
                 lits.push_back(prec);
                 lits.push_back(conflict.back().getOppositeLiteral());
@@ -327,39 +352,56 @@ void CautiousReasoning::findMinimalModelPmres() {
             conflict.pop_back();
         }
         assert(conflict.size() == 0);
+        if(coreUtil != NULL) coreUtil->addCore(core, auxAtoms);
     }
 }
 
 unsigned int CautiousReasoning::solveAndProcessCore(vector<Literal>& assumptions, vector<Literal>& conflict) {
     trace_action(predmin, 5, { trace_tag(cerr, predmin, 5); printVectorOfLiterals(assumptions, "Assumptions:"); });
-    unsigned int res = waspFacade.solve(assumptions, conflict);
-    trace_action(predmin, 5, { trace_tag(cerr, predmin, 5); printVectorOfLiterals(conflict, "Conflict:"); });
-    if(res == COHERENT) { trace_action(predmin, 6, { trace_tag(cerr, predmin, 6); waspFacade.enableOutput(); waspFacade.printAnswerSet(); waspFacade.disableOutput(); }); return CAUTIOUS_COHERENT_STOP; }
+    bool exists = false;
+    vector<Literal> auxAtoms;
+    
+    if(coreUtil != NULL) {
+        coreUtil->newComputation();
+        for(unsigned int i = 0; i < assumptions.size(); i++) coreUtil->setAssumption(assumptions[i]);
+        exists = coreUtil->checkExistenceOfCore(conflict, auxAtoms);
+    }
+    
+    if(!exists) {
+        unsigned int res = waspFacade.solve(assumptions, conflict);
+        trace_action(predmin, 5, { trace_tag(cerr, predmin, 5); printVectorOfLiterals(conflict, "Conflict:"); });
+        if(res == COHERENT) { trace_action(predmin, 6, { trace_tag(cerr, predmin, 6); waspFacade.enableOutput(); waspFacade.printAnswerSet(); waspFacade.disableOutput(); }); return CAUTIOUS_COHERENT_STOP; }
 
-    if(conflict.size() == 1) {
-        Literal lit = conflict[0];
-        Var v = lit.getVariable();
-        if(!VariableNames::isHidden(v)) addAnswer(v);
+        if(conflict.size() == 1) {
+            Literal lit = conflict[0];
+            Var v = lit.getVariable();
+            if(!VariableNames::isHidden(v)) addAnswer(v);
 
-        waspFacade.addClause(lit.getOppositeLiteral());
-        for(unsigned int i = 0; i < assumptions.size(); i++)
-            if(assumptions[i] == lit) { assumptions[i] = assumptions.back(); assumptions.pop_back(); break; }
+            waspFacade.addClause(lit.getOppositeLiteral());
+            for(unsigned int i = 0; i < assumptions.size(); i++)
+                if(assumptions[i] == lit) { assumptions[i] = assumptions.back(); assumptions.pop_back(); break; }
 
-        for(unsigned int i = 0; i < candidates.size(); i++)
-            if(candidates[i] == v) { candidates[i] = candidates.back(); candidates.pop_back(); break; }
-        return CAUTIOUS_SINGLE_CORE;
+            for(unsigned int i = 0; i < candidates.size(); i++)
+                if(candidates[i] == v) { candidates[i] = candidates.back(); candidates.pop_back(); break; }
+            return CAUTIOUS_SINGLE_CORE;
+        }        
     }
     assert_msg(conflict.size() >= 2, "Conflict size " << conflict.size());
-
-    vector<Literal> assums;
+    
+    vector<Literal> assums;    
     for(unsigned int i=0; i < assumptions.size(); i++) {
         bool found = false;
         for(unsigned int j=0; j < conflict.size(); j++)
             if(assumptions[i] == conflict[j]) { found=true; break; }
         if(!found) assums.push_back(assumptions[i]);
     }
+    if(exists) {
+        assert(coreUtil != NULL);
+        for(unsigned int i = 0; i < auxAtoms.size(); i++) assums.push_back(auxAtoms[i]);
+    }
     assumptions.swap(assums);
-    return CAUTIOUS_MULTI_CORE;
+    
+    return exists ? CAUTIOUS_ALREDY_FOUND_CORE : CAUTIOUS_MULTI_CORE;
 }
 
 void CautiousReasoning::chunkDynamic(unsigned int chunkSize) {
@@ -467,9 +509,16 @@ void CautiousReasoning::checkCoreChunk(vector<Var>& myCandidates) {
 }
 
 void CautiousReasoning::printAnswers() {
+    if(wasp::Options::silent==1) cout << "Number of cautious consequences: " << answers.size() << endl;
+    if(wasp::Options::silent>=1) return;
     OutputBuilder* output = waspFacade.getOutputBuilder();
     assert(output != NULL);
     output->startModel();
     for(unsigned int i=0; i < answers.size(); i++) output->printVariable(answers[i], true);
     output->endModel();
+}
+
+void CautiousReasoning::initAssumptions(vector<Literal>& assumptions) {
+    for(unsigned int i = 0; i < candidates.size(); i++) assumptions.push_back(Literal(candidates[i], NEGATIVE));    
+    if(coreUtil != NULL) coreUtil->resetComputation();
 }

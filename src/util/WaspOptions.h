@@ -134,6 +134,7 @@ namespace wasp
             static unsigned int initSign;
             
             static bool multiAggregates;
+            static bool queryCoreCache;
             
             static unsigned int predMinimizationAlgorithm;
             static vector< string > predicatesToMinimize;

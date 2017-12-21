@@ -252,7 +252,7 @@ WaspFacade::addPseudoBooleanConstraint(
     }
     lits.resize(j);    weights.resize(j);
     if(sumOfWeights < bound) { ok_ = false; return false; }
-    if(differentWeights < UINT64_MAX-1) { return addClause(lits); }
+    if(differentWeights < UINT64_MAX-1 && differentWeights >= bound) { return addClause(lits); }
     
     mergesort(0, lits.size()-1, lits, weights);
         

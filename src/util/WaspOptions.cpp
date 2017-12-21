@@ -130,6 +130,7 @@ namespace wasp
 #define OPTIONID_queryverbosity ( 'z' + 301 )
 #define OPTIONID_querychunksize ( 'z' + 302 )
 #define OPTIONID_querychunkpercentage ( 'z' + 303 )
+#define OPTIONID_querycorecache ( 'z' + 304 )
     
 /* PREDMIN OPTIONS */
 #define OPTIONID_predminimizationalgorithm ( 'z' + 350 )
@@ -195,6 +196,7 @@ unsigned int Options::predMinimizationAlgorithm = NO_PREDMINIMIZATION;
 vector< string > Options::predicatesToMinimize;
 
 bool Options::multiAggregates = false;
+bool Options::queryCoreCache = false;
 
 void split( const string &s, char delim, vector< string >& output )
 {
@@ -382,6 +384,7 @@ Options::parse(
                 { "query-verbosity", required_argument, NULL, OPTIONID_queryverbosity },
                 { "query-chunk-size", required_argument, NULL, OPTIONID_querychunksize },
                 { "query-chunk-percentage", required_argument, NULL, OPTIONID_querychunkpercentage },
+                { "query-enable-core-cache", no_argument, NULL, OPTIONID_querycorecache },
                 
                 // The NULL-option indicates the end of the array.
                 { NULL, 0, NULL, 0 }
@@ -802,13 +805,17 @@ Options::parse(
                 if( optarg )
                 {
                     unsigned int value = atoi( optarg );
-                    if( value <= 3 )
+                    if( value <= 4 )
                         queryVerbosity = value;
                     else
                         WaspErrorMessage::errorGeneric( "Inserted invalid value for query verbosity." );
                 }
                 else
                         WaspErrorMessage::errorGeneric( "Inserted invalid value for query verbosity." );
+                break;
+                
+            case OPTIONID_querycorecache:
+                queryCoreCache = true;
                 break;
             
             case OPTIONID_querychunksize:

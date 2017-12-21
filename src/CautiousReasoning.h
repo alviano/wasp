@@ -24,6 +24,7 @@
 #include "Literal.h"
 #include "util/VariableNames.h"
 #include <vector>
+#include <unordered_map>
 #include <iostream>
 using namespace std;
 
@@ -32,19 +33,76 @@ using namespace std;
 #define CAUTIOUS_MULTI_CORE 0
 #define CAUTIOUS_COHERENT_STOP 1
 #define CAUTIOUS_SINGLE_CORE 2
+#define CAUTIOUS_ALREDY_FOUND_CORE 3
+
+class CoreAdditional
+{
+    public:
+        inline CoreAdditional(vector<Literal>& c, vector<Literal>& auxAtoms) { core.swap(c); additionalAtoms.swap(auxAtoms); }
+        unsigned int size() const { return core.size(); }
+        Literal getLiteral(unsigned int pos) const { assert(pos < core.size()); return core[pos]; }
+        void copyCore(vector<Literal>& core_, vector<Literal>& auxAtoms) const { core_ = core; auxAtoms = additionalAtoms; } 
+
+    private:
+        vector<Literal> core;
+        vector<Literal> additionalAtoms;
+};
+
+class CoreBasedUtil
+{
+    public:
+        inline CoreBasedUtil() : numberOfCalls(1), next(0) {}
+        inline ~CoreBasedUtil() {
+            for(unsigned int i = 0; i < cores.size(); i++) delete cores[i];
+            cores.clear();
+        }
+
+        inline void newComputation() { numberOfCalls++; }
+        inline void resetComputation() { next = 0; }
+        inline void setAssumption(Literal lit) { lit2Assumptions[lit.getId()] = numberOfCalls; }
+        
+        inline void addCore(vector<Literal>& core, vector<Literal>& auxAtoms) {
+            assert(!core.empty()); assert(!auxAtoms.empty());
+            cores.push_back(new CoreAdditional(core, auxAtoms));
+            assert(core.empty()); assert(auxAtoms.empty());
+        }
+
+        inline bool checkExistenceOfCore(vector<Literal>& core, vector<Literal>& auxAtoms) {
+            bool exists = false;
+            while(next < cores.size()) {
+                bool found = true;
+                for(unsigned int i = 0; i < cores[next]->size(); i++)
+                    if(!isAssumption(cores[next]->getLiteral(i))) { found=false; break; }
+                if(found) { cores[next]->copyCore(core, auxAtoms); exists=true; break; }
+                next++;
+            }
+            if(next >= cores.size()) next = UINT_MAX; //check is not needed anymore.
+            return exists;
+        }                
+        
+    private:
+        unordered_map<int, unsigned int> lit2Assumptions;
+        unsigned int numberOfCalls;
+        unsigned int next;
+        vector<CoreAdditional*> cores;
+        inline bool isAssumption(Literal lit) const {
+            return lit2Assumptions.find(lit.getId()) != lit2Assumptions.end() && lit2Assumptions.at(lit.getId()) == numberOfCalls;
+        }    
+};
 
 class CautiousReasoning : public AnswerSetListener
 {
     public:
-        CautiousReasoning(WaspFacade& waspFacade_) : waspFacade(waspFacade_) {}
-        virtual ~CautiousReasoning() {}
+        CautiousReasoning(WaspFacade& waspFacade_) : waspFacade(waspFacade_), coreUtil(NULL) {}
+        virtual ~CautiousReasoning() { delete coreUtil; }
         void foundAnswerSet();
         void solve();
         
     private:
         vector<Var> candidates;
         vector<Var> answers;
-        WaspFacade& waspFacade;
+        WaspFacade& waspFacade;               
+        CoreBasedUtil* coreUtil;
         
         void addAnswer(Var v);
         void printCandidates();
@@ -65,6 +123,7 @@ class CautiousReasoning : public AnswerSetListener
         void coreBased(unsigned int chunkSize);
         void checkCoreChunk(vector<Var>& myCandidates);
         void printAnswers();
+        void initAssumptions(vector<Literal>& assumptions);
         
         unsigned int solveAndProcessCore(vector<Literal>& assumptions, vector<Literal>& conflict);
         

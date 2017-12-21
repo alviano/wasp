@@ -173,9 +173,10 @@ class WaspHelp
             cout << "       =one                            - Enable algorithm based on algorithm one" << endl;
             cout << "       =kdyn                           - Enable algorithm based on algorithm kdyn" << endl;
             cout << "       =pmres                          - Enable algorithm based on algorithm pmres" << endl;
-            cout << "--query-verbosity=(0,...,3)            - Enable verbosity of queries algorithms" << endl;
+            cout << "--query-verbosity=(0,...,4)            - Enable verbosity of queries algorithms" << endl;
             cout << "--query-chunk-size=n                   - Specify the size of each chunk" << endl;
             cout << "--query-chunk-percentage=(1,...,100)   - The size of each chunk is a percentage of the number of candidates" << endl;
+            cout << "--query-enable-core-cache              - Enable caching of cores for algorithms one, kdyn and pmres" << endl;
             
             cout << separator << endl;
             cout << "Predicates minimization                " << endl << endl;
