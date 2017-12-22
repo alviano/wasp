@@ -51,11 +51,15 @@ void CautiousReasoning::solve() {
 }
 
 void CautiousReasoning::foundAnswerSet() {
+    //Be careful: remove candidates only work with core-guided (maxsat) approaches
     unsigned int j=0;
     for(unsigned int i=0; i < candidates.size(); i++) {
         Var v = candidates[j] = candidates[i];
         assert(!waspFacade.isUndefined(v));
-        if(!waspFacade.isTrue(v)) continue;
+        if(!waspFacade.isTrue(v)) {
+            if(coreUtil != NULL) removedCandidates.push_back(Literal(v, NEGATIVE));
+            continue;
+        }
         
         if(waspFacade.decisionLevel(v) == 0) addAnswer( v );
         else j++;
@@ -382,7 +386,12 @@ unsigned int CautiousReasoning::solveAndProcessCore(vector<Literal>& assumptions
                 if(assumptions[i] == lit) { assumptions[i] = assumptions.back(); assumptions.pop_back(); break; }
 
             for(unsigned int i = 0; i < candidates.size(); i++)
-                if(candidates[i] == v) { candidates[i] = candidates.back(); candidates.pop_back(); break; }
+                if(candidates[i] == v) {
+                    if(coreUtil != NULL) removedCandidates.push_back(Literal(v, NEGATIVE));
+                    candidates[i] = candidates.back();
+                    candidates.pop_back();
+                    break;
+                }
             return CAUTIOUS_SINGLE_CORE;
         }        
     }
@@ -520,5 +529,5 @@ void CautiousReasoning::printAnswers() {
 
 void CautiousReasoning::initAssumptions(vector<Literal>& assumptions) {
     for(unsigned int i = 0; i < candidates.size(); i++) assumptions.push_back(Literal(candidates[i], NEGATIVE));    
-    if(coreUtil != NULL) coreUtil->resetComputation();
+    if(coreUtil != NULL) { coreUtil->resetComputation(removedCandidates); removedCandidates.clear(); }
 }

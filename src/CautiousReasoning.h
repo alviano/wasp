@@ -41,7 +41,8 @@ class CoreAdditional
         inline CoreAdditional(vector<Literal>& c, vector<Literal>& auxAtoms) { core.swap(c); additionalAtoms.swap(auxAtoms); }
         unsigned int size() const { return core.size(); }
         Literal getLiteral(unsigned int pos) const { assert(pos < core.size()); return core[pos]; }
-        void copyCore(vector<Literal>& core_, vector<Literal>& auxAtoms) const { core_ = core; auxAtoms = additionalAtoms; } 
+        void copyCore(vector<Literal>& core_, vector<Literal>& auxAtoms) const { core_ = core; auxAtoms = additionalAtoms; }
+        void addAdditionalAtoms(vector<Literal>& element) { for(unsigned int i = 0; i < additionalAtoms.size(); i++) element.push_back(additionalAtoms[i]); }
 
     private:
         vector<Literal> core;
@@ -58,13 +59,15 @@ class CoreBasedUtil
         }
 
         inline void newComputation() { numberOfCalls++; }
-        inline void resetComputation() { next = 0; }
+        inline void resetComputation(vector<Literal>& removedCandidates) { next = 0; clearCores(removedCandidates); }
         inline void setAssumption(Literal lit) { lit2Assumptions[lit.getId()] = numberOfCalls; }
         
         inline void addCore(vector<Literal>& core, vector<Literal>& auxAtoms) {
             assert(!core.empty()); assert(!auxAtoms.empty());
-            cores.push_back(new CoreAdditional(core, auxAtoms));
+            CoreAdditional* ca = new CoreAdditional(core, auxAtoms);
             assert(core.empty()); assert(auxAtoms.empty());
+            cores.push_back(ca);
+            for(unsigned int i = 0; i < ca->size(); i++) lit2Core[ca->getLiteral(i).getId()] = ca;            
         }
 
         inline bool checkExistenceOfCore(vector<Literal>& core, vector<Literal>& auxAtoms) {
@@ -78,10 +81,31 @@ class CoreBasedUtil
             }
             if(next >= cores.size()) next = UINT_MAX; //check is not needed anymore.
             return exists;
-        }                
+        }
+    
+    private:    
+        inline void clearCores(vector<Literal>& removedCandidates) {
+            unordered_set<CoreAdditional*> removedCores;
+            for(unsigned int i = 0; i < removedCandidates.size(); i++) {
+                Literal l = removedCandidates[i];
+                if(lit2Core.find(l.getId()) == lit2Core.end()) continue;
+                CoreAdditional* core = lit2Core[l.getId()];                
+                assert(core != NULL);
+                bool added = removedCores.insert(core).second;
+                if(added) core->addAdditionalAtoms(removedCandidates);
+            }
+            
+            unsigned int j = 0;
+            for(unsigned int i = 0; i < cores.size(); i++) {
+                cores[j] = cores[i];
+                if(removedCores.find(cores[i]) != removedCores.end()) { for(unsigned k = 0; k < cores[i]->size(); k++) lit2Core.erase(cores[i]->getLiteral(k).getId()); delete cores[i]; }
+                else j++;
+            }
+            cores.resize(j);            
+        }
         
-    private:
         unordered_map<int, unsigned int> lit2Assumptions;
+        unordered_map<int, CoreAdditional*> lit2Core;
         unsigned int numberOfCalls;
         unsigned int next;
         vector<CoreAdditional*> cores;
@@ -101,6 +125,7 @@ class CautiousReasoning : public AnswerSetListener
     private:
         vector<Var> candidates;
         vector<Var> answers;
+        vector<Literal> removedCandidates;
         WaspFacade& waspFacade;               
         CoreBasedUtil* coreUtil;
         
