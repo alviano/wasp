@@ -56,7 +56,8 @@ int main( int argc, char** argv )
     else if( wasp::Options::queryAlgorithm == ONE_QUERIES 
             || wasp::Options::queryAlgorithm == KDYN_QUERIES 
             || wasp::Options::queryAlgorithm == PREFERENCE_QUERIES
-            || wasp::Options::queryAlgorithm == PMRES_QUERIES ) { CautiousReasoning c( waspFacade ); c.solve(); }
+            || wasp::Options::queryAlgorithm == PMRES_QUERIES
+            || wasp::Options::queryAlgorithm == ITERATIVE_COHERENCE_TESTING_PREFERENCES ) { CautiousReasoning c( waspFacade ); c.solve(); }
     else waspFacade.solve();
     waspFacade.onFinish();
     delete waspFacadePointer;

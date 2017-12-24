@@ -995,6 +995,7 @@ Options::initMap()
     stringToQueryAlgorithms[ "one" ] = ONE_QUERIES;
     stringToQueryAlgorithms[ "kdyn" ] = KDYN_QUERIES;
     stringToQueryAlgorithms[ "pmres" ] = PMRES_QUERIES;
+    stringToQueryAlgorithms[ "ict-preferences" ] = ITERATIVE_COHERENCE_TESTING_PREFERENCES;
     
     stringToPredMinimization[ "enumeration" ] = PREDMIN_ENUMERATION;
     stringToPredMinimization[ "guess-check" ] = PREDMIN_GUESS_AND_CHECK;

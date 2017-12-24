@@ -137,6 +137,7 @@ class CautiousReasoning : public AnswerSetListener
         void iterativeCoherenceTesting();
         void iterativeCoherenceTestingRestricted(vector<Var>& myCandidates);
         void overestimateReduction();
+        void iterativeCoherenceTestingPreferences();
         
         void minimalAlgorithm();
         void findMinimalModelPreferences();

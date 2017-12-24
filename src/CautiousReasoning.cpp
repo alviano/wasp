@@ -41,7 +41,10 @@ void CautiousReasoning::solve() {
     trace_msg(predmin, 3, "...coherent");
     trace_action(predmin, 3, { trace_tag(cerr, predmin, 3); printVectorOfVars(candidates, "Candidates:"); });
     
-    minimalAlgorithm();
+    if(wasp::Options::queryAlgorithm==ITERATIVE_COHERENCE_TESTING_PREFERENCES)
+        iterativeCoherenceTestingPreferences();
+    else
+        minimalAlgorithm();
 //    coreBased(2);
     
     for(unsigned int i = 0; i < candidates.size(); i++) addAnswer(candidates[i]);
@@ -140,6 +143,24 @@ void CautiousReasoning::overestimateReduction() {
         vector<Literal> clause;
         for(unsigned int i = 0; i < candidates.size(); i++) clause.push_back(Literal(candidates[i], NEGATIVE));
         waspFacade.addClause(clause);
+    }
+}
+
+void CautiousReasoning::iterativeCoherenceTestingPreferences() {
+    vector<Literal> assumptions;
+    vector<Literal> conflict;
+    vector<Literal> preferences;
+    
+    while(!candidates.empty()) {
+        Var v = candidates.back();
+        candidates.pop_back();
+        assumptions.clear();
+        assumptions.push_back(Literal(v, NEGATIVE));
+        preferences.clear();
+        for(unsigned int i = 0; i < candidates.size(); i++) preferences.push_back(Literal(candidates[i], NEGATIVE));
+        waspFacade.setPreferredChoices(preferences);
+        unsigned int result = waspFacade.solve(assumptions, conflict);
+        if(result == INCOHERENT) { addAnswer(v); waspFacade.addClause(Literal(v, POSITIVE)); }        
     }
 }
 
