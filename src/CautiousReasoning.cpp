@@ -43,6 +43,8 @@ void CautiousReasoning::solve() {
     
     if(wasp::Options::queryAlgorithm==ITERATIVE_COHERENCE_TESTING_PREFERENCES)
         iterativeCoherenceTestingPreferences();
+    else if(wasp::Options::queryAlgorithm==PRIME_IMPLICATE)
+        primeImplicate();
     else
         minimalAlgorithm();
 //    coreBased(2);
@@ -161,6 +163,60 @@ void CautiousReasoning::iterativeCoherenceTestingPreferences() {
         waspFacade.setPreferredChoices(preferences);
         unsigned int result = waspFacade.solve(assumptions, conflict);
         if(result == INCOHERENT) { addAnswer(v); waspFacade.addClause(Literal(v, POSITIVE)); }        
+    }
+}
+
+void CautiousReasoning::primeImplicate() {
+    trace_msg(predmin, 3, "Starting algorithm based on prime implicate");
+    vector<Literal> assumptions;
+    vector<Literal> conflict;
+    
+    while(!candidates.empty()) {
+        assumptions.clear();
+        trace_action(predmin, 4, { trace_tag(cerr, predmin, 5); printVectorOfVars(candidates, "Candidates:"); });
+        for(unsigned int i = 0; i < candidates.size(); i++) assumptions.push_back(Literal(candidates[i], NEGATIVE));           
+        unsigned int result = waspFacade.solve(assumptions, conflict);
+        if(result == COHERENT) return;
+        assert(result == INCOHERENT);        
+
+        trace_action(predmin, 4, { trace_tag(cerr, predmin, 5); printVectorOfLiterals(conflict, "Conflict:"); });        
+        unsigned int index = 0;
+        while(true) {
+            assert(!conflict.empty());
+            if(conflict.size() == 1) {            
+                Literal lit = conflict[0];
+                Var v = lit.getVariable();
+                if(!VariableNames::isHidden(v) && find(answers.begin(), answers.end(), v) == answers.end()) addAnswer(v);
+
+                waspFacade.addClause(lit.getOppositeLiteral());            
+                for(unsigned int i = 0; i < candidates.size(); i++)
+                    if(candidates[i] == v) {
+                        if(coreUtil != NULL) removedCandidates.push_back(Literal(v, NEGATIVE));
+                        candidates[i] = candidates.back();
+                        candidates.pop_back();
+                        break;
+                    }
+                break;
+            }
+            trace_msg(predmin, 5, "Minimizing conflict");
+            assumptions = conflict;
+            trace_msg(predmin, 6, "Index: " << index << " - assumptions size: " << assumptions.size());
+            if(index >= assumptions.size()) break;
+            Literal tested = assumptions[index];
+            assumptions[index] = assumptions.back();
+            assumptions.pop_back();
+            unsigned int result = waspFacade.solve(assumptions, conflict);
+            if(result == COHERENT) {
+                trace_msg(predmin, 7, "Coherent");
+                assert(conflict.empty());
+                assumptions.push_back(assumptions[index]);
+                assumptions[index]=tested;
+                conflict = assumptions;                
+            }
+            else { trace_msg(predmin, 7, "Incoherent"); }
+            index++;            
+            trace_action(predmin, 4, { trace_tag(cerr, predmin, 5); printVectorOfLiterals(conflict, "Conflict:"); });            
+        }
     }
 }
 
