@@ -180,7 +180,6 @@ void CautiousReasoning::primeImplicate() {
         assert(result == INCOHERENT);        
 
         trace_action(predmin, 4, { trace_tag(cerr, predmin, 5); printVectorOfLiterals(conflict, "Conflict:"); });        
-        unsigned int index = 0;
         while(true) {
             assert(!conflict.empty());
             if(conflict.size() == 1) {            
@@ -200,21 +199,21 @@ void CautiousReasoning::primeImplicate() {
             }
             trace_msg(predmin, 5, "Minimizing conflict");
             assumptions = conflict;
-            trace_msg(predmin, 6, "Index: " << index << " - assumptions size: " << assumptions.size());
-            if(index >= assumptions.size()) break;
-            Literal tested = assumptions[index];
-            assumptions[index] = assumptions.back();
+            Literal toTest = assumptions.back();
             assumptions.pop_back();
             unsigned int result = waspFacade.solve(assumptions, conflict);
-            if(result == COHERENT) {
-                trace_msg(predmin, 7, "Coherent");
-                assert(conflict.empty());
-                assumptions.push_back(assumptions[index]);
-                assumptions[index]=tested;
-                conflict = assumptions;                
+            if(result == COHERENT) { //all other candidates in the conflict are not cautiously true: test the latest one
+                trace_msg(predmin, 7, "Coherent: testing " << toTest);
+                assumptions.clear();
+                assumptions.push_back(toTest);
+                result = waspFacade.solve(assumptions, conflict);
+                if(result == INCOHERENT) {
+                    Var v = toTest.getVariable();
+                    if(!VariableNames::isHidden(v) && find(answers.begin(), answers.end(), v) == answers.end()) addAnswer(v);
+                }
+                break;
             }
             else { trace_msg(predmin, 7, "Incoherent"); }
-            index++;            
             trace_action(predmin, 4, { trace_tag(cerr, predmin, 5); printVectorOfLiterals(conflict, "Conflict:"); });            
         }
     }
