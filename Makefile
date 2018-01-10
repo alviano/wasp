@@ -251,11 +251,11 @@ $(TESTS_OUT_asp_gringo):
 ########## Clean
 
 clean-dep:
-	rm -f $(DEPS)
+	rm -f $(DEPS)  $(DEPSCC)
 clean: clean-dep
 	rm -f $(OBJS)
 
 distclean: clean
 	rm -fr $(BUILD_DIR)
 
--include $(DEPS)
+-include $(DEPS) $(DEPSCC)

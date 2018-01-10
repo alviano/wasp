@@ -49,6 +49,9 @@ using namespace std;
 #include "propagators/CardinalityConstraint.h"
 #include "weakconstraints/OptimizationProblemUtils.h"
 #include "propagators/MultiAggregate.h"
+#include "AnswerSetListener.h"
+#include "ProgramListener.h"
+#include "input/WeightConstraint.h"
 
 class HCComponent;
 class WeakInterface;
@@ -496,6 +499,18 @@ class Solver
             }
             answerSetListeners.resize( j );
         }
+        
+        inline void attachProgramListener( ProgramListener* listener ) { assert( listener != NULL ); programListeners.push_back( listener ); }
+        inline void removeProgramListener( ProgramListener* listener ) {
+            unsigned int j = 0;
+            for( unsigned int i = 0; i < programListeners.size(); i++ ) {
+                programListeners[ j ] = programListeners[ i ];
+                if( programListeners[ i ] != listener )
+                    j++;
+            }
+            programListeners.resize( j );
+        }
+        
         inline void addPropagatorAttachedToBounds( ExternalPropagator* externalPropagator ) { assert( externalPropagator ); propagatorsAttachedToBounds.push_back( externalPropagator ); }
         inline void addPropagatorAfterUnit( ExternalPropagator* externalPropagator ) { assert( externalPropagator ); propagatorsAfterUnit.push_back( externalPropagator ); }
         inline void addPropagatorAttachedToCheckAnswerSet( ExternalPropagator* externalPropagator ) { assert( externalPropagator ); propagatorsAttachedToCheckAnswerSet.push_back( externalPropagator ); }
@@ -505,7 +520,8 @@ class Solver
         inline ExternalPropagator* getExternalPropagatorForLazyWeakConstraints() const;
         
         unsigned int estimateBinaryPropagation( Literal lit );
-
+        inline void notifyAggregate(WeightConstraint* weightConstraintRule );
+        
     private:
         inline unsigned int solve_( vector< Literal >& assumptions );
         vector< Literal > choices;
@@ -528,6 +544,11 @@ class Solver
         }
 
         inline void notifyAnswerSet();
+        inline void notifyNewClause(Literal);
+        inline void notifyNewClause(Literal, Literal);
+        inline void notifyNewClause(const Clause*);
+        inline void notifyNewClause(const vector<int>&);        
+        
         unsigned int currentDecisionLevel;
         Variables variables;
         
@@ -692,6 +713,7 @@ class Solver
         
         bool incremental_;
         vector< AnswerSetListener* > answerSetListeners;
+        vector< ProgramListener* > programListeners;
         
         #ifndef NDEBUG
         bool checkStatusBeforePropagation( Var variable )
@@ -982,6 +1004,7 @@ bool
 Solver::addClause(
     Literal literal )
 {
+    notifyNewClause(literal);
     if( isTrue( literal ) || propagateLiteralAsDeterministicConsequence( literal ) )
         return true;
     
@@ -997,6 +1020,7 @@ Solver::addClause(
     if( !callSimplifications() )
     {
         choiceHeuristic->onNewBinaryClause( lit1, lit2 );
+        notifyNewClause(lit1, lit2);
         addBinaryClause( lit1, lit2 );
     }
     else
@@ -1127,6 +1151,7 @@ Solver::addClause(
             attachClauseToAllLiterals( *clause );
         clause->setPositionInSolver( clauses.size() );
         clauses.push_back( clause );
+        notifyNewClause(clause);
         return true;
     }        
 
@@ -2856,6 +2881,60 @@ Solver::notifyAnswerSet()
 {
     for( unsigned int i = 0; i < answerSetListeners.size(); i++ )
         answerSetListeners[ i ]->foundAnswerSet();
+}
+
+void
+Solver::notifyNewClause(
+    Literal lit )
+{
+    if(programListeners.empty()) return;
+    vector<int> clause_;
+    clause_.push_back(lit.getId());
+    notifyNewClause(clause_);
+}
+
+void
+Solver::notifyNewClause(
+    Literal lit1,
+    Literal lit2 )
+{
+    if(programListeners.empty()) return;
+    vector<int> clause_;
+    clause_.push_back(lit1.getId());
+    clause_.push_back(lit2.getId());
+    notifyNewClause(clause_);
+}
+
+void
+Solver::notifyNewClause(
+    const Clause* clause )
+{
+    assert(clause != NULL);
+    if(programListeners.empty()) return;
+    vector<int> clause_;
+    for(unsigned int i = 0; i < clause->size(); i++)
+        clause_.push_back(clause->getAt(i).getId());
+    notifyNewClause(clause_);
+}
+
+void
+Solver::notifyNewClause(
+    const vector<int>& clause )
+{
+    if(programListeners.empty()) return;
+    for( unsigned int i = 0; i < programListeners.size(); i++ )
+        programListeners[ i ]->addedClause(clause);
+}
+
+void
+Solver::notifyAggregate(
+    WeightConstraint* weightConstraintRule )
+{
+    if(programListeners.empty()) return;
+    assert(weightConstraintRule != NULL);
+    
+    for( unsigned int i = 0; i < programListeners.size(); i++ )
+        programListeners[ i ]->addedAggregate(weightConstraintRule->getId(), weightConstraintRule->literals, weightConstraintRule->weights, weightConstraintRule->getBound());
 }
 
 #endif

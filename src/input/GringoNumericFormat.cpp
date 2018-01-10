@@ -2899,6 +2899,7 @@ GringoNumericFormat::addWeightConstraints()
         }
         
         cleanWeightConstraint( weightConstraintRule );
+        solver.notifyAggregate( weightConstraintRule );
         
         if( !wasp::Options::multiAggregates )
         {

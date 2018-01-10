@@ -70,6 +70,7 @@ class WeightConstraint
         inline bool isRemoved() const { return umax == MAXUNSIGNEDINT; }
 
     private:
+        friend class Solver;
         vector< int > literals;
         vector< uint64_t > weights;
 
