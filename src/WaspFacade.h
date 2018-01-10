@@ -235,6 +235,8 @@ class WaspFacade
         
         inline void attachAnswerSetListener( AnswerSetListener* listener ) { solver.attachAnswerSetListener( listener ); }
         inline void removeAnswerSetListener( AnswerSetListener* listener ) { solver.removeAnswerSetListener( listener ); }
+        inline void attachProgramListener( ProgramListener* listener ) { solver.attachProgramListener( listener ); }
+        inline void removeProgramListener( ProgramListener* listener ) { solver.removeProgramListener( listener ); }
         
         inline OutputBuilder* getOutputBuilder() const { return outputBuilder; }
         inline void enableOutput() { if( tmpOutputBuilder != NULL ) { solver.setOutputBuilder( outputBuilder ); delete tmpOutputBuilder; tmpOutputBuilder = NULL; } }
