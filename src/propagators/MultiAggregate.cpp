@@ -402,16 +402,27 @@ void
 MultiAggregate::computeWatches( Solver& solver )
 {
     w2 = ids.size() - 1;
+    unsigned int tmpw1 = w1;
+    unsigned int tmpw2 = w2;
     for( unsigned int i = 1; i < ids.size() - 1; i++ )
     {
         if( solver.isTrue( ids[ i ] ) )
-            w1 = i;
+            tmpw1 = i;
         else if( solver.isFalse( ids[ i ] ) )
         {
-            w2 = i;
+            tmpw2 = i;
             break;
         }
     }
+        
+    trace_msg( multiaggregates, 1, "w1=" << tmpw1 << " and w2=" << tmpw2 );
+    if(tmpw1 > w1) {
+        onLiteralFalse(solver, ids[tmpw1].getOppositeLiteral(), PropagatorData(tmpw1,true) );        
+    }
+    if(tmpw2 < w2) {
+        onLiteralFalse(solver, ids[tmpw2], PropagatorData(-((int) tmpw2),true) );
+    }
+    solver.propagateAtLevelZero();
     
     trace_msg( multiaggregates, 1, "w1=" << w1 << " and w2=" << w2 );
 //    assert_msg( maxUnd < weights.size() && currentSum + getWeight( maxUnd ) < getBound( w2 ), "Missing inferences" );    
