@@ -26,7 +26,7 @@
 using namespace std;
 
 void Enumeration::solve() {
-    assert(wasp::Options::enumerationStrategy == ENUMERATION_BC || wasp::Options::enumerationStrategy == ENUMERATION_BT);
+    assert(wasp::Options::enumerationStrategy == ENUMERATION_BC || wasp::Options::enumerationStrategy == ENUMERATION_BT || wasp::Options::enumerationStrategy == ENUMERATION_BTO );
     if(wasp::Options::enumerationStrategy == ENUMERATION_BC)
         enumerationBlockingClause();
     else
@@ -44,40 +44,64 @@ void Enumeration::enumerationBlockingClause() {
 
 void Enumeration::enumerationBacktracking() {
     vector< bool > checked;
-    while( checked.size() <= solver.numberOfVariables() ) checked.push_back( false );
+    //while( checked.size() <= solver.numberOfVariables() ) checked.push_back( false );
     unsigned int result = solver.solve();
     if(result == INCOHERENT) return;
         
     if(!foundModel()) return;
     solver.getChoicesWithoutAssumptions(assumptions);
+    while(checked.size() < assumptions.size()) checked.push_back(false);
     
     flipLatestChoice(assumptions, checked);
     if(assumptions.empty()) return;
+    solver.setComputeUnsatCores(true);
     begin:;
-    if(solver.getDecisionLevel(assumptions.back())-1 < solver.getCurrentDecisionLevel())
-        solver.unroll(solver.getDecisionLevel(assumptions.back())-1);
+//    if(solver.getDecisionLevel(assumptions.back())-1 < solver.getCurrentDecisionLevel())
+//        solver.unroll(solver.getDecisionLevel(assumptions.back())-1);
+    solver.unrollToZero();
     solver.clearConflictStatus();
     result = solver.solve(assumptions);
     if(result == INCOHERENT) {
-        unsigned int bl=solver.getCurrentDecisionLevel();
-        if(bl == 0) {
+        const Clause* c = solver.getUnsatCore();
+        if(c->size()==0) return;
+        assert(!assumptions.empty());
+        assert(!checked.empty());
+        if(solver.getCurrentDecisionLevel()==0 || c->size()==1) {
             unsigned int k=0;
+            assert(assumptions.size() == checked.size());
             for(unsigned int i=0; i < assumptions.size(); i++) {
                 assumptions[k] = assumptions[i];
+                checked[k] = checked[i];
                 if(solver.getDecisionLevel(assumptions[i]) != 0) k++;
             }
+            assert(assumptions.size() == checked.size());
             assumptions.resize(k);
+            checked.resize(k);
         }
         else {
-//            assert( !assums.empty() );
-//            assert_msg( solver.getDecisionLevel( assums.back() ) <= bl, solver.getDecisionLevel( assums.back() ) << " != " << bl );
-            //TO CHECK: probably this is useless code.
-            while(!assumptions.empty() && solver.getDecisionLevel( assumptions.back() ) > bl) assumptions.pop_back();
+            if(wasp::Options::enumerationStrategy == ENUMERATION_BTO) {
+                unordered_set<int> core;
+                assert(c != NULL);            
+                for(unsigned int i = 0; i < c->size(); i++) core.insert(c->getAt(i).getId());
+                unsigned int i = assumptions.size()-1;
+                assert(core.find(assumptions[i].getId()) != core.end());
+                while(i>0) {
+                    if(core.find(assumptions[i-1].getId()) != core.end()) {
+                        assumptions[i] = assumptions[i].getOppositeLiteral();
+                        checked[i] = true;
+                        break;
+                    }
+                    swap(assumptions[i], assumptions[i-1]);
+                    swap(checked[i], checked[i-1]);
+                    i--;
+                }    
+            }
         }
     }
     else {
         if(!foundModel()) return;
         solver.getChoicesWithoutAssumptions(assumptions);
+        while(checked.size() < assumptions.size()) checked.push_back(false);
     }
     
     flipLatestChoice(assumptions, checked);
@@ -90,13 +114,13 @@ void Enumeration::flipLatestChoice(vector<Literal>& choices, vector<bool>& check
     while(true) {
         size = choices.size();
         if(size == 0) return;
-        if(checked[size]) choices.pop_back();
+        if(checked[size-1]) { choices.pop_back(); checked.pop_back(); }
         else break;
     }
     
     choices[size-1]=choices[size-1].getOppositeLiteral();    
-    checked[size]=true;
-    for(unsigned int i=size+1; i < checked.size(); i++ ) checked[i]=false;
+    checked[size-1]=true;
+    //for(unsigned int i=size+1; i < checked.size(); i++ ) checked[i]=false;
 }
 
 bool Enumeration::foundModel() {

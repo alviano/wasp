@@ -216,6 +216,7 @@ class WaspHelp
             cout << "--enable-multiaggregates               - Share aggregate sets if possible" << endl;
             cout << "--enumeration-strategy                 - Select different strategy for enumeration of answer sets" << endl;
             cout << "       =bt                             - Use backtracking for enumeration" << endl;
+            cout << "       =bt-reorder                     - Use backtracking for enumeration with reorder of assumptions" << endl;
             cout << "       =bc                             - Use blocking clause" << endl;
 //            cout << "--stdin                                - Write a description." << endl;
 //            cout << "--time-limit                           - Write a description." << endl;

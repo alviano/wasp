@@ -358,7 +358,7 @@ Options::parse(
                 { "max-cost", required_argument, NULL, OPTIONID_max_cost },
                 { "disable-simplifications", no_argument, NULL, OPTIONID_simplifications },
                 { "enable-multiaggregates", no_argument, NULL, OPTIONID_multiaggregates },
-                { "enumeration-strategy", required_argument, NULL, OPTIONID_enumeration },
+                { "enumeration-strategy", required_argument, NULL, OPTIONID_enumeration },                
                 
                 { "modelchecker-algorithm", required_argument, NULL, OPTIONID_modelchecker_algorithm },  
                 { "forward-partialchecks", no_argument, NULL, OPTIONID_forward_partialchecks },  
@@ -958,6 +958,8 @@ Options::getEnumerationStrategy(
         return ENUMERATION_BT;
     else if( s == "bc" )
         return ENUMERATION_BC;
+    else if(s=="bt-reorder")
+        return ENUMERATION_BTO;
     WaspErrorMessage::errorGeneric( "Inserted invalid strategy for enumeration." );
     return ENUMERATION_BT;
 }
