@@ -38,6 +38,7 @@ using namespace std;
 #include "weakconstraints/LazyInstantiation.h"
 #include "outputBuilders/NoopOutputBuilder.h"
 #include "outputBuilders/WaspOutputBuilder.h"
+#include "weakconstraints/OneMulti.h"
 
 class WaspFacade
 {
@@ -308,6 +309,10 @@ WaspFacade::solveWithWeakConstraints()
         
         case LAZY:
             w = new LazyInstantiation( solver, solver.getExternalPropagatorForLazyWeakConstraints() );
+            break;
+            
+        case ONEMULTI:
+            w = new OneMulti( solver );
             break;
             
         case ONE:

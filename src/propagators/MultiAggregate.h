@@ -80,7 +80,13 @@ class MultiAggregate : public Propagator, public Reason
         
         inline Literal getId( unsigned int pos ) const { assert_msg( pos < ids.size(), pos << ">=" << ids.size() ); return ids[ pos ]; }        
         
-        inline void finalize( Solver& solver ) { sort(); addBound( Literal( 1, POSITIVE ), UINT64_MAX ); addBinaryClauses( solver ); assert( checkUndefined( solver ) ); }                        
+        inline void finalize( Solver& solver ) { sort(); addBound( Literal( 1, POSITIVE ), UINT64_MAX ); addBinaryClauses( solver ); assert( checkUndefined( solver ) ); }
+        inline void finalizeNoBinaryClauses( Solver& 
+        #ifndef NDEBUG
+        solver
+        #endif
+        )
+        { sort(); addBound( Literal( 1, POSITIVE ), UINT64_MAX ); assert( checkUndefined( solver ) ); }                        
         
         inline unsigned int numberOfBounds() const { return bounds.size() - 2; }
         

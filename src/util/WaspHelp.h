@@ -145,6 +145,7 @@ class WaspHelp
             cout << "       =mgd                            - Model-guided algorithm mgd" << endl;
             cout << "       =opt                            - Model-guided algorithm opt" << endl;
             cout << "       =one                            - Core-guided algorithm one (default)" << endl;
+            cout << "       =one-multi                      - Core-guided algorithm one implemented with multi aggregates" << endl;
             cout << "       =pmres                          - Core-guided algorithm pmres" << endl;
             cout << "       =k                              - Core-guided algorithm k" << endl;
             cout << "       =interleaving-restarts          - Mixed approach between one and basic - restarts based" << endl;

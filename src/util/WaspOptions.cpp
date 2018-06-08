@@ -976,6 +976,7 @@ Options::initMap()
     stringToWeak[ "interleaving-choices" ] = ONEBB;
     stringToWeak[ "basic-bt" ] = BBBT;
     stringToWeak[ "k" ] = KALG;
+    stringToWeak[ "one-multi" ] = ONEMULTI;
 
     stringToShift[ "shift" ] = SHIFT_NAIVE;
     stringToShift[ "propagator" ] = SHIFT_PROPAGATOR;
