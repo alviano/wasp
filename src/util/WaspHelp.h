@@ -152,7 +152,8 @@ class WaspHelp
             cout << "       =interleaving-choices           - Mixed approach between one and basic - choices based" << endl;
             cout << "--k-threshold                          - Initialization for algorithm k. Must be >= 0" << endl;
             cout << "       =0                              - Special case for a dynamic choice of k threshold" << endl;            
-            cout << "       =1                              - Special case for algorithm one with cardinality constraints" << endl;            
+            cout << "       =1                              - Special case for algorithm one with cardinality constraints" << endl;
+            cout << "--one-multi-threshold                  - Use one-multi only for cores whose size is greater than or equal to this threshold (default 0), for smaller cores use one. Must be >= 0" << endl;
             cout << "--enable-disjcores                     - Enable disjoint cores preprocessing (only for core-guided)" << endl;
             cout << "--trim-core                            - Enable polynomial trim of unsat cores (only for core-guided)" << endl;
             cout << "--disable-stratification               - Disable stratification (only for core-guided)" << endl;

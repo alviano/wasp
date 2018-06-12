@@ -34,6 +34,9 @@ class OneMulti : public WeakInterface
         bool processCoreOne( vector< Literal >& literals, vector< uint64_t >& weights, vector< Var >& newVars, uint64_t minWeight, unsigned int& n );
         bool addAggregateOne( vector< Literal >& literals, vector< uint64_t >& weights, vector< Var >& bounds );
         
+        bool processCoreOne( vector< Literal >& literals, vector< uint64_t >& weights, uint64_t minWeight, unsigned int& n );
+        bool addAggregateOne( vector< Literal >& literals, vector< uint64_t >& weights, uint64_t bound );
+        
         bool foundUnsat();
 };
 

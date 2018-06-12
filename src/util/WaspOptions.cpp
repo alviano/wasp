@@ -117,6 +117,7 @@ namespace wasp
 /* WEAK CONSTRAINTS OPTIONS */
 #define OPTIONID_weakconstraintsalgorithm ( 'z' + 200 )
 #define OPTIONID_kthreshold ( 'z' + 201 )
+#define OPTIONID_multithreshold ( 'z' + 202 )
 
 #define OPTIONID_disjcores ( 'z' + 215 )
 #define OPTIONID_minimize ( 'z' + 216 )
@@ -262,6 +263,8 @@ unsigned int Options::initMinisatHeuristic = INIT_MINISAT_ALL_EQUALS;
 unsigned int Options::initValue = 0;
 unsigned int Options::initSign = INIT_SIGN_MINISAT_ALLFALSE;
 
+unsigned int Options::multiThreshold = 0;
+
 void
 Options::parse(
     int argc,
@@ -368,6 +371,7 @@ Options::parse(
                 /* WEAK CONSTRAINTS */
                 { "weakconstraints-algorithm", required_argument, NULL, OPTIONID_weakconstraintsalgorithm },
                 { "k-threshold", required_argument, NULL, OPTIONID_kthreshold },
+                { "one-multi-threshold", required_argument, NULL, OPTIONID_multithreshold },
                 { "enable-disjcores", no_argument, NULL, OPTIONID_disjcores },
                 { "trim-core", no_argument, NULL, OPTIONID_minimize },
                 { "disable-stratification", no_argument, NULL, OPTIONID_stratification },
@@ -743,6 +747,16 @@ Options::parse(
                     kthreshold = kthreshold_;
                 }
                 break;
+                
+            case OPTIONID_multithreshold:
+                if( optarg )
+                {
+                    int multiThreshold_ = atoi( optarg );
+                    if( multiThreshold_ < 0 )
+                        WaspErrorMessage::errorGeneric( "Threshold for multi must be >= 0." );
+                    multiThreshold = multiThreshold_;
+                }
+                break;    
                 
             case OPTIONID_shift_strategy:
                 if( optarg )
