@@ -295,9 +295,22 @@ OneMulti::foundUnsat()
         
     solver.clearConflictStatus();
     solver.unrollToZero();
+    
+    
+    bool found = false;
+    for( unsigned int i = 0; i < unsatCore.size(); i++ ) {
+        if( solver.isFalse( unsatCore[ i ] ) && solver.getDecisionLevel( unsatCore[ i ] ) == 0 )
+        {
+            visit( unsatCore[ i ].getVariable() );
+            found = true;
+        }
+    }
 
-    for( unsigned int i = 0; i < unsatCore.size(); i++ )
-        visit( unsatCore[ i ].getVariable() );
+    if( !found )
+    {
+        for( unsigned int i = 0; i < unsatCore.size(); i++ )
+            visit( unsatCore[ i ].getVariable() );
+    }
     
     vector< Literal > literals;
     vector< uint64_t > weights;
