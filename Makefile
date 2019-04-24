@@ -1,6 +1,6 @@
 #### BUILD modalities
-# use 
-#   $ make BUILD=release 
+# use
+#   $ make BUILD=release
 # to compile different binaries
 BUILD = release
 cxxflags.debug = -Wall -Wextra -std=c++11
@@ -15,6 +15,8 @@ cxxflags.gprof = -Wall -Wextra -std=c++11 -DNDEBUG -O3 -g -pg
 linkflags.gprof = -lm -g -pg -ldl
 cxxflags.estats = -Wall -Wextra -std=c++11 -DNDEBUG -DSTATS_ON -DESTATS_ON -O3
 linkflags.estats = -lm -ldl
+cxxflags.proof = -Wall -Wextra -std=c++11 -DPROOF_LOG -DTRACE_ON -O3
+linkflags.proof = -lm -ldl
 
 # for g++ <= 4.6
 cxxflags.debug0x = -Wall -Wextra -std=c++0x
@@ -25,7 +27,7 @@ cxxflags.tracerelease0x = -Wall -Wextra -std=c++0x -DTRACE_ON -DNDEBUG -O3
 linkflags.tracerelease0x = -lm -ldl
 cxxflags.release0x = -Wall -Wextra -std=c++0x -DNDEBUG -O3
 linkflags.release0x = -lm -ldl
-cxxflags.gprof0x = -Wall -Wextra -std=c++0x -DNDEBUG -O3 -g -pg 
+cxxflags.gprof0x = -Wall -Wextra -std=c++0x -DNDEBUG -O3 -g -pg
 linkflags.gprof0x = -lm -g -pg -ldl
 cxxflags.estats0x = -Wall -Wextra -std=c++0x -DNDEBUG -DSTATS_ON -DESTATS_ON -O3
 linkflags.estats0x = -lm -ldl
@@ -95,7 +97,7 @@ $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cc
 $(BUILD_DIR)/%.d: $(SOURCE_DIR)/%.cc
 	mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) $(SCRIPT_CFLAGS) $(SCRIPT_LDFLAGS) $(CXX_SCRIPTS) -MM -MT '$(@:.d=.o)' $< -MF $@
-	
+
 $(BINARY): $(OBJS) $(OBJSCC) $(DEPS) $(DEPSCC)
 	$(LINK) $(LINKFLAGS) $(SCRIPT_CFLAGS) $(CXX_SCRIPTS) $(LIBS) $(OBJS) $(OBJSCC) $(SCRIPT_LDFLAGS) -o $(BINARY)
 
@@ -104,7 +106,7 @@ static: $(OBJS) $(OBJSCC) $(DEPS) $(DEPSCC)
 
 $(BUILD_DIR)/wasp.a:
 	ar rcs $@ $(OBJS)
-	
+
 run: $(BINARY)
 	./$(BINARY)
 
@@ -210,7 +212,7 @@ tests/sat/Intensive2: $(TESTS_OUT_sat_Intensive2)
 
 $(TESTS_OUT_sat_Intensive2):
 	@$(TESTS_TESTER) "$(TESTS_COMMAND_SatModel)" $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_SatModels) $(TESTS_REPORT_text)
-	
+
 tests/sat/Intensive3: $(TESTS_OUT_sat_Intensive3)
 
 $(TESTS_OUT_sat_Intensive3):
@@ -241,9 +243,9 @@ $(TESTS_OUT_asp_AllAnswerSetsIntensive):
 
 $(TESTS_OUT_asp_WeakConstraints):
 	@$(TESTS_TESTER) "$(TESTS_COMMAND_WeakConstraints)" $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_WeakConstraints) $(TESTS_REPORT_text)
-	
+
 $(TESTS_OUT_asp_cautious):
-	@$(TESTS_TESTER) "$(TESTS_COMMAND_WeakConstraints)" $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_AllAnswerSets) $(TESTS_REPORT_text)	
+	@$(TESTS_TESTER) "$(TESTS_COMMAND_WeakConstraints)" $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_AllAnswerSets) $(TESTS_REPORT_text)
 
 $(TESTS_OUT_asp_gringo):
 	@$(TESTS_TESTER) "$(TESTS_COMMAND_gringo)" $(patsubst %.test.py.text,%.test.py , $@) $(TESTS_CHECKER_AllAnswerSets) $(TESTS_REPORT_text)

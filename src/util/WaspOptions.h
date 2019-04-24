@@ -42,10 +42,10 @@ namespace wasp
 
             static void parse( int argc, char* const* argv );
             static void setOptions( WaspFacade& waspFacade );
-            static unsigned int maxCost;        
+            static unsigned int maxCost;
             static bool forwardPartialChecks;
             static bool heuristicPartialChecks;
-            
+
             static unsigned int queryAlgorithm;
             static unsigned int queryVerbosity;
             static bool computeFirstModel;
@@ -54,119 +54,119 @@ namespace wasp
             static bool printBounds;
             static bool printAtomTable;
             static bool stratification;
-            
+
             static unsigned int interpreter;
             static char* heuristic_scriptname;
             static vector< string > pluginsFilenames;
             static SHIFT_STRATEGY shiftStrategy;
             static string scriptDirectory;
-            
+
             static bool oneDefShift;
-            
-            static bool simplifications;            
-            
+
+            static bool simplifications;
+
             static unsigned int minimizationStrategy;
             static unsigned int minimizationBudget;
-            
-            static unsigned int enumerationStrategy;            
+
+            static unsigned int enumerationStrategy;
             static WEAK_CONSTRAINTS_ALG weakConstraintsAlg;
-            
+
             static unsigned int kthreshold;
-            
+
             static unsigned int silent;
             static bool printOnlyOptimum;
-            
+
             static bool useLazyWeakConstraints;
-            
+
             static unsigned int chunkPercentage;
             static unsigned int chunkSize;
-            
+
             static unsigned int minimizePredicateChunkPercentage;
-            
+
             static unsigned int modelcheckerAlgorithm;
-            
+
             static bool compactReasonsForHCC;
-            
+
             static DELETION_POLICY deletionPolicy;
             static unsigned int deletionThreshold;
-            
-            static vector< const char* > inputFiles;            
+
+            static vector< const char* > inputFiles;
 
             static unsigned int maxModels;
 
             static OUTPUT_POLICY outputPolicy;
 
-            
+
             static bool minisatPolicy;
 
             static RESTARTS_POLICY restartsPolicy;
-            
-            static unsigned int restartsThreshold;            
 
-            static unsigned int timeLimit;                        
-            
+            static unsigned int restartsThreshold;
+
+            static unsigned int timeLimit;
+
             static bool disjCoresPreprocessing;
-            
-            static bool minimizeUnsatCore;     
-            
+
+            static bool minimizeUnsatCore;
+
             static bool callPyFinalize;
-            
+
             static double sizeLBDQueue;
             static double sizeTrailQueue;
             static double K;
             static double R;
-            
+
             static int nbclausesBeforeReduce;
             static int incReduceDB;
             static int specialIncReduceDB;
             static unsigned int lbLBDFrozenClause;
-            
-            static unsigned int lbLBDMinimizingClause;                                    
-            
+
+            static unsigned int lbLBDMinimizingClause;
+
             static bool stats;
-            
+
             static unsigned int statsVerbosity;
-            
+
             static double initVariableIncrement;
             static double initVariableDecay;
             static unsigned int initValue;
             static unsigned int initMinisatHeuristic;
             static unsigned int initSign;
-            
+
             static bool multiAggregates;
             static bool queryCoreCache;
-            
+
             static unsigned int predMinimizationAlgorithm;
             static vector< string > predicatesToMinimize;
-            
+
             static unsigned int multiThreshold;
-            
+
             static map< string, WEAK_CONSTRAINTS_ALG > stringToWeak;
-            
+
             static map< string, SHIFT_STRATEGY > stringToShift;
-            
+
             static map< string, unsigned int > stringToMinimization;
-            
+
             static map< string, unsigned int > stringToQueryAlgorithms;
-            
+
             static map< string, unsigned int > stringToInitMinisatHeuristic;
-            
+
             static map< string, unsigned int > stringToPredMinimization;
-            
+
             static WEAK_CONSTRAINTS_ALG getAlgorithm( const string& s );
-            
+
             static SHIFT_STRATEGY getShiftStrategy( const string& s );
-            
+
             static unsigned int getMinimizationStrategy( const string& s );
-            
+
             static unsigned int getEnumerationStrategy( const string& s );
-            
+
             static unsigned int getQueryAlgorithm( const string& s );
-            
+
             static unsigned int getInitMinisatHeuristic( const string& s );
-            
+
             static void initMap();
-            
+
             static void checkOptions();
     };
 }

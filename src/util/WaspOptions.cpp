@@ -21,6 +21,7 @@
 #include "WaspErrorMessage.h"
 #include "WaspHelp.h"
 #include "../WaspFacade.h"
+#include "WaspProofLog.h"
 
 #include <getopt.h>
 #include <cstdlib>
@@ -69,7 +70,7 @@ namespace wasp
 #define OPTIONID_initVariableDecay ( 'z' + 42 )
 #define OPTIONID_initStrategy ( 'z' + 43 )
 #define OPTIONID_initValue ( 'z' + 44 )
-#define OPTIONID_initSign ( 'z' + 45 )    
+#define OPTIONID_initSign ( 'z' + 45 )
 
 /* RESTART OPTIONS */
 #define OPTIONID_geometric_restarts ( 'z' + 50 )
@@ -83,8 +84,8 @@ namespace wasp
 #define OPTIONID_heuristic_plugins ( 'z' + 62 )
 #define OPTIONID_heuristic_setscriptdirectory ( 'z' + 63 )
 #define OPTIONID_heuristic_lazyweakconstraints ( 'z' + 64 )
-    
-    
+
+
 /* GLUCOSE OPTIONS */
 #define OPTIONID_glucose_sizeLBDQueue ( 'z' + 80 )
 #define OPTIONID_glucose_sizeTrailQueue ( 'z' + 81 )
@@ -112,8 +113,8 @@ namespace wasp
 #define OPTIONID_simplifications ( 'z' + 109 )
 #define OPTIONID_enumeration ( 'z' + 110 )
 #define OPTIONID_modelchecker_compactreasons ( 'z' + 111 )
-#define OPTIONID_multiaggregates ( 'z' + 112 ) 
-    
+#define OPTIONID_multiaggregates ( 'z' + 112 )
+
 /* WEAK CONSTRAINTS OPTIONS */
 #define OPTIONID_weakconstraintsalgorithm ( 'z' + 200 )
 #define OPTIONID_kthreshold ( 'z' + 201 )
@@ -125,19 +126,22 @@ namespace wasp
 #define OPTIONID_firstmodel ( 'z' + 218 )
 #define OPTIONID_minimizationstrategy ( 'z' + 219 )
 #define OPTIONID_minimizationbudget ( 'z' + 220 )
-    
+
 /* QUERY OPTIONS */
 #define OPTIONID_queryalgorithm ( 'z' + 300 )
 #define OPTIONID_queryverbosity ( 'z' + 301 )
 #define OPTIONID_querychunksize ( 'z' + 302 )
 #define OPTIONID_querychunkpercentage ( 'z' + 303 )
 #define OPTIONID_querycorecache ( 'z' + 304 )
-    
+
+/* PROOF LOG OPTIONS */
+#define OPTIONID_proof_log ('z' + 330 )
+
 /* PREDMIN OPTIONS */
 #define OPTIONID_predminimizationalgorithm ( 'z' + 350 )
 #define OPTIONID_predminimizationpredicate ( 'z' + 351 )
 #define OPTIONID_predminimizationchunkpercentage ( 'z' + 352 )
-    
+
 #ifdef TRACE_ON
 TraceLevels Options::traceLevels;
 #endif
@@ -204,7 +208,7 @@ void split( const string &s, char delim, vector< string >& output )
     stringstream ss( s );
     string item;
     while( getline( ss, item, delim ) )
-        output.push_back( item );    
+        output.push_back( item );
 }
 SHIFT_STRATEGY Options::shiftStrategy = SHIFT_NAIVE;
 
@@ -273,7 +277,7 @@ Options::parse(
     // It will store the option code.
     int code;
     initMap();
-    
+
     do{
         // For each option there is an instance of option.
         // Each option specifies
@@ -303,7 +307,7 @@ Options::parse(
 
                 /* OUTPUT OPTIONS */
                 { "competition-output", no_argument, NULL, OPTIONID_competition_output },
-                { "silent", optional_argument, NULL, OPTIONID_silent },                
+                { "silent", optional_argument, NULL, OPTIONID_silent },
                 { "third-competition-output", no_argument, NULL, OPTIONID_third_competition_output },
                 { "multi", no_argument, NULL, OPTIONID_multi },
                 { "printlatestmodel", no_argument, NULL, OPTIONID_lastModel },
@@ -320,27 +324,27 @@ Options::parse(
                 { "init-strategy", required_argument, NULL, OPTIONID_initStrategy },
                 { "init-value", required_argument, NULL, OPTIONID_initValue },
                 { "init-sign", required_argument, NULL, OPTIONID_initSign },
-                
-                
+
+
                 { "minimize-predicates", required_argument, NULL, OPTIONID_predminimizationpredicate },
                 { "minimization-algorithm", required_argument, NULL, OPTIONID_predminimizationalgorithm },
                 { "min-chunk-percentage", required_argument, NULL, OPTIONID_predminimizationchunkpercentage },
-                
+
                 #if defined(ENABLE_PYTHON) || defined(ENABLE_PERL)
                 /* HEURISTIC */
                 { "interpreter", required_argument, NULL, OPTIONID_heuristic_interpreter },
                 { "heuristic-scriptname", required_argument, NULL, OPTIONID_heuristic_scriptname },
                 { "plugins-files", required_argument, NULL, OPTIONID_heuristic_plugins },
                 { "script-directory", required_argument, NULL, OPTIONID_heuristic_setscriptdirectory },
-                { "lazy-weakconstraints", no_argument, NULL, OPTIONID_heuristic_lazyweakconstraints },                
+                { "lazy-weakconstraints", no_argument, NULL, OPTIONID_heuristic_lazyweakconstraints },
                 #endif
-                /* RESTART OPTIONS */                
+                /* RESTART OPTIONS */
 //                { "geometric-restarts", optional_argument, NULL, OPTIONID_geometric_restarts },
 //                { "minisat-restarts", optional_argument, NULL, OPTIONID_minisat_restarts },
 //                { "disable-restarts", no_argument, NULL, OPTIONID_disable_restarts },
-//                { "sequence-based-restarts", optional_argument, NULL, OPTIONID_sequence_based_restarts },                                
-                
-                /* GLUCOSE OPTIONS */                
+//                { "sequence-based-restarts", optional_argument, NULL, OPTIONID_sequence_based_restarts },
+
+                /* GLUCOSE OPTIONS */
                 { "size-lbdqueue", required_argument, NULL, OPTIONID_glucose_sizeLBDQueue },
                 { "size-trailqueue", required_argument, NULL, OPTIONID_glucose_sizeTrailQueue },
                 { "K", required_argument, NULL, OPTIONID_glucose_K },
@@ -349,11 +353,11 @@ Options::parse(
                 { "inc-reduceDB", required_argument, NULL, OPTIONID_glucose_incReduceDB },
                 { "specialinc-reduceDB", required_argument, NULL, OPTIONID_glucose_specialIncReduceDB },
                 { "lbd-frozenclause", required_argument, NULL, OPTIONID_glucose_lbLBDFrozenClause },
-                { "lbd-minclause", required_argument, NULL, OPTIONID_glucose_lbLBDMinimizingClause },                
+                { "lbd-minclause", required_argument, NULL, OPTIONID_glucose_lbLBDMinimizingClause },
 
                 /* INPUT OPTIONS */
-                { "dimacs", no_argument, NULL, OPTIONID_dimacs },                
-                
+                { "dimacs", no_argument, NULL, OPTIONID_dimacs },
+
                 /* GENERIC OPTIONS*/
                 { "help", no_argument, NULL, OPTIONID_help },
                 { "stdin", no_argument, NULL, OPTIONID_stdin },
@@ -361,13 +365,13 @@ Options::parse(
                 { "max-cost", required_argument, NULL, OPTIONID_max_cost },
                 { "disable-simplifications", no_argument, NULL, OPTIONID_simplifications },
                 { "enable-multiaggregates", no_argument, NULL, OPTIONID_multiaggregates },
-                { "enumeration-strategy", required_argument, NULL, OPTIONID_enumeration },                
-                
-                { "modelchecker-algorithm", required_argument, NULL, OPTIONID_modelchecker_algorithm },  
-                { "forward-partialchecks", no_argument, NULL, OPTIONID_forward_partialchecks },  
+                { "enumeration-strategy", required_argument, NULL, OPTIONID_enumeration },
+
+                { "modelchecker-algorithm", required_argument, NULL, OPTIONID_modelchecker_algorithm },
+                { "forward-partialchecks", no_argument, NULL, OPTIONID_forward_partialchecks },
                 { "heuristic-partialchecks", no_argument, NULL, OPTIONID_heuristic_partialchecks },
-                { "modelchecker-compactreasons", no_argument, NULL, OPTIONID_modelchecker_compactreasons },                
-                
+                { "modelchecker-compactreasons", no_argument, NULL, OPTIONID_modelchecker_compactreasons },
+
                 /* WEAK CONSTRAINTS */
                 { "weakconstraints-algorithm", required_argument, NULL, OPTIONID_weakconstraintsalgorithm },
                 { "k-threshold", required_argument, NULL, OPTIONID_kthreshold },
@@ -378,7 +382,7 @@ Options::parse(
                 { "compute-firstmodel", optional_argument, NULL, OPTIONID_firstmodel },
                 { "shrinking-strategy", required_argument, NULL, OPTIONID_minimizationstrategy },
                 { "shrinking-budget", required_argument, NULL, OPTIONID_minimizationbudget },
-                
+
                 /* SHIFT STRATEGY */
                 { "disjunction", required_argument, NULL, OPTIONID_shift_strategy },
                 { "enable-shift-onedef", no_argument, NULL, OPTIONID_shift_onedef },
@@ -389,7 +393,11 @@ Options::parse(
                 { "query-chunk-size", required_argument, NULL, OPTIONID_querychunksize },
                 { "query-chunk-percentage", required_argument, NULL, OPTIONID_querychunkpercentage },
                 { "query-enable-core-cache", no_argument, NULL, OPTIONID_querycorecache },
-                
+
+                #ifdef PROOF_LOG
+                { "proof-log", optional_argument, NULL, OPTIONID_proof_log },
+                #endif
+
                 // The NULL-option indicates the end of the array.
                 { NULL, 0, NULL, 0 }
             };
@@ -422,7 +430,7 @@ Options::parse(
             case OPTIONID_trace_checker:
                 setTraceLevel( modelchecker, atoi( optarg ) );
                 break;
-                
+
             case OPTIONID_trace_heuristic:
                 setTraceLevel( heuristic, atoi( optarg ) );
                 break;
@@ -434,39 +442,39 @@ Options::parse(
             case OPTIONID_trace_us:
                 setTraceLevel( unfoundedset, atoi( optarg ) );
                 break;
-                
+
             case OPTIONID_trace_learning:
                 setTraceLevel( learning, atoi( optarg ) );
                 break;
-                
+
             case OPTIONID_trace_enumeration:
                 setTraceLevel( enumeration, atoi( optarg ) );
                 break;
-                
+
             case OPTIONID_trace_satelite:
                 setTraceLevel( satelite, atoi( optarg ) );
                 break;
-                
+
             case OPTIONID_trace_aggregates:
                 setTraceLevel( aggregates, atoi( optarg ) );
                 break;
-            
+
             case OPTIONID_trace_weakconstraints:
                 setTraceLevel( weakconstraints, atoi( optarg ) );
                 break;
-                
+
             case OPTIONID_trace_disjunction:
                 setTraceLevel( disjunction, atoi( optarg ) );
                 break;
 
             case OPTIONID_trace_multiaggregates:
                 setTraceLevel( multiaggregates, atoi( optarg ) );
-                break;    
+                break;
 
             case OPTIONID_trace_predmin:
                 setTraceLevel( predmin, atoi( optarg ) );
-                break;    
-                
+                break;
+
             case OPTIONID_competition_output:
                 outputPolicy = COMPETITION_OUTPUT;
                 break;
@@ -478,7 +486,7 @@ Options::parse(
                     if( silent < 1 )
                         silent = 0;
                     else if( silent > 1 )
-                        silent = 2;                    
+                        silent = 2;
                 }
                 outputPolicy = SILENT_OUTPUT;
                 break;
@@ -490,7 +498,7 @@ Options::parse(
             case OPTIONID_onlyOptimum:
                 printOnlyOptimum = true;
                 break;
-                
+
             case OPTIONID_stats:
                 stats = true;
                 if( optarg )
@@ -498,11 +506,11 @@ Options::parse(
                     statsVerbosity = atoi( optarg );
                 }
                 break;
-                
+
             case OPTIONID_multi:
                 outputPolicy = MULTI;
                 break;
-                
+
             case OPTIONID_lastModel:
                 outputPolicy = MULTI;
                 printLastModelOnly = true;
@@ -524,7 +532,7 @@ Options::parse(
                     if( !strcmp( optarg, "python" ) )
                         interpreter = PYTHON_INTERPRETER;
                     else
-                    #endif                    
+                    #endif
                         WaspErrorMessage::errorGeneric( "Unkwown interpreter." );
                 }
                 break;
@@ -532,30 +540,30 @@ Options::parse(
             case OPTIONID_printbounds:
                 printBounds = true;
                 break;
-                
+
             case OPTIONID_printatomtable:
                 printAtomTable = true;
                 break;
-                
+
             case OPTIONID_idOutput:
                 outputPolicy = ID_OUTPUT;
-                break;                
-                                
+                break;
+
             case OPTIONID_heuristic_scriptname:
                 if( optarg )
                     heuristic_scriptname = optarg;
                 break;
-                
+
             case OPTIONID_heuristic_plugins:
                 if( optarg )
                     split( string( optarg ), ',', pluginsFilenames );
                 break;
-                
+
             case OPTIONID_heuristic_setscriptdirectory:
                 if( optarg )
                     scriptDirectory = string( optarg );
                 break;
-                
+
             case OPTIONID_heuristic_lazyweakconstraints:
                 useLazyWeakConstraints = true;
                 weakConstraintsAlg = LAZY;
@@ -580,7 +588,7 @@ Options::parse(
                         restartsThreshold = 100;
                 }
                 break;
-                
+
             case OPTIONID_minisat_restarts:
                 restartsPolicy = MINISAT_RESTARTS_POLICY;
                 if( optarg )
@@ -590,19 +598,19 @@ Options::parse(
                         restartsThreshold = 100;
                 }
                 break;
-                
+
             case OPTIONID_disable_restarts:
                 restartsPolicy = NO_RESTARTS_POLICY;
-                break;                            
-                            
+                break;
+
             case OPTIONID_dimacs:
                 outputPolicy = DIMACS_OUTPUT;
-                break; 
-                
+                break;
+
             case OPTIONID_simplifications:
                 simplifications = false;
                 break;
-                
+
             case OPTIONID_modelchecker_algorithm:
                 modelcheckerAlgorithm = REDUCT_BASED;
                 if( optarg )
@@ -617,16 +625,16 @@ Options::parse(
                 else
                     WaspErrorMessage::errorGeneric( "Inserted invalid algorithm for model checker." );
                 break;
-                
+
             case OPTIONID_modelchecker_compactreasons:
                 compactReasonsForHCC = true;
                 shiftStrategy = SHIFT_AUTO;
                 break;
-                
+
             case OPTIONID_multiaggregates:
                 multiAggregates = true;
                 break;
-                
+
             case OPTIONID_help:
                 WaspHelp::printHelp();
                 exit( 0 );
@@ -640,77 +648,77 @@ Options::parse(
                 if( optarg )
                     timeLimit = atoi( optarg );
                 break;
-                
+
             case OPTIONID_max_cost:
                 if( optarg )
                     maxCost = atoi( optarg );
                 break;
-                
+
             case OPTIONID_glucose_sizeLBDQueue:
                 if( optarg )
                     sizeLBDQueue = atof( optarg );
                 break;
-             
+
             case OPTIONID_glucose_sizeTrailQueue:
                 if( optarg )
                     sizeTrailQueue = atof( optarg );
                 break;
-                
+
             case OPTIONID_glucose_K:
                 if( optarg )
                     K = atof( optarg );
                 break;
-                
+
             case OPTIONID_glucose_R:
                 if( optarg )
                     R = atof( optarg );
                 break;
-                
+
             case OPTIONID_glucose_nbclausesBeforeReduce:
                 if( optarg )
                     nbclausesBeforeReduce = atoi( optarg );
                 break;
-                
+
             case OPTIONID_glucose_incReduceDB:
                 if( optarg )
                     incReduceDB = atoi( optarg );
                 break;
-            
+
             case OPTIONID_glucose_specialIncReduceDB:
                 if( optarg )
                     specialIncReduceDB = atoi( optarg );
                 break;
-                
+
             case OPTIONID_glucose_lbLBDFrozenClause:
                 if( optarg )
                     lbLBDFrozenClause = atoi( optarg );
                 break;
-                
+
             case OPTIONID_glucose_lbLBDMinimizingClause:
                 if( optarg )
                     lbLBDMinimizingClause = atoi( optarg );
                 break;
-                
+
             case OPTIONID_initVariableIncrement:
                 if( optarg )
                     initVariableIncrement = atof( optarg );
                 break;
-                
+
             case OPTIONID_initVariableDecay:
-                if( optarg )                    
-                    initVariableDecay = 1 / ( double ) ( atoi( optarg ) / 100 );                
+                if( optarg )
+                    initVariableDecay = 1 / ( double ) ( atoi( optarg ) / 100 );
                 break;
-                
+
             case OPTIONID_initStrategy:
                 if( optarg )
                     initMinisatHeuristic = getInitMinisatHeuristic( optarg );
                 break;
-                
+
             case OPTIONID_initValue:
                 if( optarg )
                     initValue = atoi( optarg );
                 break;
-                
+
             case OPTIONID_initSign:
                 if( optarg )
                 {
@@ -722,14 +730,14 @@ Options::parse(
                         initValue = INIT_SIGN_MINISAT_MIXED;
                 }
                 break;
-    
+
             case OPTIONID_forward_partialchecks:
                 forwardPartialChecks = true;
                 break;
-                
+
             case OPTIONID_heuristic_partialchecks:
                 heuristicPartialChecks = true;
-                break;                         
+                break;
 
             case OPTIONID_weakconstraintsalgorithm:
                 if( optarg )
@@ -737,7 +745,7 @@ Options::parse(
                 else
                     WaspErrorMessage::errorGeneric( "Inserted invalid algorithm for weak constraints." );
                 break;
-                
+
             case OPTIONID_kthreshold:
                 if( optarg )
                 {
@@ -747,7 +755,7 @@ Options::parse(
                     kthreshold = kthreshold_;
                 }
                 break;
-                
+
             case OPTIONID_multithreshold:
                 if( optarg )
                 {
@@ -756,64 +764,64 @@ Options::parse(
                         WaspErrorMessage::errorGeneric( "Threshold for multi must be >= 0." );
                     multiThreshold = multiThreshold_;
                 }
-                break;    
-                
+                break;
+
             case OPTIONID_shift_strategy:
                 if( optarg )
                     shiftStrategy = getShiftStrategy( string( optarg ) );
                 else
                     WaspErrorMessage::errorGeneric( "Inserted invalid strategy for shift." );
                 break;
-                
+
             case OPTIONID_enumeration:
                 if( optarg )
                     enumerationStrategy = getEnumerationStrategy( string( optarg ) );
-                else 
+                else
                     WaspErrorMessage::errorGeneric( "Inserted invalid strategy for enumeration." );
                 break;
 
             case OPTIONID_shift_onedef:
                 oneDefShift = true;
                 break;
-                
+
             case OPTIONID_disjcores:
                 disjCoresPreprocessing = true;
                 break;
-                
+
             case OPTIONID_minimize:
                 minimizeUnsatCore = true;
                 break;
-                
+
             case OPTIONID_stratification:
                 stratification = false;
                 break;
-                
+
             case OPTIONID_firstmodel:
                 computeFirstModel = true;
                 if( optarg )
-                    budget = atoi( optarg );                    
+                    budget = atoi( optarg );
                 break;
-                
+
             case OPTIONID_minimizationstrategy:
                 if( optarg )
                     minimizationStrategy = getMinimizationStrategy( string( optarg ) );
                 else
-                    WaspErrorMessage::errorGeneric( "Inserted invalid strategy for minimization." );                
+                    WaspErrorMessage::errorGeneric( "Inserted invalid strategy for minimization." );
                 break;
-                
+
             case OPTIONID_minimizationbudget:
                 if( optarg )
-                    minimizationBudget = atoi( optarg );                    
+                    minimizationBudget = atoi( optarg );
                 break;
-                
+
             case OPTIONID_queryalgorithm:
                 queryAlgorithm = ITERATIVE_COHERENCE_TESTING;
                 if( optarg )
-                    queryAlgorithm = getQueryAlgorithm( optarg );                    
+                    queryAlgorithm = getQueryAlgorithm( optarg );
                 else
                     WaspErrorMessage::errorGeneric( "Inserted invalid algorithm for query answering." );
                 break;
-                
+
             case OPTIONID_queryverbosity:
                 queryVerbosity = 0;
                 if( optarg )
@@ -827,11 +835,11 @@ Options::parse(
                 else
                         WaspErrorMessage::errorGeneric( "Inserted invalid value for query verbosity." );
                 break;
-                
+
             case OPTIONID_querycorecache:
                 queryCoreCache = true;
                 break;
-            
+
             case OPTIONID_querychunksize:
                 if( optarg )
                 {
@@ -842,7 +850,7 @@ Options::parse(
                 else
                     WaspErrorMessage::errorGeneric( "Only one option between chunk percentage and chunk size can be specified." );
                 break;
-                
+
             case OPTIONID_querychunkpercentage:
                 if( optarg )
                 {
@@ -855,7 +863,20 @@ Options::parse(
                 else
                     WaspErrorMessage::errorGeneric( "Inserted invalid value for chunk percentage." );
                 break;
-                
+
+            #ifdef PROOF_LOG
+            case OPTIONID_proof_log:
+                if( optarg )
+                {
+                    if(!proof::setLogFile(optarg))
+                        WaspErrorMessage::errorGeneric( "Specify a valid path to save the proof log." );
+                }
+                else
+                    WaspErrorMessage::errorGeneric( "Specify a valid path to save the proof log." );
+
+                break;
+            #endif
+            
             case OPTIONID_predminimizationalgorithm:
                 if( optarg )
                 {
@@ -863,18 +884,18 @@ Options::parse(
                     if( it == stringToPredMinimization.end() )
                         WaspErrorMessage::errorGeneric( "Inserted invalid algorithm for pred minimization." );
 
-                    predMinimizationAlgorithm = it->second;    
+                    predMinimizationAlgorithm = it->second;
                 }
                 break;
-            
+
             case OPTIONID_predminimizationpredicate:
                 if( optarg )
                 {
-                    string s( optarg );                    
-                    split( s, ';', predicatesToMinimize );                    
+                    string s( optarg );
+                    split( s, ';', predicatesToMinimize );
                 }
-                break;    
-            
+                break;
+
             case OPTIONID_predminimizationchunkpercentage:
                 if( optarg )
                 {
@@ -882,8 +903,8 @@ Options::parse(
                     if( minimizePredicateChunkPercentage == 0 || minimizePredicateChunkPercentage > 100 )
                         WaspErrorMessage::errorGeneric( "Inserted invalid value for chunk percentage." );
                 }
-                break;                    
-                
+                break;
+
             default:
                 WaspErrorMessage::errorGeneric( "This option is not supported." );
                 break;
@@ -905,41 +926,41 @@ Options::setOptions(
 {
     if( minisatPolicy ) waspFacade.setMinisatPolicy();
     waspFacade.setOutputPolicy( outputPolicy );
-    waspFacade.setRestartsPolicy( restartsPolicy, restartsThreshold );    
-    waspFacade.setMinimizeUnsatCore( minimizeUnsatCore );    
+    waspFacade.setRestartsPolicy( restartsPolicy, restartsThreshold );
+    waspFacade.setMinimizeUnsatCore( minimizeUnsatCore );
 }
 
 WEAK_CONSTRAINTS_ALG
 Options::getAlgorithm(
     const string& s )
-{   
+{
     map< string, WEAK_CONSTRAINTS_ALG >::iterator it = stringToWeak.find( s );
     if( it == stringToWeak.end() )
         WaspErrorMessage::errorGeneric( "Inserted invalid algorithm for weak constraints." );
-    
-    return it->second;    
+
+    return it->second;
 }
 
 SHIFT_STRATEGY
 Options::getShiftStrategy(
     const string& s )
-{   
+{
     map< string, SHIFT_STRATEGY >::iterator it = stringToShift.find( s );
     if( it == stringToShift.end() )
         WaspErrorMessage::errorGeneric( "Inserted invalid strategy for shift." );
-    
-    return it->second;    
+
+    return it->second;
 }
 
 SHIFT_STRATEGY
 Options::getMinimizationStrategy(
     const string& s )
-{   
+{
     map< string, unsigned int >::iterator it = stringToMinimization.find( s );
     if( it == stringToMinimization.end() )
         WaspErrorMessage::errorGeneric( "Inserted invalid strategy for minimization." );
-    
-    return it->second;    
+
+    return it->second;
 }
 
 unsigned int
@@ -949,8 +970,8 @@ Options::getQueryAlgorithm(
     map< string, unsigned int >::iterator it = stringToQueryAlgorithms.find( s );
     if( it == stringToQueryAlgorithms.end() )
         WaspErrorMessage::errorGeneric( "Inserted invalid strategy for query algorithm." );
-    
-    return it->second; 
+
+    return it->second;
 }
 
 unsigned int
@@ -960,8 +981,8 @@ Options::getInitMinisatHeuristic(
     map< string, unsigned int >::iterator it = stringToInitMinisatHeuristic.find( s );
     if( it == stringToInitMinisatHeuristic.end() )
         WaspErrorMessage::errorGeneric( "Inserted invalid strategy for initialization of minisat heuristic." );
-    
-    return it->second; 
+
+    return it->second;
 }
 
 unsigned int
@@ -999,10 +1020,10 @@ Options::initMap()
     stringToShift[ "auto" ] = SHIFT_AUTO;
 //    stringToShift[ "quadratic" ] = SHIFT_QUADRATIC;
 //    stringToShift[ "quadratic-aggregate" ] = SHIFT_QUADRATIC_AGGREGATE;
-    
+
     stringToMinimization[ "progression" ] = MINIMIZATION_PROGRESSION;
     stringToMinimization[ "linearsearch" ] = MINIMIZATION_LINEARSEARCH;
-    
+
     stringToQueryAlgorithms[ "or" ] = OVERESTIMATE_REDUCTION;
     stringToQueryAlgorithms[ "ict" ] = ITERATIVE_COHERENCE_TESTING;
     stringToQueryAlgorithms[ "cb" ] = COREBASED_QUERIES;
@@ -1014,14 +1035,14 @@ Options::initMap()
     stringToQueryAlgorithms[ "pmres" ] = PMRES_QUERIES;
     stringToQueryAlgorithms[ "ict-preferences" ] = ITERATIVE_COHERENCE_TESTING_PREFERENCES;
     stringToQueryAlgorithms[ "pi" ] = PRIME_IMPLICATE;
-    
+
     stringToPredMinimization[ "enumeration" ] = PREDMIN_ENUMERATION;
     stringToPredMinimization[ "guess-check" ] = PREDMIN_GUESS_AND_CHECK;
     stringToPredMinimization[ "guess-check-minimize" ] = PREDMIN_GUESS_AND_CHECK_AND_MINIMIZE;
     stringToPredMinimization[ "guess-check-split" ] = PREDMIN_GUESS_AND_CHECK_AND_SPLIT;
     stringToPredMinimization[ "preferences" ] = PREDMIN_PREFERENCES;
     stringToPredMinimization[ "core-based"] = PREDMIN_CORE;
-    
+
     stringToInitMinisatHeuristic[ "all-equals" ] = INIT_MINISAT_ALL_EQUALS;
     stringToInitMinisatHeuristic[ "moms" ] = INIT_MINISAT_MOMS;
     stringToInitMinisatHeuristic[ "binary" ] = INIT_MINISAT_BINARY;
@@ -1029,7 +1050,7 @@ Options::initMap()
     stringToInitMinisatHeuristic[ "propagators" ] = INIT_MINISAT_PROPAGATORS;
     stringToInitMinisatHeuristic[ "visible-atoms" ] = INIT_MINISAT_VISIBLE_ATOMS;
     stringToInitMinisatHeuristic[ "hidden-atoms" ] = INIT_MINISAT_HIDDEN_ATOMS;
-    stringToInitMinisatHeuristic[ "combination" ] = INIT_MINISAT_COMBINATION;                    
+    stringToInitMinisatHeuristic[ "combination" ] = INIT_MINISAT_COMBINATION;
 }
 
 void
@@ -1037,10 +1058,10 @@ Options::checkOptions()
 {
     if( compactReasonsForHCC && shiftStrategy == SHIFT_NAIVE )
         WaspErrorMessage::errorGeneric( "Compact reasons canno be combined with shift" );
-    
+
     if( modelcheckerAlgorithm == UNFOUNDED_BASED && heuristicPartialChecks )
         WaspErrorMessage::errorGeneric( "Partial checks are not available for the unfounded based approach" );
-    
+
     if( modelcheckerAlgorithm == UNFOUNDED_BASED && forwardPartialChecks )
         WaspErrorMessage::errorGeneric( "Partial checks are not available for the unfounded based approach" );
 }

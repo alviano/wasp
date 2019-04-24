@@ -30,6 +30,7 @@
 #include "../util/WaspOptions.h"
 #include "../util/WaspTrace.h"
 #include "../util/WaspAssert.h"
+#include "../util/WaspProofLog.h"
 
 class Learning;
 class Solver;
@@ -49,8 +50,8 @@ class Component : public PostPropagator
     friend ostream& operator<<( ostream& o, const Component& c );
     public:
         inline Component( vector< GUSData* >& gusData_, Solver& s ) : PostPropagator(), solver( s ), gusData( gusData_ ), clauseToPropagate( NULL ), conflict( 0 ), id( 0 ), done( 0 ), first( 1 ), removed( 0 ), numberOfCalls( 0 ) {}
-        ~Component();        
-        
+        ~Component();
+
         virtual bool onLiteralFalse( Literal lit );
 
         inline bool isCyclic() const { return variablesInComponent.size() > 1; }
@@ -61,7 +62,7 @@ class Component : public PostPropagator
 
         inline void setId( unsigned int id ) { this->id = id; }
         inline unsigned int getId() const { return id; }
-        
+
         virtual Clause* getClauseToPropagate( Learning& learning );
 
         inline bool isAuxVariable( unsigned int varId ) { return getGUSData( varId ).isAux(); }
@@ -70,16 +71,16 @@ class Component : public PostPropagator
         inline void addInternalLiteralForVariable( unsigned int varId, Literal lit ) { addInternalLiteral( varId, lit ); /*getGUSData( varId ).internalLiterals.push_back( lit );*/ }
         inline void addVariablePossiblySupportedByLiteral( Var var, Literal lit ) { gusData[ lit.getVariable() ]->possiblySupportedByThis[ lit.getSign() ].push_back( var ); }
         inline void addAuxVariableSupportedByLiteral( Var var, Literal lit ) { gusData[ lit.getVariable() ]->auxVariablesSupportedByThis[ lit.getSign() ].push_back( var ); }
-        
+
         inline void variableHasNoSourcePointer( Var var );
         void onLearningForUnfounded( unsigned int id, Learning& );
-        
+
         void remove() { removed = 1; }
         bool isRemoved() const { return removed; }
-        
+
         Clause* inferFalsityOfUnfoundedAtoms();
-        void conflictOnUnfoundedAtom( Clause* clause, Var variable );                
-        
+        void conflictOnUnfoundedAtom( Clause* clause, Var variable );
+
     protected:
         virtual void reset();
 
@@ -92,22 +93,22 @@ class Component : public PostPropagator
         Vector< Var > unfoundedSet;
         Clause* clauseToPropagate;
         Vector< Clause* > clausesToDelete;
-                
-        Var conflict;        
-        
-        unsigned int id : 29;        
+
+        Var conflict;
+
+        unsigned int id : 29;
         unsigned int done : 1;
         unsigned int first : 1;
         unsigned int removed : 1;
-        
+
         vector< unsigned int > added;
         unsigned int numberOfCalls;
-        
+
         bool propagateFalseForGUS( Literal lit );
         inline void propagateLiteralLostSourcePointer( Literal lit );
         bool iterationOnSupportedByThisExternal( Literal lit );
         bool iterationOnSupportedByThisInternal( Literal lit );
-        void iterationOnAuxSupportedByThis( Literal lit );        
+        void iterationOnAuxSupportedByThis( Literal lit );
 
         void foundSourcePointer( Var var, vector< Var >& vars, vector< Literal >& lits );
         inline void lookForANewSourcePointer( Var var );
@@ -120,30 +121,32 @@ class Component : public PostPropagator
 //        inline void setVariableFounded( unsigned int id, bool value );
         inline void setFounded( Var var );
         inline void setUnfounded( Var var );
-        
+
         void addVariableSupportedByLiteral( Var variable, Literal literal );
-        
+
         void removeFalseAtomsAndPropagateUnfoundedness();
-        
+
         inline GUSData& getGUSData( Var var );
-        
+
         void computeGUS();
         void computeGUSFirst();
         bool computeUnfoundedSet( Var var );
-        
+
         inline void visit( Var var ) { assert_msg( var < added.size(), var << " >= " << added.size() ); added[ var ] = numberOfCalls; }
         inline bool visited( Var var ) const { assert_msg( var < added.size(), var << " >= " << added.size() ); return added[ var ] == numberOfCalls; }
-        
+
         inline Var updateClauseToPropagate();
-        
+
         virtual bool hasToAddClause() const;
 
-        
+
         #ifndef NDEBUG
         bool checkSourcePointersStatus();
         bool checkFoundedStatus();
         void printVariablesWithoutSourcePointer();
         #endif
+
+        Clause* trackClauseToPropagate(Clause* c);
 };
 
 //bool ComponentComparator::operator()( const Component* c1, const Component* c2 ) const { return c1->getId() < c2->getId(); }
@@ -176,7 +179,7 @@ Component::addExternalLiteral(
     if( !getGUSData( var ).isAux() )
         getGUSData( var ).externalLiterals.push_back( literal );
     else
-        getGUSData( var ).literals.push_back( literal ); 
+        getGUSData( var ).literals.push_back( literal );
 }
 
 void
@@ -206,7 +209,7 @@ Component::resetSourcePointer(
         }
     }
     else
-    {        
+    {
         trace_msg( unfoundedset, 3, "Aux variable " << Literal( var, POSITIVE ) << " has a source pointer" );
         getGUSData( var ).numberOfSupporting = 0;
     }
@@ -222,7 +225,7 @@ Component::setUnfounded(
 void
 Component::setFounded(
     Var var )
-{    
+{
     if( getGUSData( var ).isFounded() )
     {
         assert_msg( !getGUSData( var ).isAux() || getGUSData( var ).numberOfSupporting == 0, "Aux: " << Literal( var, POSITIVE ) << " - Without source: " << getGUSData( var ).numberOfSupporting );
