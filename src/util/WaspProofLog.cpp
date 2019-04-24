@@ -23,7 +23,8 @@ void unfoundedSetAddition() {}
 static FILE* log_file = stderr;
 
 bool setLogFile( const char* filename ) {
-    return true;
+    log_file = fopen( filename, "w" );
+    return log_file != NULL;
 }
 
 void bodyDefinition( int id ) {
@@ -66,7 +67,7 @@ void loop( const std::vector<unsigned>& unfounded ) {
             log(" %d", unfounded[j]);
         }
         log(" 0\n");
-    }    
+    }
 }
 
 void unfoundedSetAddition() {
