@@ -66,13 +66,13 @@ Component::getClauseToPropagate(
             return NULL;
         assert( clauseToPropagate == NULL );
         clauseToPropagate = learning.learnClausesFromUnfoundedSet( unfoundedSet );
-        
+
         proof_block({
             vector<unsigned> us;
             for(unsigned i = 0; i < unfoundedSet.size(); i++) us.push_back(unfoundedSet[i]);
             proof::loop( us );
         });
-        
+
         solver.onUnfoundedSet( unfoundedSet );
         solver.onLoopFormula( clauseToPropagate );
         clausesToDelete.push_back( clauseToPropagate );
@@ -934,7 +934,6 @@ Component::trackClauseToPropagate(
         for(unsigned i = 0; i < clause->size(); i++) lits.push_back( clause->getAt(i).getId() );
         proof::addition( lits );
     });
-    proof_log("SSS");
     return clause;
 }
 
