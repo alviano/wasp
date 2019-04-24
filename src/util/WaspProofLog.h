@@ -43,7 +43,7 @@ void completionRuleAddition();
 void completionSupportAddition();
 void extension( int var, const std::vector<int>& lits );
 void deletion( const std::vector<int>& lits );
-void loop();
+void loop( const std::vector<unsigned>& unfounded );
 void unfoundedSetAddition();
 
 }

@@ -58,8 +58,15 @@ void deletion( const std::vector<int>& lits ) {
     log( "0\n" );
 }
 
-void loop() {
-
+void loop( const std::vector<unsigned>& unfounded ) {
+    for(unsigned int i = 0; i < unfounded.size(); i++) {
+        log("l %d", unfounded[i]);
+        for(unsigned int j = 0; j < unfounded.size(); j++) {
+            if(i == j) continue;
+            log(" %d", unfounded[j]);
+        }
+        log(" 0\n");
+    }    
 }
 
 void unfoundedSetAddition() {
