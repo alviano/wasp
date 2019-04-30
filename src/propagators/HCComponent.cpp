@@ -43,14 +43,14 @@ HCComponent::computeReasonForUnfoundedAtom(
         return;
     }
     trace_msg( modelchecker, 2, "Processing variable " << solver.getLiteral( v ) );
-    vector< Clause* >& definingRules = getGUSData( v ).definingRulesForNonHCFAtom;        
+    vector< Clause* >& definingRules = getGUSData( v ).definingRulesForNonHCFAtom;
     for( unsigned int i = 0; i < definingRules.size(); i++ )
     {
         Clause* rule = definingRules[ i ];
         trace_msg( modelchecker, 3, "Processing rule " << *rule );
-        
+
         bool skipRule = false;
-        
+
         unsigned int min = UINT_MAX;
         unsigned int pos = UINT_MAX;
         for( unsigned int j = 0; j < rule->size(); j++ )
@@ -71,7 +71,7 @@ HCComponent::computeReasonForUnfoundedAtom(
                     break;
                 }
             }
-            
+
             //This should be not true anymore.
 //            assert( !isInUnfoundedSet( lit.getVariable() ) );
             //If the variable is in the HCC component and it is undefined can be a reason during partial checks
@@ -81,13 +81,13 @@ HCComponent::computeReasonForUnfoundedAtom(
                     pos = j;
                 continue;
             }
-            
+
             if( !solver.isTrue( lit ) )
             {
                 trace_msg( modelchecker, 5, "Skip " << lit << " because it is not true" );
                 continue;
             }
-            
+
             unsigned int dl = solver.getDecisionLevel( lit );
             if( dl == 0 )
             {
@@ -101,7 +101,7 @@ HCComponent::computeReasonForUnfoundedAtom(
                 pos = j;
             }
         }
-        
+
         if( !skipRule )
         {
             assert_msg( pos < rule->size(), "Trying to access " << pos << " in " << *rule );
@@ -127,7 +127,7 @@ HCComponent::computeReasonForUnfoundedAtomCompactReasons(
         bool skipRule = false;
         Literal l = Literal::null;
         for( unsigned int j = 0; j < rule->size(); j++ )
-        {            
+        {
             Literal lit = rule->getAt( j );
             if( isInUnfoundedSet( lit.getVariable() ) )
             {
@@ -144,7 +144,7 @@ HCComponent::computeReasonForUnfoundedAtomCompactReasons(
                     break;
                 }
             }
-            
+
             if( solver.isUndefined( lit ) && sameComponent( lit.getVariable() ) && ( lit.isNegativeBodyLiteral() || lit.isHeadAtom() ) )
             {
                 trace_msg( modelchecker, 4, "is undefined and in the same component" );
@@ -152,32 +152,32 @@ HCComponent::computeReasonForUnfoundedAtomCompactReasons(
                     l = lit;
                 continue;
             }
-            
+
             if( !solver.isTrue( lit ) )
             {
                 trace_msg( modelchecker, 5, "Skip " << lit << " because it is not true" );
                 continue;
             }
-            
+
             if( solver.getDecisionLevel( lit ) == 0 )
             {
                 skipRule = true;
                 break;
             }
-            
+
             if( !lit.isHeadAtom() )
             {
                 trace_msg( modelchecker, 5, "Skip " << lit << " because it is a body literal" );
                 continue;
             }
-            
+
             if( l == Literal::null || solver.isUndefined( l ) || solver.getDecisionLevel( lit ) < solver.getDecisionLevel( l ) )
                 l = lit;
         }
-        
+
         if( skipRule )
             continue;
-        
+
         assert( i < definingLiterals.size() );
         Literal defLit = definingLiterals[ i ];
         trace_msg( modelchecker, 2, "Def rule " << *rule );
@@ -189,14 +189,14 @@ HCComponent::computeReasonForUnfoundedAtomCompactReasons(
                 if( l == Literal::null || solver.isUndefined( l ) || solver.getDecisionLevel( defLit ) < solver.getDecisionLevel( l ) )
                     learning.onNavigatingLiteralForUnfoundedSetLearning( defLit.getOppositeLiteral() );
                 else
-                    learning.onNavigatingLiteralForUnfoundedSetLearning( l.getOppositeLiteral() );                    
+                    learning.onNavigatingLiteralForUnfoundedSetLearning( l.getOppositeLiteral() );
             }
         }
         else
         {
             assert( l != Literal::null );
             learning.onNavigatingLiteralForUnfoundedSetLearning( l.getOppositeLiteral() );
-        }        
+        }
     }
 }
 
@@ -226,6 +226,13 @@ HCComponent::getClauseToPropagate(
         trace_msg( modelchecker, 1, "Learning unfounded set rule for component " << *this );
         Clause* loopFormula = learning.learnClausesFromDisjunctiveUnfoundedSet( unfoundedSet );
         trace_msg( modelchecker, 1, "Adding loop formula: " << *loopFormula );
+
+        proof_block({
+            vector<unsigned> us;
+            for(unsigned i = 0; i < unfoundedSet.size(); i++) us.push_back(unfoundedSet[i]);
+            proof::loop( us );
+        });
+
         unfoundedSet.clear();
         solver.onLearningALoopFormulaFromModelChecker();
         return loopFormula;
@@ -235,9 +242,9 @@ HCComponent::getClauseToPropagate(
 
 void
 HCComponent::reset()
-{    
+{
     while( !trail.empty() && solver.isUndefined( trail.back() ) )
-    {        
+    {
         hasToTestModel = false;
         trail.pop_back();
     }
