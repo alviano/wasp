@@ -861,6 +861,18 @@ Component::hasToAddClause() const
     return !done;
 }
 
+Clause*
+Component::trackClauseToPropagate(
+    Clause* clause )
+{
+    proof_block({
+        vector<int> lits;
+        for(unsigned i = 0; i < clause->size(); i++) lits.push_back( clause->getAt(i).getId() );
+        proof::addition( lits );
+    });
+    return clause;
+}
+
 #ifndef NDEBUG
 bool
 Component::checkSourcePointersStatus()
@@ -923,18 +935,6 @@ Component::printVariablesWithoutSourcePointer()
     for( unsigned int i = 0; i < variablesWithoutSourcePointer.size(); i++ )
         cout << " " << Literal( variablesWithoutSourcePointer[ i ], POSITIVE );
     cout << endl;
-}
-
-Clause*
-Component::trackClauseToPropagate(
-    Clause* clause )
-{
-    proof_block({
-        vector<int> lits;
-        for(unsigned i = 0; i < clause->size(); i++) lits.push_back( clause->getAt(i).getId() );
-        proof::addition( lits );
-    });
-    return clause;
 }
 
 #endif
