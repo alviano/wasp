@@ -862,17 +862,17 @@ Solver::minisatDeletion()
 {
     ClauseIterator i = learnedClauses_begin();
     ClauseIterator j = learnedClauses_begin();
-    Activity threshold = deletionCounters.increment / numberOfLearnedClauses();
+    Activity threshold = deletionCounters.increment / (numberOfLearnedClauses()-nbFrozenClauses);
     
     stable_sort( learnedClauses.begin(), learnedClauses.end(), compareClauses );    
         
     unsigned int numberOfDeletions = 0;
-    unsigned int size = numberOfLearnedClauses();
+    unsigned int size = numberOfLearnedClauses()-nbFrozenClauses;
     unsigned int toDelete = size / 2;
     while( i != learnedClauses.end() )
     {
         Clause& clause = **i;
-        if( /*clause.size() > 2 &&*/ !isLocked( clause ) && ( numberOfDeletions < toDelete || clause.activity() < threshold ) )
+        if( !clause.frozen() && /*clause.size() > 2 &&*/ !isLocked( clause ) && ( numberOfDeletions < toDelete || clause.activity() < threshold ) )
         {
             deleteLearnedClause( i );
             numberOfDeletions++;
@@ -952,12 +952,12 @@ Solver::glucoseDeletion()
         glucoseData.nbclausesBeforeReduce += glucoseData.specialIncReduceDB;
     
     unsigned int numberOfDeletions = 0;
-    unsigned int size = numberOfLearnedClauses();
+    unsigned int size = numberOfLearnedClauses() - nbFrozenClauses;
     unsigned int toDelete = size / 2;
     while( i != learnedClauses.end() )
     {
         Clause& clause = **i;
-        if( clause.lbd() > 2 && /*clause.size() > 2 &&*/ clause.canBeDeleted() && !isLocked( clause ) && ( numberOfDeletions < toDelete ) )
+        if( !clause.frozen() && clause.lbd() > 2 && /*clause.size() > 2 &&*/ clause.canBeDeleted() && !isLocked( clause ) && ( numberOfDeletions < toDelete ) )
         {
             deleteLearnedClause( i );
             numberOfDeletions++;
@@ -1390,7 +1390,10 @@ Solver::addLearnedClause(
     else
     {
         attachClause( *learnedClause );
-        learnedClauses.push_back( learnedClause );        
+        learnedClauses.push_back( learnedClause );
+        for(unsigned int i = 0; i < clauseListeners.size(); i++) {
+            clauseListeners[i]->onLearningClause(learnedClause);
+        }
     }    
 }
 
@@ -1429,4 +1432,24 @@ Solver::getChoicesWithoutAssumptions(
         trace_msg( enumeration, 2, "Adding literal " << choices[ i ] << " in assumptions." );        
         assums.push_back( choices[ i ] );        
     }
+}
+
+void Solver::freeze(Clause* clause) {
+    if(clause->frozen())
+        return;
+    assert(clause->isLearned());
+    nbFrozenClauses++;
+    detachClause(*clause);
+    literalsInLearnedClauses -= clause->size();
+}
+
+void Solver::thaw(Clause* clause) {
+    if(!clause->frozen())
+        return;
+    assert(clause->isLearned());
+    assert(getCurrentDecisionLevel() == 0);
+    assert(nbFrozenClauses > 0);
+    nbFrozenClauses--;
+    attachClause(*clause);
+    literalsInLearnedClauses += clause->size();
 }

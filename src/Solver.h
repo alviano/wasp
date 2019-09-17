@@ -51,6 +51,7 @@ using namespace std;
 #include "propagators/MultiAggregate.h"
 #include "AnswerSetListener.h"
 #include "ProgramListener.h"
+#include "ClauseListener.h"
 #include "input/WeightConstraint.h"
 
 class HCComponent;
@@ -500,6 +501,17 @@ class Solver
             answerSetListeners.resize( j );
         }
         
+        inline void attachClauseListener( ClauseListener* listener ) { assert( listener != NULL ); clauseListeners.push_back( listener ); }
+        inline void removeClauseListener( ClauseListener* listener ) {
+            unsigned int j = 0;
+            for( unsigned int i = 0; i < clauseListeners.size(); i++ ) {
+                clauseListeners[ j ] = clauseListeners[ i ];
+                if( clauseListeners[ i ] != listener )
+                    j++;
+            }
+            clauseListeners.resize( j );
+        }
+        
         inline void attachProgramListener( ProgramListener* listener ) { assert( listener != NULL ); programListeners.push_back( listener ); }
         inline void removeProgramListener( ProgramListener* listener ) {
             unsigned int j = 0;
@@ -521,6 +533,9 @@ class Solver
         
         unsigned int estimateBinaryPropagation( Literal lit );
         inline void notifyAggregate(WeightConstraint* weightConstraintRule );
+        
+        void freeze(Clause* clause);
+        void thaw(Clause* clause);
         
     private:
         inline unsigned int solve_( vector< Literal >& assumptions );
@@ -554,6 +569,7 @@ class Solver
         
         vector< Clause* > clauses;
         vector< Clause* > learnedClauses;
+        unsigned int nbFrozenClauses;
         
         vector< unsigned int > unrollVector;
         
@@ -714,6 +730,7 @@ class Solver
         bool incremental_;
         vector< AnswerSetListener* > answerSetListeners;
         vector< ProgramListener* > programListeners;
+        vector< ClauseListener* > clauseListeners;
         
         #ifndef NDEBUG
         bool checkStatusBeforePropagation( Var variable )
@@ -772,7 +789,7 @@ Solver::Solver()
 {
     dependencyGraph = new DependencyGraph( *this );
     satelite = new Satelite( *this );
-    
+    nbFrozenClauses = 0;
     choiceHeuristic = new MinisatHeuristic( *this );
     deletionCounters.init();
     glucoseData.init();
@@ -1280,7 +1297,10 @@ Solver::deleteLearnedClause(
     trace_msg( solving, 4, "Deleting learned clause " << *learnedClause );
     detachClause( *learnedClause );
     literalsInLearnedClauses -= learnedClause->size();
-    releaseClause( learnedClause );
+    releaseClause( learnedClause );    
+    for(unsigned int i = 0; i < clauseListeners.size(); i++) {
+        clauseListeners[i]->onDeletingClause(learnedClause);
+    }
 //    delete learnedClause;
 //    learnedClauses.erase( iterator );
 }
@@ -2457,7 +2477,7 @@ Solver::deleteClausesIfNecessary()
 {
     if( glucoseHeuristic_ )
     {
-        if( numberOfLearnedClauses() >= glucoseData.currRestart * glucoseData.nbclausesBeforeReduce )
+        if( numberOfLearnedClauses() - nbFrozenClauses >= glucoseData.currRestart * glucoseData.nbclausesBeforeReduce )
         {
             assert( numberOfLearnedClauses() > 0 );
             glucoseData.currRestart = ( conflicts / glucoseData.nbclausesBeforeReduce ) + 1;
@@ -2467,7 +2487,7 @@ Solver::deleteClausesIfNecessary()
     }
     else
     {
-        if( ( int ) ( numberOfLearnedClauses() - numberOfAssignedLiterals() ) >= deletionCounters.maxLearned )
+        if( ( int ) ( numberOfLearnedClauses() - nbFrozenClauses - numberOfAssignedLiterals() ) >= deletionCounters.maxLearned )
             deleteClauses();
     }
 }

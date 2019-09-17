@@ -70,6 +70,9 @@ Vector< T >::push_back(
     vector[ size_++ ] = element;
 }
 
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wclass-memaccess"
 template< class T >
 void
 Vector< T >::resetCapacity(
@@ -87,6 +90,9 @@ Vector< T >::resetCapacity(
     delete [] vector;
     vector = tmpVector;    
 }
+#pragma GCC diagnostic pop
+
+
 
 template< class T >
 bool

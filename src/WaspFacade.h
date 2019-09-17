@@ -243,7 +243,9 @@ class WaspFacade
         inline void enableOutput() { if( tmpOutputBuilder != NULL ) { solver.setOutputBuilder( outputBuilder ); delete tmpOutputBuilder; tmpOutputBuilder = NULL; } }
         inline void disableOutput() { if( tmpOutputBuilder == NULL ) { tmpOutputBuilder = new NoopOutputBuilder(); solver.setOutputBuilder( tmpOutputBuilder ); } }        
         
-        inline void disableVariableElimination() { disableVE_ = true; };
+        inline void disableVariableElimination() { disableVE_ = true; }
+        inline void freeze(Clause* clause) { assert(runtime_); solver.freeze(clause); }
+        inline void thaw(Clause* clause) { assert(runtime_); solver.unrollToZero(); solver.thaw(clause); }
         
     private:
         Solver solver;
