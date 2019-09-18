@@ -23,6 +23,7 @@
 #include "util/WaspOptions.h"
 #include "PredicateMinimization.h"
 #include "CautiousReasoning.h"
+#include "StreamReasoning.h"
 using namespace std;
 
 int EXIT_CODE = 0;
@@ -52,14 +53,16 @@ int main( int argc, char** argv )
     signal( SIGXCPU, my_handler );
     
     waspFacade.readInput( cin );
-    if( wasp::Options::predMinimizationAlgorithm != NO_PREDMINIMIZATION ) { PredicateMinimization p( waspFacade ); p.solve(); }
-    else if( wasp::Options::queryAlgorithm == ONE_QUERIES 
-            || wasp::Options::queryAlgorithm == KDYN_QUERIES 
-            || wasp::Options::queryAlgorithm == PREFERENCE_QUERIES
-            || wasp::Options::queryAlgorithm == PMRES_QUERIES
-            || wasp::Options::queryAlgorithm == ITERATIVE_COHERENCE_TESTING_PREFERENCES
-            || wasp::Options::queryAlgorithm == PRIME_IMPLICATE ) { CautiousReasoning c( waspFacade ); c.solve(); }
-    else waspFacade.solve();
+//    if( wasp::Options::predMinimizationAlgorithm != NO_PREDMINIMIZATION ) { PredicateMinimization p( waspFacade ); p.solve(); }
+//    else if( wasp::Options::queryAlgorithm == ONE_QUERIES 
+//            || wasp::Options::queryAlgorithm == KDYN_QUERIES 
+//            || wasp::Options::queryAlgorithm == PREFERENCE_QUERIES
+//            || wasp::Options::queryAlgorithm == PMRES_QUERIES
+//            || wasp::Options::queryAlgorithm == ITERATIVE_COHERENCE_TESTING_PREFERENCES
+//            || wasp::Options::queryAlgorithm == PRIME_IMPLICATE ) { CautiousReasoning c( waspFacade ); c.solve(); }
+//    else waspFacade.solve();
+    StreamReasoning r (waspFacade);
+    r.solve();
     waspFacade.onFinish();
     delete waspFacadePointer;
     Statistics::clean();

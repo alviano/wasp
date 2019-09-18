@@ -238,13 +238,15 @@ class WaspFacade
         inline void removeAnswerSetListener( AnswerSetListener* listener ) { solver.removeAnswerSetListener( listener ); }
         inline void attachProgramListener( ProgramListener* listener ) { solver.attachProgramListener( listener ); }
         inline void removeProgramListener( ProgramListener* listener ) { solver.removeProgramListener( listener ); }
+        inline void attachClauseListener(ClauseListener* listener) { solver.attachClauseListener(listener); }
+        inline void removeClauseListener(ClauseListener* listener) { solver.removeClauseListener(listener); }
         
         inline OutputBuilder* getOutputBuilder() const { return outputBuilder; }
         inline void enableOutput() { if( tmpOutputBuilder != NULL ) { solver.setOutputBuilder( outputBuilder ); delete tmpOutputBuilder; tmpOutputBuilder = NULL; } }
         inline void disableOutput() { if( tmpOutputBuilder == NULL ) { tmpOutputBuilder = new NoopOutputBuilder(); solver.setOutputBuilder( tmpOutputBuilder ); } }        
         
         inline void disableVariableElimination() { disableVE_ = true; }
-        inline void freeze(Clause* clause) { assert(runtime_); solver.freeze(clause); }
+        inline void freeze(Clause* clause) { assert(runtime_); solver.unrollToZero(); solver.freeze(clause); }
         inline void thaw(Clause* clause) { assert(runtime_); solver.unrollToZero(); solver.thaw(clause); }
         
     private:
