@@ -142,7 +142,7 @@ GringoNumericFormat::readChoiceRule(
 {
     unsigned headSize, bodySize, negativeSize;
     input.read( headSize );
-    unsigned head[ headSize ];
+    unsigned* head = new unsigned[ headSize ];
     for( unsigned i = 0; i < headSize; )
     {
         input.read( head[ i ] );
@@ -156,6 +156,7 @@ GringoNumericFormat::readChoiceRule(
     if( headSize == 0 )
     {
         skipLiterals( input, bodySize );
+        delete[] head;
         return;
     }
     
@@ -174,6 +175,7 @@ GringoNumericFormat::readChoiceRule(
         {
             delete rule;
             skipLiterals( input, bodySize );
+            delete[] head;
             return;
         }
         else if( solver.isUndefined( tmp ) )
@@ -193,6 +195,7 @@ GringoNumericFormat::readChoiceRule(
         {
             delete rule;
             skipLiterals( input, bodySize );
+            delete[] head;
             return;
         }
         else 
@@ -221,7 +224,7 @@ GringoNumericFormat::readChoiceRule(
         delete rule;
     else
         add( rule, true, 0 );
-    
+    delete[] head;    
 }
 
 void
@@ -230,7 +233,7 @@ GringoNumericFormat::readDisjunctiveRule(
 {
     unsigned headSize = 0;
     input.read( headSize );
-    unsigned head[ headSize ];
+    unsigned* head = new unsigned[ headSize ];
     ++readNormalRule_numberOfCalls;    
     for( unsigned i = 0; i < headSize; )
     {        
@@ -244,6 +247,7 @@ GringoNumericFormat::readDisjunctiveRule(
             unsigned bodySize, negativeSize;
             readBodySize( input, bodySize, negativeSize );
             skipLiterals( input, bodySize );
+            delete[] head;
             return;
         }
         else
@@ -260,6 +264,7 @@ GringoNumericFormat::readDisjunctiveRule(
     if( headSize == 0 )
     {
         readConstraint( input );
+        delete[] head;
         return;
     }
     
@@ -279,6 +284,7 @@ GringoNumericFormat::readDisjunctiveRule(
         {
             delete rule;
             skipLiterals( input, bodySize );
+            delete[] head;
             return;
         }
         else if( solver.isUndefined( tmp ) )
@@ -298,6 +304,7 @@ GringoNumericFormat::readDisjunctiveRule(
         {
             delete rule;
             skipLiterals( input, bodySize );
+            delete[] head;
             return;
         }
         else 
@@ -356,6 +363,7 @@ GringoNumericFormat::readDisjunctiveRule(
         numberOfDisjunctiveRules++;
         statistics( &solver, readDisjunctiveRule() );
     }
+    delete[] head;
 }
 
 void
