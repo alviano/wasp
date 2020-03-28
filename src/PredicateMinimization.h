@@ -47,12 +47,16 @@ class PredicateMinimization : public AnswerSetListener
         void coreBased( unsigned int chunkSize );
         
         virtual void foundAnswerSet();
-        void printTrueVars();
+        void printAnswerSet();
         
         vector<Var> originalCandidates;
         vector<Var> candidates;
         vector<Var> trueVars;
+        vector<Var> answerSet;
         unsigned int enumeratedModels;
+        
+        void printInitialStats();
+        void printStats();
         
         #ifdef TRACE_ON
         inline void printVectorOfVars(const vector<Var>& v, const string& description) {

@@ -522,6 +522,21 @@ class Solver
         unsigned int estimateBinaryPropagation( Literal lit );
         inline void notifyAggregate(WeightConstraint* weightConstraintRule );
         
+        inline float avgClausesSize() const {
+            float size = 0;
+            float binary = 0;
+            for(unsigned int i = 0; i < clauses.size(); i++) size += clauses[i]->size();
+            for(unsigned int i = 2; i <= numberOfVariables(); i++)
+                binary += getDataStructure(Literal(i, POSITIVE)).variableBinaryClauses.size() + getDataStructure(Literal(i, NEGATIVE)).variableBinaryClauses.size();
+            binary = binary / 2;
+            
+            float dimension = binary*2;
+            
+            return clauses.size()+binary > 0 ? (size+dimension)/(clauses.size()+binary) : 0; 
+        }
+        
+        inline unsigned int nbRestarts() const { return numberOfRestarts; }        
+        
     private:
         inline unsigned int solve_( vector< Literal >& assumptions );
         vector< Literal > choices;

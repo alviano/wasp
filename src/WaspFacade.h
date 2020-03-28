@@ -243,13 +243,17 @@ class WaspFacade
         inline void enableOutput() { if( tmpOutputBuilder != NULL ) { solver.setOutputBuilder( outputBuilder ); delete tmpOutputBuilder; tmpOutputBuilder = NULL; } }
         inline void disableOutput() { if( tmpOutputBuilder == NULL ) { tmpOutputBuilder = new NoopOutputBuilder(); solver.setOutputBuilder( tmpOutputBuilder ); } }        
         
-        inline void disableVariableElimination() { disableVE_ = true; };
+        inline void disableVariableElimination() { disableVE_ = true; }
         
+        inline const Solver& getSolver() const { return solver; }
+        
+        inline unsigned int numberOfCalls() const { return nbCalls; }
     private:
         Solver solver;
         bool runtime_;
         bool ok_;
         bool disableVE_;
+        unsigned int nbCalls;
         
         OutputBuilder* outputBuilder;
         OutputBuilder* tmpOutputBuilder;
@@ -260,7 +264,7 @@ class WaspFacade
         inline void addVariables(Var addedVar);
 };
 
-WaspFacade::WaspFacade() : runtime_(false), ok_(true), disableVE_(false), tmpOutputBuilder(NULL)
+WaspFacade::WaspFacade() : runtime_(false), ok_(true), disableVE_(false), nbCalls(0), tmpOutputBuilder(NULL)
 {   
     outputBuilder = new WaspOutputBuilder();
     solver.setOutputBuilder(outputBuilder);    

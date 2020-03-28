@@ -41,6 +41,7 @@ void PredicateMinimization::solve() {
             if(startsWith(name, wasp::Options::predicatesToMinimize[i])) { waspFacade.freeze(j); candidates.push_back(j); originalCandidates.push_back(j); break; }
         }
     }
+    printInitialStats();
     
     if(candidates.empty()) {
         vector<Literal> assumptions;
@@ -89,7 +90,58 @@ void PredicateMinimization::solve() {
     if(enumeratedModels == 0)
         waspFacade.printIncoherence();
     else
-        printTrueVars();
+        printAnswerSet();
+}
+
+#include <ctime>
+#include <iostream>
+
+char* unix_timestamp()
+{
+    time_t t = std::time(0);
+    long int now = static_cast<long int> (t);
+    return ctime(&now);    
+}
+
+void PredicateMinimization::printInitialStats() {
+    cout << "[INITSTATS];#rules;#atoms;#gapatoms;avg_clauses_length;#undef;timestamp" << endl;
+    cout << "[STATS];algo;#gap;#nbCalls;#undef;#restarts;timestamp" << endl;
+    cout << "[INITSTATS];";
+    cout << waspFacade.getSolver().numberOfClauses() << ";";
+    cout << waspFacade.getSolver().numberOfVariables() << ";";
+    cout << candidates.size() << ";";
+    cout << waspFacade.getSolver().avgClausesSize() << ";";
+    cout << waspFacade.getSolver().numberOfVariables() - waspFacade.getSolver().numberOfAssignedLiterals() << ";";
+    cout << unix_timestamp();
+}
+
+void PredicateMinimization::printStats() {
+    cout << "[STATS];";
+    switch(wasp::Options::predMinimizationAlgorithm) {
+        case PREDMIN_GUESS_AND_CHECK:
+            cout << "gc;";
+            break;
+        case PREDMIN_GUESS_AND_CHECK_AND_MINIMIZE:
+            cout << "minim;";
+            break;
+        case PREDMIN_GUESS_AND_CHECK_AND_SPLIT:
+            cout << "split;";
+            break;
+        case PREDMIN_ENUMERATION:
+            cout << "enum;";
+            break;
+        case PREDMIN_PREFERENCES:
+            cout << "pref;";
+            break;
+        case PREDMIN_CORE:
+            cout << "core;";
+            break;
+    }
+    cout << candidates.size() << ";";
+    cout << waspFacade.numberOfCalls() << ";";
+    cout << waspFacade.getSolver().numberOfVariables() - waspFacade.getSolver().numberOfAssignedLiterals() << ";";
+    cout << waspFacade.getSolver().nbRestarts() << ";";
+    cout << unix_timestamp();
 }
 
 void PredicateMinimization::foundAnswerSet() {
@@ -99,7 +151,13 @@ void PredicateMinimization::foundAnswerSet() {
         if(waspFacade.isTrue(Literal(originalCandidates[i], POSITIVE)))
             trueVars_.push_back(originalCandidates[i]);        
     
-    if(enumeratedModels == 1 || trueVars_.size() < trueVars.size()) trueVars.swap(trueVars_);    
+    if(enumeratedModels == 1 || trueVars_.size() < trueVars.size()) {
+        trueVars.swap(trueVars_);
+        answerSet.clear();
+        for(unsigned int i = 1; i <= waspFacade.numberOfVariables(); i++ )
+            if(waspFacade.isTrue(Literal(i, POSITIVE)))
+                answerSet.push_back(i);
+    }
 }
 
 void PredicateMinimization::enumeration() {
@@ -125,7 +183,8 @@ void PredicateMinimization::guessAndCheck() {
             else { lits.push_back(Literal(v, POSITIVE)); assumptions.push_back(Literal(v, NEGATIVE)); }
         }
         if( !waspFacade.addClause(lits) || waspFacade.solve(assumptions, conflict) == INCOHERENT) { trace_msg(predmin, 2, "...minimal: STOP"); break; }
-        trace_msg(predmin, 2, "...not minimal!");        
+        trace_msg(predmin, 2, "...not minimal!");
+        printStats();
     }
 }
 
@@ -152,6 +211,7 @@ void PredicateMinimization::guessAndCheckAndMinimize() {
         
         for(unsigned int i = 0; i < unaryClauses.size(); i++) if(!waspFacade.addClause(unaryClauses[i])) { candidates.clear(); break; }
         if(!waspFacade.addClause(lits)) { candidates.clear(); break; }
+        printStats();
     }
 }
 
@@ -186,6 +246,7 @@ void PredicateMinimization::guessAndCheckAndSplit() {
         assumptions.clear();
         assumptions.push_back(Literal(candidates.back(), NEGATIVE));
         candidates.pop_back();
+        printStats();
     }
 }
 
@@ -250,15 +311,16 @@ void PredicateMinimization::coreBased( unsigned int chunkSize ) {
                 trace_action(predmin, 3, { trace_tag(cerr, predmin, 3); printVectorOfLiterals(assums, "Assumptions:"); });
                 if(assumptions.size() == 0) { trace_msg(predmin, 3, "Give up: switch to guess-check-minimize"); guessAndCheckAndMinimize(); break; }
             }
+            printStats();
         }        
     }
 }
 
-void PredicateMinimization::printTrueVars()
+void PredicateMinimization::printAnswerSet()
 {
     OutputBuilder* output = waspFacade.getOutputBuilder();
     assert(output != NULL);
     output->startModel();
-    for( unsigned int i = 0; i < trueVars.size(); i++ ) output->printVariable(trueVars[ i ], true);
+    for( unsigned int i = 0; i < answerSet.size(); i++ ) output->printVariable(answerSet[ i ], true);
     output->endModel();
 }

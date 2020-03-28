@@ -295,6 +295,7 @@ unsigned int
 WaspFacade::solve(const vector<Literal>& assumptions, vector<Literal>& conflict)
 {
     if(!ok_) { return INCOHERENT; }
+    nbCalls++;
     //First call
     if(!runtime_) {
         runtime_ = true;
