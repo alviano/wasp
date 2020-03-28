@@ -30,7 +30,7 @@ MyPythonInterpreter::MyPythonInterpreter(
 {
     setenv( "PYTHONPATH", ".", 1 );
     Py_Initialize();
-    PyObject* pName = 
+    PyObject* pName =
     #ifdef PYTHON_THREE
         PyUnicode_FromString( filename );
     #else
@@ -47,14 +47,13 @@ MyPythonInterpreter::MyPythonInterpreter(
     {
         if( PyErr_Occurred() )
             PyErr_Print();
-        string message = "Module " + string( filename ) + " does not exist.\n";        
+        string message = "Module " + string( filename ) + " does not exist.\n";
         WaspErrorMessage::errorGeneric( message );
     }
 }
 
 MyPythonInterpreter::~MyPythonInterpreter()
 {
-    Py_XDECREF( pModule );
     if( callPyFinalize )
         Py_Finalize();
 }
@@ -79,7 +78,7 @@ MyPythonInterpreter::callListMethod(
         PyObject* result = PyObject_CallObject( pFunc, pArgs );
         if( result )
         {
-            bool isInt = 
+            bool isInt =
             #ifdef PYTHON_THREE
                 PyLong_Check( result );
             #else
@@ -90,8 +89,8 @@ MyPythonInterpreter::callListMethod(
                 int size = PyList_Size( result );
                 for( int i = size - 1; i >= 0; i-- )
                 {
-                    PyObject* item = PyList_GetItem( result, i );                
-                    bool isInt = 
+                    PyObject* item = PyList_GetItem( result, i );
+                    bool isInt =
                     #ifdef PYTHON_THREE
                         PyLong_Check( item );
                     #else
@@ -99,7 +98,7 @@ MyPythonInterpreter::callListMethod(
                     #endif
                     if( isInt )
                     {
-                        int value = 
+                        int value =
                         #ifdef PYTHON_THREE
                             PyLong_AsLong( item );
                         #else
@@ -112,7 +111,7 @@ MyPythonInterpreter::callListMethod(
             }
             else if( isInt )
             {
-                int value = 
+                int value =
                 #ifdef PYTHON_THREE
                     PyLong_AsLong( result );
                 #else
@@ -173,7 +172,7 @@ void MyPythonInterpreter::callListMethod(
             else if( isInt )
             {
                 uint64_t value =
-                #ifdef PYTHON_THREE 
+                #ifdef PYTHON_THREE
                     PyLong_AsUnsignedLongLongMask( result );
                 #else
                     PyInt_AsUnsignedLongLongMask( result );
@@ -184,7 +183,7 @@ void MyPythonInterpreter::callListMethod(
                 PyErr_Print();
         }
         else if( PyErr_Occurred() )
-            PyErr_Print();        
+            PyErr_Print();
         Py_XDECREF( pArgs );
     }
     else
@@ -193,7 +192,7 @@ void MyPythonInterpreter::callListMethod(
             PyErr_Print();
         printf("Method %s not found\n", method_name.c_str());
     }
-    Py_XDECREF( pFunc );    
+    Py_XDECREF( pFunc );
 }
 
 void MyPythonInterpreter::callVoidMethod(
@@ -207,7 +206,7 @@ void MyPythonInterpreter::callVoidMethod(
     if( pFunc && PyCallable_Check( pFunc ) )
     {
         PyObject* pArgs = PyTuple_New( 2 );
-        PyObject* param1_python = 
+        PyObject* param1_python =
         #ifdef PYTHON_THREE
             PyLong_FromSize_t( param1 );
         #else
@@ -222,7 +221,7 @@ void MyPythonInterpreter::callVoidMethod(
         #endif
 
         PyTuple_SetItem( pArgs, 0, param1_python );
-        PyTuple_SetItem( pArgs, 1, param2_python );        
+        PyTuple_SetItem( pArgs, 1, param2_python );
         PyObject* result = PyObject_CallObject( pFunc, pArgs );
         if( result )
             Py_XDECREF( result );
@@ -250,7 +249,7 @@ bool MyPythonInterpreter::checkMethod(
        res = true;
     else if( PyErr_Occurred() )
         PyErr_Clear();
-        
+
     Py_XDECREF( pFunc );
     return res;
 }
@@ -263,7 +262,7 @@ void MyPythonInterpreter::addElementInMap(
     PyObject* pFunc = PyObject_GetAttrString( pModule, map_name.c_str() );
     if( pFunc )
     {
-        PyObject* value_python = 
+        PyObject* value_python =
         #ifdef PYTHON_THREE
             PyLong_FromSize_t( value );
         #else
@@ -271,7 +270,7 @@ void MyPythonInterpreter::addElementInMap(
         #endif
 
         char *cstr = new char[key.length() + 1];
-        strcpy(cstr, key.c_str());        
+        strcpy(cstr, key.c_str());
         int res = PyMapping_SetItemString(pFunc, cstr, value_python);
         if( res == -1 || PyErr_Occurred() )
             PyErr_Print();
@@ -297,7 +296,7 @@ bool MyPythonInterpreter::checkAttribute(
        res = true;
     else if( PyErr_Occurred() )
         PyErr_Clear();
-        
+
     Py_XDECREF( pFunc );
     return res;
 }
