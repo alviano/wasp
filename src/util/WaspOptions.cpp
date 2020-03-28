@@ -870,6 +870,8 @@ Options::parse(
             case OPTIONID_predminimizationpredicate:
                 if( optarg )
                 {
+                    if(predMinimizationAlgorithm == NO_PREDMINIMIZATION)
+                        predMinimizationAlgorithm = PREDMIN_GUESS_AND_CHECK_AND_SPLIT;                    
                     string s( optarg );                    
                     split( s, ';', predicatesToMinimize );                    
                 }

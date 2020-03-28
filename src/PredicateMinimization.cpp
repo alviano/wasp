@@ -41,7 +41,9 @@ void PredicateMinimization::solve() {
             if(startsWith(name, wasp::Options::predicatesToMinimize[i])) { waspFacade.freeze(j); candidates.push_back(j); originalCandidates.push_back(j); break; }
         }
     }
-    printInitialStats();
+
+    if(wasp::Options::stats)
+        printInitialStats();
     
     if(candidates.empty()) {
         vector<Literal> assumptions;
@@ -116,6 +118,9 @@ void PredicateMinimization::printInitialStats() {
 }
 
 void PredicateMinimization::printStats() {
+    if(!wasp::Options::stats)
+        return;
+
     cout << "[STATS];";
     switch(wasp::Options::predMinimizationAlgorithm) {
         case PREDMIN_GUESS_AND_CHECK:
