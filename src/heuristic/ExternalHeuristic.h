@@ -46,6 +46,8 @@
 #define error_initfallback "Method " method_initFallback " is not well-formed: see the documentation for more information"
 #define error_factorfallback "Method " method_factorFallback " is not well-formed: see the documentation for more information"
 
+#define attribute_interpretation "waspInterpretation"
+
 #include "../interpreters/Interpreter.h"
 #include "MinisatHeuristic.h"
 class ExternalHeuristic : public MinisatHeuristic
@@ -95,7 +97,9 @@ class ExternalHeuristic : public MinisatHeuristic
         
         bool check_initFallback;
         bool check_factorFallback;
-        bool check_signFallback;                
+        bool check_signFallback;       
+
+        bool check_attribute_interpretation;         
         
         int status;
         int value;

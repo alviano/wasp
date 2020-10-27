@@ -126,3 +126,25 @@ def fallback(n):
 
 def unroll(v):
     return [v, 3, 0]
+    
+FALSE = 0
+TRUE = 1
+UNDEFINED = 2
+ELIMINATED = 3
+def isTrue(lit, waspInterpretation):
+    if lit > 0:
+        return waspInterpretation["%s" % lit] == TRUE
+    else:
+        return waspInterpretation["%s" % -lit] == FALSE
+        
+def isFalse(lit, waspInterpretation):
+    if lit > 0:
+        return waspInterpretation["%s" % lit] == FALSE
+    else:
+        return waspInterpretation["%s" % -lit] == TRUE
+
+def isUndefined(lit, waspInterpretation):
+    return waspInterpretation["%s" % abs(lit)] == UNDEFINED
+    
+def isEliminated(lit, waspInterpretation):
+    return waspInterpretation["%s" % abs(lit)] == ELIMINATED

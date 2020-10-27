@@ -56,12 +56,29 @@ ExternalHeuristic::ExternalHeuristic( Solver& s, char* filename, unsigned int in
     
     status = CHOICE;    
     value = 0;
+
+    check_attribute_interpretation = interpreter->checkAttribute( attribute_interpretation );
 }
 
 ExternalHeuristic::~ExternalHeuristic() { delete interpreter; }
 
 void ExternalHeuristic::selectLiteral()
 {
+    if( check_attribute_interpretation ) {
+        int FALSE_PROP = 0;
+        int TRUE_PROP = 1;
+        int UNDEF_PROP = 2;
+        int ELIM_PROP = 3;
+        for(unsigned int var = 0; var <= solver.numberOfVariables(); var++)
+            if(solver.hasBeenEliminated(var))
+                interpreter->addElementInMap(attribute_interpretation, to_string(var), ELIM_PROP ); 
+            else if(solver.isTrue(var))
+                interpreter->addElementInMap(attribute_interpretation, to_string(var), TRUE_PROP );  
+            else if(solver.isFalse(var))
+                interpreter->addElementInMap(attribute_interpretation, to_string(var), FALSE_PROP );
+            else
+                interpreter->addElementInMap(attribute_interpretation, to_string(var), UNDEF_PROP );
+    }
     vector< int > result;
     interpreter->callListMethod( method_selectLiteral, result );    
     unsigned int size = result.size();
