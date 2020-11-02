@@ -1503,8 +1503,8 @@ Solver::analyzeConflict()
         assert_msg( unrollLevel != 0, "Trying to backjumping to level 0" );
         assert_msg( unrollLevel < currentDecisionLevel, "Trying to backjump from level " << unrollLevel << " to level " << currentDecisionLevel );
         trace_msg( solving, 2, "Learned clause and backjumping to level " << unrollLevel );
-        addLearnedClause( learnedClause, true );        
         choiceHeuristic->onLearningClause( learnedClause->lbd(), learnedClause );
+        addLearnedClause( learnedClause, true );        
         unroll( unrollLevel );
         clearConflictStatus();                        
         if( size != 2 )
