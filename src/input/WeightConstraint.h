@@ -48,7 +48,7 @@ class WeightConstraint
         inline uint64_t getWeight( unsigned int pos ) const { assert( pos < weights.size() ); return weights[ pos ]; }
         inline void setWeight( unsigned int pos, uint64_t value ) { assert( pos < weights.size() ); weights[ pos ] = value; }
 
-        inline bool canBeAClause() const { return ( weights.front() == weights.back() ) && ( weights.front() != 0 ) && ( bound / weights.front() == 1 ); }
+        inline bool canBeAClause() const { return ( weights.front() == weights.back() ) && ( weights.front() != 0 ) && (bound < weights.front()); }
 
         inline void addNegativeLiteral( unsigned int idLit ) { literals.push_back( -idLit ); }
         inline void addPositiveLiteral( unsigned int idLit ) { literals.push_back( idLit ); }
