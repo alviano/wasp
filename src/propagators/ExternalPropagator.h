@@ -86,15 +86,16 @@ class ExternalPropagator : public Propagator
         void checkWellFormed( const string& );
         void computeReason( Solver& solver, const vector< int >& output );
         Clause* getReason( Solver&, Literal lit );
-        void handleConflict( Solver&, Literal );
-        void clearClausesToDelete();
+        void handleConflict( Solver&, Literal );        
         void attachWatches( Solver& solver );
         void checkIdOfLiteral( const Solver& solver, int id ) const;
+        void addReasonToDelete(Clause* c, unsigned int level);
+        void clearClausesToDelete(unsigned int level);
         
         Vector< Literal > trail;
         Vector< Literal > trueLiterals;
         Interpreter* interpreter;
-        Vector< Clause* > clausesToDelete;
+        vector< vector< Clause* > > clausesToDelete;
         char* fn;
         bool check_addedVarName;
         bool check_onAtomElimination;

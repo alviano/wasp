@@ -30,7 +30,7 @@ ExternalPropagator::~ExternalPropagator()
 {
     delete interpreter;
     delete fn;
-    clearClausesToDelete();
+    clearClausesToDelete( 0 );
 }
 
 ExternalPropagator::ExternalPropagator()
@@ -140,8 +140,7 @@ void
 ExternalPropagator::reset(
     const Solver& solver )
 {
-    if( solver.getCurrentDecisionLevel() == 0 )
-        clearClausesToDelete();
+    clearClausesToDelete(solver.getCurrentDecisionLevel());
     trueLiterals.clear();
     vector< int > parameters;
     parameters.push_back( solver.getCurrentDecisionLevel() );
@@ -356,11 +355,13 @@ ExternalPropagator::getReasonForCheckFailure(
 }
 
 void
-ExternalPropagator::clearClausesToDelete()
+ExternalPropagator::clearClausesToDelete(unsigned int level)
 {
-    for( unsigned int i = 0; i < clausesToDelete.size(); i++ )
-        delete clausesToDelete[ i ];
-    clausesToDelete.clear();
+    for( unsigned int i = level; i < clausesToDelete.size(); i++ ) {
+        for( unsigned int j = 0; j < clausesToDelete[i].size(); j++ )
+            delete clausesToDelete[ i ][ j ];
+        clausesToDelete[ i ].clear();
+    }
 }
 
 void
@@ -566,6 +567,14 @@ ExternalPropagator::handleConflict(
 }
 
 void
+ExternalPropagator::addReasonToDelete(Clause* c, unsigned int level) {
+    while(level <= clausesToDelete.size()) {
+        clausesToDelete.push_back(vector<Clause*>());
+    }
+    clausesToDelete[level].push_back(c);    
+}
+
+void
 ExternalPropagator::computeReason(
     Solver& solver,
     const vector< int >& output )
@@ -595,8 +604,8 @@ ExternalPropagator::computeReason(
     Clause* reason = NULL;
     if( !check_getReasonForLiteral )
     {
-        reason = getReason( solver, Literal::null );
-        clausesToDelete.push_back( reason );
+        reason = getReason( solver, Literal::null );        
+        addReasonToDelete(reason, solver.getCurrentDecisionLevel());
     }
     for( unsigned int i = 0; i < output.size(); i++ )
     {
@@ -609,7 +618,7 @@ ExternalPropagator::computeReason(
         {
             Clause* r = getReason( solver, lit );
             solver.assignLiteral( r );
-            clausesToDelete.push_back( r );
+            addReasonToDelete(r, solver.getCurrentDecisionLevel());
         }
         else
             solver.assignLiteral( lit, reason );
