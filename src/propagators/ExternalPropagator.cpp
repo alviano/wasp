@@ -568,7 +568,7 @@ ExternalPropagator::handleConflict(
 
 void
 ExternalPropagator::addReasonToDelete(Clause* c, unsigned int level) {
-    while(level <= clausesToDelete.size()) {
+    while(clausesToDelete.size() <= level) {
         clausesToDelete.push_back(vector<Clause*>());
     }
     clausesToDelete[level].push_back(c);    
