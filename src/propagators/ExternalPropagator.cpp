@@ -357,7 +357,7 @@ ExternalPropagator::getReasonForCheckFailure(
 void
 ExternalPropagator::clearClausesToDelete(unsigned int level)
 {
-    for( unsigned int i = level; i < clausesToDelete.size(); i++ ) {
+    for( unsigned int i = level + 1; i < clausesToDelete.size(); i++ ) {
         for( unsigned int j = 0; j < clausesToDelete[i].size(); j++ )
             delete clausesToDelete[ i ][ j ];
         clausesToDelete[ i ].clear();
