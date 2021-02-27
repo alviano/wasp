@@ -134,7 +134,7 @@ void ExternalHeuristic::initFallback()
         int var = output[ i ];
         if( var <= 0 || ( unsigned int ) var > solver.numberOfVariables() )
             WaspErrorMessage::errorGeneric( "Variable " + to_string( var ) + " does not exist." );
-        
+        if(!solver.isUndefined(var)) continue;
         int value = output[ i + 1 ];        
         init( var, value );
     }
@@ -156,6 +156,7 @@ void ExternalHeuristic::factorFallback()
         if( var <= 0 || ( unsigned int ) var > solver.numberOfVariables() )
             WaspErrorMessage::errorGeneric( "Variable " + to_string( var ) + " does not exist." );
         
+        if(!solver.isUndefined(var)) continue;
         int value = output[ i + 1 ];
         setFactor( var, value );
     }
@@ -174,6 +175,7 @@ void ExternalHeuristic::signFallback()
         if( var != 0 && var > solver.numberOfVariables() )
             WaspErrorMessage::errorGeneric( "Variable " + to_string( var ) + " does not exist." );
         
+        if(!solver.isUndefined(var)) continue;
         setSign( lit );
     }
 }
