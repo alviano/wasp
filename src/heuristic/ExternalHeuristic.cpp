@@ -52,12 +52,12 @@ ExternalHeuristic::ExternalHeuristic( Solver& s, char* filename, unsigned int in
     
     check_initFallback = interpreter->checkMethod( method_initFallback );
     check_factorFallback = interpreter->checkMethod( method_factorFallback );
-    check_signFallback = interpreter->checkMethod( method_signFallback );
+    check_signFallback = interpreter->checkMethod( method_signFallback );    
     
     status = CHOICE;    
     value = 0;
 
-    check_attribute_interpretation = interpreter->checkAttribute( attribute_interpretation );
+    check_attribute_interpretation = interpreter->checkAttribute( attribute_interpretation );    
 }
 
 ExternalHeuristic::~ExternalHeuristic() { delete interpreter; }
@@ -121,6 +121,21 @@ void ExternalHeuristic::onDeletion()
 
 void ExternalHeuristic::initFallback()
 {
+    if(interpreter->checkMethod(method_getPreferences)) {
+        vector<int> output;
+        interpreter->callListMethod(method_getPreferences, output);
+        if(output.empty())
+            return;
+        vector<Literal> prefs;
+        for(int i = output.size()-1; i >= 0; i--) {
+            int lit = output[i];
+            if((unsigned int) abs(lit) > solver.numberOfVariables())
+                WaspErrorMessage::errorGeneric( "Variable " + to_string(abs(lit)) + " does not exist." );
+            if(!solver.isUndefined(lit)) continue;
+            prefs.push_back(Literal::createLiteralFromInt(lit));
+        }
+        solver.addPrefChoices(prefs);
+    }
     if( !check_initFallback )
         return;
     vector< int > output;

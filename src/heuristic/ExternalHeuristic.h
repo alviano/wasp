@@ -42,6 +42,8 @@
 #define method_factorFallback "factorFallback"
 #define method_signFallback "signFallback"
 
+#define method_getPreferences "getPreferences"
+
 #define error_selectLiteral "Method " method_selectLiteral " is not well-formed: see the documentation for more information"
 #define error_initfallback "Method " method_initFallback " is not well-formed: see the documentation for more information"
 #define error_factorfallback "Method " method_factorFallback " is not well-formed: see the documentation for more information"
