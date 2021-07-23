@@ -129,9 +129,10 @@ void ExternalHeuristic::initFallback()
         vector<Literal> prefs;
         for(int i = output.size()-1; i >= 0; i--) {
             int lit = output[i];
-            if((unsigned int) abs(lit) > solver.numberOfVariables())
-                WaspErrorMessage::errorGeneric( "Variable " + to_string(abs(lit)) + " does not exist." );
-            if(!solver.isUndefined(lit)) continue;
+            Var v = lit < 0 ? -lit : lit;
+            if(v > solver.numberOfVariables())
+                WaspErrorMessage::errorGeneric( "Variable " + to_string(v) + " does not exist." );
+            if(!solver.isUndefined(v)) continue;
             prefs.push_back(Literal::createLiteralFromInt(lit));
         }
         solver.addPrefChoices(prefs);
