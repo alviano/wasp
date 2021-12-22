@@ -138,6 +138,7 @@ namespace wasp
             
             static unsigned int predMinimizationAlgorithm;
             static vector< string > predicatesToMinimize;
+            static vector< string > predicatesMUS;
             
             static unsigned int multiThreshold;
             

@@ -129,7 +129,7 @@ MinisatHeuristic::simplifyVariablesAtLevelZero()
             setSign( undefinedVars[ i ] );
     }    
     
-    if( wasp::Options::initMinisatHeuristic == INIT_MINISAT_ALL_EQUALS && wasp::Options::initValue == 0 ) return;
+    if( wasp::Options::initMinisatHeuristic == INIT_MINISAT_ALL_EQUALS && wasp::Options::initValue == 0 ) return;    
     unsigned int maxScore = 0;
     for ( unsigned int i = 0; i < undefinedVars.size(); i++ )
     {
@@ -138,7 +138,7 @@ MinisatHeuristic::simplifyVariablesAtLevelZero()
         unsigned int score = 0;
         computeScore( v, score );        
         maxScore = max( maxScore, score );
-        act[ v ] = ( double ) score * -1.0;        
+        act[ v ] = ( double ) score * -1.0;            
 	}    
     if( maxScore == 0 ) return;
     double ms = ( double ) maxScore;

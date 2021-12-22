@@ -137,6 +137,7 @@ namespace wasp
 #define OPTIONID_predminimizationalgorithm ( 'z' + 350 )
 #define OPTIONID_predminimizationpredicate ( 'z' + 351 )
 #define OPTIONID_predminimizationchunkpercentage ( 'z' + 352 )
+#define OPTIONID_mus ( 'z' + 353 )
     
 #ifdef TRACE_ON
 TraceLevels Options::traceLevels;
@@ -195,6 +196,7 @@ string Options::scriptDirectory = "";
 
 unsigned int Options::predMinimizationAlgorithm = NO_PREDMINIMIZATION;
 vector< string > Options::predicatesToMinimize;
+vector< string > Options::predicatesMUS;
 
 bool Options::multiAggregates = false;
 bool Options::queryCoreCache = false;
@@ -325,6 +327,8 @@ Options::parse(
                 { "minimize-predicates", required_argument, NULL, OPTIONID_predminimizationpredicate },
                 { "minimization-algorithm", required_argument, NULL, OPTIONID_predminimizationalgorithm },
                 { "min-chunk-percentage", required_argument, NULL, OPTIONID_predminimizationchunkpercentage },
+
+                { "mus", required_argument, NULL, OPTIONID_mus},
                 
                 #if defined(ENABLE_PYTHON) || defined(ENABLE_PERL)
                 /* HEURISTIC */
@@ -884,7 +888,15 @@ Options::parse(
                     if( minimizePredicateChunkPercentage == 0 || minimizePredicateChunkPercentage > 100 )
                         WaspErrorMessage::errorGeneric( "Inserted invalid value for chunk percentage." );
                 }
-                break;                    
+                break;       
+
+            case OPTIONID_mus:
+                if( optarg )
+                {
+                    string s( optarg );                    
+                    split( s, ';', predicatesMUS );
+                }
+                break;             
                 
             default:
                 WaspErrorMessage::errorGeneric( "This option is not supported." );

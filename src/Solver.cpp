@@ -519,25 +519,25 @@ Solver::solvePropagators(
             }
         #endif
     }
-    
-    #if defined(ENABLE_PYTHON) || defined(ENABLE_PERL)
-    for( unsigned int i = 0; i < propagatorsAttachedToCheckAnswerSet.size(); i++ )
-        if( !propagatorsAttachedToCheckAnswerSet[ i ]->checkAnswerSet( *this ) )
-        {
-            if( !handlePropagatorFailure( propagatorsAttachedToCheckAnswerSet[ i ] ) )
-                return INCOHERENT;
-            if( conflictDetected() )
-                goto conflict;
-            else
-                goto propagationLabel;
-        }
-    #endif    
+            
     completeModel();
     assert_msg( getNumberOfUndefined() == 0, "Found a model with " << getNumberOfUndefined() << " undefined variables." );
     assert_msg( allClausesSatisfied(), "The model found is not correct." );
     
     if( modelIsValidUnderAssumptions( assumptions ) )
     {
+        #if defined(ENABLE_PYTHON) || defined(ENABLE_PERL)
+        for( unsigned int i = 0; i < propagatorsAttachedToCheckAnswerSet.size(); i++ )
+            if( !propagatorsAttachedToCheckAnswerSet[ i ]->checkAnswerSet( *this ) )
+            {
+                if( !handlePropagatorFailure( propagatorsAttachedToCheckAnswerSet[ i ] ) )
+                    return INCOHERENT;
+                if( conflictDetected() )
+                    goto conflict;
+                else
+                    goto propagationLabel;
+            }
+        #endif
         notifyAnswerSet();
         return COHERENT;
     }    
@@ -548,14 +548,16 @@ unsigned int
 Solver::estimateBinaryPropagation(
     Literal lit )
 {
+    if(!isUndefined(lit.getVariable())) return 0;
     assert( !conflictDetected() );    
     setTrue( lit );
+    unsigned int orig = numberOfAssignedLiterals();    
     Var variable = lit.getVariable();
-    unsigned int orig = numberOfAssignedLiterals();
     shortPropagation( variable );
     unsigned int value = numberOfAssignedLiterals() - orig;
     if( conflictDetected() ) { conflictLiteral = Literal::null; conflictClause = NULL; }
-    while( numberOfAssignedLiterals() != value ) variables.unrollLastVariable();
+    while( numberOfAssignedLiterals() != orig ) variables.unrollLastVariable();
+    setUndefined(lit.getVariable());
     return value;
 }
 

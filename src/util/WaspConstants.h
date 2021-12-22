@@ -216,5 +216,14 @@ typedef unsigned int RESTARTS_POLICY;
 typedef unsigned int WEAK_CONSTRAINTS_ALG;
 typedef unsigned int SHIFT_STRATEGY;
 
+#include <string>
+struct Utils {    
+    static bool startsWith(const std::string& orig, const std::string& str) {
+        if(str.length() > orig.length()) return false;    
+        for(unsigned int i = 0; i < str.size(); i++) if(orig[i] != str[i]) return false;    
+        return true;
+    }    
+};
+
 #endif
 

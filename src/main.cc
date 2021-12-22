@@ -22,7 +22,9 @@
 #include "WaspFacade.h"
 #include "util/WaspOptions.h"
 #include "PredicateMinimization.h"
+#include "ReasoningPredicateMinimization.h"
 #include "CautiousReasoning.h"
+#include "Mus.h"
 using namespace std;
 
 int EXIT_CODE = 0;
@@ -52,7 +54,9 @@ int main( int argc, char** argv )
     signal( SIGXCPU, my_handler );
     
     waspFacade.readInput( cin );
-    if( wasp::Options::predMinimizationAlgorithm != NO_PREDMINIMIZATION ) { PredicateMinimization p( waspFacade ); p.solve(); }
+    if( wasp::Options::predMinimizationAlgorithm != NO_PREDMINIMIZATION && wasp::Options::maxModels == 1 ) { PredicateMinimization p( waspFacade ); p.solve(); }
+    else if( wasp::Options::predMinimizationAlgorithm != NO_PREDMINIMIZATION ) { ReasoningPredicateMinimization p( waspFacade ); p.enumeration(); }
+    else if( wasp::Options::predicatesMUS.size() > 0) { MUS mus(waspFacade); mus.enumeration(); }
     else if( wasp::Options::queryAlgorithm == ONE_QUERIES 
             || wasp::Options::queryAlgorithm == KDYN_QUERIES 
             || wasp::Options::queryAlgorithm == PREFERENCE_QUERIES

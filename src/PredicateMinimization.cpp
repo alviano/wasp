@@ -24,12 +24,6 @@
 #include <vector>
 using namespace std;
 
-bool startsWith(const string& orig, const string& str) {
-    if(str.length() > orig.length()) return false;    
-    for(unsigned int i = 0; i < str.size(); i++) if(orig[i] != str[i]) return false;    
-    return true;
-}
-
 void PredicateMinimization::solve() {
     waspFacade.disableOutput();
     assert( wasp::Options::predMinimizationAlgorithm != NO_PREDMINIMIZATION );
@@ -38,7 +32,7 @@ void PredicateMinimization::solve() {
         if(VariableNames::isHidden(j)) continue;
         const string& name = VariableNames::getName(j);
         for( unsigned int i = 0; i < wasp::Options::predicatesToMinimize.size(); i++ ) {
-            if(startsWith(name, wasp::Options::predicatesToMinimize[i])) { waspFacade.freeze(j); candidates.push_back(j); originalCandidates.push_back(j); break; }
+            if(Utils::startsWith(name, wasp::Options::predicatesToMinimize[i])) { waspFacade.freeze(j); candidates.push_back(j); originalCandidates.push_back(j); break; }
         }
     }
 
