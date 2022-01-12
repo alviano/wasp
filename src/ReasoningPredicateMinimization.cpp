@@ -31,7 +31,13 @@ void ReasoningPredicateMinimization::enumeration() {
         if(VariableNames::isHidden(j)) { continue; }
         const string& name = VariableNames::getName(j);
         for( unsigned int i = 0; i < wasp::Options::predicatesToMinimize.size(); i++ ) {
-            if(Utils::startsWith(name, wasp::Options::predicatesToMinimize[i])) { waspFacade.freeze(j); candidates.insert(j); originalCandidates.push_back(j); break; }
+            if(Utils::startsWith(name, wasp::Options::predicatesToMinimize[i])) {
+                waspFacade.freeze(j);
+                candidates.insert(j);
+                originalCandidates.push_back(j);
+                lastOriginalVar = j;
+                break;
+            }
         }
     }    
         
@@ -55,8 +61,8 @@ void ReasoningPredicateMinimization::enumerationPreferences() {
         unsigned int result = waspFacade.solve(assumptions, conflict);
         if(result == INCOHERENT)
             break;
-        vector<Literal> all;
-        vector<Literal> clause;            
+        vector<Literal> all;        
+        vector<Literal> clause;  
         for(unsigned int i = 0; i < originalCandidates.size(); i++)
             if(waspFacade.isTrue(originalCandidates[i])) {
                 all.push_back(Literal(originalCandidates[i], POSITIVE));
@@ -64,9 +70,10 @@ void ReasoningPredicateMinimization::enumerationPreferences() {
             }
             else {
                 all.push_back(Literal(originalCandidates[i], NEGATIVE));                        
-            }        
+            }            
+        
         enumerationBacktracking(all);
-        waspFacade.addClause(clause);       
+        waspFacade.addClause(clause);        
     }
 }
 
@@ -82,19 +89,17 @@ void ReasoningPredicateMinimization::enumerationUnsatCores() {
             vector<Literal> all;
             vector<Literal> clause;            
             for(unsigned int i = 0; i < originalCandidates.size(); i++)
-                if(candidates.find(originalCandidates[i]) == candidates.end()) {
-                    if(waspFacade.isTrue(originalCandidates[i])) {
-                        all.push_back(Literal(originalCandidates[i], POSITIVE));
-                        clause.push_back(Literal(originalCandidates[i], NEGATIVE));
-                    }
-                    else {
-                        all.push_back(Literal(originalCandidates[i], NEGATIVE));                        
-                    }
+                if(waspFacade.isTrue(originalCandidates[i])) {
+                    all.push_back(Literal(originalCandidates[i], POSITIVE));
+                    clause.push_back(Literal(originalCandidates[i], NEGATIVE));
                 }
+                else {
+                    all.push_back(Literal(originalCandidates[i], NEGATIVE));                        
+                }                
             for(unordered_set<Var>::iterator it = candidates.begin(); it != candidates.end(); ++it) {
-                all.push_back(Literal(*it, POSITIVE));
-            }
-            
+                if(*it > lastOriginalVar) //Only for aux
+                    all.push_back(Literal(*it, POSITIVE));
+            }            
             enumerationBacktracking(all);
             waspFacade.addClause(clause);            
         }
@@ -119,11 +124,10 @@ void ReasoningPredicateMinimization::enumerationUnsatCores() {
     }    
 }
 
-void ReasoningPredicateMinimization::enumerationBacktracking(vector<Literal> assums) {
+void ReasoningPredicateMinimization::enumerationBacktracking(const vector<Literal>& assums) {
     vector< bool > checked;        
     vector<Literal> assumptions;
-    for(unsigned int i = 0; i < assums.size(); i++) { assumptions.push_back(assums[i]); checked.push_back(true); }
-    assums.clear();    
+    for(unsigned int i = 0; i < assums.size(); i++) { assumptions.push_back(assums[i]); checked.push_back(true); }        
 
     vector<Literal> conflict;
     unsigned int result = waspFacade.solve(assumptions, conflict);

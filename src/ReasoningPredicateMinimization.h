@@ -40,13 +40,14 @@ class ReasoningPredicateMinimization
     private:
         WaspFacade& waspFacade;
 
-        void enumerationBacktracking(vector<Literal> assums);
+        void enumerationBacktracking(const vector<Literal>& assums);
         void flipLatestChoice(vector<Literal>& choices, vector<bool>& checked);
         bool foundModel();        
         
         vector<Var> originalCandidates;
-        unordered_set<Var> candidates;
+        unordered_set<Var> candidates;        
         unsigned int numberOfModels;
+        unsigned int lastOriginalVar = 0;
 
         void enumerationUnsatCores();
         void enumerationPreferences();   
