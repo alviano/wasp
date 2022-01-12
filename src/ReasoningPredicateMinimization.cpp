@@ -35,6 +35,42 @@ void ReasoningPredicateMinimization::enumeration() {
         }
     }    
         
+    if(wasp::Options::predMinimizationAlgorithm==PREDMIN_PREFERENCES)
+        enumerationPreferences();
+    else
+        enumerationUnsatCores();
+    
+    if(numberOfModels == 0)
+        waspFacade.printIncoherence();
+}
+
+void ReasoningPredicateMinimization::enumerationPreferences() {
+    vector<Literal> preferences;
+    for(unordered_set<Var>::iterator it = candidates.begin(); it != candidates.end(); ++it)
+        preferences.push_back(Literal(*it, NEGATIVE));
+    waspFacade.setPreferredChoices(preferences);
+    while(true) {        
+        vector<Literal> assumptions;
+        vector<Literal> conflict;
+        unsigned int result = waspFacade.solve(assumptions, conflict);
+        if(result == INCOHERENT)
+            break;
+        vector<Literal> all;
+        vector<Literal> clause;            
+        for(unsigned int i = 0; i < originalCandidates.size(); i++)
+            if(waspFacade.isTrue(originalCandidates[i])) {
+                all.push_back(Literal(originalCandidates[i], POSITIVE));
+                clause.push_back(Literal(originalCandidates[i], NEGATIVE));
+            }
+            else {
+                all.push_back(Literal(originalCandidates[i], NEGATIVE));                        
+            }        
+        enumerationBacktracking(all);
+        waspFacade.addClause(clause);       
+    }
+}
+
+void ReasoningPredicateMinimization::enumerationUnsatCores() {
     while(true) {        
         vector<Literal> assumptions;
         vector<Literal> conflict;

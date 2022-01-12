@@ -46,7 +46,10 @@ class ReasoningPredicateMinimization
         
         vector<Var> originalCandidates;
         unordered_set<Var> candidates;
-        unsigned int numberOfModels;        
+        unsigned int numberOfModels;
+
+        void enumerationUnsatCores();
+        void enumerationPreferences();   
 };
 
 #endif
