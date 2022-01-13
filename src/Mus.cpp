@@ -31,7 +31,7 @@ void MUS::enumeration() {
         vector<Literal> assumptions;
         vector<Literal> conflict;
         unsigned int result = checkFormula.solve(assumptions, conflict);
-        if(result == INCOHERENT) return;
+        if(result == INCOHERENT) break;
 
         assumptions.clear();
         conflict.clear();
@@ -45,7 +45,7 @@ void MUS::enumeration() {
         result = waspFacade.solve(assumptions, conflict);        
         if(result == INCOHERENT) {            
             if(!computeMUS(conflict))
-                return;
+                break;
             for(unsigned int i = 0; i < conflict.size(); i++)
                 conflict[i] = Literal(idsmap[conflict[i].getVariable()], NEGATIVE);
             checkFormula.addClause(conflict);
@@ -54,6 +54,9 @@ void MUS::enumeration() {
             checkFormula.addClause(clause);
         }
     }
+    if(wasp::Options::silent == 2) {
+        cout << "Number of printed answers: " << numberOfMUSes << endl;
+    }
 }
 
 bool MUS::computeMUS(vector<Literal>& conflict) {
@@ -61,13 +64,16 @@ bool MUS::computeMUS(vector<Literal>& conflict) {
     vector<Literal> mus;
     quickXPlain.minimizeUnsatCore(conflict, mus);
     conflict.clear();
-    cout << "[MUS #" << numberOfMUSes+1 << "]:";
+    if(wasp::Options::silent < 2)
+        cout << "[MUS #" << numberOfMUSes+1 << "]:";
     for(vector<Literal>::iterator it = mus.begin(); it != mus.end(); ++it) {
         assert(!VariableNames::isHidden(it->getVariable()));
         conflict.push_back(Literal((*it).getVariable(), POSITIVE));
-        cout << " " << Literal((*it).getVariable(), POSITIVE);
+        if(wasp::Options::silent < 2)
+            cout << " " << Literal((*it).getVariable(), POSITIVE);
     }
-    cout << endl;
+    if(wasp::Options::silent < 2)
+        cout << endl;
     return(wasp::Options::maxModels == 0 || ++numberOfMUSes < wasp::Options::maxModels);   
 
     /*
@@ -101,4 +107,10 @@ bool MUS::computeMUS(vector<Literal>& conflict) {
             mus.insert(toTest.getVariable());
         }
     }*/
+}
+
+void MUS::onKill() {
+    if(wasp::Options::silent == 2) {
+        cout << "Number of printed answers: " << numberOfMUSes << endl;
+    }
 }

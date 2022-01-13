@@ -30,13 +30,21 @@ using namespace std;
 int EXIT_CODE = 0;
 
 WaspFacade* waspFacadePointer = NULL;
+MUS* mus = NULL;
 
 void my_handler( int )
 {
     cerr << "Killed: Bye!" << endl;
     if( EXIT_CODE == 0 )
-        EXIT_CODE = 1;
-    waspFacadePointer->onKill();
+        EXIT_CODE = 1;    
+    if(mus != NULL) {
+        waspFacadePointer->onKill(false);        
+        mus->onKill();        
+        delete mus;
+    }    
+    else {
+        waspFacadePointer->onKill(true);
+    }
     delete waspFacadePointer;
     Statistics::clean();
     exit( EXIT_CODE );
@@ -56,7 +64,7 @@ int main( int argc, char** argv )
     waspFacade.readInput( cin );
     if( wasp::Options::predMinimizationAlgorithm != NO_PREDMINIMIZATION && wasp::Options::maxModels == 1 ) { PredicateMinimization p( waspFacade ); p.solve(); }
     else if( wasp::Options::predMinimizationAlgorithm != NO_PREDMINIMIZATION ) { ReasoningPredicateMinimization p( waspFacade ); p.enumeration(); }
-    else if( wasp::Options::predicatesMUS.size() > 0) { MUS mus(waspFacade); mus.enumeration(); }
+    else if( wasp::Options::predicatesMUS.size() > 0) { mus = new MUS(waspFacade); mus->enumeration(); }
     else if( wasp::Options::queryAlgorithm == ONE_QUERIES 
             || wasp::Options::queryAlgorithm == KDYN_QUERIES 
             || wasp::Options::queryAlgorithm == PREFERENCE_QUERIES
@@ -64,7 +72,7 @@ int main( int argc, char** argv )
             || wasp::Options::queryAlgorithm == ITERATIVE_COHERENCE_TESTING_PREFERENCES
             || wasp::Options::queryAlgorithm == PRIME_IMPLICATE ) { CautiousReasoning c( waspFacade ); c.solve(); }
     else waspFacade.solve();
-    waspFacade.onFinish();
+    waspFacade.onFinish(mus == NULL);
     delete waspFacadePointer;
     Statistics::clean();
     return EXIT_CODE;

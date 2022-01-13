@@ -139,12 +139,24 @@ class WaspFacade
         /**
          * Notification of safe termination.
          */
-        inline void onFinish() { statistics( &solver, endSolving() ); estatistics( &solver, endSolving() ); statistics( &solver, printTime() ); solver.onFinish(); }
+        inline void onFinish(bool value) {
+            statistics( &solver, endSolving() );
+            estatistics( &solver, endSolving() );
+            statistics( &solver, printTime() );
+            if(value)
+                solver.onFinish();
+        }
 
         /**
          * Notification of kill.
          */
-        inline void onKill() { statistics( &solver, endSolving() ); estatistics( &solver, endSolving() ); statistics( &solver, printTime() ); solver.onKill(); }        
+        inline void onKill(bool value) {
+            statistics( &solver, endSolving() );
+            estatistics( &solver, endSolving() );
+            statistics( &solver, printTime() );
+            if(value)
+                solver.onKill();
+        }        
         inline unsigned int numberOfLevels() const { return solver.numberOfLevels(); }
         
         inline void getOptLiterals(unsigned int level, vector< OptimizationLiteralData >& optLits) {

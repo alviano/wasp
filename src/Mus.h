@@ -17,6 +17,7 @@ class MUS {
         virtual ~MUS() {}
 
         void enumeration();
+        void onKill();
 
     private:
         bool computeMUS(vector<Literal>& conflict);

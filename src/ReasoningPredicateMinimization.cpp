@@ -127,7 +127,11 @@ void ReasoningPredicateMinimization::enumerationUnsatCores() {
 void ReasoningPredicateMinimization::enumerationBacktracking(const vector<Literal>& assums) {
     vector< bool > checked;        
     vector<Literal> assumptions;
-    for(unsigned int i = 0; i < assums.size(); i++) { assumptions.push_back(assums[i]); checked.push_back(true); }        
+    for(unsigned int i = 0; i < assums.size(); i++) {
+        if(waspFacade.isTrue(assums[i]) && waspFacade.decisionLevel(assums[i]) == 0) continue;        
+        assumptions.push_back(assums[i]);
+        checked.push_back(true);
+    }        
 
     vector<Literal> conflict;
     unsigned int result = waspFacade.solve(assumptions, conflict);

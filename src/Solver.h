@@ -1392,13 +1392,14 @@ bool
 Solver::chooseLiteral(
     vector< Literal >& assumptions )
 {        
-    Literal choice = Literal::null;    
+    Literal choice = Literal::null;
     for( unsigned int i = currentDecisionLevel; i < assumptions.size(); i++ )
     {
         if( isUndefined( assumptions[ i ] ) )
         {
-            if( choice == Literal::null )
-                choice = assumptions[ i ];
+            //if( choice == Literal::null )
+            choice = assumptions[ i ];
+            break;
         }
         else if( isFalse( assumptions[ i ] ) )
         {
@@ -1413,8 +1414,12 @@ Solver::chooseLiteral(
         }
         else
         {
-            if( choice == Literal::null )
-                incrementCurrentDecisionLevel();
+            //if( choice == Literal::null )
+            incrementCurrentDecisionLevel();
+            if( choices.size() <= currentDecisionLevel )
+                choices.push_back( assumptions[i] );
+            else
+                choices[ currentDecisionLevel ] = assumptions[i];
         }
     }
     
