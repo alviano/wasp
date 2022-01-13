@@ -34,8 +34,7 @@ void ReasoningPredicateMinimization::enumeration() {
             if(Utils::startsWith(name, wasp::Options::predicatesToMinimize[i])) {
                 waspFacade.freeze(j);
                 candidates.insert(j);
-                originalCandidates.push_back(j);
-                lastOriginalVar = j;
+                originalCandidates.push_back(j);                
                 break;
             }
         }
@@ -78,6 +77,7 @@ void ReasoningPredicateMinimization::enumerationPreferences() {
 }
 
 void ReasoningPredicateMinimization::enumerationUnsatCores() {
+    lastOriginalVar = waspFacade.numberOfVariables();
     while(true) {        
         vector<Literal> assumptions;
         vector<Literal> conflict;
@@ -96,17 +96,19 @@ void ReasoningPredicateMinimization::enumerationUnsatCores() {
                 else {
                     all.push_back(Literal(originalCandidates[i], NEGATIVE));                        
                 }                
-            for(unordered_set<Var>::iterator it = candidates.begin(); it != candidates.end(); ++it) {
-                if(*it > lastOriginalVar) //Only for aux
-                    all.push_back(Literal(*it, POSITIVE));
-            }            
+            for(unsigned int var = lastOriginalVar+1; var <= waspFacade.numberOfVariables(); var++) {
+                if(waspFacade.isTrue(var))
+                    all.push_back(Literal(var, POSITIVE));
+                else
+                    all.push_back(Literal(var, NEGATIVE));
+            } 
             enumerationBacktracking(all);
             waspFacade.addClause(clause);            
         }
         else {
             if(conflict.empty()) break;
             vector<Literal> constraint;
-            Var previousVar = 0;            
+            Var previousVar = 0;         
             for(unsigned int i = 0; i < conflict.size(); i++) {
                 constraint.push_back(conflict[i]);
                 candidates.erase(conflict[i].getVariable());
@@ -120,7 +122,7 @@ void ReasoningPredicateMinimization::enumerationUnsatCores() {
                 }
             }            
             waspFacade.addCardinalityConstraint(constraint, conflict.size()-1);              
-        }
+        }        
     }    
 }
 
