@@ -72,6 +72,8 @@ void ReasoningPredicateMinimization::enumerationPreferences() {
             }            
         
         enumerationBacktracking(all);
+        if(numberOfModels >= wasp::Options::maxModels)
+            break;
         waspFacade.addClause(clause);        
     }
 }
@@ -103,6 +105,8 @@ void ReasoningPredicateMinimization::enumerationUnsatCores() {
                     all.push_back(Literal(var, NEGATIVE));
             } 
             enumerationBacktracking(all);
+            if(numberOfModels >= wasp::Options::maxModels)
+                break;
             waspFacade.addClause(clause);            
         }
         else {
