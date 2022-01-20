@@ -69,7 +69,7 @@ bool MUS::computeMUS(vector<Literal>& conflict) {
     for(vector<Literal>::iterator it = mus.begin(); it != mus.end(); ++it) {
         assert(!VariableNames::isHidden(it->getVariable()));
         conflict.push_back(Literal((*it).getVariable(), POSITIVE));
-        if(wasp::Options::silent < 2)
+        if(wasp::Options::silent < 1)
             cout << " " << Literal((*it).getVariable(), POSITIVE);
     }
     if(wasp::Options::silent < 2)
