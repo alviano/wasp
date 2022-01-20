@@ -124,7 +124,7 @@ Solver::~Solver()
 
 void
 Solver::initFrom(
-    Solver& solver )
+    const Solver& solver )
 {   
     assert( solver.restart != NULL );
     assert( this->restart == NULL );    

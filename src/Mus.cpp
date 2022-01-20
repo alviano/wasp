@@ -17,6 +17,8 @@ void MUS::enumeration() {
     }
 
     WaspFacade checkFormula;
+    Solver& s = const_cast<Solver&>(checkFormula.getSolver());
+    s.initFrom(waspFacade.getSolver());
     unordered_map<Var,Var> idsmap;
     vector<Literal> preferredChoices;
 

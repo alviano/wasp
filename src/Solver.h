@@ -398,7 +398,7 @@ class Solver
         
         inline bool modelIsValidUnderAssumptions( vector< Literal >& assumptions );
         
-        void initFrom( Solver& solver );
+        void initFrom( const Solver& solver );
         
         HCComponent* createHCComponent( unsigned numberOfInputAtoms );
         
@@ -1270,6 +1270,7 @@ Solver::doRestart()
     assert( currentDecisionLevel != 0 );
     trace( solving, 2, "Performing restart.\n" );
     numberOfRestarts++;
+    assert(restart);
     restart->onRestart();
     choiceHeuristic->onRestart();
     
