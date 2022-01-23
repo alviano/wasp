@@ -122,8 +122,10 @@ class WaspHelp
             #ifdef ENABLE_PYTHON
             cout << "       =python                         - Use python as interpreter" << endl;            
             #endif
-            cout << "--heuristic-scriptname                 - Specify the name of the script" << endl;            
+            cout << "--heuristic-scriptname=file            - Specify the name of the script" << endl;            
+            cout << "                                       - add \"file param1 param2\" for parameters (requires an empty list sys_parameters in the python file)" << endl;
             cout << "--plugins-files=file1,file2,...,filen  - Specify a list of plugins" << endl;
+            cout << "                                       - add \"file1 param1 param2\" for parameters (requires an empty list sys_parameters in the python file)" << endl;
             cout << "--script-directory=absolutepath        - Specify a different folder for retrieving the python modules (default is .)" << endl;
             cout << "--lazy-weakconstraints                 - Enable the algorithm to lazily add weak constraints" << endl;
             #endif

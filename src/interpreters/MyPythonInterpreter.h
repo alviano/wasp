@@ -31,7 +31,7 @@ using namespace std;
 class MyPythonInterpreter : public Interpreter
 {
     public:
-        MyPythonInterpreter( char* filename, string, bool );
+        MyPythonInterpreter( char* filename, string, bool, bool = true );
         ~MyPythonInterpreter();
         
         void callListMethod( const string& method_name, const vector< int >& parameters, vector< int >& output );
@@ -44,6 +44,7 @@ class MyPythonInterpreter : public Interpreter
     private:        
         PyObject* pModule;
         bool callPyFinalize;
+        void addElementInList( const string& name, const string& value ); 
 };
 
 #else
@@ -51,7 +52,7 @@ class MyPythonInterpreter : public Interpreter
 class MyPythonInterpreter : public Interpreter
 {
     public:
-        MyPythonInterpreter( char*, string, bool ){}
+        MyPythonInterpreter( char*, string, bool, bool = true ){}
         ~MyPythonInterpreter() {}
         
         void callListMethod( const string&, const vector< int >&, vector< int >& ) {}
@@ -60,6 +61,8 @@ class MyPythonInterpreter : public Interpreter
         bool checkMethod( const string& ) const { return false; }
         void addElementInMap( const string&, const string&, unsigned int ) {}
         bool checkAttribute( const string& ) const { return false; }
+    private:
+        void addElementInList( const string& name, const string& value ); 
 };
 
 #endif

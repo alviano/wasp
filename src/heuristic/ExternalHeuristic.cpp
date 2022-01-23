@@ -30,7 +30,7 @@ ExternalHeuristic::ExternalHeuristic( Solver& s, char* filename, unsigned int in
         WaspErrorMessage::errorGeneric( "Script file is not specified." );
 
     if( interpr == PYTHON_INTERPRETER )
-        interpreter = new MyPythonInterpreter( filename, scriptDirectory, wasp::Options::callPyFinalize );
+        interpreter = new MyPythonInterpreter( filename, scriptDirectory, wasp::Options::callPyFinalize, false );
     else if( interpr == PERL_INTERPRETER )
         interpreter = new MyPerlInterpreter( filename, scriptDirectory );
     else

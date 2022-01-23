@@ -23,18 +23,34 @@ using namespace std;
 
 #ifdef ENABLE_PYTHON
 
+std::vector<std::string> split(std::string str, std::string delimiter) {
+    std::string s = str;
+    size_t pos = 0;
+    std::string token;
+    std::vector<std::string> result;
+    while ((pos = s.find(delimiter)) != std::string::npos) {
+        token = s.substr(0, pos);
+        result.push_back(token);
+        s.erase(0, pos + delimiter.length());
+    }
+    result.push_back(s);
+    return result;
+}
+
 MyPythonInterpreter::MyPythonInterpreter(
-    char* filename,
+    char* fn,
     string scriptDirectory,
-    bool callPyFinalize_ ) : Interpreter(), callPyFinalize( callPyFinalize_ )
+    bool callPyFinalize_,
+    bool addParameters ) : Interpreter(), callPyFinalize( callPyFinalize_ )
 {
     setenv( "PYTHONPATH", ".", 1 );
+    vector<string> f = split(string(fn), " ");
     Py_Initialize();
     PyObject* pName =
     #ifdef PYTHON_THREE
-        PyUnicode_FromString( filename );
+        PyUnicode_FromString( f[0].c_str() );
     #else
-        PyString_FromString( filename );
+        PyString_FromString( f[0].c_str() );
     #endif
     if( scriptDirectory != "" )
     {
@@ -47,8 +63,15 @@ MyPythonInterpreter::MyPythonInterpreter(
     {
         if( PyErr_Occurred() )
             PyErr_Print();
-        string message = "Module " + string( filename ) + " does not exist.\n";
+        string message = "Module " + f[0] + " does not exist.\n";
         WaspErrorMessage::errorGeneric( message );
+    }
+    if(addParameters) {
+        if(checkAttribute("sys_parameters")) {
+            addElementInList("sys_parameters", f[0]+".py");
+            for(unsigned int i = 1; i < f.size(); i++)
+                addElementInList("sys_parameters", f[i]);        
+        }
     }
 }
 
@@ -281,6 +304,32 @@ void MyPythonInterpreter::addElementInMap(
         if( PyErr_Occurred() )
             PyErr_Print();
         printf( "Element %s not found\n", map_name.c_str() );
+    }
+    Py_XDECREF( pFunc );
+}
+
+void MyPythonInterpreter::addElementInList(
+    const string& name,
+    const string& value)
+{
+    PyObject* pFunc = PyObject_GetAttrString( pModule, name.c_str() );
+    if( pFunc )
+    {
+        PyObject* value_python =
+        #ifdef PYTHON_THREE
+            PyUnicode_FromString( value.c_str() );
+        #else
+            PyString_FromString( value.c_str() );
+        #endif
+        int res = PyList_Append(pFunc, value_python);
+        if( res == -1 || PyErr_Occurred() )
+            PyErr_Print();        
+    }
+    else
+    {
+        if( PyErr_Occurred() )
+            PyErr_Print();
+        printf( "Element %s not found\n", name.c_str() );
     }
     Py_XDECREF( pFunc );
 }
