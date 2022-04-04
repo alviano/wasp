@@ -23,6 +23,7 @@
 
 #include <vector>
 #include <iostream>
+#include <list>
 using namespace std;
 
 void ReasoningPredicateMinimization::enumeration() {
@@ -42,8 +43,14 @@ void ReasoningPredicateMinimization::enumeration() {
         
     if(wasp::Options::predMinimizationAlgorithm==PREDMIN_PREFERENCES)
         enumerationPreferences();
-    else
+    else if(wasp::Options::predMinimizationAlgorithm==PREDMIN_GUESS_AND_CHECK_AND_MINIMIZE)
+        enumerationMinimize();
+    else if(wasp::Options::predMinimizationAlgorithm==PREDMIN_GUESS_AND_CHECK_AND_SPLIT)
+        enumerationSplit();
+    else 
         enumerationUnsatCores();
+    
+   
     
     if(numberOfModels == 0)
         waspFacade.printIncoherence();
@@ -77,6 +84,119 @@ void ReasoningPredicateMinimization::enumerationPreferences() {
         waspFacade.addClause(clause);        
     }
 }
+
+//Implemented by Salvatore Fiorentino
+void ReasoningPredicateMinimization::enumerationMinimize(){
+    vector<Literal> assumptions;
+    vector<Literal> conflict;
+    vector<Literal> constraint;
+
+    for(unsigned int i = 0; i < originalCandidates.size(); i++)
+        constraint.push_back(Literal(waspFacade.addVariable(true), NEGATIVE));    
+    Var aux_plus = waspFacade.addVariable(true);
+    constraint.push_back(Literal(aux_plus, NEGATIVE));
+    waspFacade.addClause(constraint);
+
+    for(unsigned int i = 0; i < originalCandidates.size(); i++)
+        waspFacade.addClause(constraint[i].getOppositeLiteral() , Literal(originalCandidates[i], NEGATIVE)); // not aux_i -> not o    
+
+    bool entered = false; 
+    while(true)
+    {
+        for(unsigned int i = 0; i < originalCandidates.size(); i++)
+            candidates.insert(originalCandidates[i]);
+        assumptions.clear();
+        unsigned result = waspFacade.solve(assumptions, conflict);
+        assumptions.push_back(Literal(aux_plus, POSITIVE));
+        entered = false ;
+        while(result == COHERENT)
+        {
+            entered = true ;
+            for(unsigned  i = 0 ; i < originalCandidates.size(); i++)
+            {
+                if(candidates.find(originalCandidates[i]) == candidates.end())
+                    continue;
+                if(waspFacade.isFalse(originalCandidates[i]))
+                {
+                    candidates.erase(originalCandidates[i]);
+                    assumptions.push_back(Literal(originalCandidates[i], NEGATIVE));
+                    assumptions.push_back(constraint[i].getOppositeLiteral());
+                }
+            }
+            result = waspFacade.solve(assumptions, conflict);    
+        }
+        if(!entered)
+            break;
+        vector<Literal> clause;
+        vector<Literal> assums;
+        assums.push_back(Literal(aux_plus, NEGATIVE));
+        for(unsigned i = 0; i <  originalCandidates.size(); i++)
+        {
+            if(candidates.find(originalCandidates[i]) != candidates.end())
+            {
+                assums.push_back(Literal(originalCandidates[i], POSITIVE));
+                clause.push_back(Literal(originalCandidates[i], NEGATIVE));
+            }
+            else
+                assums.push_back(Literal(originalCandidates[i], NEGATIVE));
+            assums.push_back(constraint[i].getOppositeLiteral());
+        }
+        enumerationBacktracking(assums);
+        if(!waspFacade.addClause(clause))
+            break;
+    }   
+}
+
+//Implemented by Salvatore Fiorentino
+void ReasoningPredicateMinimization::enumerationSplit(){
+    vector<Literal> assumptions;
+    vector<Literal> conflict;
+    vector<Literal> constraint;
+
+    while(true)
+    {
+        assumptions.clear();
+        constraint.clear();
+        for(unsigned int i = 0; i < originalCandidates.size(); i++)
+            candidates.insert(originalCandidates[i]);        
+
+        unsigned int res = waspFacade.solve(assumptions, conflict);
+        if(res == INCOHERENT)
+            break;
+            
+        for(unsigned int i = 0; i < originalCandidates.size(); i++)
+        {
+            if(candidates.find(originalCandidates[i]) == candidates.end())
+                continue;
+
+            Var a = originalCandidates[i];           
+            assumptions.push_back(Literal(a, NEGATIVE));
+            unsigned int res = waspFacade.solve(assumptions, conflict);
+            assumptions.pop_back();
+            if(res == INCOHERENT)
+            {
+                assumptions.push_back(Literal(a, POSITIVE)); 
+                constraint.push_back(Literal(originalCandidates[i], NEGATIVE));
+            }
+            else
+            {
+                for(unsigned int i = 0 ; i < originalCandidates.size(); ++i)
+                {
+                    if(candidates.find(originalCandidates[i]) != candidates.end() && waspFacade.isFalse(originalCandidates[i]))
+                    {
+                        assumptions.push_back(Literal(originalCandidates[i], NEGATIVE));
+                        candidates.erase(originalCandidates[i]);        
+                    }
+                }   
+            }
+        }
+        
+        enumerationBacktracking(assumptions);
+        if(!waspFacade.addClause(constraint))
+            break;
+    }
+}
+
 
 void ReasoningPredicateMinimization::enumerationUnsatCores() {
     lastOriginalVar = waspFacade.numberOfVariables();

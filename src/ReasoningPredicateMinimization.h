@@ -50,7 +50,9 @@ class ReasoningPredicateMinimization
         unsigned int lastOriginalVar = 0;
 
         void enumerationUnsatCores();
-        void enumerationPreferences();   
+        void enumerationPreferences(); 
+        void enumerationMinimize();  
+        void enumerationSplit();
 };
 
 #endif

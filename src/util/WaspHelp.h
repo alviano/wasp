@@ -188,8 +188,8 @@ class WaspHelp
             cout << "Predicates minimization                " << endl << endl;
             cout << "--minimize-predicates=pred1;...;predn  - Find the answer set subset-minimal w.r.t. atoms over specified predicates. Can be combined with -n to enumerate answer sets" << endl;
             cout << "--minimization-algorithm               - Specify the algorithm to use for the minimization" << endl;            
-            cout << "       =enumeration                    - Enumerate all answer sets and select the cardinality minimum" << endl;
-            cout << "       =guess-check                    - Guess an answer set and check the minimality" << endl;
+            cout << "       =enumeration                    - Enumerate all answer sets and select the cardinality minimum (not supported with -n0)" << endl;
+            cout << "       =guess-check                    - Guess an answer set and check the minimality (not supported with -n0)" << endl;
             cout << "       =guess-check-minimize           - Guess an answer set and check the minimality. In case of failure reiterate the check" << endl;
             cout << "       =guess-check-split              - Guess an answer set and check the minimality of each atom" << endl;
             cout << "       =preferences                    - Use the always-false heuristic" << endl;
