@@ -94,7 +94,7 @@ WaspFacade::solve()
 
 void WaspFacade::handleWeakConstraints() {
     NoopOutputBuilder* tmp = new NoopOutputBuilder();
-    if( wasp::Options::printOnlyOptimum && wasp::Options::maxModels > 1 )
+    if( wasp::Options::printOnlyOptimum || wasp::Options::maxModels > 1 )
         solver.setOutputBuilder( tmp );
     unsigned int result = solveWithWeakConstraints();
     switch( result ) {
@@ -103,7 +103,7 @@ void WaspFacade::handleWeakConstraints() {
             break;
 
         case INCOHERENT:
-            if( wasp::Options::printOnlyOptimum && wasp::Options::maxModels > 1 )
+            if( wasp::Options::printOnlyOptimum || wasp::Options::maxModels > 1 )
                 solver.setOutputBuilder( outputBuilder );
             solver.foundIncoherence();
             break;
