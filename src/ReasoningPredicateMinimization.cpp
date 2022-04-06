@@ -142,6 +142,8 @@ void ReasoningPredicateMinimization::enumerationMinimize(){
             assums.push_back(constraint[i].getOppositeLiteral());
         }
         enumerationBacktracking(assums);
+        if(numberOfModels >= wasp::Options::maxModels)
+            break;
         if(!waspFacade.addClause(clause))
             break;
     }   
@@ -192,6 +194,8 @@ void ReasoningPredicateMinimization::enumerationSplit(){
         }
         
         enumerationBacktracking(assumptions);
+        if(numberOfModels >= wasp::Options::maxModels)
+            break;
         if(!waspFacade.addClause(constraint))
             break;
     }
