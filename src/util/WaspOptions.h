@@ -137,6 +137,7 @@ namespace wasp
             static bool queryCoreCache;
             
             static unsigned int predMinimizationAlgorithm;
+            static unsigned int predMinimizationCautiousAlgorithm;
             static vector< string > predicatesToMinimize;
             static vector< string > predicatesMUS;
             

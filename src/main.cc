@@ -62,7 +62,8 @@ int main( int argc, char** argv )
     signal( SIGXCPU, my_handler );
     
     waspFacade.readInput( cin );
-    if( wasp::Options::predMinimizationAlgorithm != NO_PREDMINIMIZATION && wasp::Options::maxModels == 1 ) { PredicateMinimization p( waspFacade ); p.solve(); }
+    if( wasp::Options::predMinimizationCautiousAlgorithm != NO_PREDMINIMIZATIONCAUTIOUS ) { ReasoningPredicateMinimization p( waspFacade ); p.cautiousReasoning(); }
+    else if( wasp::Options::predMinimizationAlgorithm != NO_PREDMINIMIZATION && wasp::Options::maxModels == 1 ) { PredicateMinimization p( waspFacade ); p.solve(); }
     else if( wasp::Options::predMinimizationAlgorithm != NO_PREDMINIMIZATION ) { ReasoningPredicateMinimization p( waspFacade ); p.enumeration(); }
     else if( wasp::Options::predicatesMUS.size() > 0) { mus = new MUS(waspFacade); mus->enumeration(); }
     else if( wasp::Options::queryAlgorithm == ONE_QUERIES 

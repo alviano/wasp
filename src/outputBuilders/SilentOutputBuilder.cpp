@@ -59,7 +59,7 @@ SilentOutputBuilder::onProgramIncoherent()
 void
 SilentOutputBuilder::onFinish()
 {
-    if( wasp::Options::silent > 1 )
+    if( wasp::Options::silent > 1 && wasp::Options::predMinimizationCautiousAlgorithm == NO_PREDMINIMIZATIONCAUTIOUS)
         cout << "Number of printed answers: " << nbOfModels << endl;
 }
 

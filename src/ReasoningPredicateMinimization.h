@@ -35,7 +35,8 @@ class ReasoningPredicateMinimization
     public:
         ReasoningPredicateMinimization(  WaspFacade& waspFacade_ ) : waspFacade( waspFacade_ ), numberOfModels( 0 ) {}
         virtual ~ReasoningPredicateMinimization() {}
-        void enumeration();        
+        void enumeration();
+        void cautiousReasoning();
 
     private:
         WaspFacade& waspFacade;
@@ -48,11 +49,15 @@ class ReasoningPredicateMinimization
         unordered_set<Var> candidates;        
         unsigned int numberOfModels;
         unsigned int lastOriginalVar = 0;
-
+        
         void enumerationUnsatCores();
         void enumerationPreferences(); 
         void enumerationMinimize();  
         void enumerationSplit();
+
+
+        vector<Var> cautiousOriginalCandidates;
+        void cautiousMinimize();
 };
 
 #endif

@@ -138,6 +138,7 @@ namespace wasp
 #define OPTIONID_predminimizationpredicate ( 'z' + 351 )
 #define OPTIONID_predminimizationchunkpercentage ( 'z' + 352 )
 #define OPTIONID_mus ( 'z' + 353 )
+#define OPTIONID_predminimizationcautiousalgorithm ( 'z' + 354 )
     
 #ifdef TRACE_ON
 TraceLevels Options::traceLevels;
@@ -195,6 +196,7 @@ vector< string > Options::pluginsFilenames;
 string Options::scriptDirectory = "";
 
 unsigned int Options::predMinimizationAlgorithm = NO_PREDMINIMIZATION;
+unsigned int Options::predMinimizationCautiousAlgorithm = NO_PREDMINIMIZATIONCAUTIOUS;
 vector< string > Options::predicatesToMinimize;
 vector< string > Options::predicatesMUS;
 
@@ -326,6 +328,7 @@ Options::parse(
                 
                 { "minimize-predicates", required_argument, NULL, OPTIONID_predminimizationpredicate },
                 { "minimization-algorithm", required_argument, NULL, OPTIONID_predminimizationalgorithm },
+                { "minimization-cautious", no_argument, NULL, OPTIONID_predminimizationcautiousalgorithm },
                 { "min-chunk-percentage", required_argument, NULL, OPTIONID_predminimizationchunkpercentage },
 
                 { "mus", required_argument, NULL, OPTIONID_mus},
@@ -869,6 +872,10 @@ Options::parse(
 
                     predMinimizationAlgorithm = it->second;    
                 }
+                break;
+
+            case OPTIONID_predminimizationcautiousalgorithm:
+                predMinimizationCautiousAlgorithm = PREDMINIMIZATIONCAUTIOUS_MINIMIZE;                
                 break;
             
             case OPTIONID_predminimizationpredicate:

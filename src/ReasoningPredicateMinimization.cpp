@@ -48,12 +48,35 @@ void ReasoningPredicateMinimization::enumeration() {
     else if(wasp::Options::predMinimizationAlgorithm==PREDMIN_GUESS_AND_CHECK_AND_SPLIT)
         enumerationSplit();
     else 
-        enumerationUnsatCores();
-    
-   
+        enumerationUnsatCores();       
     
     if(numberOfModels == 0)
         waspFacade.printIncoherence();
+}
+
+void ReasoningPredicateMinimization::cautiousReasoning() {
+    assert( wasp::Options::predMinimizationCautiousAlgorithm != NO_PREDMINIMIZATIONCAUTIOUS );
+    for(unsigned int j = 1; j <= waspFacade.numberOfVariables(); j++) {     
+        if(VariableNames::isHidden(j)) { continue; }
+        const string& name = VariableNames::getName(j);
+        bool added = false;
+        for( unsigned int i = 0; i < wasp::Options::predicatesToMinimize.size(); i++ ) {
+            if(Utils::startsWith(name, wasp::Options::predicatesToMinimize[i])) {
+                waspFacade.freeze(j);
+                candidates.insert(j);
+                originalCandidates.push_back(j);                
+                added = true;
+                break;
+            }
+        }
+        if(!added) {
+            waspFacade.freeze(j);
+            cautiousOriginalCandidates.push_back(j);
+        }
+    }
+        
+    assert(wasp::Options::predMinimizationCautiousAlgorithm==PREDMINIMIZATIONCAUTIOUS_MINIMIZE);
+    cautiousMinimize();
 }
 
 void ReasoningPredicateMinimization::enumerationPreferences() {
@@ -86,7 +109,7 @@ void ReasoningPredicateMinimization::enumerationPreferences() {
 }
 
 //Implemented by Salvatore Fiorentino
-void ReasoningPredicateMinimization::enumerationMinimize(){
+void ReasoningPredicateMinimization::enumerationMinimize() {
     vector<Literal> assumptions;
     vector<Literal> conflict;
     vector<Literal> constraint;
@@ -345,4 +368,134 @@ bool ReasoningPredicateMinimization::foundModel() {
     trace_msg( enumeration, 1, "Model number: " << numberOfModels + 1 );
     if(++numberOfModels >= wasp::Options::maxModels) { trace_msg( enumeration, 1, "Enumerated " << wasp::Options::maxModels << "." ); return false; }    
     return true;
+}
+
+void ReasoningPredicateMinimization::cautiousMinimize() {
+    vector<Var> ofs;
+    vector<Var> qfs;
+    vector<Var> qts;
+    
+    vector<Literal> clause;
+    for(unsigned int i = 0; i < originalCandidates.size(); i++) {
+        ofs.push_back(waspFacade.addVariable(true));
+        //VariableNames::setName(ofs.back(), "of(" + VariableNames::getName(originalCandidates[i]) + ")");
+        clause.push_back(Literal(ofs.back(), POSITIVE));
+        waspFacade.addClause(Literal(ofs.back(), NEGATIVE), Literal(originalCandidates[i], NEGATIVE));
+    }
+    ofs.push_back(waspFacade.addVariable(true));
+    //VariableNames::setName(ofs.back(), "of");
+    clause.push_back(Literal(ofs.back(), NEGATIVE));  
+    waspFacade.addClause(clause);
+    clause.clear();
+    vector<Literal> clause2;
+    for(unsigned int i = 0; i < cautiousOriginalCandidates.size(); i++) {
+        qfs.push_back(waspFacade.addVariable(true));
+        //VariableNames::setName(qfs.back(), "qf(" + VariableNames::getName(cautiousOriginalCandidates[i]) + ")");
+        clause.push_back(Literal(qfs.back(), POSITIVE));
+        waspFacade.addClause(Literal(qfs.back(), NEGATIVE), Literal(cautiousOriginalCandidates[i], NEGATIVE));    
+
+        qts.push_back(waspFacade.addVariable(true));
+        //VariableNames::setName(qts.back(), "qt(" + VariableNames::getName(cautiousOriginalCandidates[i]) + ")");
+        clause2.push_back(Literal(qts.back(), POSITIVE));
+        waspFacade.addClause(Literal(qts.back(), NEGATIVE), Literal(cautiousOriginalCandidates[i], POSITIVE));    
+    }
+    qfs.push_back(waspFacade.addVariable(true));
+    //VariableNames::setName(qfs.back(), "qf");
+    clause.push_back(Literal(qfs.back(), NEGATIVE));  
+    waspFacade.addClause(clause);    
+    qts.push_back(waspFacade.addVariable(true));
+    //VariableNames::setName(qts.back(), "qt");
+    clause2.push_back(Literal(qts.back(), NEGATIVE));
+    waspFacade.addClause(clause2);
+    
+    vector<Literal> assumptions;
+    vector<Literal> conflict;
+    bool flag = true;
+    unsigned int result;
+    vector<bool> interpretation;
+    interpretation.reserve(waspFacade.numberOfVariables());
+
+    unsigned int originalNumberOfCandidates = cautiousOriginalCandidates.size();
+    unsigned int removedCandidates = 0;
+
+    while(true) {
+        if(flag) {
+            assumptions.clear();        
+            assumptions.push_back(Literal(ofs.back(), NEGATIVE));
+            assumptions.push_back(Literal(qfs.back(), POSITIVE));
+            assumptions.push_back(Literal(qts.back(), NEGATIVE));           
+            result = waspFacade.solve(assumptions, conflict);
+            if(result == INCOHERENT) break;                    
+            for(unsigned int i = 0; i <= waspFacade.numberOfVariables(); i++)
+                interpretation[i] = waspFacade.isTrue(i);        
+        }
+        assumptions.clear();
+        assumptions.push_back(Literal(ofs.back(), POSITIVE));
+        assumptions.push_back(Literal(qfs.back(), NEGATIVE));
+        assumptions.push_back(Literal(qts.back(), POSITIVE));        
+        for(unsigned int i = 0; i < cautiousOriginalCandidates.size(); i++)
+            if(waspFacade.isTrue(cautiousOriginalCandidates[i]))
+                assumptions.push_back(Literal(qts[i], NEGATIVE));                    
+
+        for(unsigned int i = 0; i < originalCandidates.size(); i++)
+            if(waspFacade.isFalse(originalCandidates[i])) {
+                assumptions.push_back(Literal(originalCandidates[i], NEGATIVE));
+                assumptions.push_back(Literal(ofs[i], NEGATIVE));
+            }
+
+        result = waspFacade.solve(assumptions, conflict);        
+        if(result == INCOHERENT) {
+            unsigned int j = 0;
+            for(unsigned int i = 0; i < cautiousOriginalCandidates.size(); i++) {
+                cautiousOriginalCandidates[j] = cautiousOriginalCandidates[i];
+                qfs[j] = qfs[i];
+                qts[j] = qts[i];                
+                if(interpretation[cautiousOriginalCandidates[j]]) j++;
+                else {
+                    waspFacade.addClause(Literal(qts[i], NEGATIVE));
+                    waspFacade.addClause(Literal(qfs[i], NEGATIVE));
+                    removedCandidates++;
+                }
+            }
+            if(wasp::Options::silent < 1)
+                cout << "[PROGRESS] Considering " << ((float)(originalNumberOfCandidates-removedCandidates)*100/originalNumberOfCandidates) << "% of candidates (" << (originalNumberOfCandidates-removedCandidates) << " out of " << originalNumberOfCandidates << ")" << endl;
+            qfs[j] = qfs.back();
+            qts[j] = qts.back();
+            cautiousOriginalCandidates.resize(j);
+            qts.resize(j+1);
+            qfs.resize(j+1);
+            flag = true;
+        }
+        else {
+            bool allTrues = true;
+            for(unsigned int i = 0; i < cautiousOriginalCandidates.size(); i++)
+                if(waspFacade.isFalse(cautiousOriginalCandidates[i])) {
+                    allTrues = false;
+                    break;
+                }
+            if(allTrues) {
+                clause.clear();
+                for(unsigned int i = 0; i < originalCandidates.size(); i++)
+                    if(waspFacade.isTrue(originalCandidates[i]))
+                        clause.push_back(Literal(originalCandidates[i], NEGATIVE));
+                waspFacade.addClause(clause);
+                flag = true;
+            }
+            else {
+                flag = false;
+                for(unsigned int i = 0; i <= waspFacade.numberOfVariables(); i++)
+                    interpretation[i] = waspFacade.isTrue(i);
+            }
+        }        
+    }
+   
+    if(wasp::Options::silent < 2) {
+        cout << "Answers:";
+        for(unsigned int i = 0; i < cautiousOriginalCandidates.size(); i++)
+            cout << " " << Literal(cautiousOriginalCandidates[i]);
+        cout << endl;
+    }
+    else {
+        cout << "Number of printed answers: " << cautiousOriginalCandidates.size() << endl;
+    }
 }
