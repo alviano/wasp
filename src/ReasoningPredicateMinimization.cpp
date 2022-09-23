@@ -69,9 +69,21 @@ void ReasoningPredicateMinimization::cautiousReasoning() {
                 break;
             }
         }
-        if(!added) {
-            waspFacade.freeze(j);
-            cautiousOriginalCandidates.push_back(j);
+        if(wasp::Options::predicatesToMinimizeCautious.empty()) {
+            if(!added) {
+                waspFacade.freeze(j);
+                cautiousOriginalCandidates.push_back(j);
+            }
+        }
+        else {
+            for( unsigned int i = 0; i < wasp::Options::predicatesToMinimizeCautious.size(); i++ ) {
+                if(Utils::startsWith(name, wasp::Options::predicatesToMinimizeCautious[i])) {
+                    waspFacade.freeze(j);
+                    candidates.insert(j);
+                    cautiousOriginalCandidates.push_back(j);                
+                    break;
+                }
+            }
         }
     }
         

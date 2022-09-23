@@ -198,6 +198,7 @@ string Options::scriptDirectory = "";
 unsigned int Options::predMinimizationAlgorithm = NO_PREDMINIMIZATION;
 unsigned int Options::predMinimizationCautiousAlgorithm = NO_PREDMINIMIZATIONCAUTIOUS;
 vector< string > Options::predicatesToMinimize;
+vector< string > Options::predicatesToMinimizeCautious;
 vector< string > Options::predicatesMUS;
 
 bool Options::multiAggregates = false;
@@ -328,7 +329,7 @@ Options::parse(
                 
                 { "minimize-predicates", required_argument, NULL, OPTIONID_predminimizationpredicate },
                 { "minimization-algorithm", required_argument, NULL, OPTIONID_predminimizationalgorithm },
-                { "minimization-cautious", no_argument, NULL, OPTIONID_predminimizationcautiousalgorithm },
+                { "minimization-cautious", optional_argument, NULL, OPTIONID_predminimizationcautiousalgorithm },
                 { "min-chunk-percentage", required_argument, NULL, OPTIONID_predminimizationchunkpercentage },
 
                 { "mus", required_argument, NULL, OPTIONID_mus},
@@ -875,7 +876,12 @@ Options::parse(
                 break;
 
             case OPTIONID_predminimizationcautiousalgorithm:
-                predMinimizationCautiousAlgorithm = PREDMINIMIZATIONCAUTIOUS_MINIMIZE;                
+                predMinimizationCautiousAlgorithm = PREDMINIMIZATIONCAUTIOUS_MINIMIZE;       
+                if( optarg )
+                {
+                    string s( optarg );                    
+                    split( s, ';', predicatesToMinimizeCautious );
+                }         
                 break;
             
             case OPTIONID_predminimizationpredicate:

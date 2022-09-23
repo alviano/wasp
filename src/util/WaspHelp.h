@@ -197,6 +197,7 @@ class WaspHelp
             cout << "       =preferences                    - Use the always-false heuristic" << endl;
             cout << "       =core-based                     - Use algorithm based on unsatisfiable cores" << endl;
             cout << "--minimization-cautious                - Compute cautious consequences of subset-minimal, w.r.t. atoms over predicates specified with --minimize-predicates, answer sets" << endl;
+            cout << "       =[pred1;...;predn]              - Optional: restrict the computation of cautious consequences on atoms over specified predicates" << endl;
             //cout << "--min-chunk-percentage=(1,...,100)     - Core based algorithm can use chunks. The size of each chunk is a percentage of the number of candidates" << endl;            
 
             cout << separator << endl;
