@@ -16,11 +16,15 @@ class MUS {
         MUS(  WaspFacade& waspFacade_ ) : waspFacade( waspFacade_ ), numberOfMUSes(0) {}
         virtual ~MUS() {}
 
-        void enumeration();
+        void enumeration();        
         void onKill();
 
     private:
-        bool computeMUS(vector<Literal>& conflict);
+        void enumerationEmax();
+        bool computeAndPrintMUS(vector<Literal>& conflict);
+        void minimize(vector<Literal>& mus, const vector<Literal>& conflict) const;        
+        void printMUS(const vector<Literal>& mus, vector<Literal>& conflict) const;
+        
         template <class T>
         static void printStructureOfLiterals(T elem, const string& value, const string& postfix) {
             cout << value;
@@ -35,7 +39,7 @@ class MUS {
 
         WaspFacade& waspFacade;
         vector<Var> candidates;
-        unsigned int numberOfMUSes;
+        unsigned int numberOfMUSes;        
 };
 
 #endif

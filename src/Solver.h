@@ -173,7 +173,7 @@ class Solver
         inline bool chooseLiteral( vector< Literal >& assumptions );
         inline bool conflictDetected() const;
         inline void foundIncoherence();
-        inline bool hasUndefinedLiterals();
+        inline bool hasUndefinedLiterals() const;
         inline void printAnswerSet();
         inline void printOptimizationValue( const Vector< uint64_t >& costs );
         inline void printCautiousConsequences( const Vector< Var >& answers );        
@@ -1347,7 +1347,7 @@ Solver::conflictDetected() const
 }
 
 bool
-Solver::hasUndefinedLiterals()
+Solver::hasUndefinedLiterals() const
 {
     return variables.numberOfAssignedLiterals() < variables.numberOfVariables();
 }

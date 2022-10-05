@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <string>
 #include <cassert>
+#include <iostream>
 using namespace std;
 
 void MUS::enumeration() {
@@ -16,6 +17,22 @@ void MUS::enumeration() {
         }
     }
 
+    if(candidates.size() == 0) {        
+        vector<Literal> assumptions;
+        vector<Literal> conflict;
+        unsigned int result = waspFacade.solve(assumptions, conflict);
+        if(result == INCOHERENT)
+            printMUS(assumptions, conflict);        
+    }
+    else {
+        enumerationEmax();        
+    }
+    if(wasp::Options::silent == 2) {
+        cout << "Number of printed answers: " << numberOfMUSes << endl;
+    }
+}
+
+void MUS::enumerationEmax() {
     WaspFacade checkFormula;
     Solver& s = const_cast<Solver&>(checkFormula.getSolver());
     s.initFrom(waspFacade.getSolver());
@@ -46,7 +63,7 @@ void MUS::enumeration() {
         }
         result = waspFacade.solve(assumptions, conflict);        
         if(result == INCOHERENT) {            
-            if(!computeMUS(conflict))
+            if(!computeAndPrintMUS(conflict))
                 break;
             for(unsigned int i = 0; i < conflict.size(); i++)
                 conflict[i] = Literal(idsmap[conflict[i].getVariable()], NEGATIVE);
@@ -56,59 +73,34 @@ void MUS::enumeration() {
             checkFormula.addClause(clause);
         }
     }
-    if(wasp::Options::silent == 2) {
-        cout << "Number of printed answers: " << numberOfMUSes << endl;
+}
+
+bool MUS::computeAndPrintMUS(vector<Literal>& conflict) {
+    vector<Literal> mus;
+    minimize(mus, conflict);    
+    printMUS(mus, conflict);
+    return(wasp::Options::maxModels == 0 || ++numberOfMUSes < wasp::Options::maxModels);   
+}
+
+void MUS::minimize(vector<Literal>& mus, const vector<Literal>& conflict) const {
+    if(!conflict.empty()) {
+        QuickXPlain quickXPlain(waspFacade);
+        quickXPlain.minimizeUnsatCore(conflict, mus);
     }
 }
 
-bool MUS::computeMUS(vector<Literal>& conflict) {
-    QuickXPlain quickXPlain(waspFacade);
-    vector<Literal> mus;
-    quickXPlain.minimizeUnsatCore(conflict, mus);
+void MUS::printMUS(const vector<Literal>& mus, vector<Literal>& conflict) const {
     conflict.clear();
     if(wasp::Options::silent < 2)
         cout << "[MUS #" << numberOfMUSes+1 << "]:";
-    for(vector<Literal>::iterator it = mus.begin(); it != mus.end(); ++it) {
-        assert(!VariableNames::isHidden(it->getVariable()));
-        conflict.push_back(Literal((*it).getVariable(), POSITIVE));
+    for(auto& element : mus) {
+        assert(!VariableNames::isHidden(element.getVariable()));
+        conflict.push_back(Literal(element.getVariable(), POSITIVE));
         if(wasp::Options::silent < 1)
-            cout << " " << Literal((*it).getVariable(), POSITIVE);
+            cout << " " << Literal(element.getVariable(), POSITIVE);
     }
     if(wasp::Options::silent < 2)
-        cout << endl;
-    return(wasp::Options::maxModels == 0 || ++numberOfMUSes < wasp::Options::maxModels);   
-
-    /*
-    vector<Literal> assumptions;
-    assumptions.swap(conflict);
-    unordered_set<Var> mus;
-    while(true) {
-        Literal toTest = Literal::null;
-        for(unsigned int i = 0; i < assumptions.size(); i++) {
-            if(mus.find(assumptions[i].getVariable()) == mus.end()) {
-                toTest = assumptions[i];
-                assumptions[i] = assumptions.back();
-                assumptions.pop_back();
-                break;
-            }
-        }
-        if(toTest == Literal::null) {
-            conflict.clear();
-            cout << "[MUS #" << numberOfMUSes+1 << "]:";
-            for(unordered_set<Var>::iterator it = mus.begin(); it != mus.end(); ++it) {
-                assert(!VariableNames::isHidden(*it));
-                conflict.push_back(Literal(*it, POSITIVE));
-                cout << " " << Literal(*it, POSITIVE);
-            }
-            cout << endl;
-            return(wasp::Options::maxModels == 0 || ++numberOfMUSes < wasp::Options::maxModels);                
-        }
-        unsigned int result = waspFacade.solve(assumptions, conflict);        
-        if(result == COHERENT) {
-            assumptions.push_back(toTest);
-            mus.insert(toTest.getVariable());
-        }
-    }*/
+        cout << endl;    
 }
 
 void MUS::onKill() {
