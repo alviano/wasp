@@ -33,10 +33,14 @@ class WaspFacade;
 class ReasoningPredicateMinimization
 {
     public:
-        ReasoningPredicateMinimization(  WaspFacade& waspFacade_ ) : waspFacade( waspFacade_ ), numberOfModels( 0 ) {}
+        ReasoningPredicateMinimization(  WaspFacade& waspFacade_, unsigned int numberOfModels_ = 0, bool printCandidatesOnly_ = false ) : waspFacade( waspFacade_ ), numberOfModels( numberOfModels_ ), printCandidatesOnly(printCandidatesOnly_) {}
         virtual ~ReasoningPredicateMinimization() {}
         void enumeration();
         void cautiousReasoning();
+        void addCandidates(const vector<Var>& candidates_);
+        void enumerationPreferences();     
+        void setMaxNumberOfModelsInEnumeration(unsigned int maxNumber) { maxModelsInEnumeration = maxNumber; }
+        void setPrefix(string prefix_) { prefix = prefix_; }
 
     private:
         WaspFacade& waspFacade;
@@ -49,9 +53,12 @@ class ReasoningPredicateMinimization
         unordered_set<Var> candidates;        
         unsigned int numberOfModels;
         unsigned int lastOriginalVar = 0;
+        unsigned int numberOfModelsInEnumeration = 0;
+        unsigned int maxModelsInEnumeration = UINT_MAX;
+        bool printCandidatesOnly;
+        string prefix;
         
         void enumerationUnsatCores();
-        void enumerationPreferences(); 
         void enumerationMinimize();  
         void enumerationSplit();
 

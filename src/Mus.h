@@ -21,6 +21,7 @@ class MUS {
 
     private:
         void enumerationEmax();
+        void enumerationCaMUS();
         bool computeAndPrintMUS(vector<Literal>& conflict);
         void minimize(vector<Literal>& mus, const vector<Literal>& conflict) const;        
         void printMUS(const vector<Literal>& mus, vector<Literal>& conflict) const;

@@ -53,6 +53,14 @@ void ReasoningPredicateMinimization::enumeration() {
         waspFacade.printIncoherence();
 }
 
+void ReasoningPredicateMinimization::addCandidates(const vector<Var>& candidates_) {
+    for( unsigned int i = 0; i < candidates_.size(); i++ ) {
+        waspFacade.freeze(candidates_[i]);
+        candidates.insert(candidates_[i]);
+        originalCandidates.push_back(candidates_[i]);
+    }       
+}
+
 void ReasoningPredicateMinimization::cautiousReasoning() {
     assert( wasp::Options::predMinimizationCautiousAlgorithm != NO_PREDMINIMIZATIONCAUTIOUS );
     for(unsigned int j = 1; j <= waspFacade.numberOfVariables(); j++) {     
@@ -289,6 +297,7 @@ void ReasoningPredicateMinimization::enumerationUnsatCores() {
 }
 
 void ReasoningPredicateMinimization::enumerationBacktracking(const vector<Literal>& assums) {
+    numberOfModelsInEnumeration = 0;
     vector< bool > checked;        
     vector<Literal> assumptions;
     for(unsigned int i = 0; i < assums.size(); i++) {
@@ -302,6 +311,7 @@ void ReasoningPredicateMinimization::enumerationBacktracking(const vector<Litera
     assert(result != INCOHERENT);    
     
     if(!foundModel()) return;
+    if(++numberOfModelsInEnumeration >= maxModelsInEnumeration) return;
     Solver& solver = const_cast<Solver&>(waspFacade.getSolver());
     solver.getChoicesWithoutAssumptions(assumptions);
     while(checked.size() < assumptions.size()) checked.push_back(false);
@@ -352,6 +362,7 @@ void ReasoningPredicateMinimization::enumerationBacktracking(const vector<Litera
     }
     else {
         if(!foundModel()) return;
+        if(++numberOfModelsInEnumeration >= maxModelsInEnumeration) return;        
         solver.getChoicesWithoutAssumptions(assumptions);
         while(checked.size() < assumptions.size()) checked.push_back(false);
     }
@@ -375,7 +386,15 @@ void ReasoningPredicateMinimization::flipLatestChoice(vector<Literal>& choices, 
 }
 
 bool ReasoningPredicateMinimization::foundModel() {
-    waspFacade.printAnswerSet();
+    if(printCandidatesOnly) {
+        cout << "[" << prefix << " #" << (numberOfModels+1) << "]: ";
+        for(unsigned int i = 0; i < originalCandidates.size(); i++)
+            if(waspFacade.isTrue(originalCandidates[i]))
+                cout << " " << Literal(originalCandidates[i]);
+        cout << endl;
+    }
+    else
+        waspFacade.printAnswerSet();
     trace_msg( enumeration, 1, "Model number: " << numberOfModels + 1 );
     if(++numberOfModels >= wasp::Options::maxModels) { trace_msg( enumeration, 1, "Enumerated " << wasp::Options::maxModels << "." ); return false; }    
     return true;

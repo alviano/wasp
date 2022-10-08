@@ -137,8 +137,9 @@ namespace wasp
 #define OPTIONID_predminimizationalgorithm ( 'z' + 350 )
 #define OPTIONID_predminimizationpredicate ( 'z' + 351 )
 #define OPTIONID_predminimizationchunkpercentage ( 'z' + 352 )
-#define OPTIONID_mus ( 'z' + 353 )
-#define OPTIONID_predminimizationcautiousalgorithm ( 'z' + 354 )
+#define OPTIONID_predminimizationcautiousalgorithm ( 'z' + 353 )
+#define OPTIONID_mus ( 'z' + 360 )
+#define OPTIONID_mus_algorithm ( 'z' + 361 )
     
 #ifdef TRACE_ON
 TraceLevels Options::traceLevels;
@@ -270,6 +271,11 @@ unsigned int Options::initSign = INIT_SIGN_MINISAT_ALLFALSE;
 
 unsigned int Options::multiThreshold = 0;
 
+
+unsigned int Options::musAlgorithm;
+unsigned int Options::mcsThreshold = UINT_MAX;
+unsigned int Options::musNumberOfMuses = UINT_MAX;
+
 void
 Options::parse(
     int argc,
@@ -333,6 +339,7 @@ Options::parse(
                 { "min-chunk-percentage", required_argument, NULL, OPTIONID_predminimizationchunkpercentage },
 
                 { "mus", required_argument, NULL, OPTIONID_mus},
+                { "mus-algorithm", required_argument, NULL, OPTIONID_mus_algorithm},
                 
                 #if defined(ENABLE_PYTHON) || defined(ENABLE_PERL)
                 /* HEURISTIC */
@@ -909,7 +916,38 @@ Options::parse(
                     string s( optarg );                    
                     split( s, ';', predicatesMUS );
                 }
-                break;             
+                break;       
+
+            case OPTIONID_mus_algorithm:
+                if( optarg )
+                {
+                    vector<string> readOptions;
+                    string s( optarg );                    
+                    split( s, ',',  readOptions);                    
+                    if(readOptions.size() == 0 || (readOptions[0] != "emax" && readOptions[0] != "camus")) {
+                        WaspErrorMessage::errorGeneric("Invalid option for mus algorithm: expected emax or camus");
+                    }
+                    if(readOptions[0] == "emax") {
+                        musAlgorithm = MUS_EMAX;
+                        if(readOptions.size() != 1)
+                            WaspErrorMessage::errorGeneric("Unexpected parameters for algorithm emax");
+                    }
+                    else if(readOptions[0] == "camus") {
+                        musAlgorithm = MUS_CAMUS;
+                        if(readOptions.size() >= 2) {
+                            int value = atoi(readOptions[1].c_str());
+                            mcsThreshold = value >= 0 ? value : UINT_MAX;
+                            if(readOptions.size() == 3) {
+                                value = atoi(readOptions[2].c_str());
+                                musNumberOfMuses = value >= 0 ? value : UINT_MAX;                                    
+                            }
+                            else if(readOptions.size() > 3) {
+                                 WaspErrorMessage::errorGeneric("Unexpected parameters for algorithm camus");
+                            }
+                        }                        
+                    }                     
+                }
+                break;      
                 
             default:
                 WaspErrorMessage::errorGeneric( "This option is not supported." );

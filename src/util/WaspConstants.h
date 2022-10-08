@@ -79,6 +79,9 @@
 #define NO_PREDMINIMIZATIONCAUTIOUS 0
 #define PREDMINIMIZATIONCAUTIOUS_MINIMIZE 1
 
+#define MUS_EMAX 0
+#define MUS_CAMUS 1
+
 /*
  * Weak constraints
  */

@@ -155,6 +155,12 @@ namespace wasp
             static map< string, unsigned int > stringToInitMinisatHeuristic;
             
             static map< string, unsigned int > stringToPredMinimization;
+
+            static unsigned int musAlgorithm;
+
+            static unsigned int mcsThreshold;
+
+            static unsigned int musNumberOfMuses;
             
             static WEAK_CONSTRAINTS_ALG getAlgorithm( const string& s );
             

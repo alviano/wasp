@@ -227,6 +227,9 @@ class WaspHelp
             cout << "       =bt-reorder                     - Use backtracking for enumeration with reorder of assumptions" << endl;
             cout << "       =bc                             - Use blocking clause" << endl;
             cout << "--mus=pred1;...;predn                  - Compute MUS w.r.t. atoms over specified predicates. Can be combined with -n to enumerate MUSes" << endl;
+            cout << "--mus-algorithm                        - Change algorithm for computing muses" << endl;
+            cout << "       =emax                           - Enable algorithm emax" << endl;
+            cout << "       =camus,[mcs_th,[mus_th]]        - Enable algorithm camus. (Options) After mcs_th mcses try to compute mus_th muses" << endl;
 //            cout << "--stdin                                - Write a description." << endl;
 //            cout << "--time-limit                           - Write a description." << endl;
         }
