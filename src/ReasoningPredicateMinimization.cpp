@@ -529,3 +529,9 @@ void ReasoningPredicateMinimization::cautiousMinimize() {
         cout << "Number of printed answers: " << cautiousOriginalCandidates.size() << endl;
     }
 }
+
+void ReasoningPredicateMinimization::onKill() {
+    if(wasp::Options::silent == 2) {
+        cout << "Number of printed answers: " << numberOfModels << endl;
+    }
+}

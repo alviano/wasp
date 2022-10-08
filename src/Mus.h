@@ -9,7 +9,7 @@ class WaspFacade;
 #include <iostream>
 #include "util/VariableNames.h"
 using namespace std;
-
+class ReasoningPredicateMinimization;
 class MUS {
 
     public:
@@ -40,7 +40,8 @@ class MUS {
 
         WaspFacade& waspFacade;
         vector<Var> candidates;
-        unsigned int numberOfMUSes;        
+        unsigned int numberOfMUSes;
+        ReasoningPredicateMinimization* reasoning;
 };
 
 #endif

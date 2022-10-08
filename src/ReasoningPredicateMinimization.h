@@ -41,6 +41,7 @@ class ReasoningPredicateMinimization
         void enumerationPreferences();     
         void setMaxNumberOfModelsInEnumeration(unsigned int maxNumber) { maxModelsInEnumeration = maxNumber; }
         void setPrefix(string prefix_) { prefix = prefix_; }
+        void onKill();
 
     private:
         WaspFacade& waspFacade;

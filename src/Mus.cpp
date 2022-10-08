@@ -152,11 +152,11 @@ void MUS::enumerationCaMUS() {
         }
     }
         
-    ReasoningPredicateMinimization reasoning(allMCS, numberOfMUSes, true);    
-    reasoning.setPrefix("MUS");
-    reasoning.addCandidates(candidates);
-    reasoning.setMaxNumberOfModelsInEnumeration(1);
-    reasoning.enumerationPreferences();
+    reasoning = new ReasoningPredicateMinimization(allMCS, numberOfMUSes, true);    
+    reasoning->setPrefix("MUS");
+    reasoning->addCandidates(candidates);
+    reasoning->setMaxNumberOfModelsInEnumeration(1);
+    reasoning->enumerationPreferences();
 }
 
 bool MUS::computeAndPrintMUS(vector<Literal>& conflict) {
@@ -189,7 +189,12 @@ void MUS::printMUS(const vector<Literal>& mus, vector<Literal>& conflict) const 
 }
 
 void MUS::onKill() {
-    if(wasp::Options::silent == 2) {
-        cout << "Number of printed answers: " << numberOfMUSes << endl;
+    if(reasoning != nullptr) {
+        reasoning->onKill();
+    }
+    else {
+        if(wasp::Options::silent == 2) {
+            cout << "Number of printed answers: " << numberOfMUSes << endl;
+        }
     }
 }
