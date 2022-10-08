@@ -387,11 +387,15 @@ void ReasoningPredicateMinimization::flipLatestChoice(vector<Literal>& choices, 
 
 bool ReasoningPredicateMinimization::foundModel() {
     if(printCandidatesOnly) {
-        cout << "[" << prefix << " #" << (numberOfModels+1) << "]: ";
-        for(unsigned int i = 0; i < originalCandidates.size(); i++)
-            if(waspFacade.isTrue(originalCandidates[i]))
-                cout << " " << Literal(originalCandidates[i]);
-        cout << endl;
+        if(wasp::Options::silent < 2)
+            cout << "[" << prefix << " #" << (numberOfModels+1) << "]: ";        
+        if(wasp::Options::silent < 1) {
+            for(unsigned int i = 0; i < originalCandidates.size(); i++)
+                if(waspFacade.isTrue(originalCandidates[i]))
+                    cout << " " << Literal(originalCandidates[i]);
+        }
+        if(wasp::Options::silent < 2)
+            cout << endl;
     }
     else
         waspFacade.printAnswerSet();
@@ -530,7 +534,7 @@ void ReasoningPredicateMinimization::cautiousMinimize() {
     }
 }
 
-void ReasoningPredicateMinimization::onKill() {
+void ReasoningPredicateMinimization::printTotalNumberOfModels() {
     if(wasp::Options::silent == 2) {
         cout << "Number of printed answers: " << numberOfModels << endl;
     }

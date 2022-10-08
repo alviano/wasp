@@ -8,13 +8,13 @@ class WaspFacade;
 #include <vector>
 #include <iostream>
 #include "util/VariableNames.h"
+#include "ReasoningPredicateMinimization.h"
 using namespace std;
-class ReasoningPredicateMinimization;
 class MUS {
 
     public:
         MUS(  WaspFacade& waspFacade_ ) : waspFacade( waspFacade_ ), numberOfMUSes(0) {}
-        virtual ~MUS() {}
+        virtual ~MUS() { delete reasoning; }
 
         void enumeration();        
         void onKill();
@@ -22,6 +22,7 @@ class MUS {
     private:
         void enumerationEmax();
         void enumerationCaMUS();
+        void printAnswers();
         bool computeAndPrintMUS(vector<Literal>& conflict);
         void minimize(vector<Literal>& mus, const vector<Literal>& conflict) const;        
         void printMUS(const vector<Literal>& mus, vector<Literal>& conflict) const;

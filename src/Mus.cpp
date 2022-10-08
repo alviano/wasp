@@ -26,14 +26,13 @@ void MUS::enumeration() {
             printMUS(assumptions, conflict);        
     }
     else {
-        if(wasp::Options::musAlgorithm == MUS_EMAX)
-            enumerationEmax();
+        if(wasp::Options::musAlgorithm == MUS_EMAX) {
+            enumerationEmax();            
+        }
         else
             enumerationCaMUS();
     }
-    if(wasp::Options::silent == 2) {
-        cout << "Number of printed answers: " << numberOfMUSes << endl;
-    }
+    printAnswers();
 }
 
 void MUS::enumerationEmax() {
@@ -157,6 +156,7 @@ void MUS::enumerationCaMUS() {
     reasoning->addCandidates(candidates);
     reasoning->setMaxNumberOfModelsInEnumeration(1);
     reasoning->enumerationPreferences();
+    reasoning->printTotalNumberOfModels();
 }
 
 bool MUS::computeAndPrintMUS(vector<Literal>& conflict) {
@@ -190,11 +190,17 @@ void MUS::printMUS(const vector<Literal>& mus, vector<Literal>& conflict) const 
 
 void MUS::onKill() {
     if(reasoning != nullptr) {
-        reasoning->onKill();
+        reasoning->printTotalNumberOfModels();
     }
     else {
         if(wasp::Options::silent == 2) {
             cout << "Number of printed answers: " << numberOfMUSes << endl;
         }
+    }
+}
+
+void MUS::printAnswers() {
+    if(reasoning == nullptr && wasp::Options::silent == 2) {    
+        cout << "Number of printed answers: " << numberOfMUSes << endl;
     }
 }
