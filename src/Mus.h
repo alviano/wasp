@@ -13,7 +13,7 @@ using namespace std;
 class MUS {
 
     public:
-        MUS(  WaspFacade& waspFacade_ ) : waspFacade( waspFacade_ ), numberOfMUSes(0) {}
+        MUS(  WaspFacade& waspFacade_ ) : waspFacade( waspFacade_ ), numberOfMUSes(0), reasoning(nullptr) {}
         virtual ~MUS() { delete reasoning; }
 
         void enumeration();        
