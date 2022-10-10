@@ -66,6 +66,8 @@ class ReasoningPredicateMinimization
 
         vector<Var> cautiousOriginalCandidates;
         void cautiousMinimize();
+        unsigned int knownAnswers = 0;
+        unsigned int leftCandidates = 0;
 };
 
 #endif

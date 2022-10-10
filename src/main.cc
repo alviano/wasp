@@ -31,6 +31,7 @@ int EXIT_CODE = 0;
 
 WaspFacade* waspFacadePointer = NULL;
 MUS* mus = NULL;
+ReasoningPredicateMinimization* p = NULL;
 
 void my_handler( int )
 {
@@ -42,6 +43,14 @@ void my_handler( int )
         mus->onKill();        
         delete mus;
     }    
+    else {
+        waspFacadePointer->onKill(true);
+    }
+    if(p != NULL) {
+        waspFacadePointer->onKill(false);
+        p->printTotalNumberOfModels();
+        delete p;
+    }
     else {
         waspFacadePointer->onKill(true);
     }
@@ -62,9 +71,9 @@ int main( int argc, char** argv )
     signal( SIGXCPU, my_handler );
     
     waspFacade.readInput( cin );
-    if( wasp::Options::predMinimizationCautiousAlgorithm != NO_PREDMINIMIZATIONCAUTIOUS ) { ReasoningPredicateMinimization p( waspFacade ); p.cautiousReasoning(); }
-    else if( wasp::Options::predMinimizationAlgorithm != NO_PREDMINIMIZATION && wasp::Options::maxModels == 1 ) { PredicateMinimization p( waspFacade ); p.solve(); }
-    else if( wasp::Options::predMinimizationAlgorithm != NO_PREDMINIMIZATION ) { ReasoningPredicateMinimization p( waspFacade ); p.enumeration(); }
+    if( wasp::Options::predMinimizationCautiousAlgorithm != NO_PREDMINIMIZATIONCAUTIOUS ) { p = new ReasoningPredicateMinimization( waspFacade ); p->cautiousReasoning(); }
+    else if( wasp::Options::predMinimizationAlgorithm != NO_PREDMINIMIZATION && wasp::Options::maxModels == 1 ) { PredicateMinimization minimization( waspFacade ); minimization.solve(); }
+    else if( wasp::Options::predMinimizationAlgorithm != NO_PREDMINIMIZATION ) { ReasoningPredicateMinimization minimization( waspFacade ); minimization.enumeration(); }
     else if( wasp::Options::predicatesMUS.size() > 0) { mus = new MUS(waspFacade); mus->enumeration(); }
     else if( wasp::Options::queryAlgorithm == ONE_QUERIES 
             || wasp::Options::queryAlgorithm == KDYN_QUERIES 

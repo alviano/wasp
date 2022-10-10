@@ -407,7 +407,7 @@ bool ReasoningPredicateMinimization::foundModel() {
 void ReasoningPredicateMinimization::cautiousMinimize() {
     vector<Var> ofs;
     vector<Var> qfs;
-    vector<Var> qts;
+    vector<Var> qts;    
     
     vector<Literal> clause;
     for(unsigned int i = 0; i < originalCandidates.size(); i++) {
@@ -466,10 +466,14 @@ void ReasoningPredicateMinimization::cautiousMinimize() {
         assumptions.clear();
         assumptions.push_back(Literal(ofs.back(), POSITIVE));
         assumptions.push_back(Literal(qfs.back(), NEGATIVE));
-        assumptions.push_back(Literal(qts.back(), POSITIVE));        
+        assumptions.push_back(Literal(qts.back(), POSITIVE));                
+        knownAnswers = 0;
         for(unsigned int i = 0; i < cautiousOriginalCandidates.size(); i++)
-            if(waspFacade.isTrue(cautiousOriginalCandidates[i]))
-                assumptions.push_back(Literal(qts[i], NEGATIVE));                    
+            if(waspFacade.isTrue(cautiousOriginalCandidates[i])) {
+                assumptions.push_back(Literal(qts[i], NEGATIVE));
+                if(waspFacade.decisionLevel(cautiousOriginalCandidates[i]) == 0)
+                    knownAnswers++;
+            }                    
 
         for(unsigned int i = 0; i < originalCandidates.size(); i++)
             if(waspFacade.isFalse(originalCandidates[i])) {
@@ -491,8 +495,9 @@ void ReasoningPredicateMinimization::cautiousMinimize() {
                     removedCandidates++;
                 }
             }
+            leftCandidates = originalNumberOfCandidates-removedCandidates;
             if(wasp::Options::silent < 1)
-                cout << "[PROGRESS] Considering " << ((float)(originalNumberOfCandidates-removedCandidates)*100/originalNumberOfCandidates) << "% of candidates (" << (originalNumberOfCandidates-removedCandidates) << " out of " << originalNumberOfCandidates << ")" << endl;
+                cout << "[PROGRESS] Considering " << ((float)(originalNumberOfCandidates-removedCandidates)*100/originalNumberOfCandidates) << "% of candidates (" << (originalNumberOfCandidates-removedCandidates) << " out of " << originalNumberOfCandidates << ") - Known answers: " << knownAnswers << endl;
             qfs[j] = qfs.back();
             qts[j] = qts.back();
             cautiousOriginalCandidates.resize(j);
@@ -522,9 +527,9 @@ void ReasoningPredicateMinimization::cautiousMinimize() {
             }
         }        
     }
-   
+    knownAnswers = cautiousOriginalCandidates.size();
     if(wasp::Options::silent < 2) {
-        cout << "Answers:";
+        cout << "Answers [#"<< cautiousOriginalCandidates.size() << "]:";
         for(unsigned int i = 0; i < cautiousOriginalCandidates.size(); i++)
             cout << " " << Literal(cautiousOriginalCandidates[i]);
         cout << endl;
@@ -535,7 +540,14 @@ void ReasoningPredicateMinimization::cautiousMinimize() {
 }
 
 void ReasoningPredicateMinimization::printTotalNumberOfModels() {
-    if(wasp::Options::silent == 2) {
-        cout << "Number of printed answers: " << numberOfModels << endl;
+    if(wasp::Options::predMinimizationCautiousAlgorithm != NO_PREDMINIMIZATIONCAUTIOUS) {
+        if(wasp::Options::silent == 2) {
+            cout << "Number of printed answers: " << knownAnswers << "," << leftCandidates << endl;
+        }
+    }
+    else {
+        if(wasp::Options::silent == 2) {
+            cout << "Number of printed answers: " << numberOfModels << endl;
+        }    
     }
 }
