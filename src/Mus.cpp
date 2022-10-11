@@ -83,6 +83,89 @@ void MUS::enumerationCaMUS() {
     vector<Literal> conflict;
     vector<Literal> cardinalityConstraint;
     vector<Literal> preferredChoices;
+    WaspFacade allMCS;
+
+    unsigned int maxId = 0;
+    for(unsigned int i = 0; i < candidates.size(); i++) {
+        cardinalityConstraint.push_back(Literal(candidates[i], POSITIVE));
+        Var auxId = waspFacade.addVariable(true);
+        VariableNames::setName(auxId, "aux" + to_string(i+1));
+        cardinalityConstraint.push_back(Literal(auxId, POSITIVE));
+        assumptions.push_back(Literal(auxId, NEGATIVE));
+        preferredChoices.push_back(Literal(candidates[i], NEGATIVE));        
+        if(candidates[i] > maxId) maxId = candidates[i];
+    }    
+    
+    bool res_ = waspFacade.addCardinalityConstraint(cardinalityConstraint, candidates.size());
+    if(!res_) {
+        printMUS(vector<Literal>(), conflict);
+        return;
+    }
+    while(allMCS.numberOfVariables() < maxId) allMCS.addVariable(true);
+    
+    unsigned int k = 0;
+    unsigned int result;
+    unsigned int numberOfMCSes = 0;    
+    while(k < candidates.size()) {
+        result = waspFacade.solve(assumptions, conflict);
+        if(result == INCOHERENT) {
+            assumptions[k] = assumptions[k].getOppositeLiteral();
+            k++;
+        }
+        else {
+            vector<Literal> mcs;
+            for(unsigned int i = 0; i < candidates.size(); i++)
+                if(waspFacade.isFalse(candidates[i])) {                    
+                    mcs.push_back(Literal(candidates[i]));                    
+                }
+            waspFacade.addClause(mcs);
+            allMCS.addClause(mcs);
+            if(++numberOfMCSes >= wasp::Options::mcsThreshold) {
+                numberOfMCSes = 0;
+                allMCS.setPreferredChoices(preferredChoices);
+                unsigned int currentNumberOfMUSes = 0;
+                while(numberOfMUSes < wasp::Options::musNumberOfMuses) {
+                    vector<Literal> tmpAssumptions;                
+                    unsigned int result = allMCS.solve(tmpAssumptions, conflict);
+                    if(result == COHERENT) {
+                        vector<Literal> toTest;
+                        for(unsigned int i = 0; i < candidates.size(); i++)
+                            if(allMCS.isTrue(candidates[i]))
+                                toTest.push_back(Literal(candidates[i], POSITIVE));
+                        result = waspFacade.solve(toTest, conflict);
+                        if(result == COHERENT) break;
+                        printMUS(toTest, conflict);
+                        currentNumberOfMUSes++;
+                        numberOfMUSes++;
+                        if(wasp::Options::maxModels != 0 && numberOfMUSes >= wasp::Options::maxModels)
+                            return;
+                        for(unsigned int i = 0; i < toTest.size(); i++)
+                            toTest[i] = toTest[i].getOppositeLiteral();
+                        waspFacade.addClause(toTest);
+                        allMCS.addClause(toTest);                        
+                    }
+                    else {
+                        break;
+                    }
+                }
+                vector<Literal> reset;
+                allMCS.setPreferredChoices(reset);
+            }
+        }
+    }
+    reasoning = new ReasoningPredicateMinimization(allMCS, numberOfMUSes, true);    
+    reasoning->setPrefix("MUS");
+    reasoning->addCandidates(candidates);
+    reasoning->setMaxNumberOfModelsInEnumeration(1);
+    reasoning->enumerationPreferences();
+    reasoning->printTotalNumberOfModels();
+}
+
+/*void MUS::enumerationCaMUS() {    
+    vector<Literal> assumptions;
+    vector<Literal> conflict;
+    vector<Literal> cardinalityConstraint;
+    vector<Literal> preferredChoices;
 
     for(unsigned int i = 0; i < candidates.size(); i++) {
         cardinalityConstraint.push_back(Literal(candidates[i], POSITIVE));
@@ -92,6 +175,12 @@ void MUS::enumerationCaMUS() {
         assumptions.push_back(Literal(auxId, NEGATIVE));
         preferredChoices.push_back(Literal(candidates[i], NEGATIVE));
     }
+
+    cout << "CC:";
+    for(unsigned int i = 0; i < cardinalityConstraint.size(); i++)
+        cout << " " << cardinalityConstraint[i];
+    cout << " >= " << candidates.size() << endl;
+    printStructureOfLiterals(assumptions, "assumptions", "");
 
     bool res_ = waspFacade.addCardinalityConstraint(cardinalityConstraint, candidates.size());
     if(!res_) {
@@ -112,9 +201,10 @@ void MUS::enumerationCaMUS() {
         else {
             vector<Literal> mcs;
             for(unsigned int i = 0; i < candidates.size(); i++)
-                if(waspFacade.isFalse(candidates[i])) {
+                if(waspFacade.isFalse(candidates[i])) {                    
                     mcs.push_back(Literal(candidates[i]));                    
                 }
+            printStructureOfLiterals(mcs, "mcs", "");
             waspFacade.addClause(mcs);
             allMCS.addClause(mcs);
             if(++numberOfMCSes >= wasp::Options::mcsThreshold) {
@@ -157,7 +247,7 @@ void MUS::enumerationCaMUS() {
     reasoning->setMaxNumberOfModelsInEnumeration(1);
     reasoning->enumerationPreferences();
     reasoning->printTotalNumberOfModels();
-}
+}*/
 
 bool MUS::computeAndPrintMUS(vector<Literal>& conflict) {
     vector<Literal> mus;

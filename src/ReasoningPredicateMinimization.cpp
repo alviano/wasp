@@ -388,7 +388,7 @@ void ReasoningPredicateMinimization::flipLatestChoice(vector<Literal>& choices, 
 bool ReasoningPredicateMinimization::foundModel() {
     if(printCandidatesOnly) {
         if(wasp::Options::silent < 2)
-            cout << "[" << prefix << " #" << (numberOfModels+1) << "]: ";        
+            cout << "[" << prefix << " #" << (numberOfModels+1) << "]:";        
         if(wasp::Options::silent < 1) {
             for(unsigned int i = 0; i < originalCandidates.size(); i++)
                 if(waspFacade.isTrue(originalCandidates[i]))
