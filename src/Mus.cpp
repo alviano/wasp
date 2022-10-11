@@ -129,11 +129,16 @@ void MUS::enumerationCaMUS() {
                     unsigned int result = allMCS.solve(tmpAssumptions, conflict);
                     if(result == COHERENT) {
                         vector<Literal> toTest;
+                        unsigned int nbCandidates = 0;
                         for(unsigned int i = 0; i < candidates.size(); i++)
                             if(allMCS.isTrue(candidates[i]))
                                 toTest.push_back(Literal(candidates[i], POSITIVE));
+                        nbCandidates = toTest.size();
+                        for(unsigned int i = 0; i < assumptions.size(); i++)
+                            toTest.push_back(Literal(assumptions[i].getVariable(), POSITIVE));
                         result = waspFacade.solve(toTest, conflict);
                         if(result == COHERENT) break;
+                        toTest.resize(nbCandidates);                        
                         printMUS(toTest, conflict);
                         currentNumberOfMUSes++;
                         numberOfMUSes++;
@@ -141,7 +146,7 @@ void MUS::enumerationCaMUS() {
                             return;
                         for(unsigned int i = 0; i < toTest.size(); i++)
                             toTest[i] = toTest[i].getOppositeLiteral();
-                        waspFacade.addClause(toTest);
+                        //waspFacade.addClause(toTest);
                         allMCS.addClause(toTest);                        
                     }
                     else {
