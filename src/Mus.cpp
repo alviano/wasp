@@ -106,9 +106,10 @@ void MUS::enumerationCaMUS() {
     unsigned int k = 0;
     unsigned int result;
     unsigned int numberOfMCSes = 0;    
-    while(k < candidates.size()) {
-        result = waspFacade.solve(assumptions, conflict);
+    while(k <= candidates.size()) {
+        result = waspFacade.solve(assumptions, conflict);        
         if(result == INCOHERENT) {
+            if(k == candidates.size()) break;
             assumptions[k] = assumptions[k].getOppositeLiteral();
             k++;
         }
