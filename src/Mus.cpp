@@ -95,10 +95,11 @@ void MUS::enumerationCaMUS() {
         preferredChoices.push_back(Literal(candidates[i], NEGATIVE));        
         if(candidates[i] > maxId) maxId = candidates[i];
     }    
-    
+
     bool res_ = waspFacade.addCardinalityConstraint(cardinalityConstraint, candidates.size());
     if(!res_) {
         printMUS(vector<Literal>(), conflict);
+        printAnswers();
         return;
     }
     while(allMCS.numberOfVariables() < maxId) allMCS.addVariable(true);

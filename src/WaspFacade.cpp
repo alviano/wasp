@@ -232,7 +232,7 @@ WaspFacade::addPseudoBooleanConstraint(
     uint64_t sumOfWeights = 0;
     unsigned int j = 0;
     for(unsigned int i = 0; i < lits.size(); i++) {
-        lits[i]=lits[j];    weights[i]=weights[j];
+        lits[j]=lits[i];    weights[j]=weights[i];
         addVariables(lits[i].getVariable());        
         if(solver.hasBeenEliminated(lits[i].getVariable())) WaspErrorMessage::errorGeneric("Trying to add a deleted variable to aggregate.");
         if(solver.isFalse(lits[i]) || weights[i] == 0) continue;
