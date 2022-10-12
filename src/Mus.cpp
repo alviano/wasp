@@ -84,6 +84,8 @@ void MUS::enumerationCaMUS() {
     vector<Literal> cardinalityConstraint;
     vector<Literal> preferredChoices;
     WaspFacade allMCS;
+    Solver& s = const_cast<Solver&>(allMCS.getSolver());
+    s.initFrom(waspFacade.getSolver());
 
     unsigned int maxId = 0;
     for(unsigned int i = 0; i < candidates.size(); i++) {
@@ -108,7 +110,7 @@ void MUS::enumerationCaMUS() {
     unsigned int result;
     unsigned int numberOfMCSes = 0;    
     while(k <= candidates.size()) {
-        result = waspFacade.solve(assumptions, conflict);        
+        result = waspFacade.solve(assumptions, conflict);
         if(result == INCOHERENT) {
             if(k == candidates.size()) break;
             assumptions[k] = assumptions[k].getOppositeLiteral();
@@ -127,7 +129,7 @@ void MUS::enumerationCaMUS() {
                 allMCS.setPreferredChoices(preferredChoices);
                 unsigned int currentNumberOfMUSes = 0;
                 while(numberOfMUSes < wasp::Options::musNumberOfMuses) {
-                    vector<Literal> tmpAssumptions;                
+                    vector<Literal> tmpAssumptions;
                     unsigned int result = allMCS.solve(tmpAssumptions, conflict);
                     if(result == COHERENT) {
                         vector<Literal> toTest;
@@ -140,7 +142,7 @@ void MUS::enumerationCaMUS() {
                             toTest.push_back(Literal(assumptions[i].getVariable(), POSITIVE));
                         result = waspFacade.solve(toTest, conflict);
                         if(result == COHERENT) break;
-                        toTest.resize(nbCandidates);                        
+                        toTest.resize(nbCandidates);
                         printMUS(toTest, conflict);
                         currentNumberOfMUSes++;
                         numberOfMUSes++;
@@ -149,7 +151,7 @@ void MUS::enumerationCaMUS() {
                         for(unsigned int i = 0; i < toTest.size(); i++)
                             toTest[i] = toTest[i].getOppositeLiteral();
                         //waspFacade.addClause(toTest);
-                        allMCS.addClause(toTest);                        
+                        allMCS.addClause(toTest);
                     }
                     else {
                         break;
