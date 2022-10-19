@@ -535,7 +535,7 @@ void ReasoningPredicateMinimization::cautiousMinimize() {
         cout << endl;
     }
     else {
-        cout << "Number of printed answers: " << cautiousOriginalCandidates.size() << "," << 0 << "," << originalNumberOfCandidatesCautious << endl;
+        cout << "Number of printed answers: " << cautiousOriginalCandidates.size() << "," << leftCandidates << "," << originalNumberOfCandidatesCautious << endl;
     }
 }
 
