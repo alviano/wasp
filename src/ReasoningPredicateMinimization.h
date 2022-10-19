@@ -68,6 +68,7 @@ class ReasoningPredicateMinimization
         void cautiousMinimize();
         unsigned int knownAnswers = 0;
         unsigned int leftCandidates = 0;
+        unsigned int originalNumberOfCandidatesCautious = 0;
 };
 
 #endif
