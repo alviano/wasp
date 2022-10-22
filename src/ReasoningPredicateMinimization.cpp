@@ -86,7 +86,6 @@ void ReasoningPredicateMinimization::cautiousReasoning() {
             for( unsigned int i = 0; i < wasp::Options::predicatesToMinimizeCautious.size(); i++ ) {
                 if(Utils::startsWith(name, wasp::Options::predicatesToMinimizeCautious[i])) {
                     waspFacade.freeze(j);
-                    candidates.insert(j);
                     cautiousOriginalCandidates.push_back(j);                
                     break;
                 }
@@ -94,8 +93,11 @@ void ReasoningPredicateMinimization::cautiousReasoning() {
         }
     }
         
-    assert(wasp::Options::predMinimizationCautiousAlgorithm==PREDMINIMIZATIONCAUTIOUS_MINIMIZE);
-    cautiousMinimize();
+    assert(wasp::Options::predMinimizationCautiousAlgorithm==PREDMINIMIZATIONCAUTIOUS_MINIMIZE || wasp::Options::predMinimizationCautiousAlgorithm == PREDMINIMIZATIONCAUTIOUS_ENUM);
+    if(wasp::Options::predMinimizationCautiousAlgorithm == PREDMINIMIZATIONCAUTIOUS_MINIMIZE)
+        cautiousMinimize();
+    else
+        cautiousBase();
 }
 
 void ReasoningPredicateMinimization::enumerationPreferences() {
@@ -457,7 +459,7 @@ void ReasoningPredicateMinimization::cautiousMinimize() {
             assumptions.clear();        
             assumptions.push_back(Literal(ofs.back(), NEGATIVE));
             assumptions.push_back(Literal(qfs.back(), POSITIVE));
-            assumptions.push_back(Literal(qts.back(), NEGATIVE));           
+            assumptions.push_back(Literal(qts.back(), NEGATIVE));        
             result = waspFacade.solve(assumptions, conflict);
             if(result == INCOHERENT) break;                    
             for(unsigned int i = 0; i <= waspFacade.numberOfVariables(); i++)
@@ -474,7 +476,8 @@ void ReasoningPredicateMinimization::cautiousMinimize() {
                 if(waspFacade.decisionLevel(cautiousOriginalCandidates[i]) == 0)
                     knownAnswers++;
             }                    
-
+        if(leftCandidates == knownAnswers)
+            break;
         for(unsigned int i = 0; i < originalCandidates.size(); i++)
             if(waspFacade.isFalse(originalCandidates[i])) {
                 assumptions.push_back(Literal(originalCandidates[i], NEGATIVE));
@@ -495,9 +498,13 @@ void ReasoningPredicateMinimization::cautiousMinimize() {
                     removedCandidates++;
                 }
             }
-            leftCandidates = originalNumberOfCandidatesCautious-removedCandidates;
-            if(wasp::Options::silent < 1)
-                cout << "[PROGRESS] Considering " << ((float)(originalNumberOfCandidatesCautious-removedCandidates)*100/originalNumberOfCandidatesCautious) << "% of candidates (" << (originalNumberOfCandidatesCautious-removedCandidates) << " out of " << originalNumberOfCandidatesCautious << ") - Known answers: " << knownAnswers << endl;
+            if(leftCandidates > (originalNumberOfCandidatesCautious-removedCandidates)) {
+                leftCandidates = originalNumberOfCandidatesCautious-removedCandidates;
+                if(wasp::Options::silent < 1)
+                    cout << "[PROGRESS] Considering " << ((float)(leftCandidates)*100/originalNumberOfCandidatesCautious) << "% of candidates (" << (originalNumberOfCandidatesCautious-removedCandidates) << " out of " << originalNumberOfCandidatesCautious << ") - Known answers: " << knownAnswers << endl;
+                if(leftCandidates == knownAnswers)
+                    break;
+            }
             qfs[j] = qfs.back();
             qts[j] = qts.back();
             cautiousOriginalCandidates.resize(j);
@@ -527,6 +534,97 @@ void ReasoningPredicateMinimization::cautiousMinimize() {
             }
         }        
     }
+    knownAnswers = cautiousOriginalCandidates.size();
+    if(wasp::Options::silent < 2) {
+        cout << "Answers [#"<< cautiousOriginalCandidates.size() << "]:";
+        for(unsigned int i = 0; i < cautiousOriginalCandidates.size(); i++)
+            cout << " " << Literal(cautiousOriginalCandidates[i]);
+        cout << endl;
+    }
+    else {
+        cout << "Number of printed answers: " << cautiousOriginalCandidates.size() << "," << leftCandidates << "," << originalNumberOfCandidatesCautious << endl;
+    }
+}
+
+void ReasoningPredicateMinimization::cautiousBase() {
+    vector<Var> qfs;
+    vector<Literal> clause;
+    vector<Literal> preferences;
+    vector<Literal> empty;
+    vector<Literal> assumptions;
+    vector<Literal> conflict;
+    for(unsigned int i = 0; i < originalCandidates.size(); i++)
+        preferences.push_back(Literal(originalCandidates[i], NEGATIVE));    
+
+    for(unsigned int i = 0; i < cautiousOriginalCandidates.size(); i++) {
+        qfs.push_back(waspFacade.addVariable(true));
+        VariableNames::setName(qfs.back(), "qf(" + VariableNames::getName(cautiousOriginalCandidates[i]) + ")");
+        clause.push_back(Literal(qfs.back(), POSITIVE));
+        waspFacade.addClause(Literal(qfs.back(), NEGATIVE), Literal(cautiousOriginalCandidates[i], NEGATIVE));    
+    }
+    qfs.push_back(waspFacade.addVariable(true));
+    VariableNames::setName(qfs.back(), "qf");
+    clause.push_back(Literal(qfs.back(), NEGATIVE));  
+    waspFacade.addClause(clause);        
+    unsigned int result;    
+    originalNumberOfCandidatesCautious = cautiousOriginalCandidates.size();
+    unsigned int removedCandidates = 0;
+    leftCandidates = originalNumberOfCandidatesCautious-removedCandidates;
+    bool finished = false;
+    while(true) {
+        assumptions.clear();
+        assumptions.push_back(Literal(qfs.back(), NEGATIVE));
+        waspFacade.setPreferredChoices(preferences);
+        result = waspFacade.solve(assumptions, conflict);
+        if(result == INCOHERENT) break;                
+        assumptions.clear();
+        clause.clear();
+        for(unsigned int i = 0; i < originalCandidates.size(); i++) {
+            if(waspFacade.isTrue(originalCandidates[i])) {
+                assumptions.push_back(Literal(originalCandidates[i], POSITIVE));
+                clause.push_back(Literal(originalCandidates[i], NEGATIVE));
+            }
+            else {
+                assumptions.push_back(Literal(originalCandidates[i], NEGATIVE));                        
+            }
+        }
+        assumptions.push_back(Literal(qfs.back(), POSITIVE));
+        waspFacade.setPreferredChoices(empty);        
+        while(result == COHERENT) {
+            unsigned int j = 0;
+            knownAnswers = 0;
+            vector<Literal> toFalsify;
+            for(unsigned int i = 0; i < cautiousOriginalCandidates.size(); i++) {
+                cautiousOriginalCandidates[j] = cautiousOriginalCandidates[i];
+                qfs[j] = qfs[i];
+                if(waspFacade.isTrue(cautiousOriginalCandidates[j])) {
+                    if(waspFacade.decisionLevel(cautiousOriginalCandidates[j])==0)
+                        knownAnswers++;
+                    j++;
+                }
+                else {
+                    toFalsify.push_back(Literal(qfs[i], NEGATIVE));
+                    removedCandidates++;
+                }
+            }
+            if(leftCandidates == knownAnswers) { finished = true; break; }
+            qfs[j] = qfs.back();
+            cautiousOriginalCandidates.resize(j);
+            qfs.resize(j+1);
+            if(leftCandidates > (originalNumberOfCandidatesCautious-removedCandidates)) {
+                leftCandidates = originalNumberOfCandidatesCautious-removedCandidates;
+                if(wasp::Options::silent < 1)
+                    cout << "[PROGRESS] Considering " << ((float)(leftCandidates)*100/originalNumberOfCandidatesCautious) << "% of candidates (" << (originalNumberOfCandidatesCautious-removedCandidates) << " out of " << originalNumberOfCandidatesCautious << ") - Known answers: " << knownAnswers << endl;
+                if(leftCandidates == knownAnswers) { finished = true; break; }                     
+            }            
+            for(unsigned int i = 0; i < toFalsify.size(); i++)
+                waspFacade.addClause(toFalsify[i]);
+            result = waspFacade.solve(assumptions, conflict);
+        }
+        if(finished)
+            break;
+        waspFacade.addClause(clause);
+    }    
     knownAnswers = cautiousOriginalCandidates.size();
     if(wasp::Options::silent < 2) {
         cout << "Answers [#"<< cautiousOriginalCandidates.size() << "]:";

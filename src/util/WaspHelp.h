@@ -188,7 +188,8 @@ class WaspHelp
             cout << "Predicates minimization                " << endl << endl;
             cout << "--minimize-predicates=pred1;...;predn  - Find the answer set subset-minimal w.r.t. atoms over specified predicates. It can be combined with:" << endl;
             cout << "                                           -n to enumerate answer sets" << endl;
-            cout << "                                           --minimization-cautious to compute cautious consequences" << endl;
+            cout << "                                           --minimization-cautious to compute cautious consequences using algorithm minimize" << endl;
+            cout << "                                           --minimization-cautious-enum to compute cautious consequences using algorithm enum" << endl;            
             cout << "--minimization-algorithm               - Specify the algorithm to use for the minimization" << endl;            
             cout << "       =enumeration                    - Enumerate all answer sets and select the cardinality minimum (not supported with -n0)" << endl;
             cout << "       =guess-check                    - Guess an answer set and check the minimality (not supported with -n0)" << endl;
@@ -196,7 +197,7 @@ class WaspHelp
             cout << "       =guess-check-split              - Guess an answer set and check the minimality of each atom" << endl;
             cout << "       =preferences                    - Use the always-false heuristic" << endl;
             cout << "       =core-based                     - Use algorithm based on unsatisfiable cores" << endl;
-            cout << "--minimization-cautious                - Compute cautious consequences of subset-minimal, w.r.t. atoms over predicates specified with --minimize-predicates, answer sets" << endl;
+            cout << "--minimization-cautious[-enum]         - Compute cautious consequences of subset-minimal, w.r.t. atoms over predicates specified with --minimize-predicates, answer sets (-enum enables algorithm based on enumeration)" << endl;
             cout << "       =[pred1;...;predn]              - Optional: restrict the computation of cautious consequences on atoms over specified predicates" << endl;
             //cout << "--min-chunk-percentage=(1,...,100)     - Core based algorithm can use chunks. The size of each chunk is a percentage of the number of candidates" << endl;            
 

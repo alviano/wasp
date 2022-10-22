@@ -138,6 +138,7 @@ namespace wasp
 #define OPTIONID_predminimizationpredicate ( 'z' + 351 )
 #define OPTIONID_predminimizationchunkpercentage ( 'z' + 352 )
 #define OPTIONID_predminimizationcautiousalgorithm ( 'z' + 353 )
+#define OPTIONID_predminimizationcautiousalgorithmbase ( 'z' + 354 )
 #define OPTIONID_mus ( 'z' + 360 )
 #define OPTIONID_mus_algorithm ( 'z' + 361 )
     
@@ -336,6 +337,7 @@ Options::parse(
                 { "minimize-predicates", required_argument, NULL, OPTIONID_predminimizationpredicate },
                 { "minimization-algorithm", required_argument, NULL, OPTIONID_predminimizationalgorithm },
                 { "minimization-cautious", optional_argument, NULL, OPTIONID_predminimizationcautiousalgorithm },
+                { "minimization-cautious-enum", optional_argument, NULL, OPTIONID_predminimizationcautiousalgorithmbase },
                 { "min-chunk-percentage", required_argument, NULL, OPTIONID_predminimizationchunkpercentage },
 
                 { "mus", required_argument, NULL, OPTIONID_mus},
@@ -884,6 +886,15 @@ Options::parse(
 
             case OPTIONID_predminimizationcautiousalgorithm:
                 predMinimizationCautiousAlgorithm = PREDMINIMIZATIONCAUTIOUS_MINIMIZE;       
+                if( optarg )
+                {
+                    string s( optarg );                    
+                    split( s, ';', predicatesToMinimizeCautious );
+                }         
+                break;
+
+            case OPTIONID_predminimizationcautiousalgorithmbase:
+                predMinimizationCautiousAlgorithm = PREDMINIMIZATIONCAUTIOUS_ENUM;       
                 if( optarg )
                 {
                     string s( optarg );                    
