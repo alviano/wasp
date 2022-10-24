@@ -497,7 +497,13 @@ void ReasoningPredicateMinimization::cautiousMinimize() {
                     waspFacade.addClause(Literal(qfs[i], NEGATIVE));
                     removedCandidates++;
                 }
-            }
+            }            
+            qfs[j] = qfs.back();
+            qts[j] = qts.back();
+            cautiousOriginalCandidates.resize(j);
+            qts.resize(j+1);
+            qfs.resize(j+1);
+            flag = true;
             if(leftCandidates > (originalNumberOfCandidatesCautious-removedCandidates)) {
                 leftCandidates = originalNumberOfCandidatesCautious-removedCandidates;
                 if(wasp::Options::silent < 1)
@@ -505,12 +511,6 @@ void ReasoningPredicateMinimization::cautiousMinimize() {
                 if(leftCandidates == knownAnswers)
                     break;
             }
-            qfs[j] = qfs.back();
-            qts[j] = qts.back();
-            cautiousOriginalCandidates.resize(j);
-            qts.resize(j+1);
-            qfs.resize(j+1);
-            flag = true;
         }
         else {
             bool allTrues = true;
@@ -607,10 +607,10 @@ void ReasoningPredicateMinimization::cautiousBase() {
                     removedCandidates++;
                 }
             }
-            if(leftCandidates == knownAnswers) { finished = true; break; }
             qfs[j] = qfs.back();
             cautiousOriginalCandidates.resize(j);
             qfs.resize(j+1);
+            if(leftCandidates == knownAnswers) { finished = true; break; }
             if(leftCandidates > (originalNumberOfCandidatesCautious-removedCandidates)) {
                 leftCandidates = originalNumberOfCandidatesCautious-removedCandidates;
                 if(wasp::Options::silent < 1)
