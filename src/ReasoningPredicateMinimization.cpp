@@ -448,7 +448,7 @@ void ReasoningPredicateMinimization::cautiousMinimize() {
     bool flag = true;
     unsigned int result;
     vector<bool> interpretation;
-    interpretation.reserve(waspFacade.numberOfVariables());
+    interpretation.reserve(waspFacade.numberOfVariables()+1);
 
     originalNumberOfCandidatesCautious = cautiousOriginalCandidates.size();
     unsigned int removedCandidates = 0;
