@@ -43,10 +43,7 @@ void my_handler( int )
         waspFacadePointer->onKill(false);        
         delete mus;
     }    
-    else {
-        waspFacadePointer->onKill(true);
-    }
-    if(p != NULL) {
+    else if(p != NULL) {
         p->printTotalNumberOfModels();
         waspFacadePointer->onKill(false);
         delete p;
