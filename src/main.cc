@@ -39,16 +39,16 @@ void my_handler( int )
     if( EXIT_CODE == 0 )
         EXIT_CODE = 1;    
     if(mus != NULL) {
-        waspFacadePointer->onKill(false);        
         mus->onKill();        
+        waspFacadePointer->onKill(false);        
         delete mus;
     }    
     else {
         waspFacadePointer->onKill(true);
     }
     if(p != NULL) {
-        waspFacadePointer->onKill(false);
         p->printTotalNumberOfModels();
+        waspFacadePointer->onKill(false);
         delete p;
     }
     else {
