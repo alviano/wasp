@@ -51,6 +51,8 @@ void my_handler( int )
     else {
         waspFacadePointer->onKill(true);
     }
+    if(wasp::Options::fastExit)
+        exit( EXIT_CODE );
     delete waspFacadePointer;
     Statistics::clean();
     exit( EXIT_CODE );
@@ -80,6 +82,8 @@ int main( int argc, char** argv )
             || wasp::Options::queryAlgorithm == PRIME_IMPLICATE ) { CautiousReasoning c( waspFacade ); c.solve(); }
     else waspFacade.solve();
     waspFacade.onFinish(mus == NULL);
+    if(wasp::Options::fastExit)
+        exit( EXIT_CODE );
     delete waspFacadePointer;
     Statistics::clean();
     return EXIT_CODE;

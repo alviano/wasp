@@ -221,6 +221,7 @@ class WaspHelp
             cout << "       =k                              - To compute at most k answers" << endl;
             cout << "--dimacs                               - Enable dimacs format as input and outputs" << endl;
             cout << "--help                                 - Print this guide and exit" << endl;
+            cout << "--fast-exit                            - Quit wasp without calling most of the distructors" << endl;
             cout << "--disable-simplifications              - Disable the simplifications of satelite" << endl;
             cout << "--enable-multiaggregates               - Share aggregate sets if possible" << endl;
             cout << "--enumeration-strategy                 - Select different strategy for enumeration of answer sets" << endl;

@@ -161,6 +161,8 @@ namespace wasp
             static unsigned int mcsThreshold;
 
             static unsigned int musNumberOfMuses;
+
+            static bool fastExit;
             
             static WEAK_CONSTRAINTS_ALG getAlgorithm( const string& s );
             

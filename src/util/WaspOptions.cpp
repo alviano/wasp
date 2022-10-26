@@ -103,6 +103,7 @@ namespace wasp
 #define OPTIONID_stdin ( 'z' + 100 )
 #define OPTIONID_time_limit ( 'z' + 101 )
 #define OPTIONID_max_cost ( 'z' + 102 )
+#define OPTIONID_fast_exit ( 'z' + 103 )
 
 #define OPTIONID_modelchecker_algorithm ( 'z' + 104 )
 #define OPTIONID_forward_partialchecks ( 'z' + 105 )
@@ -277,6 +278,8 @@ unsigned int Options::musAlgorithm;
 unsigned int Options::mcsThreshold = UINT_MAX;
 unsigned int Options::musNumberOfMuses = UINT_MAX;
 
+bool Options::fastExit = false;
+
 void
 Options::parse(
     int argc,
@@ -374,6 +377,7 @@ Options::parse(
                 /* GENERIC OPTIONS*/
                 { "help", no_argument, NULL, OPTIONID_help },
                 { "stdin", no_argument, NULL, OPTIONID_stdin },
+                { "fast-exit", no_argument, NULL, OPTIONID_fast_exit },
                 { "time-limit", required_argument, NULL, OPTIONID_time_limit },
                 { "max-cost", required_argument, NULL, OPTIONID_max_cost },
                 { "disable-simplifications", no_argument, NULL, OPTIONID_simplifications },
@@ -656,6 +660,10 @@ Options::parse(
             case OPTIONID_time_limit:
                 if( optarg )
                     timeLimit = atoi( optarg );
+                break;
+
+            case OPTIONID_fast_exit:
+                fastExit = true;
                 break;
                 
             case OPTIONID_max_cost:
