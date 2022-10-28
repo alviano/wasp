@@ -914,7 +914,7 @@ Options::parse(
                 if( optarg )
                 {
                     if(predMinimizationAlgorithm == NO_PREDMINIMIZATION)
-                        predMinimizationAlgorithm = PREDMIN_GUESS_AND_CHECK_AND_SPLIT;                    
+                        predMinimizationAlgorithm = PREDMIN_PREFERENCES;                    
                     string s( optarg );                    
                     split( s, ';', predicatesToMinimize );                    
                 }
