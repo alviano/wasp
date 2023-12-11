@@ -24,6 +24,7 @@
 #include <iostream>
 #include <vector>
 #include <unordered_map>
+#include <cstdint>
 using namespace std;
 
 class Solver;
