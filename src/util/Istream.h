@@ -20,7 +20,7 @@
 #define WASP_ISTREAM_H
 
 #include <iostream>
-
+#include <cstdint>
 using namespace std;
 
 class Istream

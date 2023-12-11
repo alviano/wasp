@@ -22,6 +22,7 @@
 #include "../util/WaspErrorMessage.h"
 #include "../util/Istream.h"
 #include <vector>
+#include <cstdint>
 using namespace std;
 class Solver;
 

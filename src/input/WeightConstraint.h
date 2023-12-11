@@ -21,6 +21,7 @@
 
 #include <iostream>
 #include <vector>
+#include <cstdint>
 #include "../stl/Vector.h"
 using namespace std;
 

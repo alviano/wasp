@@ -26,6 +26,7 @@ class Interpreter;
 
 #include <string>
 #include <vector>
+#include <cstdint>
 using namespace std;
 
 #define method_plugins_addedVarName "addedVarName"

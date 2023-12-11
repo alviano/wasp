@@ -23,6 +23,7 @@
 #include "../stl/Vector.h"
 
 #include <iostream>
+#include <cstdint>
 using namespace std;
 
 class OutputBuilder
