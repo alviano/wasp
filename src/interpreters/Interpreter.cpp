@@ -1,5 +1,6 @@
 #include "Interpreter.h"
 #include <climits>
+#include <cstdint>
 
 void Interpreter::callVoidMethod( const string& method_name, const vector< int >& parameters )
 {

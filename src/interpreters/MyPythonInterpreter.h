@@ -22,6 +22,7 @@
 #include "Interpreter.h"
 #include <string>
 #include <vector>
+#include <cstdint>
 using namespace std;
 
 #ifdef ENABLE_PYTHON

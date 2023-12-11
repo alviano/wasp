@@ -127,7 +127,6 @@ void MUS::enumerationCaMUS() {
             if(++numberOfMCSes >= wasp::Options::mcsThreshold) {
                 numberOfMCSes = 0;
                 allMCS.setPreferredChoices(preferredChoices);
-                unsigned int currentNumberOfMUSes = 0;
                 while(numberOfMUSes < wasp::Options::musNumberOfMuses) {
                     vector<Literal> tmpAssumptions;
                     unsigned int result = allMCS.solve(tmpAssumptions, conflict);
@@ -144,7 +143,6 @@ void MUS::enumerationCaMUS() {
                         if(result == COHERENT) break;
                         toTest.resize(nbCandidates);
                         printMUS(toTest, conflict);
-                        currentNumberOfMUSes++;
                         numberOfMUSes++;
                         if(wasp::Options::maxModels != 0 && numberOfMUSes >= wasp::Options::maxModels)
                             return;
