@@ -617,8 +617,13 @@ ExternalPropagator::computeReason(
         if( check_getReasonForLiteral )
         {
             Clause* r = getReason( solver, lit );
-            solver.assignLiteral( r );
-            addReasonToDelete(r, solver.getCurrentDecisionLevel());
+            if( r == NULL ) {
+                solver.assignLiteral(lit);
+            }
+            else {
+                solver.assignLiteral( r );
+                addReasonToDelete(r, solver.getCurrentDecisionLevel());
+            }
         }
         else
             solver.assignLiteral( lit, reason );
