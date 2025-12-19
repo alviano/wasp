@@ -6,6 +6,7 @@
 #include <string>
 #include <cassert>
 #include <iostream>
+#include "util/WaspOptions.h"
 using namespace std;
 
 void MUS::enumeration() {
@@ -108,7 +109,8 @@ void MUS::enumerationCaMUS() {
     
     unsigned int k = 0;
     unsigned int result;
-    unsigned int numberOfMCSes = 0;    
+    unsigned int numberOfMCSes = 0;
+    unsigned int totalNumberOfMCSes = 0;    
     while(k <= candidates.size()) {
         result = waspFacade.solve(assumptions, conflict);
         if(result == INCOHERENT) {
@@ -122,6 +124,12 @@ void MUS::enumerationCaMUS() {
                 if(waspFacade.isFalse(candidates[i])) {                    
                     mcs.push_back(Literal(candidates[i]));                    
                 }
+            if (wasp::Options::printMcs && wasp::Options::silent < 2) {
+                cout << "[MCS #" << ++totalNumberOfMCSes << "]:";
+                for(unsigned int i = 0; i < mcs.size(); i++)
+                    cout << " " << mcs[i];
+                cout << endl;                
+            }
             waspFacade.addClause(mcs);
             allMCS.addClause(mcs);
             if(++numberOfMCSes >= wasp::Options::mcsThreshold) {

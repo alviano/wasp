@@ -142,6 +142,7 @@ namespace wasp
 #define OPTIONID_predminimizationcautiousalgorithmbase ( 'z' + 354 )
 #define OPTIONID_mus ( 'z' + 360 )
 #define OPTIONID_mus_algorithm ( 'z' + 361 )
+#define OPTIONID_printmcs ( 'z' + 362 )
     
 #ifdef TRACE_ON
 TraceLevels Options::traceLevels;
@@ -277,6 +278,7 @@ unsigned int Options::multiThreshold = 0;
 unsigned int Options::musAlgorithm;
 unsigned int Options::mcsThreshold = UINT_MAX;
 unsigned int Options::musNumberOfMuses = UINT_MAX;
+bool Options::printMcs = false; 
 
 bool Options::fastExit = false;
 
@@ -345,6 +347,7 @@ Options::parse(
 
                 { "mus", required_argument, NULL, OPTIONID_mus},
                 { "mus-algorithm", required_argument, NULL, OPTIONID_mus_algorithm},
+                { "print-mcses", no_argument, NULL, OPTIONID_printmcs},
                 
                 #if defined(ENABLE_PYTHON) || defined(ENABLE_PERL)
                 /* HEURISTIC */
@@ -966,7 +969,11 @@ Options::parse(
                         }                        
                     }                     
                 }
-                break;      
+                break;
+            
+            case OPTIONID_printmcs:
+                printMcs = true;
+                break;
                 
             default:
                 WaspErrorMessage::errorGeneric( "This option is not supported." );
