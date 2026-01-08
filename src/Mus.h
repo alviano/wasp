@@ -16,16 +16,22 @@ class MUS {
         MUS(  WaspFacade& waspFacade_ ) : waspFacade( waspFacade_ ), numberOfMUSes(0), reasoning(nullptr) {}
         virtual ~MUS() { delete reasoning; }
 
-        void enumeration();        
+        void enumeration();   
+        void optimum();     
         void onKill();
 
     private:
         void enumerationEmax();
         void enumerationCaMUS();
+        void optimumMCSEmax();
+        void optimumMCSCaMUS();
         void printAnswers();
         bool computeAndPrintMUS(vector<Literal>& conflict);
         void minimize(vector<Literal>& mus, const vector<Literal>& conflict) const;        
         void printMUS(const vector<Literal>& mus, vector<Literal>& conflict) const;
+        uint32_t getCostOfLiteral(Literal lit) const {            
+            return weightMap.at(lit.getVariable());
+        }      
         
         template <class T>
         static void printStructureOfLiterals(T elem, const string& value, const string& postfix) {
@@ -41,6 +47,7 @@ class MUS {
 
         WaspFacade& waspFacade;
         vector<Var> candidates;
+        unordered_map<Var, uint32_t> weightMap;
         unsigned int numberOfMUSes;
         ReasoningPredicateMinimization* reasoning;
 };

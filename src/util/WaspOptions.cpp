@@ -143,6 +143,7 @@ namespace wasp
 #define OPTIONID_mus ( 'z' + 360 )
 #define OPTIONID_mus_algorithm ( 'z' + 361 )
 #define OPTIONID_printmcs ( 'z' + 362 )
+#define OPTIONID_mcs_algorithm ( 'z' + 363 )
     
 #ifdef TRACE_ON
 TraceLevels Options::traceLevels;
@@ -208,13 +209,6 @@ vector< string > Options::predicatesMUS;
 bool Options::multiAggregates = false;
 bool Options::queryCoreCache = false;
 
-void split( const string &s, char delim, vector< string >& output )
-{
-    stringstream ss( s );
-    string item;
-    while( getline( ss, item, delim ) )
-        output.push_back( item );    
-}
 SHIFT_STRATEGY Options::shiftStrategy = SHIFT_NAIVE;
 
 bool Options::oneDefShift = false;
@@ -347,6 +341,7 @@ Options::parse(
 
                 { "mus", required_argument, NULL, OPTIONID_mus},
                 { "mus-algorithm", required_argument, NULL, OPTIONID_mus_algorithm},
+                { "optimum-mcs-algorithm", required_argument, NULL, OPTIONID_mcs_algorithm},
                 { "print-mcses", no_argument, NULL, OPTIONID_printmcs},
                 
                 #if defined(ENABLE_PYTHON) || defined(ENABLE_PERL)
@@ -572,7 +567,7 @@ Options::parse(
                 
             case OPTIONID_heuristic_plugins:
                 if( optarg )
-                    split( string( optarg ), ',', pluginsFilenames );
+                    Utils::split( string( optarg ), ',', pluginsFilenames );
                 break;
                 
             case OPTIONID_heuristic_setscriptdirectory:
@@ -900,7 +895,7 @@ Options::parse(
                 if( optarg )
                 {
                     string s( optarg );                    
-                    split( s, ';', predicatesToMinimizeCautious );
+                    Utils::split( s, ';', predicatesToMinimizeCautious );
                 }         
                 break;
 
@@ -909,7 +904,7 @@ Options::parse(
                 if( optarg )
                 {
                     string s( optarg );                    
-                    split( s, ';', predicatesToMinimizeCautious );
+                    Utils::split( s, ';', predicatesToMinimizeCautious );
                 }         
                 break;
             
@@ -919,7 +914,7 @@ Options::parse(
                     if(predMinimizationAlgorithm == NO_PREDMINIMIZATION)
                         predMinimizationAlgorithm = PREDMIN_PREFERENCES;                    
                     string s( optarg );                    
-                    split( s, ';', predicatesToMinimize );                    
+                    Utils::split( s, ';', predicatesToMinimize );                    
                 }
                 break;    
             
@@ -936,7 +931,7 @@ Options::parse(
                 if( optarg )
                 {
                     string s( optarg );                    
-                    split( s, ';', predicatesMUS );
+                    Utils::split( s, ';', predicatesMUS );
                 }
                 break;       
 
@@ -945,7 +940,7 @@ Options::parse(
                 {
                     vector<string> readOptions;
                     string s( optarg );                    
-                    split( s, ',',  readOptions);                    
+                    Utils::split( s, ',',  readOptions);                    
                     if(readOptions.size() == 0 || (readOptions[0] != "emax" && readOptions[0] != "camus")) {
                         WaspErrorMessage::errorGeneric("Invalid option for mus algorithm: expected emax or camus");
                     }
@@ -967,6 +962,28 @@ Options::parse(
                                  WaspErrorMessage::errorGeneric("Unexpected parameters for algorithm camus");
                             }
                         }                        
+                    }                     
+                }
+                break;
+            
+            case OPTIONID_mcs_algorithm:
+                if( optarg )
+                {
+                    vector<string> readOptions;
+                    string s( optarg );                    
+                    Utils::split( s, ',',  readOptions);                    
+                    if(readOptions.size() == 0 || (readOptions[0] != "emax" && readOptions[0] != "camus")) {
+                        WaspErrorMessage::errorGeneric("Invalid option for optimum mcs algorithm: expected emax or camus");
+                    }
+                    if(readOptions[0] == "emax") {
+                        musAlgorithm = OPTIMUM_MCS_EMAX;
+                        if(readOptions.size() != 1)
+                            WaspErrorMessage::errorGeneric("Unexpected parameters for algorithm emax");
+                    }
+                    else if(readOptions[0] == "camus") {
+                        musAlgorithm = OPTIMUM_MCS_CAMUS;
+                        if(readOptions.size() != 1)
+                            WaspErrorMessage::errorGeneric("Unexpected parameters for algorithm camus");                        
                     }                     
                 }
                 break;

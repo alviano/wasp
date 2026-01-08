@@ -36,12 +36,72 @@ void MUS::enumeration() {
     printAnswers();
 }
 
+void MUS::optimum() {
+    assert(wasp::Options::predicatesMUS.size() == 0);
+    unordered_map<string,uint32_t> costMap;
+
+    for(unsigned int j = 1; j <= waspFacade.numberOfVariables(); j++) {     
+        if(VariableNames::isHidden(j)) { continue; }
+        const string& name = VariableNames::getName(j);
+        if(Utils::startsWith(name, "__optimum_mcs_objective_literal__(")) {
+            uint32_t weight;
+            string s = "";
+            string n = "";
+            bool readNumber = false;
+            for (unsigned int i = 34; i < name.length()-1; i++) {
+                if (name[i] == ',') {
+                    readNumber = true;                    
+                    weight = stoi(s);
+                    continue;
+                }
+                if (!readNumber) {
+                    s += name[i];                
+                }
+                else {
+                    n += name[i];
+                }                
+            }
+            costMap[n] = weight;
+            wasp::Options::predicatesMUS.push_back(n);
+        }                
+    }
+    for(unsigned int j = 1; j <= waspFacade.numberOfVariables(); j++) {     
+        if(VariableNames::isHidden(j)) { continue; }
+        const string& name = VariableNames::getName(j);
+        for( unsigned int i = 0; i < wasp::Options::predicatesMUS.size(); i++ ) {
+            if(Utils::startsWith(name, wasp::Options::predicatesMUS[i])) { waspFacade.freeze(j); candidates.push_back(j); weightMap[j] = costMap[name]; break; }
+        }
+    }
+
+    if(candidates.size() == 0) {        
+        vector<Literal> assumptions;
+        vector<Literal> conflict;
+        unsigned int result = waspFacade.solve(assumptions, conflict);
+        if(result == INCOHERENT)
+            cout << "No MCSes!" << endl;
+        else
+            cout << "Instance is coherent!" << endl;
+        return;
+    }
+    else {
+        if(wasp::Options::musAlgorithm == OPTIMUM_MCS_EMAX)
+            optimumMCSEmax();        
+        else if(wasp::Options::musAlgorithm == OPTIMUM_MCS_CAMUS)
+            optimumMCSCaMUS();
+        else {
+            WaspErrorMessage::errorGeneric("Unknown optimum MUS algorithm.");
+        }
+        cout << OPTIMUM_STRING << endl;
+    }
+}
+
 void MUS::enumerationEmax() {
     WaspFacade checkFormula;
     Solver& s = const_cast<Solver&>(checkFormula.getSolver());
     s.initFrom(waspFacade.getSolver());
     unordered_map<Var,Var> idsmap;
     vector<Literal> preferredChoices;
+    unsigned int totalNumberOfMCSes = 0;
 
     for(unsigned int i = 0; i < candidates.size(); i++) {
         Var newId = checkFormula.addVariable(true);
@@ -75,8 +135,147 @@ void MUS::enumerationEmax() {
         }
         else {
             checkFormula.addClause(clause);
+            if (wasp::Options::printMcs && wasp::Options::silent < 2) {
+                cout << "[MCS #" << ++totalNumberOfMCSes << "]:";
+                for(unsigned int i = 0; i < candidates.size(); i++)
+                    if(waspFacade.isFalse(candidates[i]))                 
+                        cout << " " << Literal(candidates[i]);
+                cout << endl;           
+            }
         }
     }
+}
+
+void MUS::optimumMCSEmax() {
+    WaspFacade checkFormula;
+    Solver& s = const_cast<Solver&>(checkFormula.getSolver());
+    s.initFrom(waspFacade.getSolver());
+    unordered_map<Var,Var> idsmap;
+    vector<Literal> preferredChoices;
+    unsigned int totalNumberOfMCSes = 0;
+
+    for(unsigned int i = 0; i < candidates.size(); i++) {
+        Var newId = checkFormula.addVariable(true);
+        idsmap[candidates[i]] = newId;
+        preferredChoices.push_back(Literal(newId, POSITIVE));
+    }
+    checkFormula.setPreferredChoices(preferredChoices);
+
+    while(true) {
+        vector<Literal> assumptions;
+        vector<Literal> conflict;
+        unsigned int result = checkFormula.solve(assumptions, conflict);
+        if(result == INCOHERENT) break;
+
+        assumptions.clear();
+        conflict.clear();
+        vector<Literal> clause;
+        for(unsigned int i = 0; i < candidates.size(); i++) {
+            if(checkFormula.isTrue(idsmap[candidates[i]]))
+                assumptions.push_back(Literal(candidates[i], POSITIVE));
+            else
+                clause.push_back(Literal(idsmap[candidates[i]]));
+        }
+        result = waspFacade.solve(assumptions, conflict);        
+        if(result == INCOHERENT) {        
+            vector<Literal> mus;
+            minimize(mus, conflict);
+            conflict.clear();
+            for(auto& element : mus) {
+                conflict.push_back(Literal(element.getVariable(), POSITIVE));
+            }
+            for(unsigned int i = 0; i < conflict.size(); i++)
+                conflict[i] = Literal(idsmap[conflict[i].getVariable()], NEGATIVE);
+            checkFormula.addClause(conflict);
+        }
+        else {
+            checkFormula.addClause(clause);
+            vector<Literal> mcs;
+            uint64_t cost = 0;
+            vector<Literal> newCardinalityConstraint;
+            vector<uint64_t> newWeights;
+            uint64_t sumOfWeights = 0;
+            for(unsigned int i = 0; i < candidates.size(); i++) {
+                newCardinalityConstraint.push_back(Literal(idsmap[candidates[i]], POSITIVE));
+                uint64_t current_cost = getCostOfLiteral(Literal(candidates[i]));
+                sumOfWeights += current_cost;
+                newWeights.push_back(current_cost);
+                if(waspFacade.isFalse(candidates[i])) {
+                    mcs.push_back(Literal(candidates[i]));
+                    cost += getCostOfLiteral(Literal(candidates[i]));                
+                }
+            }
+            cout << "[MCS #" << ++totalNumberOfMCSes << ", Cost " << cost << "]:";
+            for(unsigned int i = 0; i < mcs.size(); i++)
+                cout << " " << mcs[i];
+            cout << endl;
+
+            bool res_ = checkFormula.addPseudoBooleanConstraint(newCardinalityConstraint, newWeights, sumOfWeights-cost+1);
+            if (!res_) {
+                return;
+            }
+        }
+    }
+}
+
+void MUS::optimumMCSCaMUS() {    
+    vector<Literal> assumptions;
+    vector<Literal> conflict;
+    vector<Literal> cardinalityConstraint;
+    
+    unsigned int maxId = 0;
+    for(unsigned int i = 0; i < candidates.size(); i++) {
+        cardinalityConstraint.push_back(Literal(candidates[i], POSITIVE));
+        Var auxId = waspFacade.addVariable(true);
+        VariableNames::setName(auxId, "aux" + to_string(i+1));
+        cardinalityConstraint.push_back(Literal(auxId, POSITIVE));
+        assumptions.push_back(Literal(auxId, NEGATIVE));
+        if(candidates[i] > maxId) maxId = candidates[i];
+    }    
+
+    bool res_ = waspFacade.addCardinalityConstraint(cardinalityConstraint, candidates.size());
+    if(!res_) {
+        return;
+    }
+    
+    unsigned int k = 0;
+    unsigned int result;    
+    unsigned int totalNumberOfMCSes = 0;    
+    while(k <= candidates.size()) {
+        result = waspFacade.solve(assumptions, conflict);
+        if(result == INCOHERENT) {
+            if(k == candidates.size()) break;
+            assumptions[k] = assumptions[k].getOppositeLiteral();
+            k++;
+        }
+        else {
+            vector<Literal> mcs;
+            uint64_t cost = 0;
+            for(unsigned int i = 0; i < candidates.size(); i++)
+                if(waspFacade.isFalse(candidates[i])) {                    
+                    mcs.push_back(Literal(candidates[i]));
+                    cost += getCostOfLiteral(Literal(candidates[i]));                
+                }            
+            cout << "[MCS #" << ++totalNumberOfMCSes << ", Cost " << cost << "]:";
+            for(unsigned int i = 0; i < mcs.size(); i++)
+                cout << " " << mcs[i];
+            cout << endl;                
+            vector<Literal> newCardinalityConstraint;
+            vector<uint64_t> newWeights;
+            uint64_t sumOfWeights = 0;
+            for(unsigned int i = 0; i < candidates.size(); i++) {
+                newCardinalityConstraint.push_back(Literal(candidates[i], POSITIVE));
+                uint64_t current_cost = getCostOfLiteral(Literal(candidates[i]));
+                sumOfWeights += current_cost;
+                newWeights.push_back(current_cost);
+            }    
+
+            bool res_ = waspFacade.addPseudoBooleanConstraint(newCardinalityConstraint, newWeights, sumOfWeights-cost+1);
+            if (!res_) {
+                return;
+            }
+        }
+    }    
 }
 
 void MUS::enumerationCaMUS() {    

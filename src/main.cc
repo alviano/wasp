@@ -73,6 +73,7 @@ int main( int argc, char** argv )
     if( wasp::Options::predMinimizationCautiousAlgorithm != NO_PREDMINIMIZATIONCAUTIOUS ) { p = new ReasoningPredicateMinimization( waspFacade ); p->cautiousReasoning(); }
     else if( wasp::Options::predMinimizationAlgorithm != NO_PREDMINIMIZATION && wasp::Options::maxModels == 1 ) { PredicateMinimization minimization( waspFacade ); minimization.solve(); }
     else if( wasp::Options::predMinimizationAlgorithm != NO_PREDMINIMIZATION ) { ReasoningPredicateMinimization minimization( waspFacade ); minimization.enumeration(); }
+    else if( wasp::Options::musAlgorithm == OPTIMUM_MCS_EMAX || wasp::Options::musAlgorithm == OPTIMUM_MCS_CAMUS ) { mus = new MUS(waspFacade); mus->optimum(); }
     else if( wasp::Options::predicatesMUS.size() > 0) { mus = new MUS(waspFacade); mus->enumeration(); }
     else if( wasp::Options::queryAlgorithm == ONE_QUERIES 
             || wasp::Options::queryAlgorithm == KDYN_QUERIES 

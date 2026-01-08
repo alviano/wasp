@@ -232,7 +232,10 @@ class WaspHelp
             cout << "--mus-algorithm                        - Change algorithm for computing muses" << endl;
             cout << "       =emax                           - Enable algorithm emax" << endl;
             cout << "       =camus,[mcs_th,[mus_th]]        - Enable algorithm camus. (Options) After mcs_th mcses try to compute mus_th muses" << endl;
-            cout << "--print-mcses                          - Print MCSes during the computation of MUSes (works only for algorithm camus)" << endl;
+            cout << "--optimum-mcs-algorithm                - Change algorithm for computing optimum mcses. Note: It reads atoms of the form __optimum_mcs_objective_literal__(WEIGHT, LITERAL)." << endl;
+            cout << "       =emax                           - Enable algorithm emax" << endl;
+            cout << "       =camus,[mcs_th,[mus_th]]        - Enable algorithm camus. (Options) After mcs_th mcses try to compute mus_th muses" << endl;
+            cout << "--print-mcses                          - Print MCSes during the computation of MUSes" << endl;
 //            cout << "--stdin                                - Write a description." << endl;
 //            cout << "--time-limit                           - Write a description." << endl;
         }

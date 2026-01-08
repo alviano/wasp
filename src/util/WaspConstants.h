@@ -82,6 +82,8 @@
 
 #define MUS_EMAX 0
 #define MUS_CAMUS 1
+#define OPTIMUM_MCS_EMAX 2
+#define OPTIMUM_MCS_CAMUS 3
 
 /*
  * Weak constraints
@@ -224,12 +226,21 @@ typedef unsigned int WEAK_CONSTRAINTS_ALG;
 typedef unsigned int SHIFT_STRATEGY;
 
 #include <string>
+#include <sstream>
+#include <vector>
 struct Utils {    
     static bool startsWith(const std::string& orig, const std::string& str) {
         if(str.length() > orig.length()) return false;    
         for(unsigned int i = 0; i < str.size(); i++) if(orig[i] != str[i]) return false;    
         return true;
-    }    
+    }
+
+    static void split( const std::string &s, char delim, std::vector< std::string >& output ) {
+        std::stringstream ss( s );
+        std::string item;
+        while( getline( ss, item, delim ) )
+            output.push_back( item );    
+    }
 };
 
 #endif
