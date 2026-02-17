@@ -7,6 +7,7 @@ class WaspFacade;
 
 #include <vector>
 #include <iostream>
+#include<unordered_map>
 #include "util/VariableNames.h"
 #include "ReasoningPredicateMinimization.h"
 using namespace std;
